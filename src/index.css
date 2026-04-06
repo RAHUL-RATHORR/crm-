@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    background-color: #f4f7fa;
+    color: #1f2937;
+    margin: 0;
+    padding: 0;
+    font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  }
+}
+
+.border-line {
+  border-style: solid;
+  border-color: #000;
+}
+
+@media print {
+  @page {
+    margin: 0;
+    size: auto;
+  }
+
+  body {
+    background-color: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Hide everything except the Job Card */
+  .no-print,
+  nav,
+  button,
+  .modal-header,
+  .modal-footer,
+  aside,
+  header,
+  footer {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  /* Reset the fixed modal to be a regular page element for printing */
+  /* This prevents the blank page issue. */
+  .fixed,
+  [class*="fixed"] {
+    position: static !important;
+    display: block !important;
+    background: white !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    z-index: auto !important;
+  }
+
+  /* Target the specific Job Card container */
+  .bg-white.border.max-w-4xl {
+    box-shadow: none !important;
+    border: none !important; /* Removed extra outer border to avoid double lines */
+    width: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  #printable-content {
+    display: block !important;
+    padding: 1.5cm !important;
+    overflow: visible !important;
+    width: 100% !important;
+  }
+
+  .border-line {
+    border-color: #333 !important;
+  }
+
+  /* Prevent boxing and reduce boldness for print */
+  .border { border-width: 1px !important; border-color: #333 !important; }
+  .border-b, .border-b-2 { border-bottom-width: 1px !important; border-top-width: 0 !important; border-left-width: 0 !important; border-right-width: 0 !important; border-color: #333 !important; }
+  .border-t, .border-t-2 { border-top-width: 1px !important; border-bottom-width: 0 !important; border-left-width: 0 !important; border-right-width: 0 !important; border-color: #333 !important; }
+  .border-l, .border-l-2 { border-left-width: 1px !important; border-right-width: 0 !important; border-top-width: 0 !important; border-bottom-width: 0 !important; border-color: #333 !important; }
+  .border-r, .border-r-2 { border-right-width: 1px !important; border-left-width: 0 !important; border-top-width: 0 !important; border-bottom-width: 0 !important; border-color: #333 !important; }
+
+  /* Ensure background colors don't bleed from the app */
+  .min-h-screen {
+    background: white !important;
+  }
+}

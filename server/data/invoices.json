@@ -1,0 +1,23 @@
+[
+  {
+    "_id": "1775372043136kwmno",
+    "invoiceNumber": "INVN0826",
+    "date": "2026-04-05T06:53:40.826Z",
+    "jobCard": "11",
+    "partyName": "1",
+    "items": [
+      {
+        "id": 1775372020826,
+        "description": "111",
+        "qty": "4",
+        "rate": "111",
+        "total": 444
+      }
+    ],
+    "subTotal": 444,
+    "gstPercent": 18,
+    "gstAmount": 79.92,
+    "totalAmount": 523.92,
+    "createdAt": "2026-04-05T06:54:03.136Z"
+  }
+]

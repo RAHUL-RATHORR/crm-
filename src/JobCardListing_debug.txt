@@ -1,0 +1,496 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { PlusSquare, Trash2, Printer, X, Download, Pencil, RefreshCw, Filter, Search, Check } from 'lucide-react';
+import html2pdf from 'html2pdf.js';
+import DeleteConfirmationModal from './components/DeleteConfirmationModal';
+
+export default function JobCardListing() {
+  const navigate = useNavigate();
+  const [jobCards, setJobCards] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const filterRef = useRef(null);
+
+  // Column Visibility State
+  const [columnVisibility, setColumnVisibility] = useState(() => {
+    const saved = localStorage.getItem('jobCardColumnVisibility');
+    return saved ? JSON.parse(saved) : {
+      partyName: true,
+      jobName: true,
+      jobNumber: true,
+      jobDate: true,
+      cancelPlate: true,
+      paper: true,
+      printingType: true,
+      paperSize: true,
+      totalAmount: true,
+      createdAt: true
+    };
+  });
+
+  useEffect(() => {
+    localStorage.setItem('jobCardColumnVisibility', JSON.stringify(columnVisibility));
+  }, [columnVisibility]);
+
+  const loadData = () => {
+    const data = JSON.parse(localStorage.getItem('jobCards') || '[]');
+    setJobCards(data);
+  };
+
+  useEffect(() => {
+    loadData();
+
+    // Close filter dropdown on click outside
+    const handleClickOutside = (event) => {
+      if (filterRef.current && !filterRef.current.contains(event.target)) {
+        setIsFilterOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const refreshData = () => {
+    loadData();
+  };
+
+  const exportToCSV = () => {
+    const visibleData = jobCards.map(card => {
+      const exportRow = {};
+      if (columnVisibility.partyName) exportRow['Company Name'] = card.partyName;
+      if (columnVisibility.jobName) exportRow['Job Name'] = card.jobName;
+      if (columnVisibility.jobNumber) exportRow['Job Number'] = card.jobNumber;
+      if (columnVisibility.jobDate) exportRow['Job Date'] = new Date(card.jobDate).toLocaleDateString();
+      if (columnVisibility.cancelPlate) exportRow['Cancel Plate'] = card.cancelPlate || '1.00';
+      if (columnVisibility.paper) exportRow['Paper'] = card.paper;
+      if (columnVisibility.printingType) exportRow['Printing FC'] = card.printingType;
+      if (columnVisibility.paperSize) exportRow['Paper Size'] = card.paperSize;
+      if (columnVisibility.totalAmount) exportRow['Total Amount'] = card.totalAmount;
+      if (columnVisibility.createdAt) exportRow['Created At'] = new Date(card.createdAt).toLocaleString();
+      return exportRow;
+    });
+
+    if (visibleData.length === 0) return;
+
+    const headers = Object.keys(visibleData[0]);
+    const csvContent = [
+      headers.join(','),
+      ...visibleData.map(row => headers.map(header => `"${row[header] || ''}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `job_card_listing_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const toggleColumn = (col) => {
+    setColumnVisibility(prev => ({ ...prev, [col]: !prev[col] }));
+  };
+
+  const filteredCards = jobCards.filter(card =>
+    card.partyName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    card.jobName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    card.jobNumber?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [cardToDelete, setCardToDelete] = useState(null);
+
+  const handleDelete = (id) => {
+    setCardToDelete(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (cardToDelete) {
+      const updatedCards = jobCards.filter(card => card.id !== cardToDelete);
+      setJobCards(updatedCards);
+      localStorage.setItem('jobCards', JSON.stringify(updatedCards));
+      setIsDeleteModalOpen(false);
+      setCardToDelete(null);
+    }
+  };
+
+  const [selectedCard, setSelectedCard] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const openPreview = (card) => {
+    setSelectedCard(card);
+    setIsModalOpen(true);
+  };
+
+  const closePreview = () => {
+    setIsModalOpen(false);
+    setSelectedCard(null);
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleDownloadPDF = () => {
+    const element = document.getElementById('printable-content');
+    const opt = {
+      margin: 10,
+      filename: `job-card-${selectedCard?.jobNumber || 'listing'}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    html2pdf().set(opt).from(element).save();
+  };
+
+  return (
+    <div className="max-w-[1400px] mx-auto px-6 mt-8 pb-12">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 group flex items-center gap-3">
+            <div className="bg-blue-600 w-2 h-8 rounded-full shadow-lg shadow-blue-200" />
+            Job Card Listings
+          </h1>
+          <p className="text-gray-500 mt-1 font-medium">Manage and view all your job cards</p>
+        </div>
+        <button
+          onClick={() => navigate('/job-card')}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-xl shadow-blue-100 hover:scale-[1.02] active:scale-95 flex items-center gap-2"
+        >
+          <PlusSquare size={20} />
+          Add New Job Card
+        </button>
+      </div>
+
+      {/* Toolbar */}
+      <div className="bg-white p-4 rounded-t-2xl border-x border-t border-gray-100 flex flex-wrap items-center justify-between gap-4">
+        <div className="relative w-full max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <input
+            type="text"
+            placeholder="Search keyword..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm transition-all"
+          />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={refreshData}
+            className="p-2.5 text-gray-600 hover:bg-gray-100 rounded-xl transition-all border border-gray-200 group"
+            title="Refresh Data"
+          >
+            <RefreshCw size={18} className="group-active:rotate-180 transition-transform duration-500" />
+          </button>
+          <button
+            onClick={exportToCSV}
+            className="p-2.5 text-gray-600 hover:bg-gray-100 rounded-xl transition-all border border-gray-200 flex items-center gap-2 text-sm font-semibold"
+            title="Export CSV"
+          >
+            <Download size={18} /> Export
+          </button>
+
+          <div className="relative" ref={filterRef}>
+            <button
+              onClick={() => setIsFilterOpen(!isFilterOpen)}
+              className={`p-2.5 rounded-xl transition-all border flex items-center gap-2 text-sm font-semibold ${isFilterOpen ? 'bg-blue-50 border-blue-200 text-blue-600' : 'text-gray-600 border-gray-200 hover:bg-gray-100'}`}
+            >
+              <Filter size={18} /> Filter
+            </button>
+
+            {isFilterOpen && (
+              <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 p-4 animate-in fade-in zoom-in-95 duration-200">
+                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 px-1">Column Display</h3>
+                -                <div className="space-y-1">
+                  +                <div className="space-y-1 max-h-48 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
+                    {[
+                      { id: 'partyName', label: 'Company Name' },
+                      { id: 'jobName', label: 'Job Name' },
+                      { id: 'jobNumber', label: 'Job Number' },
+                      { id: 'jobDate', label: 'Job Date' },
+                      { id: 'cancelPlate', label: 'Cancel Plate' },
+                      { id: 'paper', label: 'Paper' },
+                      { id: 'printingType', label: 'Printing FC' },
+                      { id: 'paperSize', label: 'Paper Size' },
+                      { id: 'totalAmount', label: 'Total Amount' },
+                      { id: 'createdAt', label: 'Created At' }
+                    ].map((col) => (
+                      <label key={col.id} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors group">
+                        <span className="text-sm font-medium text-gray-700">{col.label}</span>
+                        <div
+                          onClick={(e) => { e.preventDefault(); toggleColumn(col.id); }}
+                          className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all ${columnVisibility[col.id] ? 'bg-blue-600 border-blue-600' : 'border-gray-300 bg-white group-hover:border-blue-400'}`}
+                        >
+                          {columnVisibility[col.id] && <Check size={12} className="text-white" strokeWidth={4} />}
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+             )}
+              </div>
+        </div>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm whitespace-nowrap">
+              <thead>
+                <tr className="bg-gray-50 text-gray-500 font-medium border-b border-gray-100 uppercase tracking-wider text-xs">
+                  <th className="py-4 px-6">S.No.</th>
+                  {columnVisibility.partyName && <th className="py-4 px-6">Company Name</th>}
+                  {columnVisibility.jobName && <th className="py-4 px-6">Job Name</th>}
+                  {columnVisibility.jobNumber && <th className="py-4 px-6">Job Number</th>}
+                  {columnVisibility.jobDate && <th className="py-4 px-6">Job Date</th>}
+                  {columnVisibility.cancelPlate && <th className="py-4 px-6">Cancel Plate</th>}
+                  {columnVisibility.paper && <th className="py-4 px-6">Paper</th>}
+                  {columnVisibility.printingType && <th className="py-4 px-6">Printing FC</th>}
+                  {columnVisibility.paperSize && <th className="py-4 px-6">Paper Size</th>}
+                  {columnVisibility.totalAmount && <th className="py-4 px-6">Total Amount</th>}
+                  {columnVisibility.createdAt && <th className="py-4 px-6">Created At</th>}
+                  <th className="py-4 px-6 text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody className="text-gray-700">
+                {filteredCards.length === 0 ? (
+                  <tr>
+                    <td colSpan="12" className="py-8 text-center text-gray-500">
+                      No job cards found.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredCards.map((card, index) => (
+                    <tr key={card.id} className="border-b last:border-0 border-gray-50 hover:bg-gray-50 transition-colors">
+                      <td className="py-4 px-6 text-gray-500">{index + 1}</td>
+                      {columnVisibility.partyName && <td className="py-4 px-6 font-medium text-gray-900">{card.partyName}</td>}
+                      {columnVisibility.jobName && <td className="py-4 px-6">{card.jobName}</td>}
+                      {columnVisibility.jobNumber && (
+                        <td className="py-4 px-6">
+                          <span className="bg-blue-50 text-blue-700 px-2.5 py-1 rounded-md text-xs font-semibold">
+                            {card.jobNumber}
+                          </span>
+                        </td>
+                      )}
+                      {columnVisibility.jobDate && (
+                        <td className="py-4 px-6 text-gray-500">
+                          {new Date(card.jobDate).toLocaleDateString()}
+                        </td>
+                      )}
+                      {columnVisibility.cancelPlate && <td className="py-4 px-6">{card.cancelPlate || '1.00'}</td>}
+                      {columnVisibility.paper && <td className="py-4 px-6">{card.paper}</td>}
+                      {columnVisibility.printingType && <td className="py-4 px-6">{card.printingType}</td>}
+                      {columnVisibility.paperSize && <td className="py-4 px-6">{card.paperSize}</td>}
+                      {columnVisibility.totalAmount && <td className="py-4 px-6 font-semibold">₹{card.totalAmount}</td>}
+                      {columnVisibility.createdAt && (
+                        <td className="py-4 px-6 text-gray-500 text-xs text-wrap max-w-[120px]">
+                          {new Date(card.createdAt).toLocaleString()}
+                        </td>
+                      )}
+                      <td className="py-4 px-6 text-center flex items-center justify-center gap-2">
+                        <button
+                          onClick={() => openPreview(card)}
+                          className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-2 rounded-lg transition-colors focus:outline-none"
+                          title="Print Preview"
+                        >
+                          <Printer size={18} />
+                        </button>
+                        <button
+                          onClick={() => navigate('/job-card', { state: { editData: card } })}
+                          className="text-teal-500 hover:text-teal-700 hover:bg-teal-50 p-2 rounded-lg transition-colors focus:outline-none"
+                          title="Edit"
+                        >
+                          <Pencil size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(card.id)}
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors focus:outline-none"
+                          title="Delete"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Print Preview Modal */}
+        {isModalOpen && selectedCard && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 no-print overflow-y-auto">
+            <div className="bg-white border border-gray-300 w-full max-w-4xl relative max-h-[95vh] flex flex-col shadow-none">
+              {/* Modal Header */}
+              <div className="p-4 border-b flex justify-between items-center bg-white">
+                <h2 className="text-xl font-bold text-gray-800">Job Card Preview</h2>
+                <button
+                  onClick={closePreview}
+                  className="p-1 hover:bg-gray-200 rounded-full transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Modal Body - Printable Content */}
+              <div className="p-8 overflow-y-auto flex-grow" id="printable-content">
+                <div className="border-line border p-6 bg-white min-h-[800px] shadow-none">
+                  {/* Job Card Header */}
+                  <div className="flex justify-between items-start mb-6 pb-2 border-b border-line">
+                    <div>
+                      <h1 className="text-3xl font-bold text-black uppercase tracking-tight">TRICKWRIC</h1>
+                    </div>
+                    <div className="border border-line px-4 py-1 text-xs font-bold uppercase">
+                      Job Card
+                    </div>
+                  </div>
+
+                  {/* Top Info Grid */}
+                  <div className="grid grid-cols-2 gap-x-12 gap-y-4 mb-2">
+                    <div className="border-b border-line pb-1 flex">
+                      <span className="text-xs font-bold uppercase w-24">Party Name:</span>
+                      <span className="flex-grow font-medium">{selectedCard.partyName}</span>
+                    </div>
+                    <div className="border-b border-line pb-1 flex">
+                      <span className="text-xs font-bold uppercase w-24">Job No:</span>
+                      <span className="flex-grow font-medium">{selectedCard.jobNumber}</span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-x-6 gap-y-4 mb-6">
+                    <div className="border-b border-line pb-1 flex col-span-1">
+                      <span className="text-xs font-bold uppercase w-24">Job Name:</span>
+                      <span className="flex-grow font-medium">{selectedCard.jobName}</span>
+                    </div>
+                    <div className="border-b border-line pb-1 flex col-span-1">
+                      <span className="text-xs font-bold uppercase w-12">Date:</span>
+                      <span className="flex-grow font-medium">{new Date(selectedCard.jobDate).toLocaleDateString()}</span>
+                    </div>
+                    <div className="border-b border-line pb-1 flex col-span-1">
+                      <span className="text-xs font-bold uppercase w-12">Qty:</span>
+                      <span className="flex-grow font-medium">{selectedCard.jobQty || 1}</span>
+                    </div>
+                  </div>
+
+                  {/* Main Content Two Columns */}
+                  <div className="flex border-t border-line pt-2">
+                    {/* Left Column - Detailed Table */}
+                    <div className="w-1/2 pr-6 border-r border-line">
+                      <div className="space-y-3">
+                        {[
+                          { label: 'Cancel Plate', value: '1.00' },
+                          { label: 'Paper', value: selectedCard.paper || '-' },
+                          { label: 'Printing U/C', value: '-' },
+                          { label: 'Printing Color', value: selectedCard.printingType || '-' },
+                          { label: 'Binding', value: '-' },
+                          { label: 'File Path', value: '-' },
+                          { label: 'Design UV', value: '-' }
+                        ].map((row, i) => (
+                          <div key={i} className="flex justify-between items-end gap-2">
+                            <span className="text-xs font-bold uppercase min-w-fit">{row.label}</span>
+                            <div className="flex-grow border-b-2 border-line h-4 min-w-[50px] text-right text-xs px-2">{row.value}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Right Column - Checklist & Sign */}
+                    <div className="w-1/2 pl-6">
+                      <div className="flex gap-6 mb-2">
+                        <label className="flex items-center gap-2 cursor-pointer pointer-events-none">
+                          <div className="w-4 h-4 border border-line flex items-center justify-center">
+                            <div className="w-2 h-2 bg-black"></div>
+                          </div>
+                          <span className="text-[10px] font-bold uppercase">Company Paper</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer pointer-events-none">
+                          <div className="w-4 h-4 border border-line"></div>
+                          <span className="text-[10px] font-bold uppercase">Paper Party</span>
+                        </label>
+                      </div>
+
+                      <div className="space-y-2 mb-4">
+                        {[
+                          { label: 'Plate From', value: '-' },
+                          { label: 'Paper From', value: '-' },
+                          { label: 'Paper Size', value: selectedCard.paperSize || '-' },
+                          { label: 'Cutting Size', value: '-' },
+                          { label: 'Paper GSM', value: '-' }
+                        ].map((row, i) => (
+                          <div key={i} className="flex flex-col border-b border-line py-1">
+                            <span className="text-[10px] font-bold uppercase opacity-60 leading-none mb-1">{row.label}</span>
+                            <span className="text-xs font-medium">{row.value}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="mb-4">
+                        <span className="text-[10px] font-bold uppercase block mb-1">Printing Sheet</span>
+                        <div className="flex gap-1">
+                          {['S/S', 'F/B', 'G/W', 'P+B'].map((label, i) => (
+                            <div key={i} className="border border-line px-1 py-0.5 text-[9px] font-bold uppercase flex items-center justify-center min-w-[30px]">
+                              {label}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between items-end mb-6 pt-10">
+                        <div className="text-center w-1/2">
+                          <div className="border-b border-line mb-1 h-5"></div>
+                          <span className="text-[10px] font-bold uppercase">Printer Sign</span>
+                        </div>
+                      </div>
+
+                      {/* Notes Box */}
+                      <div className="border border-line p-2 mt-4">
+                        <span className="text-[10px] font-bold uppercase block border-b border-line pb-0.5 mb-1">NOTES .</span>
+                        <div className="text-[9px] text-gray-800">
+                          {selectedCard.notes || 'Handle with care. Ensure high quality print.'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="p-4 border-t bg-white flex justify-end gap-3 no-print">
+                <button
+                  onClick={closePreview}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handlePrint}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 transition-colors"
+                >
+                  <Printer size={16} /> Print
+                </button>
+                <button
+                  onClick={handleDownloadPDF}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+                >
+                  <Download size={16} /> Download
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {/* Delete Confirmation Modal */}
+        <DeleteConfirmationModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          onConfirm={confirmDelete}
+          title="Are you sure?"
+          message="Are you sure you want to move to trash?"
+        />
+      </div>
+      );
+}
+
+
