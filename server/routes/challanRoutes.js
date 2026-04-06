@@ -6,10 +6,10 @@ import Challan from '../models/Challan.js';
 router.post('/', async (req, res) => {
   try {
     const { challanNo } = req.body;
-    
+
     let challan;
     if (challanNo) {
-       challan = await Challan.findOneAndUpdate(
+      challan = await Challan.findOneAndUpdate(
         { challanNo },
         { ...req.body },
         { new: true, upsert: true, setDefaultsOnInsert: true }
@@ -33,6 +33,21 @@ router.get('/', async (req, res) => {
   try {
     const challans = await Challan.find().sort({ createdAt: -1 });
     res.json(challans);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// UPDATE /api/challan/:id - Update Challan Status
+router.put('/:id', async (req, res) => {
+  try {
+    const updated = await Challan.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+    if (!updated) return res.status(404).json({ message: "Challan not found" });
+    res.json(updated);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

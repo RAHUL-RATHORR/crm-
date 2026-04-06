@@ -44,18 +44,32 @@ const ChallanList = () => {
   };
 
   const handleStatusUpdate = async (id, newStatus) => {
+    // 1. Update UI instantly
+    setChallans((prev) =>
+      prev.map((ch) =>
+        ch._id === id ? { ...ch, paymentStatus: newStatus } : ch
+      )
+    );
+    setOpenDropdownId(null);
+
     try {
       const response = await fetch(`https://crm-qpw8.onrender.com/api/challan/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ paymentStatus: newStatus })
       });
-      if (response.ok) {
-        fetchChallans();
-        setOpenDropdownId(null);
+
+      if (!response.ok) {
+        throw new Error("Failed to update status on server");
       }
+      
+      // Optionally fetch again to ensure sync, but the instant update is already done.
+      // fetchChallans(); 
     } catch (err) {
       console.error("Error updating challan status:", err);
+      // Revert UI on error
+      fetchChallans();
+      alert("Failed to update status. Please try again.");
     }
   };
 
