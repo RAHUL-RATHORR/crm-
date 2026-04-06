@@ -34,7 +34,7 @@ export default function JobCardListing() {
 
   const loadData = async () => {
     try {
-      const response = await fetch("http://localhost:5011/api/jobcard");
+      const response = await fetch("https://crm-qpw8.onrender.com/api/jobcard");
       const data = await response.json();
       setJobCards(data);
     } catch (error) {
@@ -115,7 +115,7 @@ export default function JobCardListing() {
   const confirmDelete = async () => {
     if (cardToDelete) {
       try {
-        const response = await fetch(`http://localhost:5011/api/jobcard/${cardToDelete}`, {
+        const response = await fetch(`https://crm-qpw8.onrender.com/api/jobcard/${cardToDelete}`, {
           method: "DELETE"
         });
         if (response.ok) {

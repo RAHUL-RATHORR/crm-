@@ -20,7 +20,7 @@ export default function JobCardForm() {
     };
 
     try {
-      const response = await fetch("http://localhost:5011/api/jobcard", {
+      const response = await fetch("https://crm-qpw8.onrender.com/api/jobcard", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

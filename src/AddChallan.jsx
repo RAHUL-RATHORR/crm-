@@ -22,7 +22,7 @@ const AddChallan = () => {
   });
 
   useEffect(() => {
-    fetch('http://localhost:5011/api/jobcard')
+    fetch('https://crm-qpw8.onrender.com/api/jobcard')
       .then(res => res.json())
       .then(data => setJobCards(data))
       .catch(err => console.error("Error fetching Job Cards:", err));
@@ -72,7 +72,7 @@ const AddChallan = () => {
     };
 
     try {
-      const response = await fetch('http://localhost:5011/api/challan', {
+      const response = await fetch('https://crm-qpw8.onrender.com/api/challan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(challan)

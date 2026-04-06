@@ -12,7 +12,7 @@ const InvoiceList = () => {
   }, []);
 
   const fetchInvoice = () => {
-    fetch('http://localhost:5011/api/invoice')
+    fetch('https://crm-qpw8.onrender.com/api/invoice')
       .then(res => res.json())
       .then(data => setInvoices(data))
       .catch(err => console.error("Error fetching Invoices:", err));
@@ -29,7 +29,7 @@ const InvoiceList = () => {
   const confirmDelete = async () => {
     if (invoiceToDelete) {
       try {
-        const response = await fetch(`http://localhost:5011/api/invoice/${invoiceToDelete}`, {
+        const response = await fetch(`https://crm-qpw8.onrender.com/api/invoice/${invoiceToDelete}`, {
           method: 'DELETE'
         });
         if (response.ok) {

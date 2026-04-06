@@ -15,7 +15,7 @@ const ChallanList = () => {
   }, []);
 
   const fetchChallans = () => {
-    fetch('http://localhost:5011/api/challan')
+    fetch('https://crm-qpw8.onrender.com/api/challan')
       .then(res => res.json())
       .then(data => setChallans(data))
       .catch(err => console.error("Error fetching Challans:", err));
@@ -29,7 +29,7 @@ const ChallanList = () => {
   const confirmDelete = async () => {
     if (challanToDelete) {
       try {
-        const response = await fetch(`http://localhost:5011/api/challan/${challanToDelete}`, {
+        const response = await fetch(`https://crm-qpw8.onrender.com/api/challan/${challanToDelete}`, {
           method: 'DELETE'
         });
         if (response.ok) {
@@ -45,7 +45,7 @@ const ChallanList = () => {
 
   const handleStatusUpdate = async (id, newStatus) => {
     try {
-      const response = await fetch(`http://localhost:5011/api/challan/${id}`, {
+      const response = await fetch(`https://crm-qpw8.onrender.com/api/challan/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ paymentStatus: newStatus })
