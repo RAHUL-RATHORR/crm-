@@ -82,3 +82,6 @@ const PORT = process.env.PORT || 5011;
 
 connectDB();      // ✅ ONLY ONE TIME
 startServer(PORT);
+app.get('/ping', (req, res) => {
+    res.status(200).send("I am awake!");
+});
