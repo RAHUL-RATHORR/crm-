@@ -78,7 +78,7 @@ const PaymentTypeManagement = () => {
   };
 
   return (
-    <div className="mx-auto mt-8 pb-12 text-gray-800 animate-fade-in">
+    <div className="w-full px-4 mt-8 pb-12 text-gray-800 animate-fade-in">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 group flex items-center gap-3">

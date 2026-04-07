@@ -161,7 +161,7 @@ export default function JobCardListing() {
   };
 
   return (
-    <div className="mx-auto mt-8 pb-12">
+    <div className="w-full px-4 mt-8 pb-12">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 no-print">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 group flex items-center gap-3">
