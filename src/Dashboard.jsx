@@ -80,6 +80,40 @@ const forecastData = [
   { name: 'Revenue.est', value: 45, fill: '#f59e0b' },
 ];
 
+const CountUp = ({ end, duration = 2000, prefix = "", suffix = "" }) => {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    let startTime;
+    let animationFrame;
+
+    const animate = (timestamp) => {
+      if (!startTime) startTime = timestamp;
+      const progress = timestamp - startTime;
+      const percentage = Math.min(progress / duration, 1);
+      
+      // Easing function for smooth finish
+      const easeOutQuad = (t) => t * (2 - t);
+      const currentCount = Math.floor(easeOutQuad(percentage) * end);
+      
+      setCount(currentCount);
+
+      if (percentage < 1) {
+        animationFrame = requestAnimationFrame(animate);
+      }
+    };
+
+    animationFrame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationFrame);
+  }, [end, duration]);
+
+  return (
+    <span>
+      {prefix}{count.toLocaleString('en-IN')}{suffix}
+    </span>
+  );
+};
+
 
 
 export default function Dashboard() {
@@ -159,7 +193,9 @@ export default function Dashboard() {
                 </div>
                 <span className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider">Total Revenue</span>
               </div>
-              <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 truncate">₹59,526,564</div>
+              <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 truncate">
+                <CountUp end={59526564} prefix="₹" />
+              </div>
               <div className="flex items-center gap-2 text-sm">
                 <span className="bg-red-100 text-red-600 px-2 py-0.5 rounded text-xs font-semibold">-3.5%</span>
                 <span className="text-gray-400 text-xs sm:text-sm">vs prev. month</span>
@@ -174,7 +210,9 @@ export default function Dashboard() {
                 </div>
                 <span className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider">Estimated</span>
               </div>
-              <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 truncate">₹24,562,564</div>
+              <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 truncate">
+                <CountUp end={24562564} prefix="₹" />
+              </div>
               <div className="flex items-center gap-2 text-sm">
                 <span className="bg-teal-100 text-teal-600 px-2 py-0.5 rounded text-xs font-semibold">+1.3%</span>
                 <span className="text-gray-400 text-xs sm:text-sm">vs prev. month</span>
@@ -190,15 +228,21 @@ export default function Dashboard() {
             <div className="flex flex-wrap gap-4 sm:gap-6">
               <div className="text-center">
                 <div className="text-xs sm:text-sm text-gray-500 mb-1">Revenue</div>
-                <div className="font-bold text-gray-900">₹584k</div>
+                <div className="font-bold text-gray-900">
+                  <CountUp end={584000} prefix="₹" />
+                </div>
               </div>
               <div className="text-center border-l pl-4 sm:pl-6">
                 <div className="text-xs sm:text-sm text-gray-500 mb-1">Expenses</div>
-                <div className="font-bold text-gray-900">₹457k</div>
+                <div className="font-bold text-gray-900">
+                  <CountUp end={457000} prefix="₹" />
+                </div>
               </div>
               <div className="text-center border-l pl-4 sm:pl-6">
                 <div className="text-xs sm:text-sm text-gray-500 mb-1">Profit Ratio</div>
-                <div className="font-bold text-green-500">3.6%</div>
+                <div className="font-bold text-green-500">
+                  <CountUp end={3.6} suffix="%" />
+                </div>
               </div>
             </div>
           </div>
