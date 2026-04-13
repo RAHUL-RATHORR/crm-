@@ -1,6 +1,7 @@
 import express from 'express';
 const router = express.Router();
 import JobCard from '../models/JobCard.js';
+import Notification from '../models/Notification.js';
 
 // POST /api/jobcard - Save or Update Job Card
 router.post('/', async (req, res) => {
@@ -14,15 +15,38 @@ router.post('/', async (req, res) => {
 
     // Check if updating
     let jobCard;
+    let isUpdate = false;
     if (jobNumber) {
-       jobCard = await JobCard.findOneAndUpdate(
-        { jobNumber },
-        { ...req.body },
-        { new: true, upsert: true, setDefaultsOnInsert: true }
-      );
+       const existingJob = await JobCard.findOne({ jobNumber });
+       if (existingJob) {
+         isUpdate = true;
+         jobCard = await JobCard.findOneAndUpdate(
+           { jobNumber },
+           { ...req.body },
+           { new: true }
+         );
+       } else {
+         jobCard = new JobCard(req.body);
+         await jobCard.save();
+       }
     } else {
       jobCard = new JobCard(req.body);
       await jobCard.save();
+    }
+
+    // Create Notification
+    try {
+      const notifMessage = isUpdate 
+        ? `Job Card updated: #${jobCard.jobNumber} for ${jobCard.partyName}`
+        : `New Job Card created: #${jobCard.jobNumber} for ${jobCard.partyName}`;
+      
+      const newNotif = new Notification({
+        type: isUpdate ? 'JOB_UPDATED' : 'JOB_CREATED',
+        message: notifMessage
+      });
+      await newNotif.save();
+    } catch (notifErr) {
+      console.error("Failed to create notification:", notifErr.message);
     }
 
     console.log(`☁️ Job Card Saved to MongoDB: ${jobCard.jobNumber}`);

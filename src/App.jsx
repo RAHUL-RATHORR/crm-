@@ -248,6 +248,38 @@ export default function App() {
     },
   ];
 
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await fetch('https://crm-qpw8.onrender.com/api/notifications');
+      const data = await res.json();
+      setNotifications(data);
+      setUnreadCount(data.filter(n => !n.isRead).length);
+    } catch (err) {
+      console.error("Notif Error:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      fetchNotifications();
+      const interval = setInterval(fetchNotifications, 30000); // Polling every 30s
+      return () => clearInterval(interval);
+    }
+  }, [isLoggedIn]);
+
+  const markAllAsRead = async () => {
+    try {
+      await fetch('https://crm-qpw8.onrender.com/api/notifications/read-all', { method: 'PUT' });
+      fetchNotifications();
+    } catch (err) {
+      console.error("Read Error:", err);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#f4f7fa] font-sans pb-10 text-gray-800">
       {/* Top Navbar */}
@@ -312,9 +344,56 @@ export default function App() {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-4">
-          <button className="text-gray-500 hover:text-gray-700 transition p-2">
-            <Bell size={20} />
-          </button>
+          <div className="relative">
+            <button 
+              onClick={() => setIsNotifOpen(!isNotifOpen)}
+              className="text-gray-500 hover:text-gray-700 transition p-2 relative"
+            >
+              <Bell size={20} />
+              {unreadCount > 0 && (
+                <span className="absolute top-1 right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+
+            {isNotifOpen && (
+              <div className="absolute top-full right-0 mt-3 w-80 bg-white border border-gray-100 rounded-2xl shadow-2xl z-[60] overflow-hidden transform animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="p-4 border-b border-gray-50 flex items-center justify-between">
+                  <h3 className="font-bold text-gray-900">Notifications</h3>
+                  <button 
+                    onClick={markAllAsRead}
+                    className="text-xs font-semibold text-blue-600 hover:text-blue-700"
+                  >
+                    Mark all read
+                  </button>
+                </div>
+                <div className="max-h-96 overflow-y-auto pl-1 pr-1 scrollbar-thin scrollbar-thumb-gray-200">
+                  {notifications.length === 0 ? (
+                    <div className="p-8 text-center text-gray-400 italic text-sm">
+                      No notifications yet
+                    </div>
+                  ) : (
+                    notifications.map((n) => (
+                      <div 
+                        key={n._id} 
+                        className={`p-4 border-b border-gray-50 hover:bg-gray-50 transition-colors cursor-pointer relative ${!n.isRead ? 'bg-blue-50/30' : ''}`}
+                      >
+                        {!n.isRead && <div className="absolute top-4 right-4 w-2 h-2 bg-blue-600 rounded-full" />}
+                        <p className={`text-sm ${!n.isRead ? 'font-bold text-gray-900' : 'text-gray-600'}`}>
+                          {n.message}
+                        </p>
+                        <p className="text-[10px] text-gray-400 mt-2 flex items-center gap-1 font-medium">
+                          {new Date(n.createdAt).toLocaleString()}
+                        </p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="flex items-center gap-2 bg-gray-50 pl-2 pr-3 py-1.5 rounded-full border border-gray-200 cursor-pointer hover:bg-gray-100 transition group relative">
             <UserCircle size={24} className="text-blue-600" />
             {/* <span className="text-sm font-medium hidden md:block"></span> */}

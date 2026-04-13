@@ -7,14 +7,14 @@ import LoginHistory from '../models/LoginHistory.js';
 router.post('/signup', async (req, res) => {
   try {
     const { name, email, password } = req.body;
-    
+
     // Simple check
     const existingUser = await User.findOne({ email });
     if (existingUser) return res.status(400).json({ error: "User already exists" });
 
     const user = new User({ name, email, password });
     await user.save();
-    
+
     res.status(201).json({ message: "User created successfully", user: { id: user._id, name: user.name, email: user.email } });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -26,7 +26,7 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
-    
+
     if (!user || user.password !== password) {
       if (user) {
         // Record failed attempt
@@ -34,10 +34,10 @@ router.post('/login', async (req, res) => {
       }
       return res.status(401).json({ error: "Invalid email or password" });
     }
-    
+
     // Record successful login
     await new LoginHistory({ userId: user._id, email: user.email, status: 'success', ip: req.ip, userAgent: req.headers['user-agent'] }).save();
-    
+
     res.json({ message: "Login successful", user: { id: user._id, name: user.name, email: user.email } });
   } catch (err) {
     res.status(500).json({ error: err.message });

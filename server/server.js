@@ -24,6 +24,7 @@ import challanRoutes from "./routes/challanRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import settingRoutes from "./routes/settingRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
 
 const app = express();
 app.use(cors());
@@ -47,6 +48,7 @@ app.use("/api/challan", challanRoutes);
 app.use("/api/payment-type", paymentRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/settings", settingRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 /* ================= TEST API ================= */
 app.get("/", (req, res) => {
