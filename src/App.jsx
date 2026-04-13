@@ -251,6 +251,7 @@ export default function App() {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const notifRef = useRef(null);
 
   const fetchNotifications = async () => {
     try {
@@ -277,6 +278,16 @@ export default function App() {
       };
     }
   }, [isLoggedIn]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (notifRef.current && !notifRef.current.contains(event.target)) {
+        setIsNotifOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const markAllAsRead = async () => {
     try {
@@ -350,8 +361,8 @@ export default function App() {
           })}
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-4">
-          <div className="relative">
+         <div className="flex items-center gap-2 sm:gap-4">
+          <div className="relative" ref={notifRef}>
             <button 
               onClick={() => setIsNotifOpen(!isNotifOpen)}
               className="text-gray-500 hover:text-gray-700 transition p-2 relative flex items-center justify-center"
