@@ -122,7 +122,9 @@ export default function Dashboard() {
       <main className="mt-8">
         {/* Header Section */}
         <div className="mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Good Evening!</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+            {new Date().getHours() < 12 ? 'Good Morning!' : new Date().getHours() < 17 ? 'Good Afternoon!' : 'Good Evening!'}
+          </h1>
           <p className="text-gray-500 text-sm sm:text-base">Here's what's happening today in your business.</p>
         </div>
 
