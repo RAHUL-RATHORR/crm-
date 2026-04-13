@@ -98,7 +98,7 @@ const ChallanList = () => {
           </button>
         </div>
 
-        <div className="overflow-x-auto min-h-[300px]">
+        <div className="overflow-x-auto min-h-[400px] pb-40">
           <table className="w-full text-left whitespace-nowrap min-w-[800px]">
             <thead>
               <tr className="bg-gray-50 text-gray-600 uppercase text-[10px] sm:text-xs font-bold tracking-wider">
@@ -149,7 +149,7 @@ const ChallanList = () => {
                             </>
                           )}
                         </button>
-
+ 
                         {openDropdownId === ch._id && (
                           <>
                             <div

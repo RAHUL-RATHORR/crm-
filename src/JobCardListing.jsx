@@ -150,7 +150,7 @@ export default function JobCardListing() {
   const handleSharePDF = async () => {
     if (isGenerating) return;
     setIsGenerating(true);
-    
+
     try {
       // Small delay to ensure DOM is fully painted
       await new Promise(resolve => setTimeout(resolve, 250));
@@ -159,14 +159,14 @@ export default function JobCardListing() {
       if (!element) throw new Error("Printable element not found");
 
       const filename = `job-card-${selectedCard?.jobNumber || 'listing'}.pdf`;
-      
+
       const opt = {
         margin: 5,
         filename: filename,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { 
-          scale: 2, 
-          useCORS: true, 
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
           logging: false,
           scrollY: 0,
           windowWidth: element.scrollWidth,
@@ -179,7 +179,7 @@ export default function JobCardListing() {
         // More direct way to get blob
         const pdfBlob = await html2pdf().set(opt).from(element).output('blob');
         const file = new File([pdfBlob], filename, { type: 'application/pdf' });
-        
+
         if (navigator.canShare({ files: [file] })) {
           await navigator.share({
             files: [file],
@@ -554,9 +554,8 @@ export default function JobCardListing() {
               <button
                 onClick={handleSharePDF}
                 disabled={isGenerating}
-                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-all ${
-                  isGenerating ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
-                }`}
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-all ${isGenerating ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+                  }`}
               >
                 {isGenerating ? (
                   <>

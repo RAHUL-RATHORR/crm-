@@ -59,7 +59,8 @@
   /* Target the specific Job Card container */
   .bg-white.border.max-w-4xl {
     box-shadow: none !important;
-    border: none !important; /* Removed extra outer border to avoid double lines */
+    border: none !important;
+    /* Removed extra outer border to avoid double lines */
     width: 100% !important;
     max-width: none !important;
     max-height: none !important;
@@ -79,11 +80,46 @@
   }
 
   /* Prevent boxing and reduce boldness for print */
-  .border { border-width: 1px !important; border-color: #333 !important; }
-  .border-b, .border-b-2 { border-bottom-width: 1px !important; border-top-width: 0 !important; border-left-width: 0 !important; border-right-width: 0 !important; border-color: #333 !important; }
-  .border-t, .border-t-2 { border-top-width: 1px !important; border-bottom-width: 0 !important; border-left-width: 0 !important; border-right-width: 0 !important; border-color: #333 !important; }
-  .border-l, .border-l-2 { border-left-width: 1px !important; border-right-width: 0 !important; border-top-width: 0 !important; border-bottom-width: 0 !important; border-color: #333 !important; }
-  .border-r, .border-r-2 { border-right-width: 1px !important; border-left-width: 0 !important; border-top-width: 0 !important; border-bottom-width: 0 !important; border-color: #333 !important; }
+  .border {
+    border-width: 1px !important;
+    border-color: #333 !important;
+  }
+
+  .border-b,
+  .border-b-2 {
+    border-bottom-width: 1px !important;
+    border-top-width: 0 !important;
+    border-left-width: 0 !important;
+    border-right-width: 0 !important;
+    border-color: #333 !important;
+  }
+
+  .border-t,
+  .border-t-2 {
+    border-top-width: 1px !important;
+    border-bottom-width: 0 !important;
+    border-left-width: 0 !important;
+    border-right-width: 0 !important;
+    border-color: #333 !important;
+  }
+
+  .border-l,
+  .border-l-2 {
+    border-left-width: 1px !important;
+    border-right-width: 0 !important;
+    border-top-width: 0 !important;
+    border-bottom-width: 0 !important;
+    border-color: #333 !important;
+  }
+
+  .border-r,
+  .border-r-2 {
+    border-right-width: 1px !important;
+    border-left-width: 0 !important;
+    border-top-width: 0 !important;
+    border-bottom-width: 0 !important;
+    border-color: #333 !important;
+  }
 
   /* Ensure background colors don't bleed from the app */
   .min-h-screen {
