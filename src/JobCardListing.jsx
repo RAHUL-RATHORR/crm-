@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PlusSquare, Trash2, Printer, X, Download, Pencil, RefreshCw, Filter, Search, Check } from 'lucide-react';
+import { PlusSquare, Trash2, Printer, X, Download, Pencil, RefreshCw, Filter, Search, Check, Share2, Loader2 } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
 
@@ -10,8 +10,7 @@ export default function JobCardListing() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const filterRef = useRef(null);
-
-  // Column Visibility State
+  const [isGenerating, setIsGenerating] = useState(false);
   const [columnVisibility, setColumnVisibility] = useState(() => {
     const saved = localStorage.getItem('jobCardColumnVisibility');
     return saved ? JSON.parse(saved) : {
@@ -148,16 +147,57 @@ export default function JobCardListing() {
     window.print();
   };
 
-  const handleDownloadPDF = () => {
-    const element = document.getElementById('printable-content');
-    const opt = {
-      margin: 10,
-      filename: `job-card-${selectedCard?.jobNumber || 'listing'}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2 },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-    html2pdf().set(opt).from(element).save();
+  const handleSharePDF = async () => {
+    if (isGenerating) return;
+    setIsGenerating(true);
+    
+    try {
+      // Small delay to ensure DOM is fully painted
+      await new Promise(resolve => setTimeout(resolve, 250));
+
+      const element = document.getElementById('printable-inner');
+      if (!element) throw new Error("Printable element not found");
+
+      const filename = `job-card-${selectedCard?.jobNumber || 'listing'}.pdf`;
+      
+      const opt = {
+        margin: 5,
+        filename: filename,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+          scale: 2, 
+          useCORS: true, 
+          logging: false,
+          scrollY: 0,
+          windowWidth: element.scrollWidth,
+          windowHeight: element.scrollHeight
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      if (navigator.share && navigator.canShare) {
+        // More direct way to get blob
+        const pdfBlob = await html2pdf().set(opt).from(element).output('blob');
+        const file = new File([pdfBlob], filename, { type: 'application/pdf' });
+        
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: 'Job Card PDF',
+            text: `Please find the Job Card for ${selectedCard?.partyName || 'the project'}.`
+          });
+        } else {
+          await html2pdf().set(opt).from(element).save();
+        }
+      } else {
+        await html2pdf().set(opt).from(element).save();
+      }
+    } catch (error) {
+      console.error("PDF/Share Error:", error);
+      alert("PDF generation error: " + (error.message || "Unknown error") + ". Please try again.");
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (
@@ -351,47 +391,47 @@ export default function JobCardListing() {
 
             {/* Modal Body - Printable Content */}
             <div className="p-8 overflow-y-auto flex-grow" id="printable-content">
-              <div className="border-line border p-6 bg-white min-h-[800px] shadow-none">
+              <div className="border-line border p-6 bg-white min-h-[800px] shadow-none" id="printable-inner">
                 {/* Job Card Header */}
-                <div className="flex justify-between items-start mb-6 pb-2 border-b border-line">
+                <div className="flex justify-between items-start mb-6 pb-2 border-b" style={{ borderColor: '#000000' }}>
                   <div>
-                    <h1 className="text-3xl font-bold text-black uppercase tracking-tight">TRICKWRIC</h1>
+                    <h1 className="text-3xl font-bold uppercase tracking-tight" style={{ color: '#000000' }}>TRICKWRIC</h1>
                   </div>
-                  <div className="border border-line px-4 py-1 text-xs font-bold uppercase">
+                  <div className="border px-4 py-1 text-xs font-bold uppercase" style={{ borderColor: '#000000', color: '#000000' }}>
                     Job Card
                   </div>
                 </div>
 
                 {/* Top Info Grid */}
                 <div className="grid grid-cols-2 gap-x-12 gap-y-4 mb-2">
-                  <div className="border-b border-line pb-1 flex">
-                    <span className="text-xs font-bold uppercase w-24">Party Name:</span>
-                    <span className="flex-grow font-medium">{selectedCard.partyName}</span>
+                  <div className="border-b pb-1 flex" style={{ borderColor: '#000000' }}>
+                    <span className="text-xs font-bold uppercase w-24" style={{ color: '#000000' }}>Party Name:</span>
+                    <span className="flex-grow font-medium" style={{ color: '#000000' }}>{selectedCard.partyName}</span>
                   </div>
-                  <div className="border-b border-line pb-1 flex">
-                    <span className="text-xs font-bold uppercase w-24">Job No:</span>
-                    <span className="flex-grow font-medium">{selectedCard.jobNumber}</span>
+                  <div className="border-b pb-1 flex" style={{ borderColor: '#000000' }}>
+                    <span className="text-xs font-bold uppercase w-24" style={{ color: '#000000' }}>Job No:</span>
+                    <span className="flex-grow font-medium" style={{ color: '#000000' }}>{selectedCard.jobNumber}</span>
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-x-6 gap-y-4 mb-6">
-                  <div className="border-b border-line pb-1 flex col-span-1">
-                    <span className="text-xs font-bold uppercase w-24">Job Name:</span>
-                    <span className="flex-grow font-medium">{selectedCard.jobName}</span>
+                  <div className="border-b pb-1 flex col-span-1" style={{ borderColor: '#000000' }}>
+                    <span className="text-xs font-bold uppercase w-24" style={{ color: '#000000' }}>Job Name:</span>
+                    <span className="flex-grow font-medium" style={{ color: '#000000' }}>{selectedCard.jobName}</span>
                   </div>
-                  <div className="border-b border-line pb-1 flex col-span-1">
-                    <span className="text-xs font-bold uppercase w-12">Date:</span>
-                    <span className="flex-grow font-medium">{new Date(selectedCard.jobDate).toLocaleDateString()}</span>
+                  <div className="border-b pb-1 flex col-span-1" style={{ borderColor: '#000000' }}>
+                    <span className="text-xs font-bold uppercase w-12" style={{ color: '#000000' }}>Date:</span>
+                    <span className="flex-grow font-medium" style={{ color: '#000000' }}>{new Date(selectedCard.jobDate).toLocaleDateString()}</span>
                   </div>
-                  <div className="border-b border-line pb-1 flex col-span-1">
-                    <span className="text-xs font-bold uppercase w-12">Qty:</span>
-                    <span className="flex-grow font-medium">{selectedCard.jobQty || 1}</span>
+                  <div className="border-b pb-1 flex col-span-1" style={{ borderColor: '#000000' }}>
+                    <span className="text-xs font-bold uppercase w-12" style={{ color: '#000000' }}>Qty:</span>
+                    <span className="flex-grow font-medium" style={{ color: '#000000' }}>{selectedCard.jobQty || 1}</span>
                   </div>
                 </div>
 
                 {/* Main Content Two Columns */}
-                <div className="flex border-t border-line pt-2">
+                <div className="flex border-t pt-2" style={{ borderColor: '#000000' }}>
                   {/* Left Column - Detailed Table */}
-                  <div className="w-1/2 pr-6 border-r border-line">
+                  <div className="w-1/2 pr-6 border-r" style={{ borderColor: '#000000' }}>
                     <div className="space-y-3">
                       {[
                         { label: 'Cancel Plate', value: '1.00' },
@@ -403,8 +443,8 @@ export default function JobCardListing() {
                         { label: 'Design UV', value: '-' }
                       ].map((row, i) => (
                         <div key={i} className="flex justify-between items-end gap-2">
-                          <span className="text-xs font-bold uppercase min-w-fit">{row.label}</span>
-                          <div className="flex-grow border-b-2 border-line h-4 min-w-[50px] text-right text-xs px-2">{row.value}</div>
+                          <span className="text-xs font-bold uppercase min-w-fit" style={{ color: '#000000' }}>{row.label}</span>
+                          <div className="flex-grow border-b-2 h-4 min-w-[50px] text-right text-xs px-2" style={{ borderColor: '#000000', color: '#000000' }}>{row.value}</div>
                         </div>
                       ))}
                     </div>
@@ -414,14 +454,14 @@ export default function JobCardListing() {
                   <div className="w-1/2 pl-6">
                     <div className="flex gap-6 mb-2">
                       <label className="flex items-center gap-2 cursor-pointer pointer-events-none">
-                        <div className="w-4 h-4 border border-line flex items-center justify-center">
-                          <div className="w-2 h-2 bg-black"></div>
+                        <div className="w-4 h-4 border flex items-center justify-center" style={{ borderColor: '#000000' }}>
+                          <div className="w-2 h-2" style={{ backgroundColor: '#000000' }}></div>
                         </div>
-                        <span className="text-[10px] font-bold uppercase">Company Paper</span>
+                        <span className="text-[10px] font-bold uppercase" style={{ color: '#000000' }}>Company Paper</span>
                       </label>
                       <label className="flex items-center gap-2 cursor-pointer pointer-events-none">
-                        <div className="w-4 h-4 border border-line"></div>
-                        <span className="text-[10px] font-bold uppercase">Paper Party</span>
+                        <div className="w-4 h-4 border" style={{ borderColor: '#000000' }}></div>
+                        <span className="text-[10px] font-bold uppercase" style={{ color: '#000000' }}>Paper Party</span>
                       </label>
                     </div>
 
@@ -433,18 +473,18 @@ export default function JobCardListing() {
                         { label: 'Cutting Size', value: '-' },
                         { label: 'Paper GSM', value: '-' }
                       ].map((row, i) => (
-                        <div key={i} className="flex flex-col border-b border-line py-1">
-                          <span className="text-[10px] font-bold uppercase opacity-60 leading-none mb-1">{row.label}</span>
-                          <span className="text-xs font-medium">{row.value}</span>
+                        <div key={i} className="flex flex-col border-b py-1" style={{ borderColor: '#000000' }}>
+                          <span className="text-[10px] font-bold uppercase opacity-60 leading-none mb-1" style={{ color: '#000000' }}>{row.label}</span>
+                          <span className="text-xs font-medium" style={{ color: '#000000' }}>{row.value}</span>
                         </div>
                       ))}
                     </div>
 
                     <div className="mb-4">
-                      <span className="text-[10px] font-bold uppercase block mb-1">Printing Sheet</span>
+                      <span className="text-[10px] font-bold uppercase block mb-1" style={{ color: '#000000' }}>Printing Sheet</span>
                       <div className="flex gap-1">
                         {['S/S', 'F/B', 'G/W', 'P+B'].map((label, i) => (
-                          <div key={i} className="border border-line px-1 py-0.5 text-[9px] font-bold uppercase flex items-center justify-center min-w-[30px]">
+                          <div key={i} className="border px-1 py-0.5 text-[9px] font-bold uppercase flex items-center justify-center min-w-[30px]" style={{ borderColor: '#000000', color: '#000000' }}>
                             {label}
                           </div>
                         ))}
@@ -453,15 +493,15 @@ export default function JobCardListing() {
 
                     <div className="flex justify-between items-end mb-6 pt-10">
                       <div className="text-center w-1/2">
-                        <div className="border-b border-line mb-1 h-5"></div>
-                        <span className="text-[10px] font-bold uppercase">Printer Sign</span>
+                        <div className="border-b mb-1 h-5" style={{ borderColor: '#000000' }}></div>
+                        <span className="text-[10px] font-bold uppercase" style={{ color: '#000000' }}>Printer Sign</span>
                       </div>
                     </div>
 
                     {/* Notes Box */}
-                    <div className="border border-line p-2 mt-4">
-                      <span className="text-[10px] font-bold uppercase block border-b border-line pb-0.5 mb-1">NOTES .</span>
-                      <div className="text-[9px] text-gray-800">
+                    <div className="border p-2 mt-4" style={{ borderColor: '#000000' }}>
+                      <span className="text-[10px] font-bold uppercase block border-b pb-0.5 mb-1" style={{ borderColor: '#000000', color: '#000000' }}>NOTES .</span>
+                      <div className="text-[9px]" style={{ color: '#000000' }}>
                         {selectedCard.notes || 'Handle with care. Ensure high quality print.'}
                       </div>
                     </div>
@@ -485,10 +525,22 @@ export default function JobCardListing() {
                 <Printer size={16} /> Print
               </button>
               <button
-                onClick={handleDownloadPDF}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+                onClick={handleSharePDF}
+                disabled={isGenerating}
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-all ${
+                  isGenerating ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+                }`}
               >
-                <Download size={16} /> Download
+                {isGenerating ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <Share2 size={16} /> Share & Download
+                  </>
+                )}
               </button>
             </div>
           </div>
