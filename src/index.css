@@ -82,7 +82,7 @@
   /* Prevent boxing and reduce boldness for print */
   .border {
     border-width: 1px !important;
-    border-color: #333 !important;
+    border-color: #ccc !important;
   }
 
   .border-b,
@@ -91,7 +91,7 @@
     border-top-width: 0 !important;
     border-left-width: 0 !important;
     border-right-width: 0 !important;
-    border-color: #333 !important;
+    border-color: #ccc !important;
   }
 
   .border-t,
@@ -100,7 +100,7 @@
     border-bottom-width: 0 !important;
     border-left-width: 0 !important;
     border-right-width: 0 !important;
-    border-color: #333 !important;
+    border-color: #ccc !important;
   }
 
   .border-l,
@@ -109,7 +109,7 @@
     border-right-width: 0 !important;
     border-top-width: 0 !important;
     border-bottom-width: 0 !important;
-    border-color: #333 !important;
+    border-color: #ccc !important;
   }
 
   .border-r,
@@ -118,7 +118,7 @@
     border-left-width: 0 !important;
     border-top-width: 0 !important;
     border-bottom-width: 0 !important;
-    border-color: #333 !important;
+    border-color: #ccc !important;
   }
 
   /* Ensure background colors don't bleed from the app */

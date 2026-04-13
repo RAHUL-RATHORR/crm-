@@ -435,9 +435,9 @@ export default function JobCardListing() {
                 </div>
 
                 {/* Main Content Two Columns */}
-                <div className="flex border-t pt-2" style={{ borderColor: '#000000' }}>
+                <div className="flex border-t pt-2" style={{ borderColor: '#cbd5e1' }}>
                   {/* Left Column - Detailed Table */}
-                  <div className="w-1/2 pr-6 border-r" style={{ borderColor: '#000000' }}>
+                  <div className="w-1/2 pr-6 border-r" style={{ borderColor: '#cbd5e1' }}>
                     <div className="space-y-3">
                       {[
                         { label: 'Cancel Plate', value: '1.00' },
@@ -448,9 +448,9 @@ export default function JobCardListing() {
                         { label: 'File Path', value: '-' },
                         { label: 'Design UV', value: '-' }
                       ].map((row, i) => (
-                        <div key={i} className="flex justify-between items-end gap-2">
-                          <span className="text-xs font-bold uppercase min-w-fit" style={{ color: '#000000' }}>{row.label}</span>
-                          <div className="flex-grow border-b-2 h-4 min-w-[50px] text-right text-xs px-2" style={{ borderColor: '#000000', color: '#000000' }}>{row.value}</div>
+                        <div key={i} className="flex justify-between items-end gap-2 text-xs">
+                          <span className="font-bold uppercase min-w-fit" style={{ color: '#1e293b' }}>{row.label}</span>
+                          <div className="flex-grow border-b h-4 min-w-[50px] text-right px-2" style={{ borderColor: '#cbd5e1', color: '#000000' }}>{row.value}</div>
                         </div>
                       ))}
                     </div>
@@ -460,14 +460,14 @@ export default function JobCardListing() {
                   <div className="w-1/2 pl-6">
                     <div className="flex gap-6 mb-2">
                       <label className="flex items-center gap-2 cursor-pointer pointer-events-none">
-                        <div className="w-4 h-4 border flex items-center justify-center" style={{ borderColor: '#000000' }}>
-                          <div className="w-2 h-2" style={{ backgroundColor: '#000000' }}></div>
+                        <div className="w-4 h-4 border flex items-center justify-center" style={{ borderColor: '#cbd5e1' }}>
+                          <div className="w-2 h-2" style={{ backgroundColor: '#64748b' }}></div>
                         </div>
-                        <span className="text-[10px] font-bold uppercase" style={{ color: '#000000' }}>Company Paper</span>
+                        <span className="text-[10px] font-bold uppercase text-gray-700">Company Paper</span>
                       </label>
                       <label className="flex items-center gap-2 cursor-pointer pointer-events-none">
-                        <div className="w-4 h-4 border" style={{ borderColor: '#000000' }}></div>
-                        <span className="text-[10px] font-bold uppercase" style={{ color: '#000000' }}>Paper Party</span>
+                        <div className="w-4 h-4 border" style={{ borderColor: '#cbd5e1' }}></div>
+                        <span className="text-[10px] font-bold uppercase text-gray-700">Paper Party</span>
                       </label>
                     </div>
 
@@ -479,18 +479,18 @@ export default function JobCardListing() {
                         { label: 'Cutting Size', value: '-' },
                         { label: 'Paper GSM', value: '-' }
                       ].map((row, i) => (
-                        <div key={i} className="flex flex-col border-b py-1" style={{ borderColor: '#000000' }}>
-                          <span className="text-[10px] font-bold uppercase opacity-60 leading-none mb-1" style={{ color: '#000000' }}>{row.label}</span>
-                          <span className="text-xs font-medium" style={{ color: '#000000' }}>{row.value}</span>
+                        <div key={i} className="flex flex-col border-b py-0.5" style={{ borderColor: '#e2e8f0' }}>
+                          <span className="text-[9px] font-bold uppercase opacity-50 leading-none mb-0.5" style={{ color: '#475569' }}>{row.label}</span>
+                          <span className="text-xs font-bold" style={{ color: '#000000' }}>{row.value}</span>
                         </div>
                       ))}
                     </div>
 
                     <div className="mb-4">
-                      <span className="text-[10px] font-bold uppercase block mb-1" style={{ color: '#000000' }}>Printing Sheet</span>
+                      <span className="text-[10px] font-bold uppercase block mb-1" style={{ color: '#475569' }}>Printing Sheet</span>
                       <div className="flex gap-1">
                         {['S/S', 'F/B', 'G/W', 'P+B'].map((label, i) => (
-                          <div key={i} className="border px-1 py-0.5 text-[9px] font-bold uppercase flex items-center justify-center min-w-[30px]" style={{ borderColor: '#000000', color: '#000000' }}>
+                          <div key={i} className="border px-1 py-0.5 text-[9px] font-bold uppercase flex items-center justify-center min-w-[32px] rounded" style={{ borderColor: '#cbd5e1', color: '#1e293b' }}>
                             {label}
                           </div>
                         ))}
@@ -498,16 +498,16 @@ export default function JobCardListing() {
                     </div>
 
                     <div className="flex justify-between items-end mb-6 pt-10">
-                      <div className="text-center w-1/2">
-                        <div className="border-b mb-1 h-5" style={{ borderColor: '#000000' }}></div>
-                        <span className="text-[10px] font-bold uppercase" style={{ color: '#000000' }}>Printer Sign</span>
+                      <div className="text-center w-48">
+                        <div className="border-b mb-1 h-5" style={{ borderColor: '#cbd5e1' }}></div>
+                        <span className="text-[10px] font-bold uppercase text-gray-500">Printer Sign</span>
                       </div>
                     </div>
 
                     {/* Notes Box */}
-                    <div className="border p-3 mt-4 rounded" style={{ borderColor: '#3b82f6', backgroundColor: '#f8fafc' }}>
-                      <span className="text-[10px] font-black uppercase block border-b pb-1 mb-2" style={{ borderColor: '#3b82f6', color: '#1e3a8a' }}>Work Instructions .</span>
-                      <div className="text-[10px] italic leading-relaxed" style={{ color: '#000000' }}>
+                    <div className="border border-blue-100 p-3 mt-4 rounded bg-blue-50/10">
+                      <span className="text-[10px] font-bold uppercase block border-b pb-1 mb-2 text-blue-800" style={{ borderColor: '#bfdbfe' }}>Work Instructions</span>
+                      <div className="text-[10px] italic leading-relaxed text-gray-700">
                         {selectedCard.notes || 'Handle with care. Ensure high quality print.'}
                       </div>
                     </div>
@@ -564,7 +564,7 @@ export default function JobCardListing() {
                   </>
                 ) : (
                   <>
-                    <Share2 size={16} /> Share & Download
+                    <Share2 size={16} /> Share
                   </>
                 )}
               </button>
