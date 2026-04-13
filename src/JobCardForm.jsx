@@ -28,6 +28,7 @@ export default function JobCardForm() {
         body: JSON.stringify(jobCard)
       });
       if (response.ok) {
+        window.dispatchEvent(new Event('fetchNotifications'));
         navigate('/job-card-list');
       } else {
         const errorData = await response.json();

@@ -266,8 +266,15 @@ export default function App() {
   useEffect(() => {
     if (isLoggedIn) {
       fetchNotifications();
-      const interval = setInterval(fetchNotifications, 30000); // Polling every 30s
-      return () => clearInterval(interval);
+      const interval = setInterval(fetchNotifications, 5000); // Polling every 5s for real-time feel
+      
+      const handleCustomFetch = () => fetchNotifications();
+      window.addEventListener('fetchNotifications', handleCustomFetch);
+      
+      return () => {
+        clearInterval(interval);
+        window.removeEventListener('fetchNotifications', handleCustomFetch);
+      };
     }
   }, [isLoggedIn]);
 
@@ -347,11 +354,11 @@ export default function App() {
           <div className="relative">
             <button 
               onClick={() => setIsNotifOpen(!isNotifOpen)}
-              className="text-gray-500 hover:text-gray-700 transition p-2 relative"
+              className="text-gray-500 hover:text-gray-700 transition p-2 relative flex items-center justify-center"
             >
-              <Bell size={20} />
+              <Bell size={22} />
               {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white">
+                <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] h-4 min-w-[16px] flex items-center justify-center font-bold px-1 rounded-full border-2 border-white z-10 shadow-sm">
                   {unreadCount}
                 </span>
               )}
