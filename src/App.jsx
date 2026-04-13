@@ -54,7 +54,12 @@ const DropdownMenu = ({ title, icon: Icon, items, isActive }) => {
   }, []);
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div 
+      className="relative" 
+      ref={dropdownRef}
+      onMouseEnter={() => setIsOpen(true)}
+      onMouseLeave={() => setIsOpen(false)}
+    >
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`flex items-center gap-2 px-3 h-10 text-sm font-medium rounded-md transition-colors whitespace-nowrap flex-nowrap ${isOpen || isActive
@@ -71,10 +76,13 @@ const DropdownMenu = ({ title, icon: Icon, items, isActive }) => {
       </button>
 
       <div
-        className={`absolute top-full left-0 mt-2 min-w-[220px] w-max bg-white border border-gray-100 rounded-xl shadow-[0_10px_40px_-4px_rgba(0,0,0,0.15)] transition-all duration-200 ease-out z-50 ${isOpen ? 'opacity-100 translate-y-0 visible' : 'opacity-0 translate-y-2 invisible'
+        className={`absolute top-full left-0 w-max transition-all duration-200 ease-out z-50 ${isOpen ? 'opacity-100 translate-y-0 visible' : 'opacity-0 translate-y-2 invisible'
           }`}
       >
-        <div className="p-2 space-y-1">
+        {/* Transparent bridge to prevent flickering */}
+        <div className="h-2 w-full" />
+        
+        <div className="min-w-[220px] bg-white border border-gray-100 rounded-xl shadow-[0_10px_40px_-4px_rgba(0,0,0,0.15)] p-2 space-y-1">
           {items.map((item, idx) => (
             <div
               key={idx}
