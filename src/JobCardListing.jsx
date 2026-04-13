@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PlusSquare, Trash2, Printer, X, Download, Pencil, RefreshCw, Filter, Search, Check, Share2, Loader2 } from 'lucide-react';
+import { PlusSquare, Trash2, Printer, X, Download, Pencil, RefreshCw, Filter, Search, Check, Share2, Loader2, Building2, Hash, Calendar, Layers, FileText, Globe, Phone, Mail } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
 
@@ -392,39 +392,45 @@ export default function JobCardListing() {
             {/* Modal Body - Printable Content */}
             <div className="p-8 overflow-y-auto flex-grow" id="printable-content">
               <div className="border-line border p-6 bg-white min-h-[800px] shadow-none" id="printable-inner">
-                {/* Job Card Header */}
-                <div className="flex justify-between items-start mb-6 pb-2 border-b" style={{ borderColor: '#000000' }}>
+                <div className="flex justify-between items-center mb-6 pb-4 border-b-2" style={{ borderColor: '#3b82f6' }}>
                   <div>
-                    <h1 className="text-3xl font-bold uppercase tracking-tight" style={{ color: '#000000' }}>TRICKWRIC</h1>
+                    <h1 className="text-4xl font-extrabold uppercase tracking-tighter" style={{ color: '#1e3a8a' }}>TRICKWRIC</h1>
+                    <p className="text-[10px] uppercase font-bold tracking-widest" style={{ color: '#3b82f6' }}>Production & Quality Control</p>
                   </div>
-                  <div className="border px-4 py-1 text-xs font-bold uppercase" style={{ borderColor: '#000000', color: '#000000' }}>
+                  <div className="bg-blue-50 border-2 px-6 py-2 rounded-lg text-sm font-black uppercase flex flex-col items-center" style={{ borderColor: '#3b82f6', color: '#1e3a8a', backgroundColor: '#eff6ff' }}>
+                    <span className="text-[10px] opacity-70">Document</span>
                     Job Card
                   </div>
                 </div>
 
                 {/* Top Info Grid */}
-                <div className="grid grid-cols-2 gap-x-12 gap-y-4 mb-2">
-                  <div className="border-b pb-1 flex" style={{ borderColor: '#000000' }}>
-                    <span className="text-xs font-bold uppercase w-24" style={{ color: '#000000' }}>Party Name:</span>
-                    <span className="flex-grow font-medium" style={{ color: '#000000' }}>{selectedCard.partyName}</span>
+                <div className="grid grid-cols-2 gap-x-10 gap-y-4 mb-3">
+                  <div className="border-b pb-1.5 flex items-center gap-2" style={{ borderColor: '#cbd5e1' }}>
+                    <Building2 size={14} style={{ color: '#3b82f6' }} />
+                    <span className="text-[10px] font-bold uppercase w-24 opacity-60">Party Name:</span>
+                    <span className="flex-grow font-bold text-sm" style={{ color: '#000000' }}>{selectedCard.partyName}</span>
                   </div>
-                  <div className="border-b pb-1 flex" style={{ borderColor: '#000000' }}>
-                    <span className="text-xs font-bold uppercase w-24" style={{ color: '#000000' }}>Job No:</span>
-                    <span className="flex-grow font-medium" style={{ color: '#000000' }}>{selectedCard.jobNumber}</span>
+                  <div className="border-b pb-1.5 flex items-center gap-2" style={{ borderColor: '#cbd5e1' }}>
+                    <Hash size={14} style={{ color: '#3b82f6' }} />
+                    <span className="text-[10px] font-bold uppercase w-24 opacity-60">Job No:</span>
+                    <span className="flex-grow font-bold text-sm" style={{ color: '#000000' }}>{selectedCard.jobNumber}</span>
                   </div>
                 </div>
-                <div className="grid grid-cols-3 gap-x-6 gap-y-4 mb-6">
-                  <div className="border-b pb-1 flex col-span-1" style={{ borderColor: '#000000' }}>
-                    <span className="text-xs font-bold uppercase w-24" style={{ color: '#000000' }}>Job Name:</span>
-                    <span className="flex-grow font-medium" style={{ color: '#000000' }}>{selectedCard.jobName}</span>
+                <div className="grid grid-cols-3 gap-x-6 gap-y-4 mb-8">
+                  <div className="border-b pb-1.5 flex items-center gap-2 col-span-1" style={{ borderColor: '#cbd5e1' }}>
+                    <Layers size={14} style={{ color: '#3b82f6' }} />
+                    <span className="text-[10px] font-bold uppercase w-20 opacity-60">Job Name:</span>
+                    <span className="flex-grow font-bold text-xs" style={{ color: '#000000' }}>{selectedCard.jobName}</span>
                   </div>
-                  <div className="border-b pb-1 flex col-span-1" style={{ borderColor: '#000000' }}>
-                    <span className="text-xs font-bold uppercase w-12" style={{ color: '#000000' }}>Date:</span>
-                    <span className="flex-grow font-medium" style={{ color: '#000000' }}>{new Date(selectedCard.jobDate).toLocaleDateString()}</span>
+                  <div className="border-b pb-1.5 flex items-center gap-2 col-span-1" style={{ borderColor: '#cbd5e1' }}>
+                    <Calendar size={14} style={{ color: '#3b82f6' }} />
+                    <span className="text-[10px] font-bold uppercase w-12 opacity-60">Date:</span>
+                    <span className="flex-grow font-bold text-xs" style={{ color: '#000000' }}>{new Date(selectedCard.jobDate).toLocaleDateString()}</span>
                   </div>
-                  <div className="border-b pb-1 flex col-span-1" style={{ borderColor: '#000000' }}>
-                    <span className="text-xs font-bold uppercase w-12" style={{ color: '#000000' }}>Qty:</span>
-                    <span className="flex-grow font-medium" style={{ color: '#000000' }}>{selectedCard.jobQty || 1}</span>
+                  <div className="border-b pb-1.5 flex items-center gap-2 col-span-1" style={{ borderColor: '#cbd5e1' }}>
+                    <FileText size={14} style={{ color: '#3b82f6' }} />
+                    <span className="text-[10px] font-bold uppercase w-12 opacity-60">Qty:</span>
+                    <span className="flex-grow font-bold text-xs" style={{ color: '#000000' }}>{selectedCard.jobQty || 1}</span>
                   </div>
                 </div>
 
@@ -499,12 +505,33 @@ export default function JobCardListing() {
                     </div>
 
                     {/* Notes Box */}
-                    <div className="border p-2 mt-4" style={{ borderColor: '#000000' }}>
-                      <span className="text-[10px] font-bold uppercase block border-b pb-0.5 mb-1" style={{ borderColor: '#000000', color: '#000000' }}>NOTES .</span>
-                      <div className="text-[9px]" style={{ color: '#000000' }}>
+                    <div className="border p-3 mt-4 rounded" style={{ borderColor: '#3b82f6', backgroundColor: '#f8fafc' }}>
+                      <span className="text-[10px] font-black uppercase block border-b pb-1 mb-2" style={{ borderColor: '#3b82f6', color: '#1e3a8a' }}>Work Instructions .</span>
+                      <div className="text-[10px] italic leading-relaxed" style={{ color: '#000000' }}>
                         {selectedCard.notes || 'Handle with care. Ensure high quality print.'}
                       </div>
                     </div>
+                  </div>
+                </div>
+
+                {/* Branded Footer */}
+                <div className="mt-12 pt-6 border-t flex justify-between items-center" style={{ borderColor: '#e2e8f0' }}>
+                  <div className="flex gap-4">
+                    <div className="flex items-center gap-1.5">
+                      <Phone size={10} style={{ color: '#3b82f6' }} />
+                      <span className="text-[9px] font-bold" style={{ color: '#64748b' }}>+91-XXXXX-XXXXX</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Mail size={10} style={{ color: '#3b82f6' }} />
+                      <span className="text-[9px] font-bold" style={{ color: '#64748b' }}>care@trickwrick.com</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Globe size={10} style={{ color: '#3b82f6' }} />
+                      <span className="text-[9px] font-bold" style={{ color: '#64748b' }}>www.trickwrick.com</span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[8px] italic opacity-50 block" style={{ color: '#000000' }}>Automatically generated by TRICKWRIC CRM</span>
                   </div>
                 </div>
               </div>
