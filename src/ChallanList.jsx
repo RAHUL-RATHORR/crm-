@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Trash2, MoreHorizontal, Truck, Pencil, ChevronDown, Check, Printer, X, Download, Phone, Mail, Globe, Building2, MapPin, Calendar, FileDigit } from 'lucide-react';
+import { Plus, Trash2, MoreHorizontal, Truck, Pencil, ChevronDown, Check, AlertCircle, Printer, X, Download, Phone, Mail, Globe, Building2, MapPin, Calendar, FileDigit } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
 
@@ -175,11 +175,33 @@ const ChallanList = () => {
                         <div className="relative inline-block">
                           <button
                             onClick={() => setOpenDropdownId(openDropdownId === ch._id ? null : ch._id)}
-                            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-white text-xs font-bold transition-all shadow-sm ${(ch.paymentStatus === 'Completed') ? 'bg-emerald-500' : 'bg-orange-500'
-                              }`}
+                            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-white text-xs font-bold transition-all shadow-sm ${(ch.paymentStatus === 'Completed') ? 'bg-emerald-500' : 'bg-orange-500'}`}
                           >
                             {ch.paymentStatus === 'Completed' ? 'Completed' : 'Pending'}
+                            <ChevronDown size={14} className={`transition-transform duration-200 ${openDropdownId === ch._id ? 'rotate-180' : ''}`} />
                           </button>
+
+                          {openDropdownId === ch._id && (
+                            <div className="absolute top-full left-0 mt-2 w-32 bg-white border border-gray-100 rounded-xl shadow-xl z-50 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                              {ch.paymentStatus === 'Completed' ? (
+                                <button
+                                  onClick={() => handleStatusUpdate(ch._id, 'Pending')}
+                                  className="flex items-center justify-between w-full px-4 py-2 text-xs font-bold text-orange-600 hover:bg-orange-50 transition-colors"
+                                >
+                                  Pending
+                                  <AlertCircle size={14} className="opacity-50" />
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => handleStatusUpdate(ch._id, 'Completed')}
+                                  className="flex items-center justify-between w-full px-4 py-2 text-xs font-bold text-emerald-600 hover:bg-emerald-50 transition-colors"
+                                >
+                                  Completed
+                                  <Check size={14} />
+                                </button>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </td>
                       <td className="px-4 sm:px-6 py-4 text-xs sm:text-sm text-gray-500">

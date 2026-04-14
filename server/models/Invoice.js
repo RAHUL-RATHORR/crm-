@@ -17,6 +17,7 @@ const invoiceSchema = new mongoose.Schema({
   gstPercent: { type: Number, default: 0 },
   gstAmount: { type: Number, default: 0 },
   totalAmount: { type: Number, default: 0 },
+  paidAmount: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 }, { timestamps: true });

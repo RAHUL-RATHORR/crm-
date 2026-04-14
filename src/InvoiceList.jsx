@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Trash2, MoreHorizontal, Pencil, Printer, Eye, X, Download, Phone, Mail, Globe, Building2, MapPin, Calendar, FileDigit } from 'lucide-react';
+import { Plus, Trash2, MoreHorizontal, Pencil, Printer, Eye, X, Download, Phone, Mail, Globe, Building2, MapPin, Calendar, FileDigit, AlertCircle } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
 
@@ -12,6 +12,7 @@ const InvoiceList = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [invoiceToDelete, setInvoiceToDelete] = useState(null);
+  const [openDropdownId, setOpenDropdownId] = useState(null);
 
   useEffect(() => {
     fetchInvoice();
@@ -43,6 +44,30 @@ const InvoiceList = () => {
       } catch (err) {
         console.error("Error deleting invoice:", err);
       }
+    }
+  };
+
+  const handleStatusUpdate = async (id, newStatus) => {
+    setInvoices((prev) =>
+      prev.map((inv) =>
+        inv._id === id ? { ...inv, paymentStatus: newStatus } : inv
+      )
+    );
+    setOpenDropdownId(null);
+
+    try {
+      const response = await fetch(`https://crm-qpw8.onrender.com/api/invoice/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paymentStatus: newStatus })
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update status on server");
+      }
+    } catch (err) {
+      console.error("Error updating invoice status:", err);
+      fetchInvoice();
     }
   };
 
@@ -119,6 +144,7 @@ const InvoiceList = () => {
                   <th className="px-4 sm:px-6 py-4">Invoice Number</th>
                   <th className="px-4 sm:px-6 py-4">Party Name</th>
                   <th className="px-4 sm:px-6 py-4">Total Amount</th>
+                  <th className="px-4 sm:px-6 py-4 text-center">Status</th>
                   <th className="px-4 sm:px-6 py-4">Created At</th>
                   <th className="px-4 sm:px-6 py-4 text-center">Action</th>
                 </tr>
@@ -137,6 +163,38 @@ const InvoiceList = () => {
                       <td className="px-4 sm:px-6 py-4 text-sm font-semibold text-blue-600 underline underline-offset-4 decoration-blue-100">{inv.invoiceNumber}</td>
                       <td className="px-4 sm:px-6 py-4 text-sm font-medium text-gray-800">{inv.partyName}</td>
                       <td className="px-4 sm:px-6 py-4 text-sm font-bold text-gray-900">₹ {inv.totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                      <td className="px-4 sm:px-6 py-4 text-center relative">
+                        <div className="relative inline-block">
+                          <button
+                            onClick={() => setOpenDropdownId(openDropdownId === inv._id ? null : inv._id)}
+                            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-white text-[10px] font-black uppercase tracking-wider transition-all shadow-sm ${(inv.paymentStatus === 'Completed') ? 'bg-emerald-500' : 'bg-orange-500'}`}
+                          >
+                            {inv.paymentStatus === 'Completed' ? 'Completed' : 'Pending'}
+                          </button>
+
+                          {openDropdownId === inv._id && (
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-32 bg-white border border-gray-100 rounded-xl shadow-xl z-50 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                              {inv.paymentStatus === 'Completed' ? (
+                                <button
+                                  onClick={() => handleStatusUpdate(inv._id, 'Pending')}
+                                  className="flex items-center justify-between w-full px-4 py-2 text-[10px] font-black uppercase tracking-wider text-orange-600 hover:bg-orange-50 transition-colors"
+                                >
+                                  Pending
+                                  <AlertCircle size={14} className="opacity-50" />
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => handleStatusUpdate(inv._id, 'Completed')}
+                                  className="flex items-center justify-between w-full px-4 py-2 text-[10px] font-black uppercase tracking-wider text-emerald-600 hover:bg-emerald-50 transition-colors"
+                                >
+                                  Completed
+                                  <Check size={14} />
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </td>
                       <td className="px-4 sm:px-6 py-4 text-xs sm:text-sm text-gray-500">
                         <div className="flex flex-col">
                           <span className="font-medium">{new Date(inv.createdAt).toLocaleDateString()}</span>

@@ -26,6 +26,7 @@ import authRoutes from "./routes/authRoutes.js";
 import settingRoutes from "./routes/settingRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import paperStockRoutes from "./routes/paperStockRoutes.js";
+import statementRoutes from "./routes/statementRoutes.js";
 
 const app = express();
 app.use(cors());
@@ -51,6 +52,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/settings", settingRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/paper-stock", paperStockRoutes);
+app.use("/api/statements", statementRoutes);
 
 /* ================= TEST API ================= */
 app.get("/", (req, res) => {

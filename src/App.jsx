@@ -34,6 +34,7 @@ import SiteSettings from './SiteSettings';
 import SocialSettings from './SocialSettings';
 import PaymentTypeManagement from './PaymentTypeManagement';
 import PaperStockManagement from './PaperStockManagement';
+import Statements from './Statements';
 import { LogOut } from 'lucide-react';
 
 
@@ -236,7 +237,7 @@ export default function App() {
     },
     { name: 'Payments', icon: Wallet, path: '/payment-type' },
     { name: 'Paper Stock', icon: Layers, path: '/paper-stock' },
-    { name: 'Statements', icon: FileLock },
+    { name: 'Statements', icon: FileLock, path: '/statements' },
     {
       name: 'More',
       icon: MoreHorizontal,
@@ -540,6 +541,7 @@ export default function App() {
           <Route path="/settings/social" element={<SocialSettings />} />
           <Route path="/payment-type" element={<PaymentTypeManagement />} />
           <Route path="/paper-stock" element={<PaperStockManagement />} />
+          <Route path="/statements" element={<Statements />} />
         </Routes>
       </div>
     </div>
