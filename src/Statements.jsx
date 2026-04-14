@@ -11,7 +11,8 @@ import {
   ArrowDownCircle, 
   Trash2, 
   CheckCircle2, 
-  AlertCircle 
+  AlertCircle,
+  ChevronDown
 } from 'lucide-react';
 
 const Statements = () => {
@@ -21,6 +22,9 @@ const Statements = () => {
   const [loading, setLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [dateFilter, setDateFilter] = useState('1m'); // Default to Last 30 Days
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [customRange, setCustomRange] = useState({ start: '', end: '' });
   const [formData, setFormData] = useState({
     invoiceNumber: '',
     partyName: '',
@@ -108,10 +112,35 @@ const Statements = () => {
     }
   };
 
-  const filteredStatements = statements.filter(s => 
-    s.partyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    s.invoiceNumber.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredStatements = statements.filter(s => {
+    const matchesSearch = s.partyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         s.invoiceNumber.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    if (!matchesSearch) return false;
+    if (dateFilter === 'all') return true;
+
+    const stmtDate = new Date(s.date);
+    const now = new Date();
+    now.setHours(0,0,0,0);
+    const diffDays = (now - stmtDate) / (1000 * 60 * 60 * 24);
+
+    switch(dateFilter) {
+      case '1v': return diffDays <= 7 && diffDays >= 0;
+      case '1m': return diffDays <= 30 && diffDays >= 0;
+      case '3m': return diffDays <= 90 && diffDays >= 0;
+      case '6m': return diffDays <= 180 && diffDays >= 0;
+      case '12m': return diffDays <= 365 && diffDays >= 0;
+      case 'next15': return diffDays >= -15 && diffDays <= 0;
+      case 'custom': 
+        if (!customRange.start || !customRange.end) return true;
+        const start = new Date(customRange.start);
+        const end = new Date(customRange.end);
+        start.setHours(0,0,0,0);
+        end.setHours(23,59,59,999);
+        return stmtDate >= start && stmtDate <= end;
+      default: return true;
+    }
+  });
 
   return (
     <div className="w-full px-4 mt-8 pb-12 text-gray-800 animate-in fade-in duration-500">
@@ -232,32 +261,35 @@ const Statements = () => {
       ) : (
         <div className="space-y-6">
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-5 group hover:shadow-md transition-all">
                <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-all">
                   <CreditCard size={28} />
                </div>
                <div>
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Received</p>
-                  <h3 className="text-2xl font-black text-gray-900 tracking-tight">₹{statements.reduce((acc, s) => acc + s.amount, 0).toLocaleString()}</h3>
-               </div>
-            </div>
-            <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-5 group hover:shadow-md transition-all">
-               <div className="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600 group-hover:bg-amber-600 group-hover:text-white transition-all">
-                  <AlertCircle size={28} />
-               </div>
-               <div>
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Pending Balance</p>
-                  <h3 className="text-2xl font-black text-gray-900 tracking-tight">₹{invoices.reduce((acc, inv) => acc + (inv.totalAmount - (inv.paidAmount || 0)), 0).toLocaleString()}</h3>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Monthly Received</p>
+                  <h3 className="text-2xl font-black text-gray-900 tracking-tight">
+                    ₹{statements.reduce((acc, s) => {
+                      const d = new Date(s.date);
+                      const now = new Date();
+                      return (d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) ? acc + s.amount : acc;
+                    }, 0).toLocaleString()}
+                  </h3>
                </div>
             </div>
             <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-5 group hover:shadow-md transition-all">
                <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all">
-                  <Calendar size={28} />
+                  <CreditCard size={28} />
                </div>
                <div>
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Transactions</p>
-                  <h3 className="text-2xl font-black text-gray-900 tracking-tight">{statements.length} Logged</h3>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Yearly Received</p>
+                  <h3 className="text-2xl font-black text-gray-900 tracking-tight">
+                    ₹{statements.reduce((acc, s) => {
+                      const d = new Date(s.date);
+                      const now = new Date();
+                      return d.getFullYear() === now.getFullYear() ? acc + s.amount : acc;
+                    }, 0).toLocaleString()}
+                  </h3>
                </div>
             </div>
           </div>
@@ -268,15 +300,83 @@ const Statements = () => {
               <h2 className="text-xl font-bold text-gray-900 flex items-center gap-3">
                 Transaction History
               </h2>
-              <div className="relative w-full md:w-80">
-                <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input 
-                  type="text" 
-                  placeholder="Party Name or Invoice #"
-                  className="w-full pl-12 pr-6 py-3 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all shadow-inner"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+              <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+                <div className="relative w-full md:w-auto">
+                    <button
+                        type="button"
+                        onClick={() => setIsFilterOpen(!isFilterOpen)}
+                        className="flex items-center gap-3 px-5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 shadow-sm hover:border-emerald-500 transition-all min-w-[160px] justify-between group"
+                    >
+                        <div className="flex items-center gap-2">
+                            <Calendar size={18} className="text-emerald-500 group-hover:scale-110 transition-transform" />
+                            <span>
+                                {dateFilter === 'custom' ? 'Custom Range' : 
+                                 dateFilter === '1v' ? 'Last Week' :
+                                 dateFilter === '1m' ? 'Last Month' :
+                                 dateFilter === '3m' ? 'Last 3 Months' :
+                                 dateFilter === '6m' ? 'Last 6 Months' :
+                                 'Last 12 Months'}
+                            </span>
+                        </div>
+                        <ChevronDown size={16} className={`text-gray-400 transition-transform duration-300 ${isFilterOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {isFilterOpen && (
+                        <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 py-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                             {[
+                                { id: 'custom', label: 'Custom Range', icon: <ArrowDownCircle size={14} className="text-blue-500" /> },
+                                { id: '1v', label: 'Last Week' },
+                                { id: '1m', label: 'Last Month' },
+                                { id: '3m', label: 'Last 3 Months' },
+                                { id: '6m', label: 'Last 6 Months' },
+                                { id: '12m', label: 'Last 12 Months' }
+                             ].map((opt) => (
+                                <button
+                                    key={opt.id}
+                                    onClick={() => { setDateFilter(opt.id); setIsFilterOpen(false); }}
+                                    className={`flex items-center justify-between w-full px-5 py-2.5 text-sm font-medium transition-all hover:bg-emerald-50 ${
+                                        dateFilter === opt.id ? 'text-emerald-600 font-bold bg-emerald-50/50' : 'text-gray-600'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        {opt.icon}
+                                        {opt.label}
+                                    </div>
+                                    {dateFilter === opt.id && <CheckCircle2 size={16} className="text-emerald-500" />}
+                                </button>
+                             ))}
+                        </div>
+                    )}
+                </div>
+
+                {dateFilter === 'custom' && (
+                    <div className="flex items-center gap-2 animate-in slide-in-from-left-4 duration-300 bg-gray-50/50 p-1.5 rounded-xl border border-gray-100">
+                        <input 
+                            type="date"
+                            className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm font-medium outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
+                            value={customRange.start}
+                            onChange={(e) => setCustomRange({...customRange, start: e.target.value})}
+                        />
+                        <span className="text-gray-400 font-medium text-sm">to</span>
+                        <input 
+                            type="date"
+                            className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm font-medium outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
+                            value={customRange.end}
+                            onChange={(e) => setCustomRange({...customRange, end: e.target.value})}
+                        />
+                    </div>
+                )}
+
+                <div className="relative w-full md:w-72">
+                  <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input 
+                    type="text" 
+                    placeholder="Search records..."
+                    className="w-full pl-12 pr-6 py-3 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all shadow-inner"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
               </div>
             </div>
 
