@@ -91,11 +91,11 @@ const CountUp = ({ end, duration = 2000, prefix = "", suffix = "" }) => {
       if (!startTime) startTime = timestamp;
       const progress = timestamp - startTime;
       const percentage = Math.min(progress / duration, 1);
-      
+
       // Easing function for smooth finish
       const easeOutQuad = (t) => t * (2 - t);
       const currentCount = Math.floor(easeOutQuad(percentage) * end);
-      
+
       setCount(currentCount);
 
       if (percentage < 1) {

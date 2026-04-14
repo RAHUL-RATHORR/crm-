@@ -3,13 +3,33 @@ import mongoose from 'mongoose';
 const jobCardSchema = new mongoose.Schema({
   partyName: { type: String, required: true },
   companyName: { type: String }, // redundant alias for backward compatibility
-  jobName: { type: String, required: true },
-  jobNumber: { type: String, required: true, unique: true },
+  address: { type: String },
+  contactNo: { type: String },
+  gstNo: { type: String },
+  jobName: { type: String },
+  jobNumber: { type: String },
   jobQty: { type: Number, default: 0 },
   jobDate: { type: Date, default: Date.now },
   paperType: { type: String }, // Company Paper / Paper Party
   
-  // Printing Details
+  // Printing Details (Renamed to Type of Work)
+  pageSize: { type: String },
+  pageCount: { type: String },
+  composeDesign: { type: String, default: 'No' },
+  coverPaperCount: { type: Number, default: 0 },
+  innerPaperCount: { type: Number, default: 0 },
+  paperSource: { type: String, default: 'Company paper' },
+  plateType: { type: String, default: 'New' },
+  plateQty: { type: Number, default: 0 },
+  printingQty: { type: Number, default: 0 },
+  lamination: { type: String },
+  bindingCenterPin: { type: Boolean, default: false },
+  bindingSilai: { type: Boolean, default: false },
+  bindingSidePin: { type: Boolean, default: false },
+  bindingFolding: { type: Boolean, default: false },
+  bindingPerforation: { type: Boolean, default: false },
+  bindingNumbring: { type: Boolean, default: false },
+  bindingRegister: { type: Boolean, default: false },
   controlPrint: { type: String },
   paper: { type: String },
   printingUC: { type: String },

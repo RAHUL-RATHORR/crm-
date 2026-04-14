@@ -256,13 +256,16 @@ const AddInvoice = () => {
           </div>
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 space-y-2">
             <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">GST (%) *</label>
-            <input
-              type="number"
+            <select
               name="gstPercent"
               value={formData.gstPercent}
               onChange={handleInputChange}
-              className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-base sm:text-lg font-semibold text-gray-800 outline-none"
-            />
+              className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-base sm:text-lg font-semibold text-gray-800 outline-none cursor-pointer"
+            >
+              <option value="0">0%</option>
+              <option value="5">5%</option>
+              <option value="18">18%</option>
+            </select>
           </div>
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 space-y-2">
             <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Grand Total</label>

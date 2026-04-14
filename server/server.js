@@ -10,7 +10,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Load ENV
-dotenv.config();
+dotenv.config({ path: path.join(__dirname, ".env") });
 
 // Debug
 console.log("------------------------------------------");
@@ -25,6 +25,7 @@ import paymentRoutes from "./routes/paymentRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import settingRoutes from "./routes/settingRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
+import paperStockRoutes from "./routes/paperStockRoutes.js";
 
 const app = express();
 app.use(cors());
@@ -49,6 +50,7 @@ app.use("/api/payment-type", paymentRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/settings", settingRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/paper-stock", paperStockRoutes);
 
 /* ================= TEST API ================= */
 app.get("/", (req, res) => {

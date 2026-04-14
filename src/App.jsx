@@ -33,6 +33,7 @@ import SettingsPage from './Settings';
 import SiteSettings from './SiteSettings';
 import SocialSettings from './SocialSettings';
 import PaymentTypeManagement from './PaymentTypeManagement';
+import PaperStockManagement from './PaperStockManagement';
 import { LogOut } from 'lucide-react';
 
 
@@ -54,8 +55,8 @@ const DropdownMenu = ({ title, icon: Icon, items, isActive }) => {
   }, []);
 
   return (
-    <div 
-      className="relative" 
+    <div
+      className="relative"
       ref={dropdownRef}
       onMouseEnter={() => setIsOpen(true)}
       onMouseLeave={() => setIsOpen(false)}
@@ -81,7 +82,7 @@ const DropdownMenu = ({ title, icon: Icon, items, isActive }) => {
       >
         {/* Transparent bridge to prevent flickering */}
         <div className="h-2 w-full" />
-        
+
         <div className="min-w-[220px] bg-white border border-gray-100 rounded-xl shadow-[0_10px_40px_-4px_rgba(0,0,0,0.15)] p-2 space-y-1">
           {items.map((item, idx) => (
             <div
@@ -234,7 +235,7 @@ export default function App() {
       ],
     },
     { name: 'Payments', icon: Wallet, path: '/payment-type' },
-    { name: 'Paper Stock', icon: Layers },
+    { name: 'Paper Stock', icon: Layers, path: '/paper-stock' },
     { name: 'Statements', icon: FileLock },
     {
       name: 'More',
@@ -263,7 +264,7 @@ export default function App() {
 
   const fetchNotifications = async () => {
     try {
-      const res = await fetch('https://crm-qpw8.onrender.com/api/notifications');
+      const res = await fetch('http://localhost:5011/api/notifications');
       const data = await res.json();
       setNotifications(data);
       setUnreadCount(data.filter(n => !n.isRead).length);
@@ -276,10 +277,10 @@ export default function App() {
     if (isLoggedIn) {
       fetchNotifications();
       const interval = setInterval(fetchNotifications, 5000); // Polling every 5s for real-time feel
-      
+
       const handleCustomFetch = () => fetchNotifications();
       window.addEventListener('fetchNotifications', handleCustomFetch);
-      
+
       return () => {
         clearInterval(interval);
         window.removeEventListener('fetchNotifications', handleCustomFetch);
@@ -299,7 +300,7 @@ export default function App() {
 
   const markAllAsRead = async () => {
     try {
-      await fetch('https://crm-qpw8.onrender.com/api/notifications/read-all', { method: 'PUT' });
+      await fetch('http://localhost:5011/api/notifications/read-all', { method: 'PUT' });
       fetchNotifications();
     } catch (err) {
       console.error("Read Error:", err);
@@ -369,9 +370,9 @@ export default function App() {
           })}
         </div>
 
-         <div className="flex items-center gap-2 sm:gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           <div className="relative" ref={notifRef}>
-            <button 
+            <button
               onClick={() => setIsNotifOpen(!isNotifOpen)}
               className="text-gray-500 hover:text-gray-700 transition p-2 relative flex items-center justify-center"
             >
@@ -387,7 +388,7 @@ export default function App() {
               <div className="absolute top-full right-0 mt-3 w-80 bg-white border border-gray-100 rounded-2xl shadow-2xl z-[60] overflow-hidden transform animate-in fade-in slide-in-from-top-2 duration-200">
                 <div className="p-4 border-b border-gray-50 flex items-center justify-between">
                   <h3 className="font-bold text-gray-900">Notifications</h3>
-                  <button 
+                  <button
                     onClick={markAllAsRead}
                     className="text-xs font-semibold text-blue-600 hover:text-blue-700"
                   >
@@ -401,8 +402,8 @@ export default function App() {
                     </div>
                   ) : (
                     notifications.map((n) => (
-                      <div 
-                        key={n._id} 
+                      <div
+                        key={n._id}
                         className={`p-4 border-b border-gray-50 hover:bg-gray-50 transition-colors cursor-pointer relative ${!n.isRead ? 'bg-blue-50/30' : ''}`}
                       >
                         {!n.isRead && <div className="absolute top-4 right-4 w-2 h-2 bg-blue-600 rounded-full" />}
@@ -538,10 +539,12 @@ export default function App() {
           <Route path="/settings/site" element={<SiteSettings />} />
           <Route path="/settings/social" element={<SocialSettings />} />
           <Route path="/payment-type" element={<PaymentTypeManagement />} />
+          <Route path="/paper-stock" element={<PaperStockManagement />} />
         </Routes>
       </div>
     </div>
   );
 }
+
 
 

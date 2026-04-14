@@ -68,11 +68,16 @@
     padding: 0 !important;
   }
 
-  #printable-content {
+  #printable-content,
+  #printable-invoice,
+  #printable-challan {
     display: block !important;
-    padding: 1.5cm !important;
+    padding: 1cm !important;
     overflow: visible !important;
     width: 100% !important;
+    max-width: 100% !important;
+    background: white !important;
+    box-sizing: border-box !important;
   }
 
   .border-line {

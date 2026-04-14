@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PlusSquare, Trash2, Printer, X, Download, Pencil, RefreshCw, Filter, Search, Check, Share2, Loader2, Building2, Hash, Calendar, Layers, FileText, Globe, Phone, Mail } from 'lucide-react';
+import { PlusSquare, Trash2, Printer, X, Download, Pencil, RefreshCw, Filter, Search, Check, Share2, Loader2, Building2, Hash, Calendar, Layers, FileText, Globe, Phone, Mail, MapPin, FileDigit } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
 
@@ -404,33 +404,34 @@ export default function JobCardListing() {
                 </div>
 
                 {/* Top Info Grid */}
-                <div className="grid grid-cols-2 gap-x-10 gap-y-4 mb-3">
-                  <div className="border-b pb-1.5 flex items-center gap-2" style={{ borderColor: '#cbd5e1' }}>
-                    <Building2 size={14} style={{ color: '#3b82f6' }} />
-                    <span className="text-[10px] font-bold uppercase w-24 opacity-60">Party Name:</span>
+                <div className="grid grid-cols-1 gap-y-3 mb-4">
+                  <div className="border-b pb-1 flex items-center gap-2" style={{ borderColor: '#cbd5e1' }}>
+                    <Building2 size={13} style={{ color: '#3b82f6' }} />
+                    <span className="text-[9px] font-bold uppercase w-28 opacity-60">Party Name:</span>
                     <span className="flex-grow font-bold text-sm" style={{ color: '#000000' }}>{selectedCard.partyName}</span>
                   </div>
-                  <div className="border-b pb-1.5 flex items-center gap-2" style={{ borderColor: '#cbd5e1' }}>
-                    <Hash size={14} style={{ color: '#3b82f6' }} />
-                    <span className="text-[10px] font-bold uppercase w-24 opacity-60">Job No:</span>
-                    <span className="flex-grow font-bold text-sm" style={{ color: '#000000' }}>{selectedCard.jobNumber}</span>
+                  <div className="border-b pb-1 flex items-center gap-2" style={{ borderColor: '#cbd5e1' }}>
+                    <MapPin size={13} style={{ color: '#3b82f6' }} />
+                    <span className="text-[9px] font-bold uppercase w-28 opacity-60">Address:</span>
+                    <span className="flex-grow font-bold text-xs" style={{ color: '#000000' }}>{selectedCard.address || '-'}</span>
                   </div>
                 </div>
-                <div className="grid grid-cols-3 gap-x-6 gap-y-4 mb-8">
-                  <div className="border-b pb-1.5 flex items-center gap-2 col-span-1" style={{ borderColor: '#cbd5e1' }}>
-                    <Layers size={14} style={{ color: '#3b82f6' }} />
-                    <span className="text-[10px] font-bold uppercase w-20 opacity-60">Job Name:</span>
-                    <span className="flex-grow font-bold text-xs" style={{ color: '#000000' }}>{selectedCard.jobName}</span>
+
+                <div className="grid grid-cols-3 gap-x-6 gap-y-3 mb-6">
+                  <div className="border-b pb-1 flex items-center gap-2 col-span-1" style={{ borderColor: '#cbd5e1' }}>
+                    <Phone size={13} style={{ color: '#3b82f6' }} />
+                    <span className="text-[9px] font-bold uppercase w-16 opacity-60">Contact:</span>
+                    <span className="flex-grow font-bold text-xs" style={{ color: '#000000' }}>{selectedCard.contactNo || '-'}</span>
                   </div>
-                  <div className="border-b pb-1.5 flex items-center gap-2 col-span-1" style={{ borderColor: '#cbd5e1' }}>
-                    <Calendar size={14} style={{ color: '#3b82f6' }} />
-                    <span className="text-[10px] font-bold uppercase w-12 opacity-60">Date:</span>
-                    <span className="flex-grow font-bold text-xs" style={{ color: '#000000' }}>{new Date(selectedCard.jobDate).toLocaleDateString()}</span>
+                  <div className="border-b pb-1 flex items-center gap-2 col-span-1" style={{ borderColor: '#cbd5e1' }}>
+                    <FileDigit size={13} style={{ color: '#3b82f6' }} />
+                    <span className="text-[9px] font-bold uppercase w-16 opacity-60">GST No:</span>
+                    <span className="flex-grow font-bold text-xs" style={{ color: '#000000' }}>{selectedCard.gstNo || '-'}</span>
                   </div>
-                  <div className="border-b pb-1.5 flex items-center gap-2 col-span-1" style={{ borderColor: '#cbd5e1' }}>
-                    <FileText size={14} style={{ color: '#3b82f6' }} />
-                    <span className="text-[10px] font-bold uppercase w-12 opacity-60">Qty:</span>
-                    <span className="flex-grow font-bold text-xs" style={{ color: '#000000' }}>{selectedCard.jobQty || 1}</span>
+                  <div className="border-b pb-1 flex items-center gap-2 col-span-1" style={{ borderColor: '#cbd5e1' }}>
+                    <Calendar size={13} style={{ color: '#3b82f6' }} />
+                    <span className="text-[9px] font-bold uppercase w-12 opacity-60">Date:</span>
+                    <span className="flex-grow font-bold text-xs" style={{ color: '#000000' }}>{new Date(selectedCard.jobDate).toLocaleDateString('en-IN')}</span>
                   </div>
                 </div>
 
@@ -439,20 +440,106 @@ export default function JobCardListing() {
                   {/* Left Column - Detailed Table */}
                   <div className="w-1/2 pr-6 border-r" style={{ borderColor: '#cbd5e1' }}>
                     <div className="space-y-3">
+                      <div className="text-[10px] font-black uppercase text-blue-800 border-b pb-1 mb-2" style={{ borderColor: '#bfdbfe' }}>Type Of Work</div>
                       {[
-                        { label: 'Cancel Plate', value: '1.00' },
-                        { label: 'Paper', value: selectedCard.paper || '-' },
-                        { label: 'Printing U/C', value: '-' },
-                        { label: 'Printing Color', value: selectedCard.printingType || '-' },
-                        { label: 'Binding', value: '-' },
-                        { label: 'File Path', value: '-' },
-                        { label: 'Design UV', value: '-' }
+                        { label: 'Page Size', value: selectedCard.pageSize || '-' },
+                        { label: 'Page', value: selectedCard.pageCount || '-' },
+                        { label: 'Color', value: selectedCard.printingType || '-' }
                       ].map((row, i) => (
                         <div key={i} className="flex justify-between items-end gap-2 text-xs">
                           <span className="font-bold uppercase min-w-fit" style={{ color: '#1e293b' }}>{row.label}</span>
                           <div className="flex-grow border-b h-4 min-w-[50px] text-right px-2" style={{ borderColor: '#cbd5e1', color: '#000000' }}>{row.value}</div>
                         </div>
                       ))}
+
+                      {/* Computer Details Row */}
+                      <div className="pt-2">
+                        <div className="text-[10px] font-black uppercase text-emerald-800 border-b pb-1 mb-2" style={{ borderColor: '#a7f3d0' }}>Computer Details</div>
+                        <div className="flex justify-between items-end gap-2 text-xs">
+                          <span className="font-bold uppercase min-w-fit" style={{ color: '#065f46' }}>Compose Design</span>
+                          <div className="flex-grow border-b h-4 min-w-[50px] text-right px-2 font-bold" style={{ borderColor: '#a7f3d0', color: '#000000' }}>
+                            {selectedCard.composeDesign || 'No'}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Paper Details Row */}
+                      <div className="pt-2">
+                        <div className="text-[10px] font-black uppercase text-sky-800 border-b pb-1 mb-2" style={{ borderColor: '#bae6fd' }}>Paper Details</div>
+                        <div className="flex flex-col gap-1 text-xs">
+                          <div className="flex justify-between items-end gap-2">
+                            <span className="font-bold uppercase min-w-fit" style={{ color: '#0369a1' }}>Cover / Inner</span>
+                            <div className="flex-grow border-b h-4 min-w-[50px] text-right px-2" style={{ borderColor: '#bae6fd', color: '#000000' }}>
+                              C: {selectedCard.coverPaperCount || 0} / I: {selectedCard.innerPaperCount || 0}
+                            </div>
+                          </div>
+                          <div className="flex justify-between items-end gap-2">
+                            <span className="font-bold uppercase min-w-fit" style={{ color: '#0369a1' }}>Paper Type</span>
+                            <div className="flex-grow border-b h-4 min-w-[50px] text-right px-2 font-bold" style={{ borderColor: '#bae6fd', color: '#000000' }}>
+                              {selectedCard.paperSource || 'Company paper'}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Printing Details Row */}
+                      <div className="pt-2">
+                        <div className="text-[10px] font-black uppercase text-indigo-800 border-b pb-1 mb-2" style={{ borderColor: '#e0e7ff' }}>Printing Details</div>
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                          <div className="flex justify-between items-end gap-2">
+                            <span className="font-bold uppercase min-w-fit" style={{ color: '#4338ca' }}>Plate</span>
+                            <div className="flex-grow border-b h-4 min-w-[30px] text-right px-2" style={{ borderColor: '#e0e7ff', color: '#000000' }}>
+                              {selectedCard.plateType || 'New'} ({selectedCard.plateNo || '-'})
+                            </div>
+                          </div>
+                          <div className="flex justify-between items-end gap-2">
+                            <span className="font-bold uppercase min-w-fit" style={{ color: '#4338ca' }}>Plate Qty</span>
+                            <div className="flex-grow border-b h-4 min-w-[30px] text-right px-2" style={{ borderColor: '#e0e7ff', color: '#000000' }}>
+                              {selectedCard.plateQty || 0}
+                            </div>
+                          </div>
+                          <div className="flex justify-between items-end gap-2">
+                            <span className="font-bold uppercase min-w-fit" style={{ color: '#4338ca' }}>Printing</span>
+                            <div className="flex-grow border-b h-4 min-w-[30px] text-right px-2" style={{ borderColor: '#e0e7ff', color: '#000000' }}>
+                              {selectedCard.printingQty || 0}
+                            </div>
+                          </div>
+                          <div className="flex justify-between items-end gap-2">
+                            <span className="font-bold uppercase min-w-fit" style={{ color: '#4338ca' }}>Lamination</span>
+                            <div className="flex-grow border-b h-4 min-w-[30px] text-right px-2 font-bold" style={{ borderColor: '#e0e7ff', color: '#000000' }}>
+                              {selectedCard.lamination || '-'}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Binding Details Row */}
+                      {(() => {
+                        const selectedBinding = [
+                          { key: 'bindingCenterPin', label: 'Center Pin' },
+                          { key: 'bindingSilai', label: 'Silai' },
+                          { key: 'bindingSidePin', label: 'Side Pin' },
+                          { key: 'bindingFolding', label: 'Folding' },
+                          { key: 'bindingPerforation', label: 'Perforation' },
+                          { key: 'bindingNumbring', label: 'Numbring' },
+                          { key: 'bindingRegister', label: 'Register' }
+                        ].filter(item => selectedCard[item.key]);
+
+                        if (selectedBinding.length === 0) return null;
+
+                        return (
+                          <div className="pt-2">
+                            <div className="text-[10px] font-black uppercase text-amber-800 border-b pb-1 mb-1" style={{ borderColor: '#fef3c7' }}>Binding Details</div>
+                            <div className="flex flex-wrap gap-2 text-[10px] font-bold py-1">
+                              {selectedBinding.map((item, idx) => (
+                                <span key={idx} className="bg-amber-50 px-2 py-0.5 rounded border border-amber-200" style={{ color: '#92400e' }}>
+                                  ✓ {item.label}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
 
@@ -471,31 +558,8 @@ export default function JobCardListing() {
                       </label>
                     </div>
 
-                    <div className="space-y-2 mb-4">
-                      {[
-                        { label: 'Plate From', value: '-' },
-                        { label: 'Paper From', value: '-' },
-                        { label: 'Paper Size', value: selectedCard.paperSize || '-' },
-                        { label: 'Cutting Size', value: '-' },
-                        { label: 'Paper GSM', value: '-' }
-                      ].map((row, i) => (
-                        <div key={i} className="flex flex-col border-b py-0.5" style={{ borderColor: '#e2e8f0' }}>
-                          <span className="text-[9px] font-bold uppercase opacity-50 leading-none mb-0.5" style={{ color: '#475569' }}>{row.label}</span>
-                          <span className="text-xs font-bold" style={{ color: '#000000' }}>{row.value}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="mb-4">
-                      <span className="text-[10px] font-bold uppercase block mb-1" style={{ color: '#475569' }}>Printing Sheet</span>
-                      <div className="flex gap-1">
-                        {['S/S', 'F/B', 'G/W', 'P+B'].map((label, i) => (
-                          <div key={i} className="border px-1 py-0.5 text-[9px] font-bold uppercase flex items-center justify-center min-w-[32px] rounded" style={{ borderColor: '#cbd5e1', color: '#1e293b' }}>
-                            {label}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+                    {/* Simplified Right Column - Only Notes will be shown below */}
+                    <div className="h-4"></div>
 
                     <div className="flex justify-between items-end mb-6 pt-10">
                       <div className="text-center w-48">

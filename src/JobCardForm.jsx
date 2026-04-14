@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -9,6 +9,21 @@ export default function JobCardForm() {
   const editData = location.state?.editData;
 
   const [jobDate, setJobDate] = useState(editData ? new Date(editData.jobDate) : new Date());
+  const [paperStocks, setPaperStocks] = useState([]);
+  const [selectedPaper, setSelectedPaper] = useState(editData?.paper || '');
+
+  useEffect(() => {
+    const fetchStocks = async () => {
+      try {
+        const res = await fetch('http://localhost:5011/api/paper-stock');
+        const data = await res.json();
+        setPaperStocks(data);
+      } catch (err) {
+        console.error("Stock fetch error:", err);
+      }
+    };
+    fetchStocks();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -17,10 +32,18 @@ export default function JobCardForm() {
       ...Object.fromEntries(fd.entries()),
       jobDate: jobDate.toISOString(),
       companyName: fd.get('partyName'), // alias for backward compatibility
+      // Boolean conversion for binding checkboxes
+      bindingCenterPin: fd.get('bindingCenterPin') === 'on',
+      bindingSilai: fd.get('bindingSilai') === 'on',
+      bindingSidePin: fd.get('bindingSidePin') === 'on',
+      bindingFolding: fd.get('bindingFolding') === 'on',
+      bindingPerforation: fd.get('bindingPerforation') === 'on',
+      bindingNumbring: fd.get('bindingNumbring') === 'on',
+      bindingRegister: fd.get('bindingRegister') === 'on',
     };
 
     try {
-      const response = await fetch("https://crm-qpw8.onrender.com/api/jobcard", {
+      const response = await fetch("http://localhost:5011/api/jobcard", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -58,26 +81,25 @@ export default function JobCardForm() {
             Basic Details
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             <div className="flex flex-col">
               <label className="text-sm font-medium text-gray-700 mb-1">Party Name *</label>
               <input type="text" name="partyName" defaultValue={editData?.partyName} required className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" placeholder="Enter party name" />
             </div>
             <div className="flex flex-col">
-              <label className="text-sm font-medium text-gray-700 mb-1">Job Name *</label>
-              <input type="text" name="jobName" defaultValue={editData?.jobName} required className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" placeholder="Enter job name" />
+              <label className="text-sm font-medium text-gray-700 mb-1">Address</label>
+              <input type="text" name="address" defaultValue={editData?.address} className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" placeholder="Enter address" />
             </div>
             <div className="flex flex-col">
-              <label className="text-sm font-medium text-gray-700 mb-1">Job No *</label>
-              <input type="text" name="jobNumber" defaultValue={editData?.jobNumber} required className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" placeholder="Enter job no" />
+              <label className="text-sm font-medium text-gray-700 mb-1">Contact Details</label>
+              <input type="text" name="contactNo" defaultValue={editData?.contactNo} className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" placeholder="Phone or Email" />
             </div>
             <div className="flex flex-col">
-              <label className="text-sm font-medium text-gray-700 mb-1">Job Qty</label>
-              <input type="number" name="jobQty" className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" placeholder="0" />
+              <label className="text-sm font-medium text-gray-700 mb-1">GST No.</label>
+              <input type="text" name="gstNo" defaultValue={editData?.gstNo} className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" placeholder="Enter GST number" />
             </div>
-
             <div className="flex flex-col">
-              <label className="text-sm font-medium text-gray-700 mb-1">Job Date</label>
+              <label className="text-sm font-medium text-gray-700 mb-1">Date</label>
               <DatePicker
                 selected={jobDate}
                 onChange={(date) => setJobDate(date)}
@@ -85,172 +107,249 @@ export default function JobCardForm() {
                 className="w-full h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               />
             </div>
-
-            <div className="sm:col-span-2 lg:col-span-3 space-y-2 lg:mt-2">
-              <label className="text-sm font-medium text-gray-700 block">Paper Type</label>
-              <div className="flex flex-wrap items-center gap-4 sm:gap-6">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="paperType" className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500" defaultChecked />
-                  <span className="text-sm text-gray-700">Company Paper</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="paperType" className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500" />
-                  <span className="text-sm text-gray-700">Paper Party</span>
-                </label>
-              </div>
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-gray-700 mb-1">Job Quantity *</label>
+              <input type="number" name="jobQty" defaultValue={editData?.jobQty || 0} required className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" placeholder="0" />
             </div>
           </div>
         </div>
 
-        {/* Section 2: Printing Details */}
+        {/* Section 2: Type Of Work */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 relative pt-10">
           <div className="absolute top-0 left-6 -translate-y-1/2 bg-purple-600 text-white px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold shadow-sm">
-            Printing Details
+            Type Of Work
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             <div className="flex flex-col">
-              <label className="text-sm font-medium text-gray-700 mb-1">Control Print</label>
-              <input type="text" name="controlPrint" className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
-            </div>
-            <div className="flex flex-col pt-0 sm:pt-6">
-              <input type="text" name="paper" placeholder="Paper" defaultValue={editData?.paper} className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
+              <label className="text-sm font-medium text-gray-700 mb-1">Page Size</label>
+              <input type="text" name="pageSize" defaultValue={editData?.pageSize} className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" placeholder="e.g. A4, 1/4" />
             </div>
             <div className="flex flex-col">
-              <label className="text-sm font-medium text-gray-700 mb-1">Printing U/C</label>
-              <input type="text" name="printingUC" className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
+              <label className="text-sm font-medium text-gray-700 mb-1">Page</label>
+              <input type="text" name="pageCount" defaultValue={editData?.pageCount} className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" placeholder="Number of pages" />
             </div>
-
             <div className="flex flex-col">
-              <label className="text-sm font-medium text-gray-700 mb-1">Printing Color</label>
+              <label className="text-sm font-medium text-gray-700 mb-1">Color</label>
               <select name="printingType" defaultValue={editData?.printingType} className="h-10 border border-gray-200 rounded-lg px-4 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
-                <option>Select Color</option>
+                <option value="">Select Color</option>
+                <option value="Single Color">Single Color</option>
+                <option value="Multi Color">Multi Color</option>
                 <option value="CMYK">CMYK</option>
                 <option value="Pantone">Pantone</option>
                 <option value="Black & White">Black & White</option>
               </select>
             </div>
-            <div className="flex flex-col">
-              <label className="text-sm font-medium text-gray-700 mb-1">Printing Price</label>
-              <input type="number" name="printingPrice" className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" placeholder="0" />
-            </div>
-            <div className="flex flex-col">
-              <label className="text-sm font-medium text-gray-700 mb-1">Binding No. Finished</label>
-              <select name="bindingNo" className="h-10 border border-gray-200 rounded-lg px-4 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
-                <option>Select Binding</option>
-                <option>Perfect Binding</option>
-                <option>Saddle Stitch</option>
-                <option>Spiral</option>
-              </select>
-            </div>
+          </div>
+        </div>
+
+        {/* Section 3: Computer Details */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 relative pt-10">
+          <div className="absolute top-0 left-6 -translate-y-1/2 bg-emerald-600 text-white px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold shadow-sm">
+            Computer Details
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             <div className="flex flex-col">
-              <label className="text-sm font-medium text-gray-700 mb-1">Binding Note</label>
-              <input type="text" name="bindingNote" className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
+              <label className="text-sm font-medium text-gray-700 mb-2">Compose Design</label>
+              <div className="flex items-center gap-6 h-10">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="composeDesign"
+                    value="Yes"
+                    defaultChecked={editData?.composeDesign === 'Yes'}
+                    className="w-4 h-4 text-emerald-600 border-gray-300 focus:ring-emerald-500"
+                  />
+                  <span className="text-sm text-gray-700">Yes</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="composeDesign"
+                    value="No"
+                    defaultChecked={editData?.composeDesign !== 'Yes'}
+                    className="w-4 h-4 text-emerald-600 border-gray-300 focus:ring-emerald-500"
+                  />
+                  <span className="text-sm text-gray-700">No</span>
+                </label>
+              </div>
             </div>
+          </div>
+        </div>
+        {/* Section 4: Paper details */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 relative pt-10">
+          <div className="absolute top-0 left-6 -translate-y-1/2 bg-sky-600 text-white px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold shadow-sm">
+            Paper details
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             <div className="flex flex-col">
-              <label className="text-sm font-medium text-gray-700 mb-1">File Path</label>
-              <input type="text" name="filePath" className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
-            </div>
-            <div className="flex flex-col">
-              <label className="text-sm font-medium text-gray-700 mb-1">Plate No</label>
-              <select name="plateNo" className="h-10 border border-gray-200 rounded-lg px-4 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
-                <option>Select Plate No</option>
-                <option>Plate 1</option>
-                <option>Plate 2</option>
+              <label className="text-sm font-medium text-gray-700 mb-1">Select Paper (From Stock)</label>
+              <select 
+                name="paper" 
+                value={selectedPaper}
+                onChange={(e) => setSelectedPaper(e.target.value)}
+                className="h-10 border border-gray-200 rounded-lg px-4 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
+              >
+                <option value="">-- Choose Paper --</option>
+                {paperStocks.map(stock => (
+                  <option key={stock._id} value={stock.name}>
+                    {stock.name} ({stock.gsm} GSM) - Stock: {stock.quantity}
+                  </option>
+                ))}
+                <option value="Other">Other (Custom)</option>
               </select>
             </div>
             <div className="flex flex-col">
-              <label className="text-sm font-medium text-gray-700 mb-1">Plate Price</label>
-              <input type="number" name="platePrice" className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" placeholder="0" />
+              <label className="text-sm font-medium text-gray-700 mb-1">Paper GSM</label>
+              <input
+                type="text"
+                name="paperGSM"
+                defaultValue={editData?.paperGSM}
+                className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
+                placeholder="e.g. 350, 130"
+              />
+            </div>
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-gray-700 mb-1">Cover paper count</label>
+              <input
+                type="number"
+                name="coverPaperCount"
+                defaultValue={editData?.coverPaperCount || 0}
+                min="0"
+                className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
+                placeholder="0"
+              />
+            </div>
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-gray-700 mb-1">Inner paper count</label>
+              <input
+                type="number"
+                name="innerPaperCount"
+                defaultValue={editData?.innerPaperCount || 0}
+                min="0"
+                className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
+                placeholder="0"
+              />
+            </div>
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-gray-700 mb-2">Paper Type</label>
+              <div className="flex items-center gap-6 h-10">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="paperSource"
+                    value="Party paper"
+                    defaultChecked={editData?.paperSource === 'Party paper'}
+                    className="w-4 h-4 text-sky-600 border-gray-300 focus:ring-sky-500"
+                  />
+                  <span className="text-sm text-gray-700">Party paper</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="paperSource"
+                    value="Company paper"
+                    defaultChecked={editData?.paperSource !== 'Party paper'}
+                    className="w-4 h-4 text-sky-600 border-gray-300 focus:ring-sky-500"
+                  />
+                  <span className="text-sm text-gray-700">Company paper</span>
+                </label>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Section 3: Job Summary */}
+        {/* Section 5: Printing Details */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 relative pt-10">
+          <div className="absolute top-0 left-6 -translate-y-1/2 bg-indigo-600 text-white px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold shadow-sm">
+            Printing Details
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-gray-700 mb-1">Plate Number</label>
+              <input type="text" name="plateNo" defaultValue={editData?.plateNo} className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" placeholder="Enter plate no" />
+            </div>
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-gray-700 mb-1">Quantity Of Plates</label>
+              <input type="number" name="plateQty" defaultValue={editData?.plateQty || 0} min="0" className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" />
+            </div>
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-gray-700 mb-1">Printing</label>
+              <input type="number" name="printingQty" defaultValue={editData?.printingQty || 0} min="0" className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" />
+            </div>
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-gray-700 mb-1">Lamination</label>
+              <select name="lamination" defaultValue={editData?.lamination} className="h-10 border border-gray-200 rounded-lg px-4 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                <option value="">Select Lamination</option>
+                <option value="BOPP">BOPP</option>
+                <option value="MATT">MATT</option>
+                <option value="GLOSS">GLOSS</option>
+                <option value="AQUOS COATING">AQUOS COATING</option>
+                <option value="UV">UV</option>
+              </select>
+            </div>
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-gray-700 mb-2">Plate</label>
+              <div className="flex items-center gap-4 h-10">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="plateType" value="Old" defaultChecked={editData?.plateType === 'Old'} className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500" />
+                  <span className="text-sm text-gray-700">Old</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="plateType" value="New" defaultChecked={editData?.plateType !== 'Old'} className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500" />
+                  <span className="text-sm text-gray-700">New</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Section 6: Binding */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 relative pt-10">
+          <div className="absolute top-0 left-6 -translate-y-1/2 bg-amber-600 text-white px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold shadow-sm">
+            Binding
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
+            {[
+              { name: 'bindingCenterPin', label: 'Center Pin' },
+              { name: 'bindingSilai', label: 'Silai' },
+              { name: 'bindingSidePin', label: 'Side Pin' },
+              { name: 'bindingFolding', label: 'Folding' },
+              { name: 'bindingPerforation', label: 'Perforation' },
+              { name: 'bindingNumbring', label: 'Numbring' },
+              { name: 'bindingRegister', label: 'Register' }
+            ].map(item => (
+              <label key={item.name} className="flex items-center gap-2 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  name={item.name}
+                  defaultChecked={editData?.[item.name]}
+                  className="w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500 transition-all"
+                />
+                <span className="text-sm text-gray-700 group-hover:text-amber-700 transition-colors uppercase font-medium">{item.label}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* Section 7: Notes */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 relative pt-10">
           <div className="absolute top-0 left-6 -translate-y-1/2 bg-teal-600 text-white px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold shadow-sm">
-            Job Summary
+            Notes
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 border-b border-gray-100 pb-6 mb-6">
-            <div className="flex flex-col sm:col-span-2">
-              <label className="text-sm font-medium text-gray-700 mb-1">Plate From</label>
-              <input type="text" name="plateFrom" className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
-            </div>
-            <div className="flex flex-col sm:col-span-2">
-              <label className="text-sm font-medium text-gray-700 mb-1">Paper From</label>
-              <input type="text" name="paperFrom" className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
-            </div>
-            <div className="flex flex-col">
-              <label className="text-sm font-medium text-gray-700 mb-1">Paper Size</label>
-              <input type="text" name="paperSize" defaultValue={editData?.paperSize} className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
-            </div>
-            <div className="flex flex-col">
-              <label className="text-sm font-medium text-gray-700 mb-1">Cutting Size</label>
-              <input type="text" name="cuttingSize" className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
-            </div>
-            <div className="flex flex-col sm:col-span-2">
-              <label className="text-sm font-medium text-gray-700 mb-1">Paper GSM</label>
-              <input type="text" name="paperGSM" className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-center">
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 block">Printing Sheet</label>
-              <div className="flex flex-wrap items-center gap-4 sm:gap-6">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="printSheet" className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500" defaultChecked />
-                  <span className="text-sm text-gray-700">Single</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="printSheet" className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500" />
-                  <span className="text-sm text-gray-700">Double</span>
-                </label>
-              </div>
-            </div>
-
-            <div className="flex flex-col">
-              <label className="text-sm font-medium text-gray-700 mb-1">Folding</label>
-              <input type="text" name="folding" className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
-            </div>
-
-            <div className="flex flex-col sm:col-span-2">
-              <label className="text-sm font-medium text-gray-700 mb-2">Job Color</label>
-              <div className="flex flex-wrap items-center gap-4 sm:gap-6 h-10">
-                {[1, 2, 3, 4].map((num) => (
-                  <label key={num} className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
-                    <span className="text-sm text-gray-700">{num}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:col-span-2 lg:mt-2">
-              <label className="text-sm font-medium text-gray-700 mb-1">Job Counter</label>
-              <input type="number" name="jobCounter" className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" placeholder="0" />
-            </div>
-
-            <div className="flex flex-col sm:col-span-2 lg:mt-2">
-              <label className="text-sm font-medium text-gray-700 mb-1">Total Amount</label>
-              <div className="relative h-10">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span className="text-gray-500 font-medium">₹</span>
-                </div>
-                <input type="number" name="totalAmount" defaultValue={editData?.totalAmount} className="w-full h-full pl-8 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all font-semibold" placeholder="0" />
-              </div>
-            </div>
-
-            <div className="space-y-1 col-span-full mt-4">
-              <label className="text-sm font-medium text-gray-700">Note</label>
-              <textarea name="notes" className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" rows="3" placeholder="Enter any extra instructions or notes..."></textarea>
-            </div>
-
+          <div className="w-full">
+            <label className="text-sm font-medium text-gray-700 mb-2 block font-semibold tracking-wide">Extra Instructions / Notes</label>
+            <textarea
+              name="notes"
+              defaultValue={editData?.notes}
+              className="w-full h-40 border border-gray-200 rounded-xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all resize-none shadow-sm text-sm"
+              placeholder="Enter any extra instructions or notes here..."
+            ></textarea>
           </div>
         </div>
       </div>
