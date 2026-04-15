@@ -395,28 +395,33 @@ const ChallanList = () => {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-gray-900 text-white uppercase text-[9px] font-black tracking-widest">
-                                <th className="px-4 py-3 w-12 text-center">S.No.</th>
-                                <th className="px-4 py-3">Description of Goods</th>
-                                <th className="px-4 py-3 text-center">HSN/SAC</th>
+                                <th className="px-4 py-3 w-12 text-center border-r border-gray-700">S.No.</th>
+                                <th className="px-4 py-3 border-r border-gray-700">Description of Goods</th>
+                                <th className="px-4 py-3 text-center border-r border-gray-700">HSN/SAC</th>
                                 <th className="px-4 py-3 text-right pr-8">Quantity</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                             <tr className="text-gray-900">
-                                <td className="px-4 py-8 text-center text-[11px] font-black text-gray-400">01</td>
-                                <td className="px-4 py-8">
+                                <td className="px-4 py-8 text-center text-[11px] font-black text-gray-400 border-r border-gray-100">01</td>
+                                <td className="px-4 py-8 border-r border-gray-100">
                                     <p className="text-sm font-black uppercase text-gray-900">{selectedChallan.jobName}</p>
                                     <p className="text-[10px] font-bold text-gray-400 tracking-wide mt-1 uppercase">Printing Services - {selectedChallan.jobNumber}</p>
                                 </td>
-                                <td className="px-4 py-8 text-center text-xs font-bold text-gray-600 tracking-wider font-mono">4901</td>
+                                <td className="px-4 py-8 text-center text-xs font-bold text-gray-600 tracking-wider font-mono border-r border-gray-100">4901</td>
                                 <td className="px-4 py-8 text-right text-lg font-black text-blue-700 pr-8">
                                     1 <span className="text-[10px] text-gray-400 uppercase ml-1">Unit</span>
                                 </td>
                             </tr>
-                            {/* Empty spacing rows */}
-                            {[...Array(6)].map((_, i) => (
-                                <tr key={`empty-${i}`} className="h-12 opacity-5"><td colSpan="4" className="border-b border-gray-100 font-bold"></td></tr>
-                            ))}
+                             {/* Empty spacing rows with vertical grid lines */}
+                             {[...Array(6)].map((_, i) => (
+                                 <tr key={`empty-${i}`} className="h-12 opacity-5">
+                                     <td className="border-r border-gray-100 border-b border-gray-100"></td>
+                                     <td className="border-r border-gray-100 border-b border-gray-100"></td>
+                                     <td className="border-r border-gray-100 border-b border-gray-100"></td>
+                                     <td className="border-b border-gray-100"></td>
+                                 </tr>
+                             ))}
                         </tbody>
                     </table>
                 </div>

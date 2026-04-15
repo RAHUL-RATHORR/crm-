@@ -356,32 +356,39 @@ const InvoiceList = () => {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-gray-900 text-white uppercase text-[9px] font-black tracking-widest">
-                                <th className="px-4 py-3 w-12 text-center">S.No.</th>
-                                <th className="px-4 py-3">Description of Goods</th>
-                                <th className="px-4 py-3 text-center">HSN/SAC</th>
-                                <th className="px-4 py-3 text-center">Qty</th>
-                                <th className="px-4 py-3 text-right">Rate</th>
+                                <th className="px-4 py-3 w-12 text-center border-r border-gray-700">S.No.</th>
+                                <th className="px-4 py-3 border-r border-gray-700">Description of Goods</th>
+                                <th className="px-4 py-3 text-center border-r border-gray-700">HSN/SAC</th>
+                                <th className="px-4 py-3 text-center border-r border-gray-700">Qty</th>
+                                <th className="px-4 py-3 text-right border-r border-gray-700">Rate</th>
                                 <th className="px-4 py-3 text-right">Amount (₹)</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                             {selectedInvoice.items?.map((item, idx) => (
                                 <tr key={idx} className="text-gray-900">
-                                    <td className="px-4 py-4 text-center text-[11px] font-black text-gray-400">{idx + 1}</td>
-                                    <td className="px-4 py-4">
+                                    <td className="px-4 py-4 text-center text-[11px] font-black text-gray-400 border-r border-gray-100">{idx + 1}</td>
+                                    <td className="px-4 py-4 border-r border-gray-100">
                                         <p className="text-xs font-black uppercase text-gray-900">{item.jobName}</p>
                                         <p className="text-[9px] font-bold text-gray-400 tracking-wide mt-0.5">Printing & Services</p>
                                     </td>
-                                    <td className="px-4 py-4 text-center text-[11px] font-bold text-gray-600 tracking-wider font-mono">4901</td>
-                                    <td className="px-4 py-4 text-center text-[11px] font-black">{item.qty || 0}</td>
-                                    <td className="px-4 py-4 text-right text-[11px] font-bold">₹{item.rate?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                                    <td className="px-4 py-4 text-center text-[11px] font-bold text-gray-600 tracking-wider font-mono border-r border-gray-100">4901</td>
+                                    <td className="px-4 py-4 text-center text-[11px] font-black border-r border-gray-100">{item.qty || 0}</td>
+                                    <td className="px-4 py-4 text-right text-[11px] font-bold border-r border-gray-100">₹{item.rate?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                                     <td className="px-4 py-4 text-right text-[11px] font-black">₹{item.total?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                                 </tr>
                             ))}
-                            {/* Empty spacing rows */}
-                            {[...Array(Math.max(0, 10 - (selectedInvoice.items?.length || 0)))].map((_, i) => (
-                                <tr key={`empty-${i}`} className="h-10 opacity-5"><td colSpan="6" className="border-b border-gray-100"></td></tr>
-                            ))}
+                             {/* Empty spacing rows with vertical grid lines */}
+                             {[...Array(Math.max(0, 10 - (selectedInvoice.items?.length || 0)))].map((_, i) => (
+                                 <tr key={`empty-${i}`} className="h-10 opacity-5">
+                                     <td className="border-r border-gray-100 border-b border-gray-100"></td>
+                                     <td className="border-r border-gray-100 border-b border-gray-100"></td>
+                                     <td className="border-r border-gray-100 border-b border-gray-100"></td>
+                                     <td className="border-r border-gray-100 border-b border-gray-100"></td>
+                                     <td className="border-r border-gray-100 border-b border-gray-100"></td>
+                                     <td className="border-b border-gray-100"></td>
+                                 </tr>
+                             ))}
                         </tbody>
                     </table>
                 </div>
