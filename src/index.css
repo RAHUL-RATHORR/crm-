@@ -78,7 +78,7 @@
   .a4-page {
     width: 208mm !important;   /* Slightly narrower to avoid margin issues */
     height: 294mm !important;  /* Sufficient buffer for all drivers */
-    padding: 10mm !important;
+    padding: 12mm !important;  /* Increased to 12mm for better corner clearance */
     margin: 8mm auto 0 auto !important; /* Increased to 8mm to ensure clearance */
     background: white !important;
     box-sizing: border-box !important;

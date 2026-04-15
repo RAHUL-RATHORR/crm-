@@ -451,7 +451,7 @@ export default function JobCardListing() {
                 className="bg-white mx-auto shadow-none border border-gray-100 a4-page"
               >
                  {/* Header Branding */}
-                 <div className="flex justify-between items-start mb-6 border-b-2 pb-4" style={{ borderColor: '#1e293b' }}>
+                 <div className="flex justify-between items-start mb-6 border-b-2 pb-4 px-2" style={{ borderColor: '#1e293b' }}>
                    <div className="flex-grow">
                      <div className="flex items-center gap-4 mb-2">
                          <h1 className="text-4xl font-black tracking-tight text-gray-900 leading-none">
@@ -479,10 +479,10 @@ export default function JobCardListing() {
                      <div className="bg-blue-600 text-white px-6 py-1.5 rounded text-[11px] font-black uppercase tracking-widest shadow-sm">
                          Job Card
                      </div>
-                     <div className="text-[9px] font-black text-gray-500 uppercase flex flex-col gap-0.5 mt-2 tracking-wide">
-                         <span>GSTIN: <span className="text-gray-900 border-b border-gray-200">08AALPC9959M1ZV</span></span>
-                         <span>PAN: <span className="text-gray-900 border-b border-gray-200">AALPC9959M</span></span>
-                     </div>
+                      <div className="text-[9px] font-black text-gray-500 uppercase flex flex-col gap-1 mt-2 tracking-wide">
+                          <span>GSTIN: <span className="text-gray-900 border-b-2 border-gray-100 pb-0.5 ml-1">08AALPC9959M1ZV</span></span>
+                          <span>PAN: <span className="text-gray-900 border-b-2 border-gray-100 pb-0.5 ml-1">AALPC9959M</span></span>
+                      </div>
                    </div>
                  </div>
 
@@ -521,14 +521,13 @@ export default function JobCardListing() {
                         <h4 className="text-[10px] font-black uppercase text-blue-600 border-b pb-1 mb-3 tracking-widest flex items-center gap-2">
                            <Calculator size={12} /> Production Specs
                         </h4>
-                        <div className="space-y-2">
-                            {[
+                        <div className="space-y-2">                             {[
                                 { label: 'Job Number', value: selectedCard.jobNumber, bold: true, color: 'text-blue-700' },
                                 { label: 'Job Name', value: selectedCard.jobName, uppercase: true },
                                 { label: 'Paper Size', value: selectedCard.pageSize || '-' },
                                 { label: 'Color Detail', value: selectedCard.printingType || '-' }
                             ].map((row, i) => (
-                                <div key={i} className="flex justify-between items-end gap-2 text-[11px] border-b border-gray-50 pb-1">
+                                <div key={i} className="flex justify-between items-end gap-2 text-[11px] border-b border-gray-100 pb-2">
                                     <span className="font-bold uppercase text-gray-400 min-w-fit">{row.label}</span>
                                     <span className={`text-right ${row.bold ? 'font-black' : 'font-bold'} ${row.color || 'text-gray-900'} ${row.uppercase ? 'uppercase' : ''}`}>
                                         {row.value}
@@ -550,9 +549,9 @@ export default function JobCardListing() {
                                     {selectedCard.paperSource || 'Company paper'}
                                 </div>
                             </div>
-                            <div className="space-y-2">
+                             <div className="space-y-2">
                                 <span className="text-[9px] font-black text-gray-400 uppercase block">Page Count</span>
-                                <div className="text-[11px] font-bold text-gray-900 border-b pb-1">
+                                <div className="text-[11px] font-bold text-gray-900 border-b border-gray-100 pb-2">
                                     C: {selectedCard.coverPaperCount || 0} / I: {selectedCard.innerPaperCount || 0}
                                 </div>
                             </div>
@@ -597,16 +596,15 @@ export default function JobCardListing() {
                         <h4 className="text-[10px] font-black uppercase text-indigo-600 border-b pb-1 mb-3 tracking-widest flex items-center gap-2">
                            <Printer size={12} /> Press Details
                         </h4>
-                        <div className="grid grid-cols-2 gap-y-3 gap-x-6">
-                            {[
+                        <div className="grid grid-cols-2 gap-y-3 gap-x-6">                             {[
                                 { label: 'Compose', value: selectedCard.composeDesign || 'No' },
                                 { label: 'Plate Type', value: selectedCard.plateType || 'New' },
                                 { label: 'Plate Qty', value: selectedCard.plateQty || 0 },
                                 { label: 'Lamination', value: selectedCard.lamination || '-' }
                             ].map((row, i) => (
-                                <div key={i} className="flex flex-col gap-1 border-b border-gray-50 pb-1">
-                                    <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">{row.label}</span>
-                                    <span className="text-[11px] font-bold text-gray-900">{row.value}</span>
+                                <div key={i} className="flex flex-col gap-1 border-b border-gray-100 pb-2.5">
+                                    <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none">{row.label}</span>
+                                    <span className="text-[11px] font-bold text-gray-900 leading-tight">{row.value}</span>
                                 </div>
                             ))}
                         </div>
@@ -643,7 +641,7 @@ export default function JobCardListing() {
                 </div>
 
                 {/* Branded Footer */}
-                <div className="mt-auto pt-8 border-t flex justify-between items-center opacity-60" style={{ borderColor: '#e2e8f0' }}>
+                <div className="mt-auto pt-8 border-t flex justify-between items-center opacity-60 px-2" style={{ borderColor: '#e2e8f0' }}>
                    <div className="flex gap-6">
                      <div className="flex items-center gap-1.5">
                        <Phone size={10} className="text-blue-500" />
