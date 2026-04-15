@@ -447,16 +447,41 @@ export default function JobCardListing() {
             {/* Modal Body - Printable Content */}
             <div className="p-8 overflow-y-auto flex-grow" id="printable-content">
               <div className="border-line border p-6 bg-white min-h-[800px] shadow-none" id="printable-inner">
-                <div className="flex justify-between items-center mb-6 pb-4 border-b-2" style={{ borderColor: '#3b82f6' }}>
-                  <div>
-                    <h1 className="text-4xl font-extrabold uppercase tracking-tighter" style={{ color: '#1e3a8a' }}>TRICKWRIC</h1>
-                    <p className="text-[10px] uppercase font-bold tracking-widest" style={{ color: '#3b82f6' }}>Production & Quality Control</p>
-                  </div>
-                  <div className="bg-blue-50 border-2 px-6 py-2 rounded-lg text-sm font-black uppercase flex flex-col items-center" style={{ borderColor: '#3b82f6', color: '#1e3a8a', backgroundColor: '#eff6ff' }}>
-                    <span className="text-[10px] opacity-70">Document</span>
-                    Job Card
-                  </div>
-                </div>
+                 {/* Header Branding */}
+                 <div className="flex justify-between items-start mb-6 border-b-2 pb-4" style={{ borderColor: '#1e293b' }}>
+                   <div className="flex-grow">
+                     <div className="flex items-center gap-4 mb-2">
+                         <h1 className="text-4xl font-black tracking-tight text-gray-900 leading-none">
+                             Harihar <span className="text-blue-600">Printers</span>
+                         </h1>
+                     </div>
+                     <div className="space-y-0.5">
+                         <p className="text-[10px] font-bold text-gray-700">
+                            <span className="text-blue-600 uppercase">Office:</span> J-97, Ashok Chowk, Adarsh Nagar, Jaipur-302 004
+                         </p>
+                         <p className="text-[10px] font-bold text-gray-700">
+                            <span className="text-blue-600 uppercase">Factory:</span> G-139, Hirawala Industrial Area, Kanota, Agra Road, Jaipur
+                         </p>
+                         <div className="flex gap-4 mt-1">
+                             <p className="text-[10px] font-bold text-gray-700 flex items-center gap-1">
+                                 <Phone size={10} className="text-blue-500" /> 0141-2600850, 9414043763
+                             </p>
+                             <p className="text-[10px] font-bold text-gray-700 flex items-center gap-1">
+                                 <Mail size={10} className="text-blue-500" /> hariharprinters1@gmail.com
+                             </p>
+                         </div>
+                     </div>
+                   </div>
+                   <div className="text-right flex flex-col items-end gap-1">
+                     <div className="bg-blue-600 text-white px-6 py-1.5 rounded text-[11px] font-black uppercase tracking-widest shadow-sm">
+                         Job Card
+                     </div>
+                     <div className="text-[9px] font-black text-gray-500 uppercase flex flex-col gap-0.5 mt-2 tracking-wide">
+                         <span>GSTIN: <span className="text-gray-900 border-b border-gray-200">08AALPC9959M1ZV</span></span>
+                         <span>PAN: <span className="text-gray-900 border-b border-gray-200">AALPC9959M</span></span>
+                     </div>
+                   </div>
+                 </div>
 
                 {/* Top Info Grid */}
                 <div className="grid grid-cols-1 gap-y-3 mb-4">
