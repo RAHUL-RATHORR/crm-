@@ -144,7 +144,6 @@ const InvoiceList = () => {
                   <th className="px-4 sm:px-6 py-4">Invoice Number</th>
                   <th className="px-4 sm:px-6 py-4">Party Name</th>
                   <th className="px-4 sm:px-6 py-4">Total Amount</th>
-                  <th className="px-4 sm:px-6 py-4 text-center">Status</th>
                   <th className="px-4 sm:px-6 py-4">Created At</th>
                   <th className="px-4 sm:px-6 py-4 text-center">Action</th>
                 </tr>
@@ -152,8 +151,8 @@ const InvoiceList = () => {
               <tbody className="divide-y divide-gray-50">
                 {invoices.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="px-6 py-10 text-center text-gray-500">
-                      No invoices found. Click "Add New" to create one.
+                    <td colSpan="5" className="px-6 py-10 text-center text-gray-500">
+                      No invoices found. Click &quot;Add New&quot; to create one.
                     </td>
                   </tr>
                 ) : (
@@ -163,38 +162,6 @@ const InvoiceList = () => {
                       <td className="px-4 sm:px-6 py-4 text-sm font-semibold text-blue-600 underline underline-offset-4 decoration-blue-100">{inv.invoiceNumber}</td>
                       <td className="px-4 sm:px-6 py-4 text-sm font-medium text-gray-800">{inv.partyName}</td>
                       <td className="px-4 sm:px-6 py-4 text-sm font-bold text-gray-900">₹ {inv.totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-                      <td className="px-4 sm:px-6 py-4 text-center relative">
-                        <div className="relative inline-block">
-                          <button
-                            onClick={() => setOpenDropdownId(openDropdownId === inv._id ? null : inv._id)}
-                            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-white text-[10px] font-black uppercase tracking-wider transition-all shadow-sm ${(inv.paymentStatus === 'Completed') ? 'bg-emerald-500' : 'bg-orange-500'}`}
-                          >
-                            {inv.paymentStatus === 'Completed' ? 'Completed' : 'Pending'}
-                          </button>
-
-                          {openDropdownId === inv._id && (
-                            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-32 bg-white border border-gray-100 rounded-xl shadow-xl z-50 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
-                              {inv.paymentStatus === 'Completed' ? (
-                                <button
-                                  onClick={() => handleStatusUpdate(inv._id, 'Pending')}
-                                  className="flex items-center justify-between w-full px-4 py-2 text-[10px] font-black uppercase tracking-wider text-orange-600 hover:bg-orange-50 transition-colors"
-                                >
-                                  Pending
-                                  <AlertCircle size={14} className="opacity-50" />
-                                </button>
-                              ) : (
-                                <button
-                                  onClick={() => handleStatusUpdate(inv._id, 'Completed')}
-                                  className="flex items-center justify-between w-full px-4 py-2 text-[10px] font-black uppercase tracking-wider text-emerald-600 hover:bg-emerald-50 transition-colors"
-                                >
-                                  Completed
-                                  <Check size={14} />
-                                </button>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </td>
                       <td className="px-4 sm:px-6 py-4 text-xs sm:text-sm text-gray-500">
                         <div className="flex flex-col">
                           <span className="font-medium">{new Date(inv.createdAt).toLocaleDateString()}</span>
@@ -294,10 +261,10 @@ const InvoiceList = () => {
 
             {/* Modal Body - Printable Content */}
             <div className="p-4 sm:p-8 overflow-y-auto flex-grow bg-gray-50">
-              <div 
+              <div
                 id="printable-invoice"
                 className="bg-white mx-auto shadow-none border border-gray-200"
-                style={{ 
+                style={{
                   minHeight: '148mm',
                   fontFamily: "'Inter', sans-serif",
                   color: '#000000'
@@ -374,7 +341,7 @@ const InvoiceList = () => {
                       ))}
                       {/* Placeholder Rows to fill height */}
                       {[...Array(Math.max(0, 8 - (selectedInvoice.items?.length || 0)))].map((_, i) => (
-                         <tr key={i} className="h-10 border-b opacity-10" style={{ borderColor: '#e2e8f0' }}><td colSpan="5"></td></tr>
+                        <tr key={i} className="h-10 border-b opacity-10" style={{ borderColor: '#e2e8f0' }}><td colSpan="5"></td></tr>
                       ))}
                     </tbody>
                   </table>
@@ -390,13 +357,13 @@ const InvoiceList = () => {
                     </div>
 
                     <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                       <h4 className="text-[9px] font-black uppercase text-blue-600 mb-2 bottom-border pb-1 border-b" style={{ borderColor: '#dbeafe' }}>Bank Details</h4>
-                       <div className="grid grid-cols-2 gap-y-2 text-[9px] font-bold uppercase">
-                          <p><span className="text-gray-400 mr-2 uppercase">Bank:</span> HDFC BANK LTD</p>
-                          <p><span className="text-gray-400 mr-2 uppercase">A/C:</span> 5020000XXXXXXX</p>
-                          <p><span className="text-gray-400 mr-2 uppercase">IFSC:</span> HDFC0001234</p>
-                          <p><span className="text-gray-400 mr-2 uppercase">Branch:</span> DHARUHERA</p>
-                       </div>
+                      <h4 className="text-[9px] font-black uppercase text-blue-600 mb-2 bottom-border pb-1 border-b" style={{ borderColor: '#dbeafe' }}>Bank Details</h4>
+                      <div className="grid grid-cols-2 gap-y-2 text-[9px] font-bold uppercase">
+                        <p><span className="text-gray-400 mr-2 uppercase">Bank:</span> HDFC BANK LTD</p>
+                        <p><span className="text-gray-400 mr-2 uppercase">A/C:</span> 5020000XXXXXXX</p>
+                        <p><span className="text-gray-400 mr-2 uppercase">IFSC:</span> HDFC0001234</p>
+                        <p><span className="text-gray-400 mr-2 uppercase">Branch:</span> DHARUHERA</p>
+                      </div>
                     </div>
                   </div>
 
@@ -407,18 +374,18 @@ const InvoiceList = () => {
                       <span className="text-gray-900">₹{(selectedInvoice.totalAmount / (1 + (selectedInvoice.gstRate / 100))).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                     </div>
                     <div className="flex justify-between items-center text-[11px] font-bold text-blue-600 italic">
-                      <span>CGST ({selectedInvoice.gstRate/2}%)</span>
+                      <span>CGST ({selectedInvoice.gstRate / 2}%)</span>
                       <span>₹{((selectedInvoice.totalAmount - (selectedInvoice.totalAmount / (1 + (selectedInvoice.gstRate / 100)))) / 2).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                     </div>
                     <div className="flex justify-between items-center text-[11px] font-bold text-blue-600 italic border-b pb-2" style={{ borderColor: '#cbd5e1' }}>
-                      <span>SGST ({selectedInvoice.gstRate/2}%)</span>
+                      <span>SGST ({selectedInvoice.gstRate / 2}%)</span>
                       <span>₹{((selectedInvoice.totalAmount - (selectedInvoice.totalAmount / (1 + (selectedInvoice.gstRate / 100)))) / 2).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                     </div>
                     <div className="flex justify-between items-center bg-blue-600 text-white p-4 rounded-xl shadow-lg shadow-blue-100 mt-4">
                       <span className="text-[10px] font-black uppercase">Net Payable</span>
                       <span className="text-xl font-black">₹{selectedInvoice.totalAmount?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                     </div>
-                    
+
                     <div className="pt-12 text-center">
                       <div className="border-t pt-2" style={{ borderColor: '#00000030' }}>
                         <span className="text-[10px] font-black uppercase block">Authorized Signatory</span>

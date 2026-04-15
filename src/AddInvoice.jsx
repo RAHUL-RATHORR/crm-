@@ -173,11 +173,11 @@ const AddInvoice = () => {
             <table className="w-full text-left border-collapse min-w-[800px]">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider w-1/2">Description *</th>
-                  <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider text-center">Qty *</th>
-                  <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider text-center">Rate *</th>
-                  <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider text-center">Total</th>
-                  <th className="px-6 py-3 w-16"></th>
+                  <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider w-64">Description *</th>
+                  <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider text-center w-28">Qty *</th>
+                  <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider text-center w-32">Rate *</th>
+                  <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider text-center w-36">Total</th>
+                  <th className="px-6 py-3 w-14"></th>
                 </tr>
               </thead>
               <tbody>
@@ -193,31 +193,37 @@ const AddInvoice = () => {
                         className="w-full bg-white border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
                       />
                     </td>
-                    <td className="px-6 py-4">
-                      <input
-                        type="number"
-                        value={item.qty}
-                        onChange={(e) => handleItemChange(item.id, 'qty', e.target.value)}
-                        required
-                        className="w-24 mx-auto bg-white border border-gray-200 rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm text-center"
-                      />
+                    <td className="px-2 py-4 text-center">
+                      <div className="flex justify-center">
+                        <input
+                          type="number"
+                          value={item.qty}
+                          onChange={(e) => handleItemChange(item.id, 'qty', e.target.value)}
+                          required
+                          className="w-20 bg-white border border-gray-200 rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm text-center"
+                        />
+                      </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <input
-                        type="number"
-                        value={item.rate}
-                        onChange={(e) => handleItemChange(item.id, 'rate', e.target.value)}
-                        required
-                        className="w-24 mx-auto bg-white border border-gray-200 rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm text-center"
-                      />
+                    <td className="px-2 py-4 text-center">
+                      <div className="flex justify-center">
+                        <input
+                          type="number"
+                          value={item.rate}
+                          onChange={(e) => handleItemChange(item.id, 'rate', e.target.value)}
+                          required
+                          className="w-24 bg-white border border-gray-200 rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm text-center"
+                        />
+                      </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <input
-                        type="text"
-                        value={item.total.toFixed(2)}
-                        readOnly
-                        className="w-28 mx-auto bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 focus:outline-none text-sm text-center font-medium text-gray-700"
-                      />
+                    <td className="px-2 py-4 text-center">
+                      <div className="flex justify-center">
+                        <input
+                          type="text"
+                          value={item.total.toFixed(2)}
+                          readOnly
+                          className="w-28 bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 focus:outline-none text-sm text-center font-semibold text-blue-700"
+                        />
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-center">
                       <button

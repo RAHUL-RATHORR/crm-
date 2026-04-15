@@ -38,12 +38,12 @@ router.post('/', async (req, res) => {
     // --- AUTO STOCK DEDUCTION LOGIC ---
     try {
       const { paper, paperGSM, jobQty, paperSource } = req.body;
-      
+
       // We only deduct if it's "Company paper" (meaning the printer provides it)
       if (paperSource === "Company paper" && paper && paperGSM && jobQty > 0) {
-        const stockItem = await PaperStock.findOne({ 
-          name: { $regex: new RegExp(`^${paper}$`, 'i') }, 
-          gsm: Number(paperGSM) 
+        const stockItem = await PaperStock.findOne({
+          name: { $regex: new RegExp(`^${paper}$`, 'i') },
+          gsm: Number(paperGSM)
         });
 
         if (stockItem) {
