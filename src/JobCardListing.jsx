@@ -12,17 +12,20 @@ export default function JobCardListing() {
   const filterRef = useRef(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [columnVisibility, setColumnVisibility] = useState(() => {
-    const saved = localStorage.getItem('jobCardColumnVisibility');
-    return saved ? JSON.parse(saved) : {
+    // Clear old saved visibility to avoid stale keys
+    localStorage.removeItem('jobCardColumnVisibility');
+    return {
       partyName: true,
-      jobName: true,
       jobNumber: true,
       jobDate: true,
-      cancelPlate: true,
-      paper: true,
+      jobQty: true,
+      pageSize: true,
+      pageCount: false,
       printingType: true,
-      paperSize: true,
-      totalAmount: true,
+      paper: true,
+      paperGSM: false,
+      lamination: true,
+      binding: true,
       createdAt: true
     };
   });
@@ -58,18 +61,33 @@ export default function JobCardListing() {
     loadData();
   };
 
+  const getBindingText = (card) => {
+    const bindings = [
+      { key: 'bindingCenterPin', label: 'Center Pin' },
+      { key: 'bindingSilai', label: 'Silai' },
+      { key: 'bindingSidePin', label: 'Side Pin' },
+      { key: 'bindingFolding', label: 'Folding' },
+      { key: 'bindingPerforation', label: 'Perforation' },
+      { key: 'bindingNumbring', label: 'Numbring' },
+      { key: 'bindingRegister', label: 'Register' }
+    ].filter(b => card[b.key]).map(b => b.label);
+    return bindings.length > 0 ? bindings : null;
+  };
+
   const exportToCSV = () => {
     const visibleData = jobCards.map(card => {
       const exportRow = {};
-      if (columnVisibility.partyName) exportRow['Company Name'] = card.partyName;
-      if (columnVisibility.jobName) exportRow['Job Name'] = card.jobName;
+      if (columnVisibility.partyName) exportRow['Party Name'] = card.partyName;
       if (columnVisibility.jobNumber) exportRow['Job Number'] = card.jobNumber;
       if (columnVisibility.jobDate) exportRow['Job Date'] = new Date(card.jobDate).toLocaleDateString();
-      if (columnVisibility.cancelPlate) exportRow['Cancel Plate'] = card.cancelPlate || '1.00';
-      if (columnVisibility.paper) exportRow['Paper'] = card.paper;
-      if (columnVisibility.printingType) exportRow['Printing FC'] = card.printingType;
-      if (columnVisibility.paperSize) exportRow['Paper Size'] = card.paperSize;
-      if (columnVisibility.totalAmount) exportRow['Total Amount'] = card.totalAmount;
+      if (columnVisibility.jobQty) exportRow['Job Qty'] = card.jobQty || 0;
+      if (columnVisibility.pageSize) exportRow['Page Size'] = card.pageSize || '-';
+      if (columnVisibility.pageCount) exportRow['Page Count'] = card.pageCount || '-';
+      if (columnVisibility.printingType) exportRow['Color'] = card.printingType || '-';
+      if (columnVisibility.paper) exportRow['Paper'] = card.paper || '-';
+      if (columnVisibility.paperGSM) exportRow['Paper GSM'] = card.paperGSM || '-';
+      if (columnVisibility.lamination) exportRow['Lamination'] = card.lamination || '-';
+      if (columnVisibility.binding) exportRow['Binding'] = (getBindingText(card) || []).join(' • ');
       if (columnVisibility.createdAt) exportRow['Created At'] = new Date(card.createdAt).toLocaleString();
       return exportRow;
     });
@@ -259,17 +277,19 @@ export default function JobCardListing() {
             {isFilterOpen && (
               <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 p-4 animate-in fade-in zoom-in-95 duration-200">
                 <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 px-1">Column Display</h3>
-                <div className="space-y-1 max-h-48 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
+                <div className="space-y-1 max-h-64 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
                   {[
-                    { id: 'partyName', label: 'Company Name' },
-                    { id: 'jobName', label: 'Job Name' },
+                    { id: 'partyName', label: 'Party Name' },
                     { id: 'jobNumber', label: 'Job Number' },
                     { id: 'jobDate', label: 'Job Date' },
-                    { id: 'cancelPlate', label: 'Cancel Plate' },
+                    { id: 'jobQty', label: 'Job Qty' },
+                    { id: 'pageSize', label: 'Page Size' },
+                    { id: 'pageCount', label: 'Page Count' },
+                    { id: 'printingType', label: 'Color' },
                     { id: 'paper', label: 'Paper' },
-                    { id: 'printingType', label: 'Printing FC' },
-                    { id: 'paperSize', label: 'Paper Size' },
-                    { id: 'totalAmount', label: 'Total Amount' },
+                    { id: 'paperGSM', label: 'Paper GSM' },
+                    { id: 'lamination', label: 'Lamination' },
+                    { id: 'binding', label: 'Binding' },
                     { id: 'createdAt', label: 'Created At' }
                   ].map((col) => (
                     <label key={col.id} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors group">
@@ -295,15 +315,17 @@ export default function JobCardListing() {
             <thead>
               <tr className="bg-gray-50 text-gray-500 font-medium border-b border-gray-100 uppercase tracking-wider text-xs">
                 <th className="py-4 px-6">S.No.</th>
-                {columnVisibility.partyName && <th className="py-4 px-6">Company Name</th>}
-                {columnVisibility.jobName && <th className="py-4 px-6">Job Name</th>}
+                {columnVisibility.partyName && <th className="py-4 px-6">Party Name</th>}
                 {columnVisibility.jobNumber && <th className="py-4 px-6">Job Number</th>}
                 {columnVisibility.jobDate && <th className="py-4 px-6">Job Date</th>}
-                {columnVisibility.cancelPlate && <th className="py-4 px-6">Cancel Plate</th>}
+                {columnVisibility.jobQty && <th className="py-4 px-6">Job Qty</th>}
+                {columnVisibility.pageSize && <th className="py-4 px-6">Page Size</th>}
+                {columnVisibility.pageCount && <th className="py-4 px-6">Page Count</th>}
+                {columnVisibility.printingType && <th className="py-4 px-6">Color</th>}
                 {columnVisibility.paper && <th className="py-4 px-6">Paper</th>}
-                {columnVisibility.printingType && <th className="py-4 px-6">Printing FC</th>}
-                {columnVisibility.paperSize && <th className="py-4 px-6">Paper Size</th>}
-                {columnVisibility.totalAmount && <th className="py-4 px-6">Total Amount</th>}
+                {columnVisibility.paperGSM && <th className="py-4 px-6">GSM</th>}
+                {columnVisibility.lamination && <th className="py-4 px-6">Lamination</th>}
+                {columnVisibility.binding && <th className="py-4 px-6">Binding</th>}
                 {columnVisibility.createdAt && <th className="py-4 px-6">Created At</th>}
                 <th className="py-4 px-6 text-center">Action</th>
               </tr>
@@ -320,7 +342,6 @@ export default function JobCardListing() {
                   <tr key={card._id} className="border-b last:border-0 border-gray-50 hover:bg-gray-50 transition-colors">
                     <td className="py-4 px-6 text-gray-500">{index + 1}</td>
                     {columnVisibility.partyName && <td className="py-4 px-6 font-medium text-gray-900">{card.partyName}</td>}
-                    {columnVisibility.jobName && <td className="py-4 px-6">{card.jobName}</td>}
                     {columnVisibility.jobNumber && (
                       <td className="py-4 px-6">
                         <span className="bg-blue-50 text-blue-700 px-2.5 py-1 rounded-md text-xs font-semibold">
@@ -333,11 +354,45 @@ export default function JobCardListing() {
                         {new Date(card.jobDate).toLocaleDateString()}
                       </td>
                     )}
-                    {columnVisibility.cancelPlate && <td className="py-4 px-6">{card.cancelPlate || '1.00'}</td>}
-                    {columnVisibility.paper && <td className="py-4 px-6">{card.paper}</td>}
-                    {columnVisibility.printingType && <td className="py-4 px-6">{card.printingType}</td>}
-                    {columnVisibility.paperSize && <td className="py-4 px-6">{card.paperSize}</td>}
-                    {columnVisibility.totalAmount && <td className="py-4 px-6 font-semibold">₹{card.totalAmount}</td>}
+                    {columnVisibility.jobQty && (
+                      <td className="py-4 px-6 text-gray-800 font-semibold">{card.jobQty || 0}</td>
+                    )}
+                    {columnVisibility.pageSize && (
+                      <td className="py-4 px-6 text-gray-700">{card.pageSize || '-'}</td>
+                    )}
+                    {columnVisibility.pageCount && (
+                      <td className="py-4 px-6 text-gray-700">{card.pageCount || '-'}</td>
+                    )}
+                    {columnVisibility.printingType && (
+                      <td className="py-4 px-6">
+                        {card.printingType ? (
+                          <span className="bg-purple-50 text-purple-700 px-2 py-0.5 rounded text-xs font-medium">{card.printingType}</span>
+                        ) : '-'}
+                      </td>
+                    )}
+                    {columnVisibility.paper && <td className="py-4 px-6 text-gray-700">{card.paper || '-'}</td>}
+                    {columnVisibility.paperGSM && <td className="py-4 px-6 text-gray-700">{card.paperGSM || '-'}</td>}
+                    {columnVisibility.lamination && (
+                      <td className="py-4 px-6">
+                        {card.lamination ? (
+                          <span className="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded text-xs font-medium">{card.lamination}</span>
+                        ) : <span className="text-gray-400 text-xs">None</span>}
+                      </td>
+                    )}
+                    {columnVisibility.binding && (
+                      <td className="py-4 px-6 max-w-[160px]">
+                        {(() => {
+                          const chips = getBindingText(card);
+                          return chips ? (
+                            <div className="flex flex-wrap gap-1">
+                              {chips.map((b, i) => (
+                                <span key={i} className="bg-amber-50 text-amber-700 border border-amber-100 px-1.5 py-0.5 rounded text-[10px] font-semibold">{b}</span>
+                              ))}
+                            </div>
+                          ) : <span className="text-gray-400 text-xs">None</span>;
+                        })()}
+                      </td>
+                    )}
                     {columnVisibility.createdAt && (
                       <td className="py-4 px-6 text-gray-500 text-xs text-wrap max-w-[120px]">
                         {new Date(card.createdAt).toLocaleString()}

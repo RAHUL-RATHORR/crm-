@@ -7,33 +7,47 @@ import PaperStock from '../models/PaperStock.js';
 // POST /api/jobcard - Save or Update Job Card
 router.post('/', async (req, res) => {
   try {
-    const { jobNumber, partyName } = req.body;
+    const { partyName } = req.body;
+    let { jobNumber } = req.body;
 
     // Auto-alias if needed
     if (partyName && !req.body.companyName) {
       req.body.companyName = partyName;
     }
 
-    // Check if updating
+    // Check if updating existing job card
     let jobCard;
     let isUpdate = false;
+
     if (jobNumber) {
       const existingJob = await JobCard.findOne({ jobNumber });
       if (existingJob) {
+        // UPDATE existing job card
         isUpdate = true;
         jobCard = await JobCard.findOneAndUpdate(
           { jobNumber },
-          { ...req.body },
+          { ...req.body, updatedAt: new Date() },
           { new: true }
         );
       } else {
+        // NEW job card with provided jobNumber
         jobCard = new JobCard(req.body);
         await jobCard.save();
       }
     } else {
+      // AUTO-GENERATE jobNumber
+      const lastJob = await JobCard.findOne().sort({ createdAt: -1 }).select('jobNumber');
+      let nextNum = 1;
+      if (lastJob && lastJob.jobNumber) {
+        const lastNum = parseInt(lastJob.jobNumber.replace(/[^0-9]/g, ''), 10);
+        if (!isNaN(lastNum)) nextNum = lastNum + 1;
+      }
+      const generatedJobNumber = `JOB-${String(nextNum).padStart(4, '0')}`;
+      req.body.jobNumber = generatedJobNumber;
       jobCard = new JobCard(req.body);
       await jobCard.save();
     }
+
 
     // --- AUTO STOCK DEDUCTION LOGIC ---
     try {
