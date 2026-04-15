@@ -293,18 +293,10 @@ const ChallanList = () => {
             </div>
 
             {/* Printable Content */}
-            <div className="p-4 sm:p-6 overflow-y-auto flex-grow bg-gray-100/50">
+            <div className="p-4 sm:p-6 overflow-y-auto flex-grow bg-gray-100/50 a4-page-container">
               <div 
                 id="printable-challan"
-                className="bg-white mx-auto shadow-sm border border-gray-200"
-                style={{ 
-                  minHeight: '297mm', // A4 Height
-                  width: '210mm',      // A4 Width
-                  padding: '12mm',
-                  fontFamily: "'Inter', sans-serif",
-                  color: '#000000',
-                  boxSizing: 'border-box'
-                }}
+                className="bg-white mx-auto shadow-sm border border-gray-200 a4-page"
               >
                 {/* Header Branding */}
                 <div className="flex justify-between items-start mb-6 border-b-2 pb-4" style={{ borderColor: '#1e293b' }}>
