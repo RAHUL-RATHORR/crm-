@@ -353,16 +353,18 @@ const Statements = () => {
                     <div className="flex items-center gap-2 animate-in slide-in-from-left-4 duration-300 bg-gray-50/50 p-1.5 rounded-xl border border-gray-100">
                         <input 
                             type="date"
-                            className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm font-medium outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
+                            className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm font-medium outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm cursor-pointer"
                             value={customRange.start}
                             onChange={(e) => setCustomRange({...customRange, start: e.target.value})}
+                            onClick={(e) => { try { e.target.showPicker(); } catch(_) {} }}
                         />
                         <span className="text-gray-400 font-medium text-sm">to</span>
                         <input 
                             type="date"
-                            className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm font-medium outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
+                            className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm font-medium outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm cursor-pointer"
                             value={customRange.end}
                             onChange={(e) => setCustomRange({...customRange, end: e.target.value})}
+                            onClick={(e) => { try { e.target.showPicker(); } catch(_) {} }}
                         />
                     </div>
                 )}
