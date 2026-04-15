@@ -177,7 +177,10 @@ const ChallanList = () => {
                             onClick={() => setOpenDropdownId(openDropdownId === ch._id ? null : ch._id)}
                             className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-white text-xs font-bold transition-all shadow-sm ${(ch.paymentStatus === 'Completed') ? 'bg-emerald-500' : 'bg-orange-500'}`}
                           >
-                            {ch.paymentStatus === 'Completed' ? 'Completed' : 'Pending'}
+                            <div className="flex items-center gap-1.5">
+                              {ch.paymentStatus === 'Completed' ? 'Completed' : 'Pending'}
+                              {ch.paymentStatus === 'Completed' && <Check size={12} strokeWidth={3} />}
+                            </div>
                             <ChevronDown size={14} className={`transition-transform duration-200 ${openDropdownId === ch._id ? 'rotate-180' : ''}`} />
                           </button>
 
