@@ -214,8 +214,8 @@ export default function Dashboard() {
                 <CountUp end={24562564} prefix="₹" />
               </div>
               <div className="flex items-center gap-2 text-sm">
-                <span className="bg-teal-100 text-teal-600 px-2 py-0.5 rounded text-xs font-semibold">+1.3%</span>
-                <span className="text-gray-400 text-xs sm:text-sm">vs prev. month</span>
+                <span className="bg-teal-100 text-teal-600 px-2 py-0.5 rounded text-xs font-semibold">+12.5%</span>
+                <span className="text-gray-400 text-xs sm:text-sm">vs prev. year</span>
               </div>
             </div>
           </div>
