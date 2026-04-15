@@ -290,124 +290,173 @@ const ChallanList = () => {
             </div>
 
             {/* Printable Content */}
-            <div className="p-4 sm:p-8 overflow-y-auto flex-grow bg-gray-50">
+            <div className="p-4 sm:p-6 overflow-y-auto flex-grow bg-gray-100/50">
               <div 
                 id="printable-challan"
-                className="bg-white mx-auto shadow-none border border-gray-200"
+                className="bg-white mx-auto shadow-sm border border-gray-200"
                 style={{ 
-                  minHeight: '148mm',
+                  minHeight: '297mm', // A4 Height
+                  width: '210mm',      // A4 Width
+                  padding: '12mm',
                   fontFamily: "'Inter', sans-serif",
-                  color: '#000000'
+                  color: '#000000',
+                  boxSizing: 'border-box'
                 }}
               >
-                {/* Visual Header - Identical to Job Card Screenshot */}
-                <div className="flex justify-between items-center mb-6 pb-4 border-b-2" style={{ borderColor: '#3b82f6' }}>
-                  <div>
-                    <h1 className="text-4xl font-extrabold uppercase tracking-tighter" style={{ color: '#1e3a8a' }}>TRICKWRIC</h1>
-                    <p className="text-[10px] uppercase font-bold tracking-widest" style={{ color: '#3b82f6' }}>Production & Quality Control</p>
+                {/* Header Branding */}
+                <div className="flex justify-between items-start mb-6 border-b-2 pb-4" style={{ borderColor: '#1e293b' }}>
+                  <div className="flex-grow">
+                    <div className="flex items-center gap-4 mb-2">
+                        <h1 className="text-4xl font-black tracking-tight text-gray-900 leading-none">
+                            Harihar <span className="text-blue-600">Printers</span>
+                        </h1>
+                    </div>
+                    <div className="space-y-0.5">
+                        <p className="text-[10px] font-bold text-gray-700">
+                           <span className="text-blue-600 uppercase">Office:</span> J-97, Ashok Chowk, Adarsh Nagar, Jaipur-302 004
+                        </p>
+                        <p className="text-[10px] font-bold text-gray-700">
+                           <span className="text-blue-600 uppercase">Factory:</span> G-139, Hirawala Industrial Area, Kanota, Agra Road, Jaipur
+                        </p>
+                        <div className="flex gap-4 mt-1">
+                            <p className="text-[10px] font-bold text-gray-700 flex items-center gap-1">
+                                <Phone size={10} className="text-blue-500" /> 0141-2600850, 9414043763
+                            </p>
+                            <p className="text-[10px] font-bold text-gray-700 flex items-center gap-1">
+                                <Mail size={10} className="text-blue-500" /> hariharprinters1@gmail.com
+                            </p>
+                        </div>
+                    </div>
                   </div>
-                  <div className="bg-blue-50 border-2 px-6 py-2 rounded-lg text-sm font-black uppercase flex flex-col items-center" style={{ borderColor: '#3b82f6', color: '#1e3a8a', backgroundColor: '#eff6ff' }}>
-                    <span className="text-[10px] opacity-70">Document</span>
-                    Delivery Challan
-                  </div>
-                </div>
-
-                {/* Top Info Grid - Exact Job Card Layout */}
-                <div className="grid grid-cols-1 gap-y-3 mb-4">
-                  <div className="border-b pb-1 flex items-center gap-2" style={{ borderColor: '#cbd5e1' }}>
-                    <Building2 size={13} style={{ color: '#3b82f6' }} />
-                    <span className="text-[9px] font-bold uppercase w-28 opacity-60">Party Name:</span>
-                    <span className="flex-grow font-bold text-sm" style={{ color: '#000000' }}>{selectedChallan.partyName}</span>
-                  </div>
-                  <div className="border-b pb-1 flex items-center gap-2" style={{ borderColor: '#cbd5e1' }}>
-                    <MapPin size={13} style={{ color: '#3b82f6' }} />
-                    <span className="text-[9px] font-bold uppercase w-28 opacity-60">Address:</span>
-                    <span className="flex-grow font-bold text-xs" style={{ color: '#000000' }}>Rewari, Haryana, India</span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-x-6 gap-y-3 mb-6">
-                  <div className="border-b pb-1 flex items-center gap-2 col-span-1" style={{ borderColor: '#cbd5e1' }}>
-                    <Phone size={13} style={{ color: '#3b82f6' }} />
-                    <span className="text-[9px] font-bold uppercase w-16 opacity-60">Contact:</span>
-                    <span className="flex-grow font-bold text-xs" style={{ color: '#000000' }}>-</span>
-                  </div>
-                  <div className="border-b pb-1 flex items-center gap-2 col-span-1" style={{ borderColor: '#cbd5e1' }}>
-                    <FileDigit size={13} style={{ color: '#3b82f6' }} />
-                    <span className="text-[9px] font-bold uppercase w-16 opacity-60">CH NO:</span>
-                    <span className="flex-grow font-bold text-sm text-blue-700" style={{ color: '#1d4ed8' }}>{selectedChallan.challanNo}</span>
-                  </div>
-                  <div className="border-b pb-1 flex items-center gap-2 col-span-1" style={{ borderColor: '#cbd5e1' }}>
-                    <Calendar size={13} style={{ color: '#3b82f6' }} />
-                    <span className="text-[9px] font-bold uppercase w-12 opacity-60">Date:</span>
-                    <span className="flex-grow font-bold text-xs" style={{ color: '#000000' }}>{new Date(selectedChallan.createdAt).toLocaleDateString('en-GB')}</span>
-                  </div>
-                </div>
-
-                {/* Delivery Table */}
-                <div className="mt-8 border-t-2 pt-4" style={{ borderColor: '#3b82f6' }}>
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="bg-blue-50/50 uppercase text-[10px] font-black tracking-wider text-blue-900 border-b" style={{ borderColor: '#bfdbfe' }}>
-                        <th className="px-4 py-3">S.No</th>
-                        <th className="px-4 py-3">Description of Goods</th>
-                        <th className="px-4 py-3 text-center">Job Card</th>
-                        <th className="px-4 py-3 text-right">Quantity</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      <tr className="text-gray-900 border-b" style={{ borderColor: '#f1f5f9' }}>
-                        <td className="px-4 py-5 text-xs font-bold text-gray-400">01</td>
-                        <td className="px-4 py-5">
-                          <p className="text-xs font-black uppercase">{selectedChallan.jobName}</p>
-                          <p className="text-[9px] text-gray-400 font-medium italic">Premium Delivery Item</p>
-                        </td>
-                        <td className="px-4 py-5 text-center text-[11px] font-bold">#{selectedChallan.jobNumber}</td>
-                        <td className="px-4 py-5 text-right text-sm font-black text-blue-700">1 Unit</td>
-                      </tr>
-                      {/* Blank rows for spacing */}
-                      {[1, 2, 3].map((i) => (
-                        <tr key={i} className="h-10 border-b opacity-5" style={{ borderColor: '#e2e8f0' }}><td colSpan="4"></td></tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Footer Signature Section - Styled like Job Card */}
-                <div className="mt-12 flex justify-between gap-10">
-                  <div className="w-1/2 p-6 border-2 border-gray-100 rounded-3xl border-dashed bg-gray-50/30">
-                     <p className="text-[10px] font-black text-blue-300 uppercase mb-10 tracking-widest pl-1">Receiver's Seal & Signature</p>
-                     <div className="flex justify-between items-center text-[8px] font-bold text-gray-300 italic">
-                        <span>Received above goods in perfect condition.</span>
-                     </div>
-                  </div>
-                  <div className="w-1/3 pt-10">
-                    <div className="border-t-2 pt-2 text-center" style={{ borderColor: '#1e293b' }}>
-                      <p className="text-[10px] font-black uppercase" style={{ color: '#1e293b' }}>Authorized Signatory</p>
-                      <p className="text-[8px] text-gray-400 font-bold uppercase mt-1">Sneha Graphics Solutions</p>
+                  <div className="text-right flex flex-col items-end gap-1">
+                    <div className="bg-blue-600 text-white px-4 py-1.5 rounded text-[11px] font-black uppercase tracking-widest shadow-sm">
+                        GST Delivery Challan
+                    </div>
+                    <div className="text-[9px] font-black text-gray-500 uppercase flex flex-col gap-0.5 mt-2 tracking-wide">
+                        <span>GSTIN: <span className="text-gray-900 border-b border-gray-200">08AALPC9959M1ZV</span></span>
+                        <span>PAN: <span className="text-gray-900 border-b border-gray-200">AALPC9959M</span></span>
                     </div>
                   </div>
                 </div>
 
-                {/* Branded Footer Icons */}
-                <div className="mt-12 pt-4 border-t flex justify-between items-center" style={{ borderColor: '#e2e8f0' }}>
-                  <div className="flex gap-4">
-                    <div className="flex items-center gap-1.5">
-                      <Phone size={10} style={{ color: '#3b82f6' }} />
-                      <span className="text-[9px] font-bold" style={{ color: '#64748b' }}>+91-98765-43210</span>
+                {/* Meta Information Bar */}
+                <div className="grid grid-cols-4 gap-4 mb-6 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                    <div className="flex flex-col">
+                        <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Challan Number</span>
+                        <span className="text-sm font-black text-blue-700">{selectedChallan.challanNo}</span>
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      <Mail size={10} style={{ color: '#3b82f6' }} />
-                      <span className="text-[9px] font-bold" style={{ color: '#64748b' }}>billing@snehagraphics.in</span>
+                    <div className="flex flex-col border-l border-gray-200 pl-4">
+                        <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Date</span>
+                        <span className="text-sm font-black text-gray-900">{new Date(selectedChallan.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      <Globe size={10} style={{ color: '#3b82f6' }} />
-                      <span className="text-[9px] font-bold" style={{ color: '#64748b' }}>www.snehagraphics.in</span>
+                    <div className="flex flex-col border-l border-gray-200 pl-4">
+                        <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Order No.</span>
+                        <span className="text-sm font-black text-gray-900 uppercase"> - </span>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-[8px] italic opacity-40 block" style={{ color: '#000000' }}>Automatically generated by TRICKWRIC CRM</span>
-                  </div>
+                    <div className="flex flex-col border-l border-gray-200 pl-4">
+                        <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Veh. No.</span>
+                        <span className="text-sm font-black text-gray-900"> - </span>
+                    </div>
+                </div>
+
+                {/* Party Details Grid */}
+                <div className="grid grid-cols-2 gap-8 mb-8">
+                    {/* Challan to Party */}
+                    <div className="space-y-3">
+                        <h4 className="text-[10px] font-black uppercase text-blue-600 border-b pb-1 flex items-center gap-2">
+                            <Building2 size={12} /> Challan To Party
+                        </h4>
+                        <div className="space-y-1">
+                            <p className="text-sm font-black text-gray-900 leading-tight uppercase">{selectedChallan.partyName}</p>
+                            <p className="text-[10px] font-bold text-gray-500 leading-relaxed uppercase pr-4">
+                                {selectedChallan.address || 'Address Not Provided'}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Place of Supply */}
+                    <div className="space-y-3">
+                        <h4 className="text-[10px] font-black uppercase text-gray-400 border-b pb-1 flex items-center gap-2 italic">
+                            <MapPin size={12} /> Place of Supply
+                        </h4>
+                        <div className="space-y-1 opacity-80">
+                            <p className="text-sm font-black text-gray-900 leading-tight uppercase">{selectedChallan.partyName}</p>
+                            <p className="text-[10px] font-bold text-gray-500 leading-relaxed uppercase">
+                                {selectedChallan.address || 'Same as Billing'}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Message Section */}
+                <div className="mb-6 p-4 bg-blue-50/50 rounded-xl border border-blue-100/50">
+                    <p className="text-[10px] font-bold text-blue-900 leading-relaxed text-center italic">
+                        "Kindly Count the following Material in presence our delegate. We are not responsible any complete in later. Please return one copy with our signature"
+                    </p>
+                </div>
+
+                {/* Item Table */}
+                <div className="border border-gray-200 rounded-2xl overflow-hidden mt-4">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="bg-gray-900 text-white uppercase text-[9px] font-black tracking-widest">
+                                <th className="px-4 py-3 w-12 text-center">S.No.</th>
+                                <th className="px-4 py-3">Description of Goods</th>
+                                <th className="px-4 py-3 text-center">HSN/SAC</th>
+                                <th className="px-4 py-3 text-right pr-8">Quantity</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                            <tr className="text-gray-900">
+                                <td className="px-4 py-8 text-center text-[11px] font-black text-gray-400">01</td>
+                                <td className="px-4 py-8">
+                                    <p className="text-sm font-black uppercase text-gray-900">{selectedChallan.jobName}</p>
+                                    <p className="text-[10px] font-bold text-gray-400 tracking-wide mt-1 uppercase">Printing Services - {selectedChallan.jobNumber}</p>
+                                </td>
+                                <td className="px-4 py-8 text-center text-xs font-bold text-gray-600 tracking-wider font-mono">4901</td>
+                                <td className="px-4 py-8 text-right text-lg font-black text-blue-700 pr-8">
+                                    1 <span className="text-[10px] text-gray-400 uppercase ml-1">Unit</span>
+                                </td>
+                            </tr>
+                            {/* Empty spacing rows */}
+                            {[...Array(6)].map((_, i) => (
+                                <tr key={`empty-${i}`} className="h-12 opacity-5"><td colSpan="4" className="border-b border-gray-100 font-bold"></td></tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* Signature Section */}
+                <div className="mt-16 flex justify-between gap-12">
+                   {/* Receiver Signature Side */}
+                   <div className="w-[45%] flex flex-col justify-end">
+                        <div className="border-t-2 border-dashed border-gray-200 pt-3 text-center bg-gray-50/50 p-6 rounded-2xl border-2">
+                            <div className="h-12"></div> {/* Signature Space */}
+                            <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest block mb-2">Receiver's Signature</span>
+                            <span className="text-[8px] text-gray-300 font-bold italic block">Received goods in perfect condition</span>
+                        </div>
+                   </div>
+
+                   {/* Authorised Signatory Side */}
+                   <div className="w-[45%] flex flex-col justify-end">
+                        <div className="pt-3 text-center bg-white border-2 border-gray-50 rounded-2xl p-6">
+                            <span className="text-[11px] font-black uppercase text-gray-900 block mb-1">For HARIHAR PRINTERS</span>
+                            <div className="h-12"></div> {/* Signature Space */}
+                            <div className="border-t border-gray-200 pt-2 mx-4">
+                                <span className="text-[10px] font-black uppercase text-blue-700 tracking-widest block">Authorised Signatory</span>
+                            </div>
+                        </div>
+                   </div>
+                </div>
+
+                {/* Bottom Bar */}
+                <div className="mt-20 pt-6 border-t border-gray-100 flex justify-between items-center opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500">
+                    <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Professionally Generated via Harihar CRM Platform</p>
+                    <div className="flex gap-4">
+                        <Phone size={10} className="text-blue-500" />
+                        <Mail size={10} className="text-blue-500" />
+                        <Globe size={10} className="text-blue-500" />
+                    </div>
                 </div>
               </div>
             </div>
