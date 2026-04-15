@@ -414,6 +414,8 @@ const InvoiceList = () => {
                             <p>1. Goods once sold will not be taken back.</p>
                             <p>2. Our responsibility ceases after the goods leave our premises.</p>
                             <p>3. 18% Interest will be charged if payment is not made within 15 days.</p>
+                            <p>4. All Subjects to Jaipur Jurisdiction.</p>
+                            <p>5. Payment by A/c Payee Cheque only.</p>
                         </div>
                    </div>
 
