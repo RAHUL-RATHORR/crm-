@@ -296,7 +296,7 @@ const ChallanList = () => {
             <div className="p-4 sm:p-6 overflow-y-auto flex-grow bg-gray-100/50 a4-page-container">
               <div 
                 id="printable-challan"
-                className="bg-white mx-auto shadow-sm border border-gray-200 a4-page"
+                className="bg-white mx-auto shadow-none a4-page"
               >
                 {/* Header Branding */}
                 <div className="flex justify-between items-start mb-6 border-b-2 pb-4 px-2" style={{ borderColor: '#1e293b' }}>

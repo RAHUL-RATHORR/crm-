@@ -448,7 +448,7 @@ export default function JobCardListing() {
             <div className="p-8 overflow-y-auto flex-grow a4-page-container" id="printable-content">
               <div 
                 id="printable-inner"
-                className="bg-white mx-auto shadow-none border border-gray-100 a4-page"
+                className="bg-white mx-auto shadow-none a4-page"
               >
                  {/* Header Branding */}
                  <div className="flex justify-between items-start mb-6 border-b-2 pb-4 px-2" style={{ borderColor: '#1e293b' }}>
