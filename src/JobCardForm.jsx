@@ -308,8 +308,8 @@ export default function JobCardForm() {
         </div>
 
         {/* Section 6: Binding */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 relative pt-10">
-          <div className="absolute top-0 left-6 -translate-y-1/2 bg-amber-600 text-white px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold shadow-sm">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 relative pt-14">
+          <div className="absolute -top-4 left-6 bg-amber-600 text-white px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold shadow-sm">
             Binding
           </div>
 

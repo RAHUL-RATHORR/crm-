@@ -42,7 +42,7 @@ router.post('/', async (req, res) => {
         const lastNum = parseInt(lastJob.jobNumber.replace(/[^0-9]/g, ''), 10);
         if (!isNaN(lastNum)) nextNum = lastNum + 1;
       }
-      const generatedJobNumber = `JOB-${String(nextNum).padStart(4, '0')}`;
+      const generatedJobNumber = `JOBHR-${String(nextNum).padStart(4, '0')}`;
       req.body.jobNumber = generatedJobNumber;
       jobCard = new JobCard(req.body);
       await jobCard.save();
@@ -128,6 +128,35 @@ router.delete('/:id', async (req, res) => {
     res.json({ message: "Job Card deleted successfully" });
   } catch (err) {
     console.error(`❌ Delete Error: ${err.message}`);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PATCH /api/jobcard/:id/price - Update only the price/totalAmount
+router.patch('/:id/price', async (req, res) => {
+  try {
+    const { totalAmount } = req.body;
+    const jobCard = await JobCard.findByIdAndUpdate(
+      req.params.id,
+      { totalAmount, updatedAt: new Date() },
+      { new: true }
+    );
+    
+    if (!jobCard) return res.status(404).json({ error: "Job Card not found" });
+
+    // Create Notification
+    try {
+      const newNotif = new Notification({
+        type: 'PRICE_UPDATED',
+        message: `Price updated for Job #${jobCard.jobNumber}: ₹${totalAmount}`
+      });
+      await newNotif.save();
+    } catch (nErr) {
+      console.error("Notif Error:", nErr.message);
+    }
+
+    res.json(jobCard);
+  } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });

@@ -26,7 +26,6 @@ const Statements = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [customRange, setCustomRange] = useState({ start: '', end: '' });
   const [activeTab, setActiveTab] = useState('transactions'); // 'transactions' | 'invoices'
-  const [invoiceStatusFilter, setInvoiceStatusFilter] = useState('all'); // 'all' | 'paid' | 'pending' | 'partial'
 
   useEffect(() => {
     fetchData();
@@ -89,13 +88,13 @@ const Statements = () => {
     }
   });
 
+  // Only show fully paid invoices in statements
   const filteredInvoices = invoices.filter(inv => {
-    const balance = inv.totalAmount - (inv.paidAmount || 0);
-    const status = balance <= 0 ? 'paid' : (inv.paidAmount || 0) > 0 ? 'partial' : 'pending';
+    const balance = (inv.totalAmount || 0) - (inv.paidAmount || 0);
+    const isPaid = balance <= 0 && (inv.paidAmount || 0) > 0;
     const matchesSearch = inv.partyName?.toLowerCase().includes(invoiceSearch.toLowerCase()) ||
                           inv.invoiceNumber?.toLowerCase().includes(invoiceSearch.toLowerCase());
-    const matchesStatus = invoiceStatusFilter === 'all' || status === invoiceStatusFilter;
-    return matchesSearch && matchesStatus;
+    return isPaid && matchesSearch;
   });
 
   // Summary stats
@@ -328,28 +327,10 @@ const Statements = () => {
       {activeTab === 'invoices' && (
         <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="p-6 border-b border-gray-50 flex flex-col md:flex-row justify-between items-center gap-4">
-            <h2 className="text-lg font-bold text-gray-900">Invoice Statements</h2>
-            <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-              {/* Status Filter */}
-              <div className="flex gap-1.5">
-                {[
-                  { id: 'all', label: 'All' },
-                  { id: 'paid', label: 'Paid' },
-                  { id: 'partial', label: 'Partial' },
-                  { id: 'pending', label: 'Pending' },
-                ].map(f => (
-                  <button key={f.id}
-                    onClick={() => setInvoiceStatusFilter(f.id)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                      invoiceStatusFilter === f.id
-                        ? 'bg-emerald-600 text-white'
-                        : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                    }`}
-                  >
-                    {f.label}
-                  </button>
-                ))}
-              </div>
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">Invoice Statements</h2>
+              <p className="text-xs text-gray-400 mt-0.5">Showing only fully paid invoices</p>
+            </div>
               <div className="relative w-full md:w-64">
                 <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input type="text" placeholder="Search invoices..."
@@ -357,7 +338,6 @@ const Statements = () => {
                   value={invoiceSearch} onChange={(e) => setInvoiceSearch(e.target.value)}
                 />
               </div>
-            </div>
           </div>
 
           <div className="overflow-x-auto min-h-[300px]">
@@ -377,7 +357,7 @@ const Statements = () => {
                 {loading ? (
                   <tr><td colSpan="7" className="px-8 py-20 text-center text-gray-400 font-bold animate-pulse uppercase">Loading Invoices...</td></tr>
                 ) : filteredInvoices.length === 0 ? (
-                  <tr><td colSpan="7" className="px-8 py-20 text-center text-gray-400 italic">No invoices found.</td></tr>
+                  <tr><td colSpan="7" className="px-8 py-20 text-center text-gray-400 italic">No completed invoices found.</td></tr>
                 ) : (
                   filteredInvoices.map((inv) => {
                     const balance = (inv.totalAmount || 0) - (inv.paidAmount || 0);

@@ -35,6 +35,7 @@ import SocialSettings from './SocialSettings';
 import PaymentTypeManagement from './PaymentTypeManagement';
 import PaperStockManagement from './PaperStockManagement';
 import Statements from './Statements';
+import Estimates from './Estimates';
 import { LogOut } from 'lucide-react';
 
 
@@ -243,7 +244,7 @@ export default function App() {
       icon: MoreHorizontal,
       isDropdown: true,
       dropdownItems: [
-        { label: 'Estimate/Quotation', icon: Calculator },
+        { label: 'Estimate/Quotation', icon: Calculator, onClick: () => navigate('/estimates') },
         {
           label: 'Settings',
           icon: Settings,
@@ -542,6 +543,7 @@ export default function App() {
           <Route path="/payment-type" element={<PaymentTypeManagement />} />
           <Route path="/paper-stock" element={<PaperStockManagement />} />
           <Route path="/statements" element={<Statements />} />
+          <Route path="/estimates" element={<Estimates />} />
         </Routes>
       </div>
     </div>
