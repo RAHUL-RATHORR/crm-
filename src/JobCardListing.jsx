@@ -654,7 +654,7 @@ export default function JobCardListing() {
                    </div>
                    <div className="text-right">
                      <span className="text-[8px] italic font-bold text-gray-400 block uppercase tracking-widest">
-                        Harihar CRM • Production System
+                        Harihar PRINTERS • Production System
                      </span>
                    </div>
                 </div>

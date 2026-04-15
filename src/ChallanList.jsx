@@ -451,7 +451,7 @@ const ChallanList = () => {
 
                 {/* Bottom Bar */}
                 <div className="mt-20 pt-6 border-t border-gray-100 flex justify-between items-center opacity-40 px-2 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500">
-                    <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Professionally Generated via Harihar CRM Platform</p>
+                    <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Professionally Generated via Harihar Printers</p>
                     <div className="flex gap-4">
                         <Phone size={10} className="text-blue-500" />
                         <Mail size={10} className="text-blue-500" />
