@@ -29,7 +29,7 @@ const PaperStockManagement = () => {
 
   const fetchStock = async () => {
     try {
-      const res = await fetch('http://localhost:5011/api/paper-stock');
+      const res = await fetch('https://crm-qpw8.onrender.com/api/paper-stock');
       const data = await res.json();
       setStock(data);
     } catch (err) {
@@ -42,8 +42,8 @@ const PaperStockManagement = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const url = editingId 
-      ? `http://localhost:5011/api/paper-stock/${editingId}`
-      : 'http://localhost:5011/api/paper-stock';
+      ? `https://crm-qpw8.onrender.com/api/paper-stock/${editingId}`
+      : 'https://crm-qpw8.onrender.com/api/paper-stock';
     
     const method = editingId ? 'PUT' : 'POST';
 
@@ -87,7 +87,7 @@ const PaperStockManagement = () => {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this paper stock?")) return;
     try {
-      await fetch(`http://localhost:5011/api/paper-stock/${id}`, { method: 'DELETE' });
+      await fetch(`https://crm-qpw8.onrender.com/api/paper-stock/${id}`, { method: 'DELETE' });
       fetchStock();
     } catch (err) {
       console.error("Delete error:", err);

@@ -34,8 +34,8 @@ const Statements = () => {
   const fetchData = async () => {
     try {
       const [stmtRes, invRes] = await Promise.all([
-        fetch('http://localhost:5011/api/statements'),
-        fetch('http://localhost:5011/api/invoice'),
+        fetch('https://crm-qpw8.onrender.com/api/statements'),
+        fetch('https://crm-qpw8.onrender.com/api/invoice'),
       ]);
       const [stmtData, invData] = await Promise.all([
         stmtRes.json(),
@@ -51,12 +51,13 @@ const Statements = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure? This will also update the invoice balance.")) return;
-    try {
-      const res = await fetch(`http://localhost:5011/api/statements/${id}`, { method: 'DELETE' });
-      if (res.ok) fetchData();
-    } catch (err) {
-      console.error("Delete Error:", err);
+    if (window.confirm("Are you sure? This will also update the invoice balance.")) {
+      try {
+        const res = await fetch(`https://crm-qpw8.onrender.com/api/statements/${id}`, { method: 'DELETE' });
+        if (res.ok) fetchData();
+      } catch (err) {
+        console.error("Delete Error:", err);
+      }
     }
   };
 

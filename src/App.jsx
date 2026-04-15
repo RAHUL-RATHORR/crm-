@@ -266,7 +266,7 @@ export default function App() {
 
   const fetchNotifications = async () => {
     try {
-      const res = await fetch('http://localhost:5011/api/notifications');
+      const res = await fetch('https://crm-qpw8.onrender.com/api/notifications');
       const data = await res.json();
       setNotifications(data);
       setUnreadCount(data.filter(n => !n.isRead).length);
@@ -302,7 +302,7 @@ export default function App() {
 
   const markAllAsRead = async () => {
     try {
-      await fetch('http://localhost:5011/api/notifications/read-all', { method: 'PUT' });
+      await fetch('https://crm-qpw8.onrender.com/api/notifications/read-all', { method: 'PUT' });
       fetchNotifications();
     } catch (err) {
       console.error("Read Error:", err);

@@ -15,7 +15,7 @@ export default function JobCardForm() {
   useEffect(() => {
     const fetchStocks = async () => {
       try {
-        const res = await fetch('http://localhost:5011/api/paper-stock');
+        const res = await fetch('https://crm-qpw8.onrender.com/api/paper-stock');
         const data = await res.json();
         setPaperStocks(data);
       } catch (err) {
@@ -43,7 +43,7 @@ export default function JobCardForm() {
     };
 
     try {
-      const response = await fetch("http://localhost:5011/api/jobcard", {
+      const response = await fetch("https://crm-qpw8.onrender.com/api/jobcard", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

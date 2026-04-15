@@ -21,7 +21,7 @@ export default function Estimates() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:5011/api/jobcard");
+      const response = await fetch("https://crm-qpw8.onrender.com/api/jobcard");
       const data = await response.json();
       setJobCards(data);
       
@@ -49,7 +49,7 @@ export default function Estimates() {
   const updatePrice = async (id) => {
     setUpdatingId(id);
     try {
-      const response = await fetch(`http://localhost:5011/api/jobcard/${id}/price`, {
+      const response = await fetch(`https://crm-qpw8.onrender.com/api/jobcard/${id}/price`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ totalAmount: Number(prices[id]) })
@@ -126,12 +126,12 @@ export default function Estimates() {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead>
-              <tr className="bg-gray-50/50 text-[10px] font-black uppercase text-gray-400 tracking-[0.2em] border-b border-gray-50">
+              <tr className="bg-gray-50/50 text-[11px] font-black uppercase text-gray-900 tracking-[0.2em] border-b border-gray-200">
                 <th className="py-5 px-8">S.No.</th>
                 <th className="py-5 px-8">Job Details</th>
                 <th className="py-5 px-8">Party Name</th>
                 <th className="py-5 px-8">Dimensions / Qty</th>
-                <th className="py-5 px-8 text-center bg-orange-50/50 text-orange-600">Estimate Price (₹)</th>
+                <th className="py-5 px-8 text-center bg-orange-50/50 text-orange-700">Estimate Price (₹)</th>
                 <th className="py-5 px-8 text-center">Action</th>
               </tr>
             </thead>
