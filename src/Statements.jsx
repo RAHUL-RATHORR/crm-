@@ -89,13 +89,11 @@ const Statements = () => {
     }
   });
 
-  // Only show fully paid invoices in statements
+  // Show all invoices in statements listing
   const filteredInvoices = invoices.filter(inv => {
-    const balance = (inv.totalAmount || 0) - (inv.paidAmount || 0);
-    const isPaid = balance <= 0 && (inv.paidAmount || 0) > 0;
     const matchesSearch = inv.partyName?.toLowerCase().includes(invoiceSearch.toLowerCase()) ||
                           inv.invoiceNumber?.toLowerCase().includes(invoiceSearch.toLowerCase());
-    return isPaid && matchesSearch;
+    return matchesSearch;
   });
 
   // Summary stats
@@ -330,7 +328,7 @@ const Statements = () => {
           <div className="p-6 border-b border-gray-50 flex flex-col md:flex-row justify-between items-center gap-4">
             <div>
               <h2 className="text-lg font-bold text-gray-900">Invoice Statements</h2>
-              <p className="text-xs text-gray-400 mt-0.5">Showing only fully paid invoices</p>
+              <p className="text-xs text-gray-500 mt-0.5">Showing all invoice records and balances</p>
             </div>
               <div className="relative w-full md:w-64">
                 <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -344,10 +342,10 @@ const Statements = () => {
           <div className="overflow-x-auto min-h-[300px]">
             <table className="w-full text-left whitespace-nowrap">
               <thead>
-                <tr className="bg-gray-50/50 text-[10px] font-black uppercase text-gray-400 tracking-[0.2em]">
+                <tr className="bg-gray-50/50 text-[11px] font-black uppercase text-gray-900 tracking-[0.2em] border-b border-gray-100">
                   <th className="px-8 py-4">Invoice #</th>
                   <th className="px-8 py-4">Party Name</th>
-                  <th className="px-8 py-4">Date</th>
+                  <th className="px-8 py-4 text-center">Date</th>
                   <th className="px-8 py-4 text-right">Total Amount</th>
                   <th className="px-8 py-4 text-right">Paid</th>
                   <th className="px-8 py-4 text-right">Balance Due</th>
@@ -358,7 +356,7 @@ const Statements = () => {
                 {loading ? (
                   <tr><td colSpan="7" className="px-8 py-20 text-center text-gray-400 font-bold animate-pulse uppercase">Loading Invoices...</td></tr>
                 ) : filteredInvoices.length === 0 ? (
-                  <tr><td colSpan="7" className="px-8 py-20 text-center text-gray-400 italic">No completed invoices found.</td></tr>
+                  <tr><td colSpan="7" className="px-8 py-20 text-center text-gray-400 italic font-medium">No invoices found matching your search.</td></tr>
                 ) : (
                   filteredInvoices.map((inv) => {
                     const balance = (inv.totalAmount || 0) - (inv.paidAmount || 0);
