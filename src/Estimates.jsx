@@ -15,8 +15,8 @@ export default function Estimates() {
   const [jobCards, setJobCards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [updatingId, setUpdatingId] = useState(null);
   const [prices, setPrices] = useState({}); // Local state for pricing inputs
+  const [saveStatus, setSaveStatus] = useState({}); // { id: 'idle' | 'saving' | 'saved' | 'error' }
 
   const loadData = async () => {
     setLoading(true);
@@ -47,35 +47,37 @@ export default function Estimates() {
   };
 
   const updatePrice = async (id) => {
-    setUpdatingId(id);
+    const priceValue = prices[id];
+    
+    // Simple validation
+    if (priceValue === undefined || priceValue === null || isNaN(Number(priceValue))) {
+      alert("Please enter a valid price number");
+      return;
+    }
+
+    setSaveStatus(prev => ({ ...prev, [id]: 'saving' }));
+    
     try {
       const response = await fetch(`https://crm-qpw8.onrender.com/api/jobcard/${id}/price`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ totalAmount: Number(prices[id]) })
+        body: JSON.stringify({ totalAmount: Number(priceValue) })
       });
       
       if (response.ok) {
-        // Show success briefly
-        const btn = document.getElementById(`save-btn-${id}`);
-        if(btn) {
-          const originalContent = btn.innerHTML;
-          btn.innerHTML = 'Saved!';
-          btn.classList.replace('bg-blue-600', 'bg-green-600');
-          setTimeout(() => {
-            btn.innerHTML = originalContent;
-            btn.classList.replace('bg-green-600', 'bg-blue-600');
-            setUpdatingId(null);
-          }, 2000);
-        }
+        setSaveStatus(prev => ({ ...prev, [id]: 'saved' }));
+        // Reset to idle after 3 seconds
+        setTimeout(() => {
+          setSaveStatus(prev => ({ ...prev, [id]: 'idle' }));
+        }, 3000);
       } else {
-        alert("Failed to update price");
-        setUpdatingId(null);
+        alert("Failed to update price on server");
+        setSaveStatus(prev => ({ ...prev, [id]: 'error' }));
       }
     } catch (error) {
       console.error("Update Error:", error);
-      alert("Network Error");
-      setUpdatingId(null);
+      alert("Network Error: Could not connect to the server.");
+      setSaveStatus(prev => ({ ...prev, [id]: 'error' }));
     }
   };
 
@@ -198,17 +200,29 @@ export default function Estimates() {
                     </td>
                     <td className="py-6 px-8 text-center">
                       <button
-                        id={`save-btn-${card._id}`}
                         onClick={() => updatePrice(card._id)}
-                        disabled={updatingId === card._id}
-                        className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold text-xs transition-all shadow-lg shadow-blue-100 active:scale-95 disabled:bg-gray-400 disabled:shadow-none"
+                        disabled={saveStatus[card._id] === 'saving'}
+                        className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:shadow-none ${
+                            saveStatus[card._id] === 'saved' 
+                                ? 'bg-green-600 text-white shadow-green-100' 
+                                : saveStatus[card._id] === 'error'
+                                    ? 'bg-red-600 text-white shadow-red-100'
+                                    : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-100'
+                        }`}
                       >
-                        {updatingId === card._id ? (
+                        {saveStatus[card._id] === 'saving' ? (
                             <RefreshCw size={14} className="animate-spin" />
+                        ) : saveStatus[card._id] === 'saved' ? (
+                            <Check size={14} />
                         ) : (
                             <Save size={14} />
                         )}
-                        Update Price
+                        {saveStatus[card._id] === 'saving' 
+                            ? 'Saving...' 
+                            : saveStatus[card._id] === 'saved'
+                                ? 'Saved!'
+                                : 'Update Price'
+                        }
                       </button>
                     </td>
                   </tr>
