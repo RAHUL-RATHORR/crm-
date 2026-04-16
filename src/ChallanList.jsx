@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Trash2, MoreHorizontal, Truck, Pencil, ChevronDown, Check, AlertCircle, Printer, X, Download, Phone, Mail, Globe, Building2, MapPin, Calendar, FileDigit } from 'lucide-react';
-import html2pdf from 'html2pdf.js';
+import { downloadAsPDF } from './utils/pdfExport';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
 
 const ChallanList = () => {
@@ -93,25 +93,11 @@ const ChallanList = () => {
   };
 
   const handleDownloadPDF = async () => {
-    if (isGenerating) return;
-    setIsGenerating(true);
-
-    try {
-      const element = document.getElementById('printable-challan');
-      const opt = {
-        margin: [10, 10, 10, 10],
-        filename: `Challan_${selectedChallan.challanNo}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      };
-
-      await html2pdf().set(opt).from(element).save();
-    } catch (error) {
-      console.error("PDF Error:", error);
-    } finally {
-      setIsGenerating(false);
-    }
+    await downloadAsPDF(
+      'printable-challan',
+      `Challan_${selectedChallan.challanNo}`,
+      setIsGenerating
+    );
   };
 
   return (

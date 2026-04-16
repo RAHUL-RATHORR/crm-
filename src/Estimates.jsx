@@ -233,10 +233,10 @@ export default function Estimates() {
                         onClick={() => updatePrice(card._id)}
                         disabled={saveStatus[card._id] === 'saving'}
                         className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:shadow-none ${saveStatus[card._id] === 'saved'
-                            ? 'bg-green-600 text-white shadow-green-100'
-                            : saveStatus[card._id] === 'error'
-                              ? 'bg-red-600 text-white shadow-red-100'
-                              : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-100'
+                          ? 'bg-green-600 text-white shadow-green-100'
+                          : saveStatus[card._id] === 'error'
+                            ? 'bg-red-600 text-white shadow-red-100'
+                            : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-100'
                           }`}
                       >
                         {saveStatus[card._id] === 'saving' ? (

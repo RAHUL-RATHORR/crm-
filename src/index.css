@@ -1,5 +1,45 @@
 @import "tailwindcss";
 
+:root {
+  /* Global HEX Color Overrides for PDF Compatibility (Tailwind 4) */
+  --color-blue-50: #eff6ff;
+  --color-blue-100: #dbeafe;
+  --color-blue-500: #3b82f6;
+  --color-blue-600: #2563eb;
+  --color-blue-700: #1d4ed8;
+  
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+  
+  --color-slate-100: #f1f5f9;
+  --color-slate-200: #e2e8f0;
+  --color-slate-500: #64748b;
+  --color-slate-600: #475569;
+  --color-slate-700: #334155;
+  
+  --color-emerald-50: #ecfdf5;
+  --color-emerald-500: #10b981;
+  --color-emerald-600: #059669;
+  
+  --color-teal-50: #f0fdfa;
+  --color-teal-500: #14b8a6;
+  --color-teal-600: #0d9488;
+  
+  --color-red-50: #fef2f2;
+  --color-red-500: #ef4444;
+  --color-red-600: #dc2626;
+  
+  --color-amber-500: #f59e0b;
+}
+
 @layer base {
   body {
     background-color: #f4f7fa;
@@ -23,19 +63,29 @@
   }
 
   /* Reset browser defaults for printing */
-  html, body {
+  html,
+  body {
     margin: 0 !important;
     padding: 0 !important;
     background-color: white !important;
     width: 210mm !important;
-    height: 297mm !important; /* Strictly lock to A4 Height */
-    overflow: hidden !important; /* Force single page */
+    height: 297mm !important;
+    /* Strictly lock to A4 Height */
+    overflow: hidden !important;
+    /* Force single page */
   }
 
   /* Hide UI elements */
-  nav, aside, header, footer,
-  button, .no-print, .modal-header, .modal-footer,
-  [role="navigation"], [role="complementary"],
+  nav,
+  aside,
+  header,
+  footer,
+  button,
+  .no-print,
+  .modal-header,
+  .modal-footer,
+  [role="navigation"],
+  [role="complementary"],
   .modal-backdrop {
     display: none !important;
     visibility: hidden !important;
@@ -52,7 +102,8 @@
   }
 
   /* Fix for modal positioning during print - Absolute is safer for scroll offsets */
-  .fixed, [class*="fixed"] {
+  .fixed,
+  [class*="fixed"] {
     position: absolute !important;
     top: 0 !important;
     left: 0 !important;
@@ -79,26 +130,37 @@
 
   /* The actual A4 Sheet - Strict constraints to prevent 2nd page */
   .a4-page {
-    width: 208mm !important;   /* Slightly narrower to avoid margin issues */
-    height: 294mm !important;  /* Sufficient buffer for all drivers */
-    padding: 12mm !important;  /* Increased to 12mm for better corner clearance */
-    margin: 8mm auto 0 auto !important; /* Increased to 8mm to ensure clearance */
+    width: 208mm !important;
+    /* Slightly narrower to avoid margin issues */
+    height: 294mm !important;
+    /* Sufficient buffer for all drivers */
+    padding: 12mm !important;
+    /* Increased to 12mm for better corner clearance */
+    margin: 8mm auto 0 auto !important;
+    /* Increased to 8mm to ensure clearance */
     background: white !important;
     box-sizing: border-box !important;
     overflow: hidden !important;
     display: flex !important;
     flex-direction: column !important;
     position: relative !important;
-    border: none !important;    /* Remove border on print to save pixels */
+    border: none !important;
+    /* Remove border on print to save pixels */
   }
 
   /* Prevent sections from breaking awkwardly */
-  section, tr, .avoid-break {
+  section,
+  tr,
+  .avoid-break {
     page-break-inside: avoid !important;
   }
 
   /* Border handling for print - Internal borders only */
-  .a4-page div, .a4-page table, .a4-page tr, .a4-page td, .a4-page th {
+  .a4-page div,
+  .a4-page table,
+  .a4-page tr,
+  .a4-page td,
+  .a4-page th {
     border-color: #cbd5e1 !important;
     box-shadow: none !important;
   }
