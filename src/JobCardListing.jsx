@@ -12,8 +12,14 @@ export default function JobCardListing() {
   const filterRef = useRef(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [columnVisibility, setColumnVisibility] = useState(() => {
-    // Clear old saved visibility to avoid stale keys
-    localStorage.removeItem('jobCardColumnVisibility');
+    const saved = localStorage.getItem('jobCardColumnVisibility');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error("Error parsing saved visibility:", e);
+      }
+    }
     return {
       partyName: true,
       jobNumber: true,
