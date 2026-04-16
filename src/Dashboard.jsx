@@ -191,7 +191,7 @@ export default function Dashboard() {
                 <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center text-orange-500 shrink-0">
                   <TrendingUp size={20} />
                 </div>
-                <span className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider">Total Revenue</span>
+                <span className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider">Monthly Revenue</span>
               </div>
               <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 truncate">
                 <CountUp end={59526564} prefix="₹" />
@@ -206,9 +206,9 @@ export default function Dashboard() {
             <div className="bg-white py-5 px-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-center hover:shadow-md transition-transform hover:-translate-y-1 duration-300">
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-10 h-10 rounded-full bg-teal-50 flex items-center justify-center text-teal-600 shrink-0">
-                  <Target size={20} />
+                  <TrendingUp size={20} />
                 </div>
-                <span className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider">Estimated</span>
+                <span className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider">Yearly Revenue</span>
               </div>
               <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 truncate">
                 <CountUp end={24562564} prefix="₹" />
