@@ -86,6 +86,9 @@ const ChallanList = () => {
   };
 
   const handlePrint = () => {
+    window.scrollTo(0, 0);
+    const container = document.querySelector('.a4-page-container');
+    if (container) container.scrollTop = 0;
     window.print();
   };
 

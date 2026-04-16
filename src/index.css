@@ -26,34 +26,37 @@
   html, body {
     margin: 0 !important;
     padding: 0 !important;
-    height: 297mm !important; /* Fixed A4 Height */
     background-color: white !important;
     width: 210mm !important;
-    overflow: hidden !important; /* Strictly lock to one page */
+    height: 297mm !important; /* Strictly lock to A4 Height */
+    overflow: hidden !important; /* Force single page */
   }
 
   /* Hide UI elements */
   nav, aside, header, footer,
   button, .no-print, .modal-header, .modal-footer,
-  [role="navigation"], [role="complementary"] {
+  [role="navigation"], [role="complementary"],
+  .modal-backdrop {
     display: none !important;
     visibility: hidden !important;
   }
 
   /* Ensure the main application background is white */
-  #root, .min-h-screen {
+  #root {
     background: white !important;
     padding: 0 !important;
     margin: 0 !important;
+    position: static !important;
     height: 297mm !important;
+    overflow: hidden !important;
   }
 
-  /* Fix for modal positioning during print */
+  /* Fix for modal positioning during print - Absolute is safer for scroll offsets */
   .fixed, [class*="fixed"] {
     position: absolute !important;
     top: 0 !important;
     left: 0 !important;
-    width: 100% !important;
+    width: 210mm !important;
     height: 297mm !important;
     display: block !important;
     overflow: hidden !important;
