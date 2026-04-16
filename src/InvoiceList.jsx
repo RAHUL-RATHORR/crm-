@@ -400,15 +400,15 @@ const InvoiceList = () => {
                 <div className="mt-8 flex justify-between gap-12">
                    {/* Left side: Words & Bank */}
                    <div className="flex-grow space-y-6">
-                        <div className="bg-white p-6 rounded-2xl border-2 border-blue-100 shadow-md">
-                            <h4 className="text-sm font-black uppercase text-blue-700 mb-5 flex items-center gap-2 border-b-2 pb-2 border-blue-50">
-                                <Building2 size={18} /> Bank Deposit Information
+                        <div className="bg-white p-4 rounded-xl border border-blue-100 shadow-sm">
+                            <h4 className="text-xs font-black uppercase text-blue-700 mb-3 flex items-center gap-2 border-b pb-1 border-blue-50">
+                                <Building2 size={16} /> Bank Deposit Information
                             </h4>
-                            <div className="grid grid-cols-2 gap-y-4 text-sm font-black">
-                                <p><span className="text-gray-400 uppercase tracking-tighter mr-3 text-[11px]">Bank:</span> Indusind Bank</p>
-                                <p><span className="text-gray-400 uppercase tracking-tighter mr-3 text-[11px]">IFSC:</span> INDB0000278</p>
-                                <p><span className="text-gray-400 uppercase tracking-tighter mr-3 text-[11px]">Account:</span> 650014092175</p>
-                                <p><span className="text-gray-400 uppercase tracking-tighter mr-3 text-[11px]">Branch:</span> Raja Park, Jaipur</p>
+                            <div className="grid grid-cols-2 gap-y-2 text-xs font-bold text-gray-900">
+                                <p><span className="text-gray-400 uppercase tracking-tighter mr-3 text-[10px]">Bank:</span> Indusind Bank</p>
+                                <p><span className="text-gray-400 uppercase tracking-tighter mr-3 text-[10px]">IFSC:</span> INDB0000278</p>
+                                <p><span className="text-gray-400 uppercase tracking-tighter mr-3 text-[10px]">Account:</span> 650014092175</p>
+                                <p><span className="text-gray-400 uppercase tracking-tighter mr-3 text-[10px]">Branch:</span> Raja Park, Jaipur</p>
                             </div>
                         </div>
 
