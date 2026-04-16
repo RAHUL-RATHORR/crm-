@@ -297,7 +297,7 @@ const ChallanList = () => {
 
             {/* Printable Content */}
             <div className="p-4 sm:p-6 overflow-y-auto flex-grow bg-gray-100/50 a4-page-container">
-              <div 
+              <div
                 id="printable-challan"
                 className="bg-white mx-auto shadow-none a4-page"
               >
@@ -305,161 +305,161 @@ const ChallanList = () => {
                 <div className="flex justify-between items-start mb-6 border-b-2 pb-4 px-2" style={{ borderColor: '#1e293b' }}>
                   <div className="flex-grow">
                     <div className="flex items-center gap-4 mb-2">
-                        <h1 className="text-4xl font-black tracking-tight text-gray-900 leading-none">
-                            Harihar <span className="text-blue-600">Printers</span>
-                        </h1>
+                      <h1 className="text-4xl font-black tracking-tight text-gray-900 leading-none">
+                        Harihar <span className="text-blue-600">Printers</span>
+                      </h1>
                     </div>
                     <div className="space-y-0.5">
-                        <p className="text-[10px] font-bold text-gray-700">
-                           <span className="text-blue-600 uppercase">Office:</span> J-97, Ashok Chowk, Adarsh Nagar, Jaipur-302 004
+                      <p className="text-[10px] font-bold text-gray-700">
+                        <span className="text-blue-600 uppercase">Office:</span> J-97, Ashok Chowk, Adarsh Nagar, Jaipur-302 004
+                      </p>
+                      <p className="text-[10px] font-bold text-gray-700">
+                        <span className="text-blue-600 uppercase">Factory:</span> G-139, Hirawala Industrial Area, Kanota, Agra Road, Jaipur
+                      </p>
+                      <div className="flex gap-4 mt-1">
+                        <p className="text-[10px] font-bold text-gray-700 flex items-center gap-1">
+                          <Phone size={10} className="text-blue-500" /> 0141-2600850, 9414043763
                         </p>
-                        <p className="text-[10px] font-bold text-gray-700">
-                           <span className="text-blue-600 uppercase">Factory:</span> G-139, Hirawala Industrial Area, Kanota, Agra Road, Jaipur
+                        <p className="text-[10px] font-bold text-gray-700 flex items-center gap-1">
+                          <Mail size={10} className="text-blue-500" /> hariharprinters1@gmail.com
                         </p>
-                        <div className="flex gap-4 mt-1">
-                            <p className="text-[10px] font-bold text-gray-700 flex items-center gap-1">
-                                <Phone size={10} className="text-blue-500" /> 0141-2600850, 9414043763
-                            </p>
-                            <p className="text-[10px] font-bold text-gray-700 flex items-center gap-1">
-                                <Mail size={10} className="text-blue-500" /> hariharprinters1@gmail.com
-                            </p>
-                        </div>
+                      </div>
                     </div>
                   </div>
                   <div className="text-right flex flex-col items-end gap-1">
                     <div className="bg-blue-600 text-white px-4 py-1.5 rounded text-[11px] font-black uppercase tracking-widest shadow-sm">
-                        GST Delivery Challan
+                      GST Delivery Challan
                     </div>
                     <div className="text-[9px] font-black text-gray-500 uppercase flex flex-col gap-0.5 mt-2 tracking-wide">
-                        <span>GSTIN: <span className="text-gray-900 border-b border-gray-200">08AALPC9959M1ZV</span></span>
-                        <span>PAN: <span className="text-gray-900 border-b border-gray-200">AALPC9959M</span></span>
+                      <span>GSTIN: <span className="text-gray-900 border-b border-gray-200">08AALPC9959M1ZV</span></span>
+                      <span>PAN: <span className="text-gray-900 border-b border-gray-200">AALPC9959M</span></span>
                     </div>
                   </div>
                 </div>
 
                 {/* Meta Information Bar */}
                 <div className="grid grid-cols-4 gap-4 mb-6 bg-gray-50 p-4 rounded-xl border border-gray-100">
-                    <div className="flex flex-col">
-                        <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Challan Number</span>
-                        <span className="text-sm font-black text-blue-700">{selectedChallan.challanNo}</span>
-                    </div>
-                    <div className="flex flex-col border-l border-gray-200 pl-4">
-                        <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Date</span>
-                        <span className="text-sm font-black text-gray-900">{new Date(selectedChallan.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-                    </div>
-                    <div className="flex flex-col border-l border-gray-200 pl-4">
-                        <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Order No.</span>
-                        <span className="text-sm font-black text-gray-900 uppercase"> - </span>
-                    </div>
-                    <div className="flex flex-col border-l border-gray-200 pl-4">
-                        <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Veh. No.</span>
-                        <span className="text-sm font-black text-gray-900"> - </span>
-                    </div>
+                  <div className="flex flex-col">
+                    <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Challan Number</span>
+                    <span className="text-sm font-black text-blue-700">{selectedChallan.challanNo}</span>
+                  </div>
+                  <div className="flex flex-col border-l border-gray-200 pl-4">
+                    <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Date</span>
+                    <span className="text-sm font-black text-gray-900">{new Date(selectedChallan.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                  </div>
+                  <div className="flex flex-col border-l border-gray-200 pl-4">
+                    <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Order No.</span>
+                    <span className="text-sm font-black text-gray-900 uppercase"> - </span>
+                  </div>
+                  <div className="flex flex-col border-l border-gray-200 pl-4">
+                    <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Veh. No.</span>
+                    <span className="text-sm font-black text-gray-900"> - </span>
+                  </div>
                 </div>
 
                 {/* Party Details Grid */}
                 <div className="grid grid-cols-2 gap-8 mb-8">
-                    {/* Challan to Party */}
-                    <div className="space-y-3">
-                        <h4 className="text-[10px] font-black uppercase text-blue-600 border-b pb-1 flex items-center gap-2">
-                            <Building2 size={12} /> Challan To Party
-                        </h4>
-                        <div className="space-y-1">
-                            <p className="text-sm font-black text-gray-900 leading-tight uppercase">{selectedChallan.partyName}</p>
-                            <p className="text-[10px] font-bold text-gray-500 leading-relaxed uppercase pr-4">
-                                {selectedChallan.address || 'Address Not Provided'}
-                            </p>
-                        </div>
+                  {/* Challan to Party */}
+                  <div className="space-y-3">
+                    <h4 className="text-[10px] font-black uppercase text-blue-600 border-b pb-1 flex items-center gap-2">
+                      <Building2 size={12} /> Challan To Party
+                    </h4>
+                    <div className="space-y-1">
+                      <p className="text-sm font-black text-gray-900 leading-tight uppercase">{selectedChallan.partyName}</p>
+                      <p className="text-[10px] font-bold text-gray-500 leading-relaxed uppercase pr-4">
+                        {selectedChallan.address || 'Address Not Provided'}
+                      </p>
                     </div>
+                  </div>
 
-                    {/* Place of Supply */}
-                    <div className="space-y-3">
-                        <h4 className="text-[10px] font-black uppercase text-gray-400 border-b pb-1 flex items-center gap-2 italic">
-                            <MapPin size={12} /> Place of Supply
-                        </h4>
-                        <div className="space-y-1 opacity-80">
-                            <p className="text-sm font-black text-gray-900 leading-tight uppercase">{selectedChallan.partyName}</p>
-                            <p className="text-[10px] font-bold text-gray-500 leading-relaxed uppercase">
-                                {selectedChallan.address || 'Same as Billing'}
-                            </p>
-                        </div>
+                  {/* Place of Supply */}
+                  <div className="space-y-3">
+                    <h4 className="text-[10px] font-black uppercase text-gray-400 border-b pb-1 flex items-center gap-2 italic">
+                      <MapPin size={12} /> Place of Supply
+                    </h4>
+                    <div className="space-y-1 opacity-80">
+                      <p className="text-sm font-black text-gray-900 leading-tight uppercase">{selectedChallan.partyName}</p>
+                      <p className="text-[10px] font-bold text-gray-500 leading-relaxed uppercase">
+                        {selectedChallan.address || 'Same as Billing'}
+                      </p>
                     </div>
+                  </div>
                 </div>
 
                 {/* Message Section */}
                 <div className="mb-6 p-4 bg-blue-50/50 rounded-xl border border-blue-100/50">
-                    <p className="text-[10px] font-bold text-blue-900 leading-relaxed text-center italic">
-                        "Kindly Count the following Material in presence our delegate. We are not responsible any complete in later. Please return one copy with our signature"
-                    </p>
+                  <p className="text-[10px] font-bold text-blue-900 leading-relaxed text-center italic">
+                    "Kindly Count the following Material in presence our delegate. We are not responsible any complete in later. Please return one copy with our signature"
+                  </p>
                 </div>
 
                 {/* Item Table */}
                 <div className="border border-gray-200 rounded-2xl overflow-hidden mt-4">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-gray-900 text-white uppercase text-[9px] font-black tracking-widest">
-                                <th className="px-4 py-3 w-12 text-center border-r border-gray-700">S.No.</th>
-                                <th className="px-4 py-3 border-r border-gray-700">Description of Goods</th>
-                                <th className="px-4 py-3 text-center border-r border-gray-700">HSN/SAC</th>
-                                <th className="px-4 py-3 text-right pr-8">Quantity</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            <tr className="text-gray-900">
-                                <td className="px-4 py-8 text-center text-[11px] font-black text-gray-400 border-r border-gray-100">01</td>
-                                <td className="px-4 py-8 border-r border-gray-100">
-                                    <p className="text-sm font-black uppercase text-gray-900">{selectedChallan.jobName}</p>
-                                    <p className="text-[10px] font-bold text-gray-400 tracking-wide mt-1 uppercase">Printing Services - {selectedChallan.jobNumber}</p>
-                                </td>
-                                <td className="px-4 py-8 text-center text-xs font-bold text-gray-600 tracking-wider font-mono border-r border-gray-100">4901</td>
-                                <td className="px-4 py-8 text-right text-lg font-black text-blue-700 pr-8">
-                                    1 <span className="text-[10px] text-gray-400 uppercase ml-1">Unit</span>
-                                </td>
-                            </tr>
-                             {/* Empty spacing rows with vertical grid lines */}
-                             {[...Array(6)].map((_, i) => (
-                                 <tr key={`empty-${i}`} className="h-12 opacity-5">
-                                     <td className="border-r border-gray-100 border-b border-gray-100"></td>
-                                     <td className="border-r border-gray-100 border-b border-gray-100"></td>
-                                     <td className="border-r border-gray-100 border-b border-gray-100"></td>
-                                     <td className="border-b border-gray-100"></td>
-                                 </tr>
-                             ))}
-                        </tbody>
-                    </table>
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-gray-900 text-white uppercase text-[9px] font-black tracking-widest">
+                        <th className="px-4 py-3 w-12 text-center border-r border-gray-700">S.No.</th>
+                        <th className="px-4 py-3 border-r border-gray-700">Description of Goods</th>
+                        <th className="px-4 py-3 text-center border-r border-gray-700">HSN/SAC</th>
+                        <th className="px-4 py-3 text-right pr-8">Quantity</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      <tr className="text-gray-900">
+                        <td className="px-4 py-8 text-center text-[11px] font-black text-gray-400 border-r border-gray-100">01</td>
+                        <td className="px-4 py-8 border-r border-gray-100">
+                          <p className="text-sm font-black uppercase text-gray-900">{selectedChallan.jobName}</p>
+                          <p className="text-[10px] font-bold text-gray-400 tracking-wide mt-1 uppercase">Printing Services - {selectedChallan.jobNumber}</p>
+                        </td>
+                        <td className="px-4 py-8 text-center text-xs font-bold text-gray-600 tracking-wider font-mono border-r border-gray-100">4901</td>
+                        <td className="px-4 py-8 text-right text-lg font-black text-blue-700 pr-8">
+                          1 <span className="text-[10px] text-gray-400 uppercase ml-1">Unit</span>
+                        </td>
+                      </tr>
+                      {/* Empty spacing rows with vertical grid lines */}
+                      {[...Array(6)].map((_, i) => (
+                        <tr key={`empty-${i}`} className="h-12 opacity-5">
+                          <td className="border-r border-gray-100 border-b border-gray-100"></td>
+                          <td className="border-r border-gray-100 border-b border-gray-100"></td>
+                          <td className="border-r border-gray-100 border-b border-gray-100"></td>
+                          <td className="border-b border-gray-100"></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
 
                 {/* Signature Section */}
                 <div className="mt-16 flex justify-between gap-12">
-                   {/* Receiver Signature Side */}
-                   <div className="w-[45%] flex flex-col justify-end">
-                        <div className="border-t-2 border-dashed border-gray-200 pt-3 text-center bg-gray-50/50 p-6 rounded-2xl border-2">
-                            <div className="h-12"></div> {/* Signature Space */}
-                            <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest block mb-2">Receiver's Signature</span>
-                            <span className="text-[8px] text-gray-300 font-bold italic block">Received goods in perfect condition</span>
-                        </div>
-                   </div>
+                  {/* Receiver Signature Side */}
+                  <div className="w-[45%] flex flex-col justify-end">
+                    <div className="border-t-2 border-dashed border-gray-200 pt-3 text-center bg-gray-50/50 p-6 rounded-2xl border-2">
+                      <div className="h-12"></div> {/* Signature Space */}
+                      <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest block mb-2">Receiver's Signature</span>
+                      <span className="text-[8px] text-gray-300 font-bold italic block">Received goods in perfect condition</span>
+                    </div>
+                  </div>
 
-                   {/* Authorised Signatory Side */}
-                   <div className="w-[45%] flex flex-col justify-end">
-                        <div className="pt-3 text-center bg-white border-2 border-gray-50 rounded-2xl p-6">
-                            <span className="text-[11px] font-black uppercase text-gray-900 block mb-1">For HARIHAR PRINTERS</span>
-                            <div className="h-12"></div> {/* Signature Space */}
-                            <div className="border-t border-gray-200 pt-2 mx-4">
-                                <span className="text-[10px] font-black uppercase text-blue-700 tracking-widest block">Authorised Signatory</span>
-                            </div>
-                        </div>
-                   </div>
+                  {/* Authorised Signatory Side */}
+                  <div className="w-[45%] flex flex-col justify-end">
+                    <div className="pt-3 text-center bg-white border-2 border-gray-50 rounded-2xl p-6">
+                      <span className="text-[11px] font-black uppercase text-gray-900 block mb-1">For HARIHAR PRINTERS</span>
+                      <div className="h-12"></div> {/* Signature Space */}
+                      <div className="border-t border-gray-200 pt-2 mx-4">
+                        <span className="text-[10px] font-black uppercase text-blue-700 tracking-widest block">Authorised Signatory</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Bottom Bar */}
                 <div className="mt-20 pt-6 border-t border-gray-100 flex justify-between items-center opacity-40 px-2 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500">
-                    <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Professionally Generated via Harihar Printers</p>
-                    <div className="flex gap-4">
-                        <Phone size={10} className="text-blue-500" />
-                        <Mail size={10} className="text-blue-500" />
-                        <Globe size={10} className="text-blue-500" />
-                    </div>
+                  <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Professionally Generated via Harihar Printers</p>
+                  <div className="flex gap-4">
+                    <Phone size={10} className="text-blue-500" />
+                    <Mail size={10} className="text-blue-500" />
+                    <Globe size={10} className="text-blue-500" />
+                  </div>
                 </div>
               </div>
             </div>

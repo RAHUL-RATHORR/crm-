@@ -175,7 +175,10 @@ export default function Dashboard() {
                   <button onClick={() => navigate('/job-card')} className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium text-sm transition shadow-sm hover:shadow shrink-0">
                     Add Card
                   </button>
-                  <button className="bg-teal-500 hover:bg-teal-600 text-white px-5 py-2.5 rounded-lg font-medium text-sm transition shadow-sm hover:shadow shrink-0">
+                  <button 
+                    onClick={() => navigate('/paper-stock')}
+                    className="bg-teal-500 hover:bg-teal-600 text-white px-5 py-2.5 rounded-lg font-medium text-sm transition shadow-sm hover:shadow shrink-0"
+                  >
                     Paper Stock
                   </button>
                 </div>
