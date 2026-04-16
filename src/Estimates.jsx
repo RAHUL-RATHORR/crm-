@@ -8,7 +8,11 @@ import {
   IndianRupee, 
   Save, 
   List, 
-  FileCheck
+  FileCheck,
+  Printer,
+  X,
+  Phone,
+  Mail
 } from 'lucide-react';
 
 export default function Estimates() {
@@ -17,6 +21,8 @@ export default function Estimates() {
   const [searchTerm, setSearchTerm] = useState('');
   const [prices, setPrices] = useState({}); // Local state for pricing inputs
   const [saveStatus, setSaveStatus] = useState({}); // { id: 'idle' | 'saving' | 'saved' | 'error' }
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedCard, setSelectedCard] = useState(null);
 
   const loadData = async () => {
     setLoading(true);
@@ -79,6 +85,23 @@ export default function Estimates() {
       alert("Network Error: Could not connect to the server.");
       setSaveStatus(prev => ({ ...prev, [id]: 'error' }));
     }
+  };
+
+  const handlePrint = (card) => {
+    setSelectedCard(card);
+    setIsModalOpen(true);
+  };
+
+  const closePreview = () => {
+    setIsModalOpen(false);
+    setSelectedCard(null);
+  };
+
+  const executePrint = () => {
+    window.scrollTo(0, 0);
+    const container = document.querySelector('.a4-page-container');
+    if (container) container.scrollTop = 0;
+    window.print();
   };
 
   const filteredCards = jobCards.filter(card =>
@@ -198,7 +221,14 @@ export default function Estimates() {
                             />
                         </div>
                     </td>
-                    <td className="py-6 px-8 text-center">
+                    <td className="py-6 px-8 text-center flex items-center justify-center gap-3">
+                      <button
+                        onClick={() => handlePrint(card)}
+                        className="p-2.5 bg-sky-50 text-sky-600 hover:bg-sky-600 hover:text-white rounded-xl transition-all shadow-sm active:scale-95"
+                        title="Print Quotation"
+                      >
+                        <Printer size={18} />
+                      </button>
                       <button
                         onClick={() => updatePrice(card._id)}
                         disabled={saveStatus[card._id] === 'saving'}
@@ -232,6 +262,204 @@ export default function Estimates() {
           </table>
         </div>
       </div>
+
+      {/* Quotation Print Preview Modal */}
+      {isModalOpen && selectedCard && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 overflow-y-auto">
+          <div className="bg-white border border-gray-300 w-full max-w-4xl relative max-h-[95vh] flex flex-col shadow-none">
+            {/* Modal Header */}
+            <div className="p-4 border-b flex justify-between items-center bg-white modal-header no-print">
+              <h2 className="text-xl font-bold text-gray-800">Quotation Preview</h2>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={executePrint}
+                  className="inline-flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 transition-all shadow-lg active:scale-95"
+                >
+                  <Printer size={18} /> Print
+                </button>
+                <button
+                  onClick={closePreview}
+                  className="p-1 hover:bg-gray-200 rounded-full transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body - Printable Content */}
+            <div className="p-8 overflow-y-auto flex-grow a4-page-container" id="printable-content">
+              <div 
+                id="printable-inner"
+                className="bg-white mx-auto shadow-none a4-page"
+              >
+                 {/* Header Branding */}
+                 <div className="flex justify-between items-start mb-6 border-b-2 pb-4 px-2" style={{ borderColor: '#1e293b' }}>
+                   <div className="flex-grow">
+                     <div className="flex items-center gap-4 mb-2">
+                         <h1 className="text-4xl font-black tracking-tight text-gray-900 leading-none">
+                             Harihar <span className="text-blue-600">Printers</span>
+                         </h1>
+                     </div>
+                     <div className="space-y-0.5">
+                         <p className="text-[10px] font-bold text-gray-700">
+                            <span className="text-blue-600 uppercase">Office:</span> J-97, Ashok Chowk, Adarsh Nagar, Jaipur-302 004
+                         </p>
+                         <p className="text-[10px] font-bold text-gray-700">
+                            <span className="text-blue-600 uppercase">Factory:</span> G-139, Hirawala Industrial Area, Kanota, Agra Road, Jaipur
+                         </p>
+                         <div className="flex gap-4 mt-1">
+                             <p className="text-[10px] font-bold text-gray-700 flex items-center gap-1">
+                                 <Phone size={10} className="text-blue-500" /> 0141-2600850, 9414043763
+                             </p>
+                             <p className="text-[10px] font-bold text-gray-700 flex items-center gap-1">
+                                 <Mail size={10} className="text-blue-500" /> hariharprinters1@gmail.com
+                             </p>
+                         </div>
+                     </div>
+                   </div>
+                   <div className="text-right flex flex-col items-end gap-1">
+                     <div className="bg-blue-600 text-white px-6 py-1.5 rounded text-[11px] font-black uppercase tracking-widest shadow-sm">
+                         QUOTATION
+                     </div>
+                      <div className="text-[9px] font-black text-gray-500 uppercase flex flex-col gap-1 mt-2 tracking-wide">
+                          <span>GSTIN: <span className="text-gray-900 border-b-2 border-gray-100 pb-0.5 ml-1">08AALPC9959M1ZV</span></span>
+                          <span>PAN: <span className="text-gray-900 border-b-2 border-gray-100 pb-0.5 ml-1">AALPC9959M</span></span>
+                      </div>
+                   </div>
+                 </div>
+
+                {/* Top Info Grid */}
+                <div className="grid grid-cols-2 gap-x-8 gap-y-3 mb-6 bg-gray-50/50 p-4 rounded-xl border border-gray-100">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Party Name</span>
+                    <span className="text-sm font-black text-gray-900 leading-tight uppercase">{selectedCard.partyName}</span>
+                  </div>
+                  <div className="flex flex-col gap-1 text-right">
+                    <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Date</span>
+                    <span className="text-sm font-black text-gray-900">{new Date(selectedCard.jobDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                  </div>
+                  <div className="col-span-1 flex flex-col gap-1">
+                    <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Address</span>
+                    <span className="text-[10px] font-bold text-gray-600 uppercase">{selectedCard.address || 'Address Not Provided'}</span>
+                  </div>
+                  <div className="col-span-1 flex justify-end gap-6 text-right">
+                    <div className="flex flex-col gap-1">
+                        <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Contact</span>
+                        <span className="text-[10px] font-bold text-gray-900">{selectedCard.contactNo || '-'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Main Content Sections */}
+                <div className="grid grid-cols-2 gap-x-10">
+                  {/* Left Section - Production Details */}
+                  <div className="space-y-6">
+                    <section>
+                        <h4 className="text-[10px] font-black uppercase text-blue-600 border-b pb-1 mb-3 tracking-widest flex items-center gap-2">
+                           <Calculator size={12} /> Production Specs
+                        </h4>
+                        <div className="space-y-2">
+                            {[
+                                { label: 'Job Number', value: selectedCard.jobNumber, bold: true, color: 'text-blue-700' },
+                                { label: 'Job Name', value: selectedCard.jobName, uppercase: true },
+                                { label: 'Paper Size', value: selectedCard.pageSize || '-' },
+                                { label: 'Color Detail', value: selectedCard.printingType || '-' },
+                                { label: 'Quotation Amount', value: `₹ ${Number(prices[selectedCard._id] || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`, bold: true, color: 'text-blue-700', bg: 'bg-blue-50/50 p-1.5' }
+                            ].map((row, i) => (
+                                <div key={i} className={`flex justify-between items-end gap-2 text-[11px] border-b border-gray-100 pb-2 ${row.bg || ''} rounded`}>
+                                    <span className="font-bold uppercase text-gray-400 min-w-fit">{row.label}</span>
+                                    <span className={`text-right ${row.bold ? 'font-black' : 'font-bold'} ${row.color || 'text-gray-900'} ${row.uppercase ? 'uppercase' : ''}`}>
+                                        {row.value}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+
+                    <section>
+                        <h4 className="text-[10px] font-black uppercase text-cyan-600 border-b pb-1 mb-3 tracking-widest flex items-center gap-2">
+                           <List size={12} /> Paper & Stock
+                        </h4>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <span className="text-[9px] font-black text-gray-400 uppercase block">Source</span>
+                                <div className={`px-2 py-1 rounded border text-[10px] font-black text-center uppercase ${selectedCard.paperSource === 'Company paper' ? 'bg-cyan-50 border-cyan-100 text-cyan-700' : 'bg-orange-50 border-orange-100 text-orange-700'}`}>
+                                    {selectedCard.paperSource || 'Company paper'}
+                                </div>
+                            </div>
+                             <div className="space-y-2">
+                                <span className="text-[9px] font-black text-gray-400 uppercase block">Page Count</span>
+                                <div className="text-[11px] font-bold text-gray-900 border-b border-gray-100 pb-2">
+                                    C: {selectedCard.coverPaperCount || 0} / I: {selectedCard.innerPaperCount || 0}
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                  </div>
+
+                  {/* Right Section */}
+                  <div className="space-y-6">
+                    <section>
+                        <h4 className="text-[10px] font-black uppercase text-indigo-600 border-b pb-1 mb-3 tracking-widest flex items-center gap-2">
+                           <Printer size={12} /> Press Details
+                        </h4>
+                        <div className="grid grid-cols-2 gap-y-3 gap-x-6">
+                            {[
+                                { label: 'Compose', value: selectedCard.composeDesign || 'No' },
+                                { label: 'Plate Type', value: selectedCard.plateType || 'New' },
+                                { label: 'Plate Qty', value: selectedCard.plateQty || 0 },
+                                { label: 'Lamination', value: selectedCard.lamination || '-' }
+                            ].map((row, i) => (
+                                <div key={i} className="flex flex-col gap-1 border-b border-gray-100 pb-2.5">
+                                    <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none">{row.label}</span>
+                                    <span className="text-[11px] font-bold text-gray-900 leading-tight">{row.value}</span>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="mt-4 p-3 bg-indigo-50/50 rounded-lg border border-indigo-100 text-center">
+                            <span className="text-[9px] font-black text-gray-400 uppercase block mb-1">Printing Quantity</span>
+                            <span className="text-xl font-black text-indigo-700">{selectedCard.printingQty || 0}</span>
+                        </div>
+                    </section>
+
+                    <section>
+                        <h4 className="text-[10px] font-black uppercase text-rose-600 border-b pb-1 mb-3 tracking-widest flex items-center gap-2">
+                           <AlertCircle size={12} /> Quotation Terms
+                        </h4>
+                        <div className="border border-rose-100 p-4 rounded-xl bg-rose-50/20 min-h-[80px]">
+                            <p className="text-[10px] italic leading-relaxed text-gray-700 font-medium">
+                                {selectedCard.notes || 'Note: Prices are valid for 7 days. Taxes extras as applicable unless mentioned.'}
+                            </p>
+                        </div>
+                    </section>
+                  </div>
+                </div>
+
+                {/* Footer Signatory Area */}
+                <div className="mt-10 pt-10 grid grid-cols-2 gap-4 border-t border-gray-100 border-dashed">
+                    <div className="text-center">
+                        <div className="w-16 h-1 border-b border-gray-300 mx-auto mb-2"></div>
+                        <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Customer Signature</span>
+                    </div>
+                    <div className="text-center">
+                        <div className="w-16 h-1 border-b border-gray-300 mx-auto mb-2"></div>
+                        <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">For Harihar Printers</span>
+                    </div>
+                </div>
+
+                 {/* Branding Footer */}
+                 <div className="mt-12 pt-4 border-t border-gray-100 flex justify-between items-center px-2">
+                    <p className="text-[8px] font-black text-gray-400 uppercase tracking-[0.2em]">Harihar Printers • Production System</p>
+                    <div className="flex gap-4">
+                        <p className="text-[8px] font-black text-gray-300 uppercase letter-spacing-1">Original</p>
+                        <p className="text-[8px] font-black text-gray-300 uppercase letter-spacing-1">Duplicate</p>
+                    </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
