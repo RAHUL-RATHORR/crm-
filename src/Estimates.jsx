@@ -346,6 +346,10 @@ export default function Estimates() {
                       <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Contact</span>
                       <span className="text-[10px] font-bold text-gray-900">{selectedCard.contactNo || '-'}</span>
                     </div>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Job Qty</span>
+                      <span className="text-[10px] font-black text-blue-600">{selectedCard.jobQty || '-'}</span>
+                    </div>
                   </div>
                 </div>
 
@@ -393,6 +397,12 @@ export default function Estimates() {
                           </div>
                         </div>
                       </div>
+                      <div className="mt-2 border-t border-gray-50 pt-2">
+                        <div className="flex justify-between items-center text-[10px]">
+                          <span className="font-bold text-gray-400 uppercase">Paper Type</span>
+                          <span className="font-bold text-gray-900 uppercase">{selectedCard.paper || '-'}</span>
+                        </div>
+                      </div>
                     </section>
                   </div>
 
@@ -407,6 +417,7 @@ export default function Estimates() {
                           { label: 'Compose', value: selectedCard.compose || 'No' },
                           { label: 'Design', value: selectedCard.design || 'No' },
                           { label: 'Plate Type', value: selectedCard.plateType || 'New' },
+                          { label: 'Plate Number', value: selectedCard.plateNumber || '-' },
                           { label: 'Plate Qty', value: selectedCard.plateQty || 0 },
                           { label: 'Lamination', value: selectedCard.lamination || '-' }
                         ].map((row, i) => (
