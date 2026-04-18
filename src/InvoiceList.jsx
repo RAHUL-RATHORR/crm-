@@ -248,59 +248,58 @@ const InvoiceList = () => {
             <div className="p-4 sm:p-6 overflow-y-auto flex-grow bg-gray-100/50 a4-page-container">
               <div
                 id="printable-invoice"
-                className="bg-white mx-auto a4-page shadow-none"
-                style={{ backgroundColor: '#ffffff', color: '#111827' }}
+                className="bg-white mx-auto a4-page"
               >
                 {/* Header Branding */}
                 <div className="flex justify-between items-start mb-6 border-b-2 pb-4 px-2" style={{ borderColor: '#1e293b' }}>
                   <div className="flex-grow">
                     <div className="flex items-center gap-4 mb-2">
-                      <h1 className="text-4xl font-black tracking-tight leading-none" style={{ color: '#111827' }}>
-                        Harihar <span style={{ color: '#2563eb' }}>Printers</span>
+                      <h1 className="text-4xl font-black tracking-tight text-gray-900 leading-none">
+                        Harihar <span className="text-blue-600">Printers</span>
                       </h1>
                     </div>
                     <div className="space-y-0.5">
-                      <p className="text-[10px] font-bold" style={{ color: '#374151' }}>
-                        <span style={{ color: '#2563eb' }}>OFFICE:</span> J-97, Ashok Chowk, Adarsh Nagar, Jaipur-302 004
+                      <p className="text-[10px] font-bold text-gray-700">
+                        <span className="text-blue-600">OFFICE:</span> J-97, Ashok Chowk, Adarsh Nagar, Jaipur-302 004
                       </p>
-                      <p className="text-[10px] font-bold" style={{ color: '#374151' }}>
-                        <span style={{ color: '#2563eb' }}>FACTORY:</span> G-139, Hirawala Industrial Area, Kanota, Agra Road, Jaipur
+                      <p className="text-[10px] font-bold text-gray-700">
+                        <span className="text-blue-600">FACTORY:</span> G-139, Hirawala Industrial Area, Kanota, Agra Road, Jaipur
                       </p>
                       <div className="flex gap-4 mt-1">
-                        <p className="text-[10px] font-bold flex items-center gap-1" style={{ color: '#374151' }}>
-                          <Phone size={10} style={{ color: '#3b82f6' }} /> 0141-2600850, 9414043763
+                        <p className="text-[10px] font-bold text-gray-700 flex items-center gap-1">
+                          <Phone size={10} className="text-blue-500" /> 0141-2600850, 9414043763
                         </p>
                       </div>
                     </div>
                   </div>
                   <div className="text-right flex flex-col items-end gap-1">
-                    <div className="text-white px-4 py-1.5 rounded text-[11px] font-black uppercase tracking-widest shadow-sm" style={{ backgroundColor: '#2563eb' }}>
+                    <div className="bg-blue-600 text-white px-4 py-1.5 rounded text-[11px] font-black uppercase tracking-widest shadow-sm">
                       GST Tax Invoice
                     </div>
-                    <div className="text-[9px] font-black uppercase flex flex-col gap-0.5 mt-2" style={{ color: '#6b7280' }}>
-                      <span>GSTIN: <span className="border-b" style={{ color: '#111827', borderColor: '#e5e7eb' }}>08AALPC9959M1ZV</span></span>
-                      <span>PAN: <span className="border-b" style={{ color: '#111827', borderColor: '#e5e7eb' }}>AALPC9959M</span></span>
+                    <div className="text-[9px] font-black text-gray-500 uppercase flex flex-col gap-0.5 mt-2">
+                      <span>GSTIN: <span className="text-gray-900 border-b border-gray-200">08AALPC9959M1ZV</span></span>
+                      <span>PAN: <span className="text-gray-900 border-b border-gray-200">AALPC9959M</span></span>
                     </div>
                   </div>
                 </div>
 
                 {/* Meta Information Bar */}
-                <div className="grid grid-cols-4 gap-4 mb-6 p-4 rounded-xl border" style={{ backgroundColor: '#f9fafb', borderColor: '#f3f4f6' }}>
+                <div className="grid grid-cols-4 gap-4 mb-6 bg-gray-50 p-4 rounded-xl border border-gray-100">
                   <div className="flex flex-col">
-                    <span className="text-[8px] font-black uppercase tracking-widest leading-none mb-1" style={{ color: '#9ca3af' }}>Invoice Number</span>
-                    <span className="text-sm font-black" style={{ color: '#1d4ed8' }}>{selectedInvoice.invoiceNumber}</span>
+                    <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Invoice Number</span>
+                    <span className="text-sm font-black text-blue-700">{selectedInvoice.invoiceNumber}</span>
                   </div>
-                  <div className="flex flex-col border-l pl-4" style={{ borderColor: '#e5e7eb' }}>
-                    <span className="text-[8px] font-black uppercase tracking-widest leading-none mb-1" style={{ color: '#9ca3af' }}>Date</span>
-                    <span className="text-sm font-black" style={{ color: '#111827' }}>{new Date(selectedInvoice.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                  <div className="flex flex-col border-l border-gray-200 pl-4">
+                    <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Date</span>
+                    <span className="text-sm font-black text-gray-900">{new Date(selectedInvoice.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
                   </div>
-                  <div className="flex flex-col border-l pl-4" style={{ borderColor: '#e5e7eb' }}>
-                    <span className="text-[8px] font-black uppercase tracking-widest leading-none mb-1" style={{ color: '#9ca3af' }}>Reverse Charge</span>
-                    <span className="text-sm font-black uppercase" style={{ color: '#111827' }}>NO</span>
+                  <div className="flex flex-col border-l border-gray-200 pl-4">
+                    <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Reverse Charge</span>
+                    <span className="text-sm font-black text-gray-900 uppercase">NO</span>
                   </div>
-                  <div className="flex flex-col border-l pl-4" style={{ borderColor: '#e5e7eb' }}>
-                    <span className="text-[8px] font-black uppercase tracking-widest leading-none mb-1" style={{ color: '#9ca3af' }}>State Code</span>
-                    <span className="text-sm font-black" style={{ color: '#111827' }}>08 (Raj)</span>
+                  <div className="flex flex-col border-l border-gray-200 pl-4">
+                    <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">State Code</span>
+                    <span className="text-sm font-black text-gray-900">08 (Raj)</span>
                   </div>
                 </div>
 
@@ -308,17 +307,17 @@ const InvoiceList = () => {
                 <div className="grid grid-cols-2 gap-8 mb-8">
                   {/* Bill to Party */}
                   <div className="space-y-3">
-                    <h4 className="text-[10px] font-black uppercase border-b pb-1 flex items-center gap-2" style={{ color: '#2563eb', borderColor: '#e5e7eb' }}>
+                    <h4 className="text-[10px] font-black uppercase text-blue-600 border-b pb-1 flex items-center gap-2">
                       <Building2 size={12} /> Bill To Party
                     </h4>
                     <div className="space-y-1">
-                      <p className="text-sm font-black leading-tight uppercase" style={{ color: '#111827' }}>{selectedInvoice.partyName}</p>
-                      <p className="text-[10px] font-bold leading-relaxed uppercase pr-4" style={{ color: '#6b7280' }}>
+                      <p className="text-sm font-black text-gray-900 leading-tight uppercase">{selectedInvoice.partyName}</p>
+                      <p className="text-[10px] font-bold text-gray-500 leading-relaxed uppercase pr-4">
                         {selectedInvoice.address || 'Address Not Provided'}
                       </p>
                       {selectedInvoice.contactNo && (
-                        <p className="text-[10px] font-bold flex items-center gap-2" style={{ color: '#374151' }}>
-                          <span style={{ color: '#9ca3af' }}>CONTACT:</span> {selectedInvoice.contactNo}
+                        <p className="text-[10px] font-bold text-gray-700 flex items-center gap-2">
+                          <span className="text-gray-400">CONTACT:</span> {selectedInvoice.contactNo}
                         </p>
                       )}
                     </div>
@@ -326,12 +325,12 @@ const InvoiceList = () => {
 
                   {/* Place of Supply */}
                   <div className="space-y-3">
-                    <h4 className="text-[10px] font-black uppercase border-b pb-1 flex items-center gap-2 italic" style={{ color: '#9ca3af', borderColor: '#e5e7eb' }}>
+                    <h4 className="text-[10px] font-black uppercase text-gray-400 border-b pb-1 flex items-center gap-2 italic">
                       <MapPin size={12} /> Place of Supply
                     </h4>
                     <div className="space-y-1 opacity-80">
-                      <p className="text-sm font-black leading-tight uppercase" style={{ color: '#111827' }}>{selectedInvoice.partyName}</p>
-                      <p className="text-[10px] font-bold leading-relaxed uppercase" style={{ color: '#6b7280' }}>
+                      <p className="text-sm font-black text-gray-900 leading-tight uppercase">{selectedInvoice.partyName}</p>
+                      <p className="text-[10px] font-bold text-gray-500 leading-relaxed uppercase">
                         {selectedInvoice.address || 'Same as Billing'}
                       </p>
                     </div>
@@ -339,41 +338,41 @@ const InvoiceList = () => {
                 </div>
 
                 {/* Item Table */}
-                <div className="border rounded-2xl overflow-hidden mt-4" style={{ borderColor: '#e5e7eb' }}>
+                <div className="border border-gray-200 rounded-2xl overflow-hidden mt-4">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="text-white uppercase text-[9px] font-black tracking-widest" style={{ backgroundColor: '#111827' }}>
-                        <th className="px-4 py-3 w-12 text-center border-r" style={{ borderColor: '#374151' }}>S.No.</th>
-                        <th className="px-4 py-3 border-r" style={{ borderColor: '#374151' }}>Description of Goods</th>
-                        <th className="px-4 py-3 text-center border-r" style={{ borderColor: '#374151' }}>HSN/SAC</th>
-                        <th className="px-4 py-3 text-center border-r" style={{ borderColor: '#374151' }}>Qty</th>
-                        <th className="px-4 py-3 text-right border-r" style={{ borderColor: '#374151' }}>Rate</th>
+                      <tr className="bg-gray-900 text-white uppercase text-[9px] font-black tracking-widest">
+                        <th className="px-4 py-3 w-12 text-center border-r border-gray-700">S.No.</th>
+                        <th className="px-4 py-3 border-r border-gray-700">Description of Goods</th>
+                        <th className="px-4 py-3 text-center border-r border-gray-700">HSN/SAC</th>
+                        <th className="px-4 py-3 text-center border-r border-gray-700">Qty</th>
+                        <th className="px-4 py-3 text-right border-r border-gray-700">Rate</th>
                         <th className="px-4 py-3 text-right">Amount (₹)</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y" style={{ borderColor: '#f3f4f6' }}>
+                    <tbody className="divide-y divide-gray-100">
                       {selectedInvoice.items?.map((item, idx) => (
-                        <tr key={idx} style={{ color: '#111827' }}>
-                          <td className="px-4 py-4 text-center text-[11px] font-black border-r" style={{ borderRightColor: '#f3f4f6', color: '#9ca3af' }}>{idx + 1}</td>
-                          <td className="px-4 py-4 border-r" style={{ borderRightColor: '#f3f4f6' }}>
-                            <p className="text-xs font-black uppercase" style={{ color: '#111827' }}>{item.jobName}</p>
-                            <p className="text-[9px] font-bold tracking-wide mt-0.5" style={{ color: '#9ca3af' }}>Printing & Services</p>
+                        <tr key={idx} className="text-gray-900">
+                          <td className="px-4 py-4 text-center text-[11px] font-black text-gray-400 border-r border-gray-100">{idx + 1}</td>
+                          <td className="px-4 py-4 border-r border-gray-100">
+                            <p className="text-xs font-black uppercase text-gray-900">{item.jobName}</p>
+                            <p className="text-[9px] font-bold text-gray-400 tracking-wide mt-0.5">Printing & Services</p>
                           </td>
-                          <td className="px-4 py-4 text-center text-[11px] font-bold tracking-wider font-mono border-r" style={{ borderRightColor: '#f3f4f6', color: '#4b5563' }}>4901</td>
-                          <td className="px-4 py-4 text-center text-[11px] font-black border-r" style={{ borderRightColor: '#f3f4f6' }}>{item.qty || 0}</td>
-                          <td className="px-4 py-4 text-right text-[11px] font-bold border-r" style={{ borderRightColor: '#f3f4f6' }}>₹{item.rate?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                          <td className="px-4 py-4 text-center text-[11px] font-bold text-gray-600 tracking-wider font-mono border-r border-gray-100">4901</td>
+                          <td className="px-4 py-4 text-center text-[11px] font-black border-r border-gray-100">{item.qty || 0}</td>
+                          <td className="px-4 py-4 text-right text-[11px] font-bold border-r border-gray-100">₹{item.rate?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                           <td className="px-4 py-4 text-right text-[11px] font-black">₹{item.total?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                         </tr>
                       ))}
                       {/* Empty spacing rows with vertical grid lines */}
                       {[...Array(Math.max(0, 10 - (selectedInvoice.items?.length || 0)))].map((_, i) => (
                         <tr key={`empty-${i}`} className="h-10 opacity-5">
-                          <td className="border-r border-b" style={{ borderColor: '#f3f4f6' }}></td>
-                          <td className="border-r border-b" style={{ borderColor: '#f3f4f6' }}></td>
-                          <td className="border-r border-b" style={{ borderColor: '#f3f4f6' }}></td>
-                          <td className="border-r border-b" style={{ borderColor: '#f3f4f6' }}></td>
-                          <td className="border-r border-b" style={{ borderColor: '#f3f4f6' }}></td>
-                          <td className="border-b" style={{ borderColor: '#f3f4f6' }}></td>
+                          <td className="border-r border-gray-100 border-b border-gray-100"></td>
+                          <td className="border-r border-gray-100 border-b border-gray-100"></td>
+                          <td className="border-r border-gray-100 border-b border-gray-100"></td>
+                          <td className="border-r border-gray-100 border-b border-gray-100"></td>
+                          <td className="border-r border-gray-100 border-b border-gray-100"></td>
+                          <td className="border-b border-gray-100"></td>
                         </tr>
                       ))}
                     </tbody>
@@ -384,19 +383,19 @@ const InvoiceList = () => {
                 <div className="mt-8 flex justify-between gap-12">
                   {/* Left side: Words & Bank */}
                   <div className="flex-grow space-y-6">
-                    <div className="bg-white p-4 rounded-xl border shadow-sm" style={{ borderColor: '#dbeafe' }}>
-                      <h4 className="text-xs font-black uppercase mb-3 flex items-center gap-2 border-b pb-1" style={{ color: '#1d4ed8', borderColor: '#eff6ff' }}>
+                    <div className="bg-white p-4 rounded-xl border border-blue-100 shadow-sm">
+                      <h4 className="text-xs font-black uppercase text-blue-700 mb-3 flex items-center gap-2 border-b pb-1 border-blue-50">
                         <Building2 size={16} /> Bank Deposit Information
                       </h4>
-                      <div className="grid grid-cols-2 gap-y-2 text-xs font-bold" style={{ color: '#111827' }}>
-                        <p><span className="uppercase tracking-tighter mr-3 text-[10px]" style={{ color: '#9ca3af' }}>Bank:</span> Indusind Bank</p>
-                        <p><span className="uppercase tracking-tighter mr-3 text-[10px]" style={{ color: '#9ca3af' }}>IFSC:</span> INDB0000278</p>
-                        <p><span className="uppercase tracking-tighter mr-3 text-[10px]" style={{ color: '#9ca3af' }}>Account:</span> 650014092175</p>
-                        <p><span className="uppercase tracking-tighter mr-3 text-[10px]" style={{ color: '#9ca3af' }}>Branch:</span> Raja Park, Jaipur</p>
+                      <div className="grid grid-cols-2 gap-y-2 text-xs font-bold text-gray-900">
+                        <p><span className="text-gray-400 uppercase tracking-tighter mr-3 text-[10px]">Bank:</span> Indusind Bank</p>
+                        <p><span className="text-gray-400 uppercase tracking-tighter mr-3 text-[10px]">IFSC:</span> INDB0000278</p>
+                        <p><span className="text-gray-400 uppercase tracking-tighter mr-3 text-[10px]">Account:</span> 650014092175</p>
+                        <p><span className="text-gray-400 uppercase tracking-tighter mr-3 text-[10px]">Branch:</span> Raja Park, Jaipur</p>
                       </div>
                     </div>
 
-                    <div className="text-[9px] font-bold leading-relaxed space-y-1" style={{ color: '#9ca3af' }}>
+                    <div className="text-[9px] text-gray-400 font-bold leading-relaxed space-y-1">
                       <p>E. & O.E.</p>
                       <p>1. Goods once sold will not be taken back.</p>
                       <p>2. Our responsibility ceases after the goods leave our premises.</p>
@@ -409,25 +408,25 @@ const InvoiceList = () => {
                   {/* Right side: Calculations */}
                   <div className="w-[300px] space-y-3">
                     <div className="space-y-2 pt-2">
-                      <div className="flex justify-between items-center text-[11px] font-bold" style={{ color: '#6b7280' }}>
+                      <div className="flex justify-between items-center text-[11px] font-bold text-gray-500">
                         <span>Total Taxable Value</span>
-                        <span style={{ color: '#111827' }}>₹{(selectedInvoice.totalAmount / (1 + (selectedInvoice.gstRate / 100))).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                        <span className="text-gray-900">₹{(selectedInvoice.totalAmount / (1 + (selectedInvoice.gstRate / 100))).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                       </div>
-                      <div className="flex justify-between items-center text-[11px] font-bold" style={{ color: '#6b7280' }}>
+                      <div className="flex justify-between items-center text-[11px] font-bold text-gray-500">
                         <span>(+) Freight / Packaging</span>
-                        <span style={{ color: '#111827' }}>₹0.00</span>
+                        <span className="text-gray-900">₹0.00</span>
                       </div>
-                      <div className="flex justify-between items-center text-[11px] font-bold" style={{ color: '#2563eb' }}>
+                      <div className="flex justify-between items-center text-[11px] font-bold text-blue-600">
                         <span>Add: CGST ({selectedInvoice.gstRate / 2}%)</span>
                         <span>₹{((selectedInvoice.totalAmount - (selectedInvoice.totalAmount / (1 + (selectedInvoice.gstRate / 100)))) / 2).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                       </div>
-                      <div className="flex justify-between items-center text-[11px] font-bold border-b pb-2" style={{ color: '#2563eb', borderColor: '#f3f4f6' }}>
+                      <div className="flex justify-between items-center text-[11px] font-bold text-blue-600 border-b border-gray-100 pb-2">
                         <span>Add: SGST ({selectedInvoice.gstRate / 2}%)</span>
                         <span>₹{((selectedInvoice.totalAmount - (selectedInvoice.totalAmount / (1 + (selectedInvoice.gstRate / 100)))) / 2).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                       </div>
                     </div>
 
-                    <div className="text-white rounded-xl px-5 py-4 shadow-xl shadow-blue-100" style={{ backgroundColor: '#2563eb' }}>
+                    <div className="bg-blue-600 text-white rounded-xl px-5 py-4 shadow-xl shadow-blue-100">
                       <div className="flex flex-col gap-0.5">
                         <span className="text-[8px] font-black uppercase opacity-70 tracking-widest">Total Amount (Tax Incl.)</span>
                         <span className="text-2xl font-black">₹{selectedInvoice.totalAmount?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
@@ -435,22 +434,22 @@ const InvoiceList = () => {
                     </div>
 
                     <div className="pt-8 text-center">
-                      <div className="border-t mt-4 pt-3 flex flex-col gap-1 items-center" style={{ borderColor: '#e5e7eb' }}>
-                        <span className="text-[10px] font-black uppercase" style={{ color: '#111827' }}>For HARIHAR PRINTERS</span>
+                      <div className="border-t border-gray-200 mt-4 pt-3 flex flex-col gap-1 items-center">
+                        <span className="text-[10px] font-black uppercase text-gray-900">For HARIHAR PRINTERS</span>
                         <div className="h-10"></div> {/* Signature Space */}
-                        <span className="text-[9px] font-black uppercase tracking-widest px-4 border-t pt-1" style={{ color: '#9ca3af', borderColor: '#f3f4f6' }}>Authorised Signatory</span>
+                        <span className="text-[9px] font-black uppercase text-gray-400 tracking-widest px-4 border-t border-gray-100 pt-1">Authorised Signatory</span>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Bottom Bar */}
-                <div className="mt-12 pt-6 border-t flex justify-between items-center opacity-40 px-2 transition-all duration-500" style={{ borderColor: '#f3f4f6' }}>
-                  <p className="text-[8px] font-black uppercase tracking-widest" style={{ color: '#9ca3af' }}>Professionally Generated via Harihar Printers</p>
+                <div className="mt-12 pt-6 border-t border-gray-100 flex justify-between items-center opacity-40 px-2 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500">
+                  <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Professionally Generated via Harihar Printers</p>
                   <div className="flex gap-4">
-                    <Phone size={10} style={{ color: '#9ca3af' }} />
-                    <Mail size={10} style={{ color: '#9ca3af' }} />
-                    <Globe size={10} style={{ color: '#9ca3af' }} />
+                    <Phone size={10} />
+                    <Mail size={10} />
+                    <Globe size={10} />
                   </div>
                 </div>
               </div>

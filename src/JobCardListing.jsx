@@ -25,11 +25,13 @@ export default function JobCardListing() {
       jobNumber: true,
       jobDate: true,
       jobQty: true,
+      jobName: true,
       pageSize: true,
       pageCount: false,
       printingType: true,
       paper: true,
-      paperGSM: false,
+      paperGSM: true,
+      innerPaperGSM: false,
       lamination: true,
       binding: true,
       createdAt: true
@@ -247,11 +249,13 @@ export default function JobCardListing() {
                     { id: 'jobNumber', label: 'Job Number' },
                     { id: 'jobDate', label: 'Job Date' },
                     { id: 'jobQty', label: 'Job Qty' },
-                    { id: 'pageSize', label: 'Page Size' },
+                    { id: 'jobName', label: 'Item Name' },
+                    { id: 'pageSize', label: 'Item Size' },
                     { id: 'pageCount', label: 'Page Count' },
                     { id: 'printingType', label: 'Color' },
                     { id: 'paper', label: 'Paper' },
-                    { id: 'paperGSM', label: 'Paper GSM' },
+                    { id: 'paperGSM', label: 'Cover GSM' },
+                    { id: 'innerPaperGSM', label: 'Inner GSM' },
                     { id: 'lamination', label: 'Lamination' },
                     { id: 'binding', label: 'Binding' },
                     { id: 'createdAt', label: 'Created At' }
@@ -283,11 +287,13 @@ export default function JobCardListing() {
                 {columnVisibility.jobNumber && <th className="py-4 px-6">Job Number</th>}
                 {columnVisibility.jobDate && <th className="py-4 px-6">Job Date</th>}
                 {columnVisibility.jobQty && <th className="py-4 px-6">Job Qty</th>}
-                {columnVisibility.pageSize && <th className="py-4 px-6">Page Size</th>}
+                {columnVisibility.jobName && <th className="py-4 px-6">Item Name</th>}
+                {columnVisibility.pageSize && <th className="py-4 px-6">Item Size</th>}
                 {columnVisibility.pageCount && <th className="py-4 px-6">Page Count</th>}
                 {columnVisibility.printingType && <th className="py-4 px-6">Color</th>}
                 {columnVisibility.paper && <th className="py-4 px-6">Paper</th>}
-                {columnVisibility.paperGSM && <th className="py-4 px-6">GSM</th>}
+                {columnVisibility.paperGSM && <th className="py-4 px-6">Cover GSM</th>}
+                {columnVisibility.innerPaperGSM && <th className="py-4 px-6">Inner GSM</th>}
                 {columnVisibility.lamination && <th className="py-4 px-6">Lamination</th>}
                 {columnVisibility.binding && <th className="py-4 px-6">Binding</th>}
                 {columnVisibility.createdAt && <th className="py-4 px-6">Created At</th>}
@@ -321,6 +327,9 @@ export default function JobCardListing() {
                     {columnVisibility.jobQty && (
                       <td className="py-4 px-6 text-gray-800 font-semibold">{card.jobQty || 0}</td>
                     )}
+                    {columnVisibility.jobName && (
+                      <td className="py-4 px-6 text-gray-900 font-medium">{card.jobName || '-'}</td>
+                    )}
                     {columnVisibility.pageSize && (
                       <td className="py-4 px-6 text-gray-700">{card.pageSize || '-'}</td>
                     )}
@@ -336,6 +345,7 @@ export default function JobCardListing() {
                     )}
                     {columnVisibility.paper && <td className="py-4 px-6 text-gray-700">{card.paper || '-'}</td>}
                     {columnVisibility.paperGSM && <td className="py-4 px-6 text-gray-700">{card.paperGSM || '-'}</td>}
+                    {columnVisibility.innerPaperGSM && <td className="py-4 px-6 text-gray-700">{card.innerPaperGSM || '-'}</td>}
                     {columnVisibility.lamination && (
                       <td className="py-4 px-6">
                         {card.lamination ? (
@@ -488,7 +498,7 @@ export default function JobCardListing() {
                       <div className="space-y-2">                             {[
                         { label: 'Job Number', value: selectedCard.jobNumber, bold: true, color: 'text-blue-700' },
                         { label: 'Job Name', value: selectedCard.jobName, uppercase: true },
-                        { label: 'Paper Size', value: selectedCard.pageSize || '-' },
+                        { label: 'Item Size', value: selectedCard.pageSize || '-' },
                         { label: 'Color Detail', value: selectedCard.printingType || '-' }
                       ].map((row, i) => (
                         <div key={i} className="flex justify-between items-end gap-2 text-[11px] border-b border-gray-100 pb-2">
@@ -514,9 +524,9 @@ export default function JobCardListing() {
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <span className="text-[9px] font-black text-gray-400 uppercase block">Page Count</span>
+                          <span className="text-[9px] font-black text-gray-400 uppercase block">Page & GSM</span>
                           <div className="text-[11px] font-bold text-gray-900 border-b border-gray-100 pb-2">
-                            C: {selectedCard.coverPaperCount || 0} / I: {selectedCard.innerPaperCount || 0}
+                            C: {selectedCard.coverPaperCount || 0} ({selectedCard.paperGSM || '-'}) / I: {selectedCard.innerPaperCount || 0} ({selectedCard.innerPaperGSM || '-'})
                           </div>
                         </div>
                       </div>
@@ -561,7 +571,8 @@ export default function JobCardListing() {
                         <Printer size={12} /> Press Details
                       </h4>
                       <div className="grid grid-cols-2 gap-y-3 gap-x-6">                             {[
-                        { label: 'Compose', value: selectedCard.composeDesign || 'No' },
+                        { label: 'Compose', value: selectedCard.compose || 'No' },
+                        { label: 'Design', value: selectedCard.design || 'No' },
                         { label: 'Plate Type', value: selectedCard.plateType || 'New' },
                         { label: 'Plate Qty', value: selectedCard.plateQty || 0 },
                         { label: 'Lamination', value: selectedCard.lamination || '-' }

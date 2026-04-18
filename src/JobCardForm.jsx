@@ -112,8 +112,8 @@ export default function JobCardForm() {
               <input type="text" name="address" defaultValue={editData?.address} className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" placeholder="Enter address" />
             </div>
             <div className="flex flex-col">
-              <label className="text-sm font-medium text-gray-700 mb-1">Contact Details</label>
-              <input type="text" name="contactNo" defaultValue={editData?.contactNo} className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" placeholder="Phone or Email" />
+              <label className="text-sm font-medium text-gray-700 mb-1">Contact No.</label>
+              <input type="text" name="contactNo" defaultValue={editData?.contactNo} className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" placeholder="Enter Phone" />
             </div>
             <div className="flex flex-col">
               <label className="text-sm font-medium text-gray-700 mb-1">GST No.</label>
@@ -143,12 +143,12 @@ export default function JobCardForm() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             <div className="flex flex-col">
-              <label className="text-sm font-medium text-gray-700 mb-1">Page Size</label>
-              <input type="text" name="pageSize" defaultValue={editData?.pageSize} className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" placeholder="e.g. A4, 1/4" />
+              <label className="text-sm font-medium text-gray-700 mb-1">Item Name *</label>
+              <input type="text" name="jobName" defaultValue={editData?.jobName} required className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" placeholder="Enter job/item name" />
             </div>
             <div className="flex flex-col">
-              <label className="text-sm font-medium text-gray-700 mb-1">Page</label>
-              <input type="text" name="pageCount" defaultValue={editData?.pageCount} className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" placeholder="Number of pages" />
+              <label className="text-sm font-medium text-gray-700 mb-1">Item Size</label>
+              <input type="text" name="pageSize" defaultValue={editData?.pageSize} className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" placeholder="e.g. A4, 1/4" />
             </div>
             <div className="flex flex-col">
               <label className="text-sm font-medium text-gray-700 mb-1">Color</label>
@@ -172,14 +172,14 @@ export default function JobCardForm() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             <div className="flex flex-col">
-              <label className="text-sm font-medium text-gray-700 mb-2">Compose Design</label>
+              <label className="text-sm font-medium text-gray-700 mb-2">Compose</label>
               <div className="flex items-center gap-6 h-10">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="radio"
-                    name="composeDesign"
+                    name="compose"
                     value="Yes"
-                    defaultChecked={editData?.composeDesign === 'Yes'}
+                    defaultChecked={editData?.compose === 'Yes'}
                     className="w-4 h-4 text-emerald-600 border-gray-300 focus:ring-emerald-500"
                   />
                   <span className="text-sm text-gray-700">Yes</span>
@@ -187,9 +187,34 @@ export default function JobCardForm() {
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="radio"
-                    name="composeDesign"
+                    name="compose"
                     value="No"
-                    defaultChecked={editData?.composeDesign !== 'Yes'}
+                    defaultChecked={editData?.compose !== 'Yes'}
+                    className="w-4 h-4 text-emerald-600 border-gray-300 focus:ring-emerald-500"
+                  />
+                  <span className="text-sm text-gray-700">No</span>
+                </label>
+              </div>
+            </div>
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-gray-700 mb-2">Design</label>
+              <div className="flex items-center gap-6 h-10">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="design"
+                    value="Yes"
+                    defaultChecked={editData?.design === 'Yes'}
+                    className="w-4 h-4 text-emerald-600 border-gray-300 focus:ring-emerald-500"
+                  />
+                  <span className="text-sm text-gray-700">Yes</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="design"
+                    value="No"
+                    defaultChecked={editData?.design !== 'Yes'}
                     className="w-4 h-4 text-emerald-600 border-gray-300 focus:ring-emerald-500"
                   />
                   <span className="text-sm text-gray-700">No</span>
@@ -282,14 +307,14 @@ export default function JobCardForm() {
               </div>
             </div>
             <div className="flex flex-col">
-              <label className="text-sm font-medium text-gray-700 mb-1">Paper GSM</label>
+              <label className="text-sm font-medium text-gray-700 mb-1">Cover paper gsm</label>
               <input
                 type="text"
                 name="paperGSM"
                 value={paperGSM}
                 onChange={(e) => setPaperGSM(e.target.value)}
                 className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
-                placeholder="e.g. 350, 130"
+                placeholder="e.g. 350, 250"
               />
             </div>
             <div className="flex flex-col">
@@ -298,17 +323,6 @@ export default function JobCardForm() {
                 type="number"
                 name="coverPaperCount"
                 defaultValue={editData?.coverPaperCount || 0}
-                min="0"
-                className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
-                placeholder="0"
-              />
-            </div>
-            <div className="flex flex-col">
-              <label className="text-sm font-medium text-gray-700 mb-1">Inner paper count</label>
-              <input
-                type="number"
-                name="innerPaperCount"
-                defaultValue={editData?.innerPaperCount || 0}
                 min="0"
                 className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
                 placeholder="0"
@@ -338,6 +352,27 @@ export default function JobCardForm() {
                   <span className="text-sm text-gray-700">Company paper</span>
                 </label>
               </div>
+            </div>
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-gray-700 mb-1">Inner paper gsm</label>
+              <input
+                type="text"
+                name="innerPaperGSM"
+                defaultValue={editData?.innerPaperGSM}
+                className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
+                placeholder="e.g. 80, 100"
+              />
+            </div>
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-gray-700 mb-1">Inner paper count</label>
+              <input
+                type="number"
+                name="innerPaperCount"
+                defaultValue={editData?.innerPaperCount || 0}
+                min="0"
+                className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
+                placeholder="0"
+              />
             </div>
           </div>
         </div>

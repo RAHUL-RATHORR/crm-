@@ -387,9 +387,9 @@ export default function Estimates() {
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <span className="text-[9px] font-black text-gray-400 uppercase block">Page Count</span>
+                          <span className="text-[9px] font-black text-gray-400 uppercase block">Page & GSM</span>
                           <div className="text-[11px] font-bold text-gray-900 border-b border-gray-100 pb-2">
-                            C: {selectedCard.coverPaperCount || 0} / I: {selectedCard.innerPaperCount || 0}
+                            C: {selectedCard.coverPaperCount || 0} ({selectedCard.paperGSM || '-'}) / I: {selectedCard.innerPaperCount || 0} ({selectedCard.innerPaperGSM || '-'})
                           </div>
                         </div>
                       </div>
@@ -404,7 +404,8 @@ export default function Estimates() {
                       </h4>
                       <div className="grid grid-cols-2 gap-y-3 gap-x-6">
                         {[
-                          { label: 'Compose', value: selectedCard.composeDesign || 'No' },
+                          { label: 'Compose', value: selectedCard.compose || 'No' },
+                          { label: 'Design', value: selectedCard.design || 'No' },
                           { label: 'Plate Type', value: selectedCard.plateType || 'New' },
                           { label: 'Plate Qty', value: selectedCard.plateQty || 0 },
                           { label: 'Lamination', value: selectedCard.lamination || '-' }
