@@ -427,7 +427,7 @@ export default function Estimates() {
                           { label: 'Compose', value: selectedCard.compose || 'No' },
                           { label: 'Design', value: selectedCard.design || 'No' },
                           { label: 'Plate Type', value: selectedCard.plateType || 'New' },
-                          { label: 'Plate Number', value: selectedCard.plateNumber || '-' },
+                          { label: 'Plate Number', value: selectedCard.plateNo || '-' },
                           { label: 'Plate Qty', value: selectedCard.plateQty || 0 },
                           { label: 'Lamination', value: selectedCard.lamination || '-' }
                         ].map((row, i) => (
