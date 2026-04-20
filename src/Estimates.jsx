@@ -383,24 +383,34 @@ export default function Estimates() {
                       <h4 className="text-[10px] font-black uppercase text-cyan-600 border-b pb-1 mb-3 tracking-widest flex items-center gap-2">
                         <List size={12} /> Paper & Stock
                       </h4>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <span className="text-[9px] font-black text-gray-400 uppercase block">Source</span>
-                          <div className={`px-2 py-1 rounded border text-[10px] font-black text-center uppercase ${selectedCard.paperSource === 'Company paper' ? 'bg-cyan-50 border-cyan-100 text-cyan-700' : 'bg-orange-50 border-orange-100 text-orange-700'}`}>
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center border-b border-gray-50 pb-1.5">
+                          <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none">Source</span>
+                          <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${selectedCard.paperSource === 'Company paper' ? 'bg-cyan-50 text-cyan-700' : 'bg-orange-50 text-orange-700'}`}>
                             {selectedCard.paperSource || 'Company paper'}
-                          </div>
+                          </span>
                         </div>
+                        <div className="flex justify-between items-center border-b border-gray-50 pb-1.5">
+                          <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none">Stock</span>
+                          <span className="text-[10px] font-bold text-gray-900 uppercase">{selectedCard.paper || '-'}</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <span className="text-[9px] font-black text-gray-400 uppercase block">Page & GSM</span>
                           <div className="text-[11px] font-bold text-gray-900 border-b border-gray-100 pb-2">
-                            C: {selectedCard.coverPaperCount || 0} ({selectedCard.paperGSM || '-'}) {selectedCard.coverPaperDetails ? `[${selectedCard.coverPaperDetails}]` : ''} / I: {selectedCard.innerPaperCount || 0} ({selectedCard.innerPaperGSM || '-'}) {selectedCard.innerPaperDetails ? `[${selectedCard.innerPaperDetails}]` : ''}
+                            C: {selectedCard.coverPaperCount || 0} ({selectedCard.paperGSM || '-'}) / I: {selectedCard.innerPaperCount || 0} ({selectedCard.innerPaperGSM || '-'})
                           </div>
                         </div>
                       </div>
-                      <div className="mt-2 border-t border-gray-50 pt-2">
-                        <div className="flex justify-between items-center text-[10px]">
-                          <span className="font-bold text-gray-400 uppercase">Paper Type</span>
-                          <span className="font-bold text-gray-900 uppercase">{selectedCard.paper || '-'}</span>
+                        <div className="mt-3 grid grid-cols-2 gap-4 border-t border-gray-50 pt-2">
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none">Cover Details</span>
+                            <span className="text-[10px] font-bold text-gray-900">{selectedCard.coverPaperDetails || '-'}</span>
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none">Inner Details</span>
+                            <span className="text-[10px] font-bold text-gray-900">{selectedCard.innerPaperDetails || '-'}</span>
+                          </div>
                         </div>
                       </div>
                     </section>

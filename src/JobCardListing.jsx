@@ -530,8 +530,18 @@ export default function JobCardListing() {
                         <div className="space-y-2">
                           <span className="text-[9px] font-black text-gray-400 uppercase block">Page & GSM</span>
                           <div className="text-[11px] font-bold text-gray-900 border-b border-gray-100 pb-2">
-                            C: {selectedCard.coverPaperCount || 0} ({selectedCard.paperGSM || '-'}) {selectedCard.coverPaperDetails ? `[${selectedCard.coverPaperDetails}]` : ''} / I: {selectedCard.innerPaperCount || 0} ({selectedCard.innerPaperGSM || '-'}) {selectedCard.innerPaperDetails ? `[${selectedCard.innerPaperDetails}]` : ''}
+                            C: {selectedCard.coverPaperCount || 0} ({selectedCard.paperGSM || '-'}) / I: {selectedCard.innerPaperCount || 0} ({selectedCard.innerPaperGSM || '-'})
                           </div>
+                        </div>
+                      </div>
+                      <div className="mt-3 grid grid-cols-2 gap-4 border-t border-gray-50 pt-2">
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none">Cover Details</span>
+                          <span className="text-[10px] font-bold text-gray-900">{selectedCard.coverPaperDetails || '-'}</span>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none">Inner Details</span>
+                          <span className="text-[10px] font-bold text-gray-900">{selectedCard.innerPaperDetails || '-'}</span>
                         </div>
                       </div>
                       <div className="mt-2 border-t border-gray-50 pt-2">
