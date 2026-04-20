@@ -15,8 +15,7 @@ const jobCardSchema = new mongoose.Schema({
   // Printing Details (Renamed to Type of Work)
   pageSize: { type: String },
   pageCount: { type: String },
-  compose: { type: String, default: 'No' },
-  design: { type: String, default: 'No' },
+  composeDesign: { type: String, default: 'No' },
   coverPaperCount: { type: Number, default: 0 },
   innerPaperCount: { type: Number, default: 0 },
   paperSource: { type: String, default: 'Company paper' },

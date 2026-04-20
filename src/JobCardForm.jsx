@@ -87,6 +87,7 @@ export default function JobCardForm() {
 
   return (
     <form onSubmit={handleSubmit} className="mx-auto mt-8 pb-12">
+      {editData?.jobNumber && <input type="hidden" name="jobNumber" value={editData.jobNumber} />}
       <div className="mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
           <div className="bg-blue-600 w-1.5 h-6 rounded-full" />
