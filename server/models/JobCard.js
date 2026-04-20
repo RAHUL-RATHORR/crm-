@@ -8,10 +8,10 @@ const jobCardSchema = new mongoose.Schema({
   gstNo: { type: String },
   jobName: { type: String },
   jobNumber: { type: String },
-  jobQty: { type: String, default: "0" },
+  jobQty: { type: Number, default: 0 },
   jobDate: { type: Date, default: Date.now },
   paperType: { type: String }, // Company Paper / Paper Party
-  
+
   // Printing Details (Renamed to Type of Work)
   pageSize: { type: String },
   pageCount: { type: String },
@@ -20,8 +20,8 @@ const jobCardSchema = new mongoose.Schema({
   innerPaperCount: { type: Number, default: 0 },
   paperSource: { type: String, default: 'Company paper' },
   plateType: { type: String, default: 'New' },
-  plateQty: { type: String, default: "0" },
-  printingQty: { type: String, default: "0" },
+  plateQty: { type: Number, default: 0 },
+  printingQty: { type: Number, default: 0 },
   lamination: { type: String },
   bindingCenterPin: { type: Boolean, default: false },
   bindingSilai: { type: Boolean, default: false },
@@ -40,7 +40,7 @@ const jobCardSchema = new mongoose.Schema({
   filePath: { type: String },
   plateNo: { type: String },
   platePrice: { type: Number, default: 0 },
-  
+
   // Job Summary
   plateFrom: { type: String },
   paperFrom: { type: String },
@@ -53,7 +53,7 @@ const jobCardSchema = new mongoose.Schema({
   jobCounter: { type: Number, default: 0 },
   totalAmount: { type: Number, default: 0 },
   notes: { type: String },
-  
+
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 }, { timestamps: true });

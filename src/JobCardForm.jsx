@@ -130,14 +130,7 @@ export default function JobCardForm() {
             </div>
             <div className="flex flex-col">
               <label className="text-sm font-medium text-gray-700 mb-1">Job Quantity *</label>
-              <input 
-                type="text" 
-                name="jobQty" 
-                defaultValue={editData?.jobQty} 
-                required 
-                className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" 
-                placeholder="e.g. 1000, 10 Books" 
-              />
+              <input type="number" name="jobQty" defaultValue={editData?.jobQty || 0} required className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" placeholder="0" />
             </div>
           </div>
         </div>
@@ -269,32 +262,32 @@ export default function JobCardForm() {
                         />
                       </div>
                     </div>
-                    
+
                     {paperStocks.filter(s => s.name.toLowerCase().includes(paperSearchTerm.toLowerCase())).length > 0 ? (
                       paperStocks
                         .filter(s => s.name.toLowerCase().includes(paperSearchTerm.toLowerCase()))
                         .map(stock => (
-                        <button
-                          key={stock._id}
-                          type="button"
-                          onClick={() => {
-                            setSelectedPaper(stock.name);
-                            setPaperGSM(stock.gsm || '');
-                            setIsPaperDropdownOpen(false);
-                          }}
-                          className={`w-full px-4 py-2.5 text-left text-sm flex items-center justify-between hover:bg-sky-50 transition-colors ${selectedPaper === stock.name ? 'bg-sky-50/50 text-sky-700 font-bold' : 'text-gray-700'}`}
-                        >
-                          <div className="flex items-center gap-3">
-                            <FileText size={14} className={selectedPaper === stock.name ? 'text-sky-500' : 'text-gray-300'} />
-                            <span>{stock.name} <span className="text-[10px] text-gray-400 ml-1">({stock.gsm} GSM)</span></span>
-                          </div>
-                          {selectedPaper === stock.name && <div className="w-1.5 h-1.5 rounded-full bg-sky-500" />}
-                        </button>
-                      ))
+                          <button
+                            key={stock._id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedPaper(stock.name);
+                              setPaperGSM(stock.gsm || '');
+                              setIsPaperDropdownOpen(false);
+                            }}
+                            className={`w-full px-4 py-2.5 text-left text-sm flex items-center justify-between hover:bg-sky-50 transition-colors ${selectedPaper === stock.name ? 'bg-sky-50/50 text-sky-700 font-bold' : 'text-gray-700'}`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <FileText size={14} className={selectedPaper === stock.name ? 'text-sky-500' : 'text-gray-300'} />
+                              <span>{stock.name} <span className="text-[10px] text-gray-400 ml-1">({stock.gsm} GSM)</span></span>
+                            </div>
+                            {selectedPaper === stock.name && <div className="w-1.5 h-1.5 rounded-full bg-sky-500" />}
+                          </button>
+                        ))
                     ) : (
                       <div className="px-4 py-2 text-xs text-gray-400 italic">No paper stocks found</div>
                     )}
-                    
+
                     <div className="border-t border-gray-50 mt-2 pt-2">
                       <button
                         type="button"
@@ -417,21 +410,21 @@ export default function JobCardForm() {
             </div>
             <div className="flex flex-col">
               <label className="text-sm font-medium text-gray-700 mb-1">Quantity Of Plates</label>
-              <input 
-                type="text" 
-                name="plateQty" 
-                defaultValue={editData?.plateQty} 
-                className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" 
+              <input
+                type="text"
+                name="plateQty"
+                defaultValue={editData?.plateQty}
+                className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                 placeholder="e.g. 4, 8 plates"
               />
             </div>
             <div className="flex flex-col">
               <label className="text-sm font-medium text-gray-700 mb-1">Printing</label>
-              <input 
-                type="text" 
-                name="printingQty" 
-                defaultValue={editData?.printingQty} 
-                className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" 
+              <input
+                type="text"
+                name="printingQty"
+                defaultValue={editData?.printingQty}
+                className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                 placeholder="e.g. 1000, 2 colors"
               />
             </div>
