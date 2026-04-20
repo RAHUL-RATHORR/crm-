@@ -15,6 +15,8 @@ export default function JobCardForm() {
   const [paperGSM, setPaperGSM] = useState(editData?.paperGSM || '');
   const [paperSearchTerm, setPaperSearchTerm] = useState('');
   const [isPaperDropdownOpen, setIsPaperDropdownOpen] = useState(false);
+  const [compose, setCompose] = useState(editData?.compose || 'No');
+  const [design, setDesign] = useState(editData?.design || 'No');
   const paperDropdownRef = useRef(null);
 
   useEffect(() => {
@@ -180,7 +182,8 @@ export default function JobCardForm() {
                     type="radio"
                     name="compose"
                     value="Yes"
-                    defaultChecked={editData?.compose === 'Yes'}
+                    checked={compose === 'Yes'}
+                    onChange={() => setCompose('Yes')}
                     className="w-4 h-4 text-emerald-600 border-gray-300 focus:ring-emerald-500"
                   />
                   <span className="text-sm text-gray-700">Yes</span>
@@ -190,7 +193,8 @@ export default function JobCardForm() {
                     type="radio"
                     name="compose"
                     value="No"
-                    defaultChecked={editData?.compose !== 'Yes'}
+                    checked={compose === 'No'}
+                    onChange={() => setCompose('No')}
                     className="w-4 h-4 text-emerald-600 border-gray-300 focus:ring-emerald-500"
                   />
                   <span className="text-sm text-gray-700">No</span>
@@ -205,7 +209,8 @@ export default function JobCardForm() {
                     type="radio"
                     name="design"
                     value="Yes"
-                    defaultChecked={editData?.design === 'Yes'}
+                    checked={design === 'Yes'}
+                    onChange={() => setDesign('Yes')}
                     className="w-4 h-4 text-emerald-600 border-gray-300 focus:ring-emerald-500"
                   />
                   <span className="text-sm text-gray-700">Yes</span>
@@ -215,7 +220,8 @@ export default function JobCardForm() {
                     type="radio"
                     name="design"
                     value="No"
-                    defaultChecked={editData?.design !== 'Yes'}
+                    checked={design === 'No'}
+                    onChange={() => setDesign('No')}
                     className="w-4 h-4 text-emerald-600 border-gray-300 focus:ring-emerald-500"
                   />
                   <span className="text-sm text-gray-700">No</span>
