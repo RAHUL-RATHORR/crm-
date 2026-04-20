@@ -8,7 +8,7 @@ const jobCardSchema = new mongoose.Schema({
   gstNo: { type: String },
   jobName: { type: String },
   jobNumber: { type: String },
-  jobQty: { type: Number, default: 0 },
+  jobQty: { type: String, default: "0" },
   jobDate: { type: Date, default: Date.now },
   paperType: { type: String }, // Company Paper / Paper Party
   
@@ -20,8 +20,8 @@ const jobCardSchema = new mongoose.Schema({
   innerPaperCount: { type: Number, default: 0 },
   paperSource: { type: String, default: 'Company paper' },
   plateType: { type: String, default: 'New' },
-  plateQty: { type: Number, default: 0 },
-  printingQty: { type: Number, default: 0 },
+  plateQty: { type: String, default: "0" },
+  printingQty: { type: String, default: "0" },
   lamination: { type: String },
   bindingCenterPin: { type: Boolean, default: false },
   bindingSilai: { type: Boolean, default: false },
