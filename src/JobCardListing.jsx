@@ -530,7 +530,7 @@ export default function JobCardListing() {
                         <div className="space-y-2">
                           <span className="text-[9px] font-black text-gray-400 uppercase block">Page & GSM</span>
                           <div className="text-[11px] font-bold text-gray-900 border-b border-gray-100 pb-2">
-                            C: {selectedCard.coverPaperCount || 0} ({selectedCard.paperGSM || '-'}) / I: {selectedCard.innerPaperCount || 0} ({selectedCard.innerPaperGSM || '-'})
+                            C: {selectedCard.coverPaperCount || 0} ({selectedCard.paperGSM || '-'}) {selectedCard.coverPaperDetails ? `[${selectedCard.coverPaperDetails}]` : ''} / I: {selectedCard.innerPaperCount || 0} ({selectedCard.innerPaperGSM || '-'}) {selectedCard.innerPaperDetails ? `[${selectedCard.innerPaperDetails}]` : ''}
                           </div>
                         </div>
                       </div>

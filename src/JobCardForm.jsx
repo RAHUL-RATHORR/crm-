@@ -229,7 +229,7 @@ export default function JobCardForm() {
             Paper details
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             <div className="flex flex-col relative" ref={paperDropdownRef}>
               <label className="text-sm font-medium text-gray-700 mb-1">Select Paper (From Stock)</label>
               <div className="relative">
@@ -329,6 +329,16 @@ export default function JobCardForm() {
               />
             </div>
             <div className="flex flex-col">
+              <label className="text-sm font-medium text-gray-700 mb-1">Cover paper Details</label>
+              <input
+                type="text"
+                name="coverPaperDetails"
+                defaultValue={editData?.coverPaperDetails}
+                className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
+                placeholder="e.g. Size, Type"
+              />
+            </div>
+            <div className="flex flex-col">
               <label className="text-sm font-medium text-gray-700 mb-2">Paper Type</label>
               <div className="flex items-center gap-6 h-10">
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -372,6 +382,16 @@ export default function JobCardForm() {
                 min="0"
                 className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
                 placeholder="0"
+              />
+            </div>
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-gray-700 mb-1">Inner paper Details</label>
+              <input
+                type="text"
+                name="innerPaperDetails"
+                defaultValue={editData?.innerPaperDetails}
+                className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
+                placeholder="e.g. Extra info"
               />
             </div>
           </div>
@@ -424,7 +444,7 @@ export default function JobCardForm() {
         </div>
 
         {/* Section 6: Binding */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 relative pt-14">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 relative pt-14 text-gray-700">
           <div className="absolute -top-4 left-6 bg-amber-600 text-white px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold shadow-sm">
             Binding
           </div>
