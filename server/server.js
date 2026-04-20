@@ -1,3 +1,4 @@
+// CRM Server v1.0.2 - Force Redeploy for Schema Updates
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";

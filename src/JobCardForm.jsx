@@ -133,7 +133,14 @@ export default function JobCardForm() {
             </div>
             <div className="flex flex-col">
               <label className="text-sm font-medium text-gray-700 mb-1">Job Quantity *</label>
-              <input type="number" name="jobQty" defaultValue={editData?.jobQty || 0} required className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" placeholder="0" />
+              <input 
+                type="text" 
+                name="jobQty" 
+                defaultValue={editData?.jobQty} 
+                required 
+                className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" 
+                placeholder="e.g. 1000, 50 Books" 
+              />
             </div>
           </div>
         </div>
