@@ -18,11 +18,22 @@ router.post('/', async (req, res) => {
     // Check if updating existing job card
     let jobCard;
     let isUpdate = false;
+    const { _id } = req.body;
 
-    if (jobNumber) {
+    if (_id) {
+      // UPDATE by _id (most reliable)
+      jobCard = await JobCard.findByIdAndUpdate(
+        _id,
+        { ...req.body, updatedAt: new Date() },
+        { new: true }
+      );
+      if (jobCard) isUpdate = true;
+    }
+
+    if (!isUpdate && jobNumber) {
       const existingJob = await JobCard.findOne({ jobNumber });
       if (existingJob) {
-        // UPDATE existing job card
+        // UPDATE by jobNumber (fallback)
         isUpdate = true;
         jobCard = await JobCard.findOneAndUpdate(
           { jobNumber },
@@ -34,7 +45,7 @@ router.post('/', async (req, res) => {
         jobCard = new JobCard(req.body);
         await jobCard.save();
       }
-    } else {
+    } else if (!isUpdate) {
       // AUTO-GENERATE jobNumber
       const lastJob = await JobCard.findOne().sort({ createdAt: -1 }).select('jobNumber');
       let nextNum = 1;
