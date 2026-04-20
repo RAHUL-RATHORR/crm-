@@ -364,7 +364,7 @@ export default function Estimates() {
                       <div className="space-y-2">
                         {[
                           { label: 'Job Number', value: selectedCard.jobNumber, bold: true, color: 'text-blue-700' },
-                          { label: 'Job Name', value: selectedCard.jobName, uppercase: true },
+                          { label: 'Item Name', value: selectedCard.jobName, uppercase: true },
                           { label: 'Paper Size', value: selectedCard.pageSize || '-' },
                           { label: 'Color Detail', value: selectedCard.printingType || '-' },
                           { label: 'Quotation Amount', value: `₹ ${Number(prices[selectedCard._id] || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`, bold: true, color: 'text-blue-700', bg: 'bg-blue-50/50 p-1.5' }

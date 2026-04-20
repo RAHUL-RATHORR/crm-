@@ -501,7 +501,7 @@ export default function JobCardListing() {
                       </h4>
                       <div className="space-y-2">                             {[
                         { label: 'Job Number', value: selectedCard.jobNumber, bold: true, color: 'text-blue-700' },
-                        { label: 'Job Name', value: selectedCard.jobName, uppercase: true },
+                        { label: 'Item Name', value: selectedCard.jobName, uppercase: true },
                         { label: 'Item Size', value: selectedCard.pageSize || '-' },
                         { label: 'Color Detail', value: selectedCard.printingType || '-' }
                       ].map((row, i) => (
