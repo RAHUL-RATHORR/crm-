@@ -17,6 +17,11 @@ export default function JobCardForm() {
   const [isPaperDropdownOpen, setIsPaperDropdownOpen] = useState(false);
   const [compose, setCompose] = useState(editData?.compose || 'No');
   const [design, setDesign] = useState(editData?.design || 'No');
+  const [coverPaperCount, setCoverPaperCount] = useState(editData?.coverPaperCount || 0);
+  const [coverPaperDetails, setCoverPaperDetails] = useState(editData?.coverPaperDetails || '');
+  const [innerPaperGSM, setInnerPaperGSM] = useState(editData?.innerPaperGSM || '');
+  const [innerPaperCount, setInnerPaperCount] = useState(editData?.innerPaperCount || 0);
+  const [innerPaperDetails, setInnerPaperDetails] = useState(editData?.innerPaperDetails || '');
   const paperDropdownRef = useRef(null);
 
   useEffect(() => {
@@ -336,7 +341,8 @@ export default function JobCardForm() {
               <input
                 type="number"
                 name="coverPaperCount"
-                defaultValue={editData?.coverPaperCount || 0}
+                value={coverPaperCount}
+                onChange={(e) => setCoverPaperCount(e.target.value)}
                 min="0"
                 className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
                 placeholder="0"
@@ -347,7 +353,8 @@ export default function JobCardForm() {
               <input
                 type="text"
                 name="coverPaperDetails"
-                defaultValue={editData?.coverPaperDetails}
+                value={coverPaperDetails}
+                onChange={(e) => setCoverPaperDetails(e.target.value)}
                 className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
                 placeholder="e.g. Size, Type"
               />
@@ -382,7 +389,8 @@ export default function JobCardForm() {
               <input
                 type="text"
                 name="innerPaperGSM"
-                defaultValue={editData?.innerPaperGSM}
+                value={innerPaperGSM}
+                onChange={(e) => setInnerPaperGSM(e.target.value)}
                 className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
                 placeholder="e.g. 80, 100"
               />
@@ -392,7 +400,8 @@ export default function JobCardForm() {
               <input
                 type="number"
                 name="innerPaperCount"
-                defaultValue={editData?.innerPaperCount || 0}
+                value={innerPaperCount}
+                onChange={(e) => setInnerPaperCount(e.target.value)}
                 min="0"
                 className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
                 placeholder="0"
@@ -403,7 +412,8 @@ export default function JobCardForm() {
               <input
                 type="text"
                 name="innerPaperDetails"
-                defaultValue={editData?.innerPaperDetails}
+                value={innerPaperDetails}
+                onChange={(e) => setInnerPaperDetails(e.target.value)}
                 className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
                 placeholder="e.g. Extra info"
               />
