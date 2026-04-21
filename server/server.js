@@ -55,13 +55,32 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/paper-stock", paperStockRoutes);
 app.use("/api/statements", statementRoutes);
 
-/* ================= TEST API ================= */
-app.get("/", (req, res) => {
+/* ================= STATIC FILES & SPA ROUTING ================= */
+const distPath = path.join(__dirname, "..", "dist");
+
+// Serve static assets
+app.use(express.static(distPath));
+
+// API Test Route (Internal)
+app.get("/api/health", (req, res) => {
     res.json({
         status: "Active",
         database: mongoose.connection.readyState === 1 ? "Connected" : "Disconnected",
         message: "CRM API running stable 🚀"
     });
+});
+
+// The "catchall" handler: for any request that doesn't
+// match one above (like /invoices, /challans), send back index.html.
+app.get("*", (req, res) => {
+    // If it's not an API call, serve the frontend
+    if (!req.path.startsWith('/api')) {
+        res.sendFile(path.join(distPath, "index.html"), (err) => {
+            if (err) {
+                res.status(500).send("Frontend build not found. Please run 'npm run build'.");
+            }
+        });
+    }
 });
 
 /* ================= SERVER START ================= */
