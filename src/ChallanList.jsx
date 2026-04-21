@@ -288,21 +288,21 @@ const ChallanList = () => {
                 className="bg-white mx-auto shadow-none a4-page"
               >
                 {/* Refined Traditional GST Delivery Challan Layout */}
-                <div className="border-[1px] border-black p-0 text-black leading-tight font-serif" style={{ minHeight: '1050px', display: 'flex', flexDirection: 'column' }}>
+                <div className="border-[1px] border-black p-0 text-black leading-tight font-sans" style={{ minHeight: '1050px', display: 'flex', flexDirection: 'column' }}>
                   
                   {/* Top Badge */}
                   <div className="flex justify-center -mt-3 mb-1">
-                    <span className="border border-black rounded-full px-8 py-0.5 bg-white text-[10px] font-bold uppercase tracking-widest z-10 shadow-sm">
-                      GST Delivery Challan
+                    <span className="bg-black text-white px-8 py-0.5 text-[10px] font-black uppercase tracking-[0.3em] border border-black">
+                      Delivery Challan
                     </span>
                   </div>
 
-                  {/* Header Section */}
+                  {/* Top Branding Section */}
                   <div className="flex justify-between px-4 pb-1.5 border-b border-black">
                     <div className="w-7/12 pt-2">
                       <div className="flex items-center">
-                        <h1 className="text-[38px] font-black italic tracking-tighter" style={{ fontFamily: '"Old English Text MT", "Times New Roman", serif', display: 'inline-flex', alignItems: 'center' }}>
-                          Harihar <span className="not-italic ml-2 font-serif text-[32px]">Printers</span>
+                        <h1 className="text-[38px] font-black tracking-tighter" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                          Harihar <span className="ml-2 font-sans text-[32px]">Printers</span>
                         </h1>
                       </div>
                       <div className="text-[9px] font-bold mt-0.5 space-y-0.5">
@@ -390,30 +390,30 @@ const ChallanList = () => {
                   </div>
 
                   {/* Instruction Message */}
-                  <div className="px-4 py-2 text-[9px] font-bold border-b border-black italic leading-tight">
+                  <div className="px-4 py-2 text-[9px] font-bold border-b border-black leading-tight">
                     Kindly Count the following Material in presence our delegate. We are not responsible any complete in later. Please return one copy with our signature.
                   </div>
 
                   {/* Main Items Table */}
                   <div className="flex-grow overflow-hidden flex flex-col border-x border-black border-b border-black">
-                    <table className="w-full border-collapse">
+                    <table className="w-full border-collapse font-sans">
                       <thead>
                         <tr className="bg-gray-100 text-[9px] font-black border-b border-black text-center">
                           <th className="border-r border-black w-12 py-1">S.No</th>
-                          <th className="border-r border-black py-1 px-4">Description of Goods</th>
+                          <th className="border-r border-black py-1 px-4 text-black">Description of Goods</th>
                           <th className="border-r border-black w-28 py-1">HSN/SAC Code</th>
                           <th className="w-24 py-1">Qty.</th>
                         </tr>
                       </thead>
                       <tbody className="flex-grow">
-                        <tr className="text-[10px] font-bold h-10 italic">
+                        <tr className="text-[10px] font-bold h-10">
                           <td className="border-r border-black text-center">1</td>
-                          <td className="border-r border-black px-4 uppercase leading-relaxed font-black">
+                          <td className="border-r border-black px-4 uppercase leading-relaxed font-black text-black">
                             {selectedChallan.jobName}
-                            <div className="text-[8px] font-bold text-gray-500 mt-0.5 not-italic tracking-wider">JOB CARD NO: {selectedChallan.jobNumber}</div>
+                            <div className="text-[8px] font-black text-gray-600 mt-0.5 tracking-wider">JOB CARD NO: {selectedChallan.jobNumber}</div>
                           </td>
                           <td className="border-r border-black text-center">4911</td>
-                          <td className="text-center font-black text-xs">{selectedChallan.qty}</td>
+                          <td className="text-center font-black text-xs text-black">{selectedChallan.qty}</td>
                         </tr>
                         {/* Empty spacing rows with vertical lines only */}
                         {[...Array(18)].map((_, i) => (
@@ -437,9 +437,9 @@ const ChallanList = () => {
                         <span className="text-[9px] font-black uppercase tracking-tighter">Receiver's Signature</span>
                       </div>
                       <div className="w-56 text-right flex flex-col items-center">
-                        <p className="text-[10px] font-black italic uppercase mb-10 w-full text-right pr-4">For Harihar Printers</p>
+                        <p className="text-[10px] font-black uppercase mb-10 w-full text-right pr-4 text-black">For Harihar Printers</p>
                         <div className="border-t border-black w-full mb-1"></div>
-                        <span className="text-[9px] font-black uppercase tracking-tighter">Authorised Signatory</span>
+                        <span className="text-[9px] font-black uppercase tracking-tighter text-black">Authorised Signatory</span>
                       </div>
                     </div>
                   </div>

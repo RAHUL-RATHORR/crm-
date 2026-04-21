@@ -268,21 +268,21 @@ const InvoiceList = () => {
                 className="bg-white mx-auto a4-page"
               >
                 {/* Refined Traditional GST Invoice Layout */}
-                <div className="border-[1px] border-black p-0 text-black leading-tight font-serif" style={{ minHeight: '1050px', display: 'flex', flexDirection: 'column' }}>
+                <div className="border-[1px] border-black p-0 text-black leading-tight font-sans" style={{ minHeight: '1050px', display: 'flex', flexDirection: 'column' }}>
                   
                   {/* Top Badge */}
                   <div className="flex justify-center -mt-3 mb-1">
-                    <span className="border border-black rounded-full px-8 py-0.5 bg-white text-[10px] font-bold uppercase tracking-widest z-10 shadow-sm">
-                      GST TAX INVOICE
+                    <span className="bg-black text-white px-8 py-0.5 text-[10px] font-black uppercase tracking-[0.3em] border border-black">
+                      TAX INVOICE
                     </span>
                   </div>
 
                   {/* Header Section */}
                   <div className="flex justify-between px-4 pb-1.5 border-b border-black">
-                    <div className="w-7/12">
-                      <div className="flex items-center mt-1">
-                        <h1 className="text-[38px] font-black italic tracking-tighter" style={{ fontFamily: '"Old English Text MT", "Times New Roman", serif', display: 'inline-flex', alignItems: 'center' }}>
-                          Harihar <span className="not-italic ml-2 font-serif text-[32px]">Printers</span>
+                    <div className="w-7/12 pt-2">
+                      <div className="flex items-center">
+                        <h1 className="text-[38px] font-black tracking-tighter" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                          Harihar <span className="ml-2 font-sans text-[32px]">Printers</span>
                         </h1>
                       </div>
                       <div className="text-[9px] font-bold mt-0.5 space-y-0.5">
@@ -447,7 +447,7 @@ const InvoiceList = () => {
                         <div className="p-4 text-[9px] font-bold">
                           <div className="flex items-start gap-1">
                             <span className="whitespace-nowrap">Rupees in Words.</span>
-                            <span className="border-b border-black flex-grow font-black italic pl-2 py-0.5 lowercase">({NumberToWords(selectedInvoice.totalAmount)} Only)</span>
+                            <span className="border-b border-black flex-grow font-black pl-2 py-0.5 lowercase text-black">({NumberToWords(selectedInvoice.totalAmount)} Only)</span>
                           </div>
                           
                           <div className="mt-4 text-[8px] leading-relaxed text-gray-700 space-y-0.5">
