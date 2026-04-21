@@ -320,7 +320,7 @@ const ChallanList = () => {
                          <p>WHITE - OFFICE COPY</p>
                        </div>
 
-                       <table className="w-full border-collapse mt-6">
+                       <table className="w-full border-collapse mt-10">
                           <tbody>
                             <tr className="h-5">
                               <td className="w-24">Challan No.</td>
