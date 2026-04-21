@@ -289,191 +289,168 @@ export default function Estimates() {
             <div className="p-8 overflow-y-auto flex-grow a4-page-container" id="printable-content">
               <div
                 id="printable-inner"
-                className="bg-white mx-auto shadow-none a4-page"
+                className="bg-white mx-auto shadow-none a4-page font-sans"
+                style={{ color: '#334155' }}
               >
-                {/* Header Branding */}
-                <div className="flex justify-between items-start mb-6 border-b-2 pb-4 px-2" style={{ borderColor: '#1e293b' }}>
-                  <div className="flex-grow">
-                    <div className="flex items-center gap-4 mb-2">
-                      <h1 className="text-4xl font-black tracking-tight text-gray-900 leading-none">
-                        Harihar <span className="text-blue-600">Printers</span>
-                      </h1>
-                    </div>
-                    <div className="space-y-0.5">
-                      <p className="text-[10px] font-bold text-gray-700">
-                        <span className="text-blue-600 uppercase">Office:</span> J-97, Ashok Chowk, Adarsh Nagar, Jaipur-302 004
-                      </p>
-                      <p className="text-[10px] font-bold text-gray-700">
-                        <span className="text-blue-600 uppercase">Factory:</span> G-139, Hirawala Industrial Area, Kanota, Agra Road, Jaipur
-                      </p>
-                      <div className="flex gap-4 mt-1">
-                        <p className="text-[10px] font-bold text-gray-700 flex items-center gap-1">
-                          <Phone size={10} className="text-blue-500" /> 0141-2600850, 9414043763
-                        </p>
-                        <p className="text-[10px] font-bold text-gray-700 flex items-center gap-1">
-                          <Mail size={10} className="text-blue-500" /> hariharprinters1@gmail.com
-                        </p>
-                      </div>
+                {/* --- HEADER SECTION --- */}
+                <div className="flex justify-between items-start mb-8">
+                  <div>
+                    <h1 className="text-4xl font-bold mb-1" style={{ color: '#5E9681' }}>
+                      Computer Quotation
+                    </h1>
+                    <div className="mt-2">
+                      <h2 className="text-xl font-bold text-gray-800 tracking-tight">Harihar Printers</h2>
+                      <p className="text-[10px] text-gray-500 font-medium italic">Your Vision, Our Print.</p>
                     </div>
                   </div>
-                  <div className="text-right flex flex-col items-end gap-1">
-                    <div className="bg-blue-600 text-white px-6 py-1.5 rounded text-[11px] font-black uppercase tracking-widest shadow-sm">
-                      QUOTATION
+                  
+                  {/* Metadata Table */}
+                  <div className="w-48 border border-gray-200 rounded-lg overflow-hidden">
+                    <table className="w-full text-[10px]">
+                      <tbody className="divide-y divide-gray-200">
+                        <tr className="bg-gray-50/50">
+                          <td className="px-2 py-1.5 font-bold text-gray-500 uppercase">DATE :</td>
+                          <td className="px-2 py-1.5 font-bold text-right text-gray-800">
+                            {new Date(selectedCard.jobDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="px-2 py-1.5 font-bold text-gray-500 uppercase">Quote No :</td>
+                          <td className="px-2 py-1.5 font-bold text-right text-gray-800">{selectedCard.jobNumber}</td>
+                        </tr>
+                        <tr className="bg-gray-50/50">
+                          <td className="px-2 py-1.5 font-bold text-gray-500 uppercase">Expiration :</td>
+                          <td className="px-2 py-1.5 font-bold text-right text-gray-800">
+                            {new Date(new Date(selectedCard.jobDate).getTime() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* --- ADDRESS SECTION --- */}
+                <div className="flex justify-between gap-10 mb-8 px-1">
+                  <div className="flex-1">
+                    <h4 className="text-[11px] font-black text-gray-900 border-b-2 mb-2 pb-0.5 inline-block uppercase tracking-wider">Address :</h4>
+                    <div className="text-[10px] space-y-0.5 font-medium text-gray-600">
+                      <p className="font-bold text-gray-800">Harihar Printers</p>
+                      <p>Office: J-97, Ashok Chowk, Adarsh Nagar, Jaipur</p>
+                      <p>Factory: G-139, Hirawala Ind. Area, Kanota, Jaipur</p>
+                      <p>Tel: +91 94140-43763</p>
                     </div>
-                    <div className="text-[9px] font-black text-gray-500 uppercase flex flex-col gap-1 mt-2 tracking-wide">
-                      <span>GSTIN: <span className="text-gray-900 border-b-2 border-gray-100 pb-0.5 ml-1">08AALPC9959M1ZV</span></span>
-                      <span>PAN: <span className="text-gray-900 border-b-2 border-gray-100 pb-0.5 ml-1">AALPC9959M</span></span>
+                  </div>
+                  <div className="flex-1 text-right">
+                    <h4 className="text-[11px] font-black text-gray-900 border-b-2 mb-2 pb-0.5 inline-block uppercase tracking-wider">To :</h4>
+                    <div className="text-[10px] space-y-0.5 font-medium text-gray-600">
+                      <p className="font-bold text-teal-800 uppercase text-xs">{selectedCard.partyName}</p>
+                      <p className="uppercase">{selectedCard.address || 'Address Not Provided'}</p>
+                      <p>GSTIN: {selectedCard.gstNumber || '-'}</p>
+                      <p>Tel: {selectedCard.contactNo || '-'}</p>
                     </div>
                   </div>
                 </div>
 
-                {/* Top Info Grid */}
-                <div className="grid grid-cols-2 gap-x-8 gap-y-3 mb-6 bg-gray-50/50 p-4 rounded-xl border border-gray-100">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Party Name</span>
-                    <span className="text-sm font-black text-gray-900 leading-tight uppercase">{selectedCard.partyName}</span>
-                  </div>
-                  <div className="flex flex-col gap-1 text-right">
-                    <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Date</span>
-                    <span className="text-sm font-black text-gray-900">{new Date(selectedCard.jobDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-                  </div>
-                  <div className="col-span-1 flex flex-col gap-1">
-                    <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Address</span>
-                    <span className="text-[10px] font-bold text-gray-600 uppercase">{selectedCard.address || 'Address Not Provided'}</span>
-                  </div>
-                  <div className="col-span-1 flex justify-end gap-6 text-right">
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Contact</span>
-                      <span className="text-[10px] font-bold text-gray-900">{selectedCard.contactNo || '-'}</span>
+                {/* --- INFO BAR --- */}
+                <div className="grid grid-cols-4 mb-8 border border-gray-200">
+                  {[
+                    { label: 'SALES PERSON', value: 'Admin' },
+                    { label: 'JOB Number', value: selectedCard.jobNumber },
+                    { label: 'PAYMENT TERMS', value: '7 Days' },
+                    { label: 'DUE DATE', value: new Date(selectedCard.jobDate).toLocaleDateString() }
+                  ].map((item, i) => (
+                    <div key={i} className={`p-2 border-r border-gray-200 last:border-0 ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'}`}>
+                      <p className="text-[8px] font-black text-gray-400 uppercase mb-1" style={{ color: '#5E9681' }}>{item.label}</p>
+                      <p className="text-[10px] font-bold text-gray-800">{item.value}</p>
                     </div>
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Job Qty</span>
-                      <span className="text-[10px] font-black text-blue-600">{selectedCard.jobQty || '-'}</span>
+                  ))}
+                </div>
+
+                {/* --- ITEMS TABLE --- */}
+                <div className="mb-8 border border-gray-200 rounded-sm overflow-hidden min-h-[300px] flex flex-col">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="text-white text-[10px] font-black uppercase tracking-widest" style={{ backgroundColor: '#5E9681' }}>
+                        <th className="px-4 py-2.5 border-r border-teal-500/30 w-20">Quantity</th>
+                        <th className="px-4 py-2.5 border-r border-teal-500/30">Description</th>
+                        <th className="px-4 py-2.5 border-r border-teal-500/30 text-right w-28">Unit Price</th>
+                        <th className="px-4 py-2.5 text-right w-32">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 flex-grow">
+                      <tr className="text-[11px] group">
+                        <td className="px-4 py-4 border-r border-gray-100 font-bold align-top text-center text-gray-700">
+                          {selectedCard.jobQty}
+                        </td>
+                        <td className="px-4 py-4 border-r border-gray-100 align-top">
+                          <div className="space-y-1">
+                            <p className="font-black text-teal-900 uppercase text-xs">{selectedCard.jobName}</p>
+                            <p className="text-[9px] text-gray-500 font-medium leading-relaxed italic">
+                              Printing Specifications: {selectedCard.printingType || 'Full Color'} / 
+                              Size: {selectedCard.pageSize || 'Standard'} / 
+                              Paper: {selectedCard.paper || 'Premium Stock'}
+                            </p>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 border-r border-gray-100 font-bold align-top text-right text-gray-700">
+                          ₹ {(Number(prices[selectedCard._id] || 0) / (selectedCard.jobQty || 1)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="px-4 py-4 font-black align-top text-right text-gray-900">
+                          ₹ {Number(prices[selectedCard._id] || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                        </td>
+                      </tr>
+                      {/* Blank rows to fill space */}
+                      {[1, 2, 3, 4, 5].map((i) => (
+                        <tr key={i} className="border-0">
+                          <td className="px-4 py-4 border-r border-gray-50">&nbsp;</td>
+                          <td className="px-4 py-4 border-r border-gray-50">&nbsp;</td>
+                          <td className="px-4 py-4 border-r border-gray-50">&nbsp;</td>
+                          <td className="px-4 py-4">&nbsp;</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  
+                  {/* Total Calculation Section */}
+                  <div className="border-t border-gray-200 mt-auto bg-gray-50/50">
+                    <div className="flex flex-col w-56 ml-auto border-l border-gray-200">
+                      <div className="flex justify-between px-4 py-2 border-b border-gray-200">
+                        <span className="text-[9px] font-bold text-gray-500 uppercase">Sub Total</span>
+                        <span className="text-[10px] font-bold text-gray-800">₹ {Number(prices[selectedCard._id] || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                      </div>
+                      <div className="flex justify-between px-4 py-2 border-b border-gray-200">
+                        <span className="text-[9px] font-bold text-gray-500 uppercase">GST (If applicable)</span>
+                        <span className="text-[10px] font-bold text-gray-800">As per norms</span>
+                      </div>
+                      <div className="flex justify-between px-4 py-3" style={{ backgroundColor: '#5E9681' }}>
+                        <span className="text-[10px] font-black text-white uppercase tracking-wider">Total Amount</span>
+                        <span className="text-xs font-black text-white">₹ {Number(prices[selectedCard._id] || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Main Content Sections */}
-                <div className="grid grid-cols-2 gap-x-10">
-                  {/* Left Section - Production Details */}
-                  <div className="space-y-6">
-                    <section>
-                      <h4 className="text-[10px] font-black uppercase text-blue-600 border-b pb-1 mb-3 tracking-widest flex items-center gap-2">
-                        <Calculator size={12} /> Production Specs
-                      </h4>
-                      <div className="space-y-2">
-                        {[
-                          { label: 'Job Number', value: selectedCard.jobNumber, bold: true, color: 'text-blue-700' },
-                          { label: 'Item Name', value: selectedCard.jobName, uppercase: true },
-                          { label: 'Paper Size', value: selectedCard.pageSize || '-' },
-                          { label: 'Color Detail', value: selectedCard.printingType || '-' },
-                          { label: 'Quotation Amount', value: `₹ ${Number(prices[selectedCard._id] || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`, bold: true, color: 'text-blue-700', bg: 'bg-blue-50/50 p-1.5' }
-                        ].map((row, i) => (
-                          <div key={i} className={`flex justify-between items-end gap-2 text-[11px] border-b border-gray-100 pb-2 ${row.bg || ''} rounded`}>
-                            <span className="font-bold uppercase text-gray-400 min-w-fit">{row.label}</span>
-                            <span className={`text-right ${row.bold ? 'font-black' : 'font-bold'} ${row.color || 'text-gray-900'} ${row.uppercase ? 'uppercase' : ''}`}>
-                              {row.value}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </section>
-
-                    <section>
-                      <h4 className="text-[10px] font-black uppercase text-cyan-600 border-b pb-1 mb-3 tracking-widest flex items-center gap-2">
-                        <List size={12} /> Paper & Stock
-                      </h4>
-                      <div className="space-y-3">
-                        <div className="flex justify-between items-center border-b border-gray-50 pb-1.5">
-                          <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none">Source</span>
-                          <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${selectedCard.paperSource === 'Company paper' ? 'bg-cyan-50 text-cyan-700' : 'bg-orange-50 text-orange-700'}`}>
-                            {selectedCard.paperSource || 'Company paper'}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center border-b border-gray-50 pb-1.5">
-                          <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none">Stock</span>
-                          <span className="text-[10px] font-bold text-gray-900 uppercase">{selectedCard.paper || '-'}</span>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <span className="text-[9px] font-black text-gray-400 uppercase block">Page & GSM</span>
-                          <div className="text-[11px] font-bold text-gray-900 border-b border-gray-100 pb-2">
-                            C: {selectedCard.coverPaperCount || 0} ({selectedCard.paperGSM || '-'}) / I: {selectedCard.innerPaperCount || 0} ({selectedCard.innerPaperGSM || '-'})
-                          </div>
-                        </div>
-                      </div>
-                        <div className="mt-3 grid grid-cols-2 gap-4 border-t border-gray-50 pt-2">
-                          <div className="flex flex-col gap-1">
-                            <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none">Cover Details</span>
-                            <span className="text-[10px] font-bold text-gray-900">{selectedCard.coverPaperDetails || '-'}</span>
-                          </div>
-                          <div className="flex flex-col gap-1">
-                            <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none">Inner Details</span>
-                            <span className="text-[10px] font-bold text-gray-900">{selectedCard.innerPaperDetails || '-'}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </section>
+                {/* --- FOOTER SECTION --- */}
+                <div className="mt-12 text-[9px] text-gray-500 space-y-4">
+                  <p className="font-medium">This Quotation is prepared by: <span className="font-bold text-gray-800 ml-1">Admin @ Harihar Printers</span></p>
+                  
+                  <div className="pt-8 grid grid-cols-2 gap-20">
+                    <div className="border-t border-gray-300 pt-1">
+                      <p className="font-bold uppercase tracking-widest text-[#5E9681]">Quotation accepted by :</p>
+                    </div>
+                    <div className="border-t border-gray-300 pt-1 text-right">
+                      <p className="font-bold uppercase tracking-widest text-[#5E9681]">Authorised Signatory</p>
+                    </div>
                   </div>
 
-                  {/* Right Section */}
-                  <div className="space-y-6">
-                    <section>
-                      <h4 className="text-[10px] font-black uppercase text-indigo-600 border-b pb-1 mb-3 tracking-widest flex items-center gap-2">
-                        <Printer size={12} /> Press Details
-                      </h4>
-                      <div className="grid grid-cols-2 gap-y-3 gap-x-6">
-                        {[
-                          { label: 'Compose', value: selectedCard.compose || 'No' },
-                          { label: 'Design', value: selectedCard.design || 'No' },
-                          { label: 'Plate Type', value: selectedCard.plateType || 'New' },
-                          { label: 'Plate Number', value: selectedCard.plateNo || '-' },
-                          { label: 'Plate Qty', value: selectedCard.plateQty || 0 },
-                          { label: 'Lamination', value: selectedCard.lamination || '-' }
-                        ].map((row, i) => (
-                          <div key={i} className="flex flex-col gap-1 border-b border-gray-100 pb-2.5">
-                            <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none">{row.label}</span>
-                            <span className="text-[11px] font-bold text-gray-900 leading-tight">{row.value}</span>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="mt-4 p-3 bg-indigo-50/50 rounded-lg border border-indigo-100 text-center">
-                        <span className="text-[9px] font-black text-gray-400 uppercase block mb-1">Printing Quantity</span>
-                        <span className="text-xl font-black text-indigo-700">{selectedCard.printingQty || 0}</span>
-                      </div>
-                    </section>
-
-                    <section>
-                      <h4 className="text-[10px] font-black uppercase text-rose-600 border-b pb-1 mb-3 tracking-widest flex items-center gap-2">
-                        <AlertCircle size={12} /> Quotation Terms
-                      </h4>
-                      <div className="border border-rose-100 p-4 rounded-xl bg-rose-50/20 min-h-[80px]">
-                        <p className="text-[10px] italic leading-relaxed text-gray-700 font-medium">
-                          {selectedCard.notes || 'Note: Prices are valid for 7 days. Taxes extras as applicable unless mentioned.'}
-                        </p>
-                      </div>
-                    </section>
-                  </div>
-                </div>
-
-                {/* Footer Signatory Area */}
-                <div className="mt-10 pt-10 grid grid-cols-2 gap-4 border-t border-gray-100 border-dashed">
-                  <div className="text-center">
-                    <div className="w-16 h-1 border-b border-gray-300 mx-auto mb-2"></div>
-                    <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Customer Signature</span>
-                  </div>
-                  <div className="text-center">
-                    <div className="w-16 h-1 border-b border-gray-300 mx-auto mb-2"></div>
-                    <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">For Harihar Printers</span>
-                  </div>
-                </div>
-
-                {/* Branding Footer */}
-                <div className="mt-12 pt-4 border-t border-gray-100 flex justify-between items-center px-2">
-                  <p className="text-[8px] font-black text-gray-400 uppercase tracking-[0.2em]">Harihar Printers • Production System</p>
-                  <div className="flex gap-4">
-                    <p className="text-[8px] font-black text-gray-300 uppercase letter-spacing-1">Original</p>
-                    <p className="text-[8px] font-black text-gray-300 uppercase letter-spacing-1">Duplicate</p>
+                  <p className="text-center pt-8 font-medium">
+                    If you have any enquiries about this, please contact us on Tel: <span className="text-gray-900 font-bold">+91 0141-2600850, 94140-43763</span>
+                  </p>
+                  
+                  <div className="pt-8 text-center">
+                    <p className="text-xl font-bold tracking-tight uppercase" style={{ color: '#5E9681' }}>
+                      Thank You For Your Business
+                    </p>
                   </div>
                 </div>
               </div>
