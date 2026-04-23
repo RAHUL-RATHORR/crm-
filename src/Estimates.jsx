@@ -12,8 +12,11 @@ import {
   Printer,
   X,
   Phone,
-  Mail
+  Mail,
+  Download,
+  FileText
 } from 'lucide-react';
+import { downloadAsPDF } from './utils/pdfExport';
 
 export default function Estimates() {
   const [jobCards, setJobCards] = useState([]);
@@ -23,6 +26,7 @@ export default function Estimates() {
   const [saveStatus, setSaveStatus] = useState({}); // { id: 'idle' | 'saving' | 'saved' | 'error' }
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCard, setSelectedCard] = useState(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const loadData = async () => {
     setLoading(true);
@@ -102,6 +106,15 @@ export default function Estimates() {
     const container = document.querySelector('.a4-page-container');
     if (container) container.scrollTop = 0;
     window.print();
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!selectedCard) return;
+    await downloadAsPDF(
+      'printable-inner',
+      `Quotation_${selectedCard.jobNumber}`,
+      setIsGenerating
+    );
   };
 
   const filteredCards = jobCards.filter(card =>
@@ -271,6 +284,14 @@ export default function Estimates() {
               <h2 className="text-xl font-bold text-gray-800">Quotation Preview</h2>
               <div className="flex items-center gap-3">
                 <button
+                  onClick={handleDownloadPDF}
+                  disabled={isGenerating}
+                  className="flex items-center gap-2 bg-gray-100 text-gray-700 px-6 py-2 rounded-xl text-sm font-bold hover:bg-gray-200 transition-all disabled:opacity-50"
+                >
+                  {isGenerating ? "..." : <Download size={18} />}
+                  PDF
+                </button>
+                <button
                   onClick={executePrint}
                   className="inline-flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 transition-all shadow-lg active:scale-95"
                 >
@@ -303,7 +324,7 @@ export default function Estimates() {
                       <p className="text-[10px] text-gray-500 font-medium italic">Your Vision, Our Print.</p>
                     </div>
                   </div>
-                  
+
                   {/* Metadata Table */}
                   <div className="w-48 border border-gray-200 rounded-lg overflow-hidden">
                     <table className="w-full text-[10px]">
@@ -386,8 +407,8 @@ export default function Estimates() {
                           <div className="space-y-1">
                             <p className="font-black text-teal-900 uppercase text-xs">{selectedCard.jobName}</p>
                             <p className="text-[9px] text-gray-500 font-medium leading-relaxed italic">
-                              Printing Specifications: {selectedCard.printingType || 'Full Color'} / 
-                              Size: {selectedCard.pageSize || 'Standard'} / 
+                              Printing Specifications: {selectedCard.printingType || 'Full Color'} /
+                              Size: {selectedCard.pageSize || 'Standard'} /
                               Paper: {selectedCard.paper || 'Premium Stock'}
                             </p>
                           </div>
@@ -410,7 +431,7 @@ export default function Estimates() {
                       ))}
                     </tbody>
                   </table>
-                  
+
                   {/* Total Calculation Section */}
                   <div className="border-t border-gray-200 mt-auto bg-gray-50/50">
                     <div className="flex flex-col w-56 ml-auto border-l border-gray-200">
@@ -433,7 +454,7 @@ export default function Estimates() {
                 {/* --- FOOTER SECTION --- */}
                 <div className="mt-12 text-[9px] text-gray-500 space-y-4">
                   <p className="font-medium">This Quotation is prepared by: <span className="font-bold text-gray-800 ml-1">Admin @ Harihar Printers</span></p>
-                  
+
                   <div className="pt-8 grid grid-cols-2 gap-20">
                     <div className="border-t border-gray-300 pt-1">
                       <p className="font-bold uppercase tracking-widest text-[#5E9681]">Quotation accepted by :</p>
@@ -446,12 +467,8 @@ export default function Estimates() {
                   <p className="text-center pt-8 font-medium">
                     If you have any enquiries about this, please contact us on Tel: <span className="text-gray-900 font-bold">+91 0141-2600850, 94140-43763</span>
                   </p>
-                  
-                  <div className="pt-8 text-center">
-                    <p className="text-xl font-bold tracking-tight uppercase" style={{ color: '#5E9681' }}>
-                      Thank You For Your Business
-                    </p>
-                  </div>
+
+
                 </div>
               </div>
             </div>

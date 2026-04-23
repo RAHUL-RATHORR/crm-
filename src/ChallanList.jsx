@@ -243,208 +243,194 @@ const ChallanList = () => {
 
       {/* Challan Preview & Print Modal */}
       {isModalOpen && selectedChallan && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white border border-gray-300 w-full max-w-4xl relative max-h-[95vh] flex flex-col shadow-2xl animate-in zoom-in duration-200">
+        <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white border border-gray-300 w-full max-w-4xl relative max-h-[95vh] flex flex-col shadow-none">
             {/* Modal Header */}
             <div className="p-4 border-b flex justify-between items-center bg-white modal-header no-print">
-              <div className="flex items-center gap-4">
-                <div className="bg-blue-600 p-2 rounded-lg text-white">
-                  <Printer size={18} />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-gray-800">Challan Preview</h2>
-                  <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">#{selectedChallan.challanNo} • {selectedChallan.partyName}</p>
-                </div>
-              </div>
+              <h2 className="text-xl font-bold text-gray-800">Challan Preview</h2>
               <div className="flex items-center gap-3">
                 <button
                   onClick={handleDownloadPDF}
                   disabled={isGenerating}
-                  className="flex items-center gap-2 bg-gray-100 text-gray-700 px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-gray-200 transition-all disabled:opacity-50"
+                  className="flex items-center gap-2 bg-gray-100 text-gray-700 px-6 py-2 rounded-xl text-sm font-bold hover:bg-gray-200 transition-all disabled:opacity-50"
                 >
-                  {isGenerating ? "..." : <Download size={14} />}
+                  {isGenerating ? "..." : <Download size={18} />}
                   PDF
                 </button>
                 <button
                   onClick={handlePrint}
-                  className="flex items-center gap-2 bg-blue-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-700 transition-all"
+                  className="inline-flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 transition-all shadow-lg active:scale-95"
                 >
-                  <Printer size={14} />
-                  Print
+                  <Printer size={18} /> Print
                 </button>
                 <button
                   onClick={closePreview}
-                  className="p-1.5 hover:bg-gray-100 rounded-full transition-colors ml-2 font-bold"
+                  className="p-1 hover:bg-gray-200 rounded-full transition-colors"
                 >
                   <X size={20} />
                 </button>
               </div>
             </div>
 
-            {/* Printable Content */}
-            <div className="p-4 sm:p-6 overflow-y-auto flex-grow bg-gray-100/50 a4-page-container">
+            {/* Modal Body - Printable Content */}
+            <div className="p-8 overflow-y-auto flex-grow a4-page-container" id="printable-content">
               <div
                 id="printable-challan"
-                className="bg-white mx-auto shadow-none a4-page"
+                className="bg-white mx-auto shadow-none a4-page font-sans"
+                style={{ color: '#334155' }}
               >
-                {/* Refined Traditional GST Delivery Challan Layout */}
-                <div className="border-[1px] border-black p-0 text-black leading-tight font-sans" style={{ minHeight: '1050px', display: 'flex', flexDirection: 'column' }}>
-                  
-                  {/* Top Badge */}
-                  <div className="flex justify-center -mt-3 mb-1">
-                    <span className="bg-black text-white px-8 py-0.5 text-[10px] font-black uppercase tracking-[0.3em] border border-black">
+                {/* Traditional Green/Teal Design - Matching Estimates */}
+                <div className="flex justify-between items-start mb-8">
+                  <div>
+                    <h1 className="text-4xl font-bold mb-1" style={{ color: '#1e3a8a' }}>
                       Delivery Challan
-                    </span>
-                  </div>
-
-                  {/* Top Branding Section */}
-                  <div className="flex justify-between px-4 pb-1.5 border-b border-black">
-                    <div className="w-7/12 pt-2">
-                      <div className="flex items-center">
-                        <h1 className="text-[38px] font-black tracking-tighter" style={{ display: 'inline-flex', alignItems: 'center' }}>
-                          Harihar <span className="ml-2 font-sans text-[32px]">Printers</span>
-                        </h1>
-                      </div>
-                      <div className="text-[9px] font-bold mt-0.5 space-y-0.5">
-                        <p>Office : J-97, Ashok Chowk, Adarsh Nagar, Jaipur-302 004</p>
-                        <p>Factory : G-139, Hirawala Industrial Area, Kanota, Agra Road, Jaipur</p>
-                        <p>Email : hariharprinters1@gmail.com</p>
-                        <p>Ph.: 0141-2600850 ● Mob.: 9314130859, 9414043763</p>
-                      </div>
-                    </div>
-                    <div className="w-5/12 text-[9px] font-bold border-l border-black pl-3 pt-2 relative">
-                       {/* Copy info box */}
-                       <div className="absolute top-1 right-2 border border-black p-0.5 text-[7px] font-black leading-tight text-right uppercase bg-white">
-                         <p>WHITE - ORIGINAL</p>
-                         <p>GREEN - DUPLICATE</p>
-                         <p>WHITE - OFFICE COPY</p>
-                       </div>
-
-                       <table className="w-full border-collapse mt-10">
-                          <tbody>
-                            <tr className="h-5">
-                              <td className="w-24">Challan No.</td>
-                              <td className="border-b border-black uppercase text-[10px] font-black">{selectedChallan.challanNo}</td>
-                              <td className="w-8 text-center px-1">Date</td>
-                              <td className="border-b border-black w-24 text-right px-1">{new Date(selectedChallan.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: '2-digit' })}</td>
-                            </tr>
-                            <tr className="h-5">
-                              <td>Order No.</td>
-                              <td className="border-b border-black"></td>
-                              <td className="text-center px-1">Date</td>
-                              <td className="border-b border-black"></td>
-                            </tr>
-                            <tr className="h-5">
-                              <td>Veh. No.</td>
-                              <td className="border-b border-black"></td>
-                              <td className="text-center px-1">Date</td>
-                              <td className="border-b border-black"></td>
-                            </tr>
-                          </tbody>
-                       </table>
+                    </h1>
+                    <div className="mt-2">
+                      <h2 className="text-xl font-bold text-gray-800 tracking-tight">Harihar Printers</h2>
+                      <p className="text-[10px] text-gray-500 font-medium italic">Your Vision, Our Print.</p>
                     </div>
                   </div>
-
-                  {/* GSTIN and PAN Bar */}
-                  <div className="grid grid-cols-2 border-b border-black text-[10px] font-bold">
-                    <div className="px-4 py-1 border-r border-black flex justify-between">
-                      <span>GSTIN : 08AALPC9959M1ZV</span>
-                    </div>
-                    <div className="px-4 py-1 flex justify-between">
-                      <span>PAN No. AALPC9959M</span>
-                    </div>
-                  </div>
-
-                  {/* Party Details Grid */}
-                  <div className="flex border-b border-black h-[140px]">
-                    <div className="w-1/2 border-r border-black flex flex-col">
-                      <div className="bg-gray-100 border-b border-black px-2 py-0.5 text-[9px] font-bold italic uppercase">Challan to Party</div>
-                      <div className="p-3 space-y-2 flex-grow">
-                        <div className="flex items-start">
-                          <span className="text-[10px] font-bold mr-1">M/s.</span>
-                          <span className="text-xs font-black uppercase underline decoration-dotted underline-offset-4">{selectedChallan.partyName}</span>
-                        </div>
-                        <div className="border-b border-black h-4 mt-2"></div>
-                        <div className="border-b border-black h-4"></div>
-                        <div className="flex items-center gap-4 mt-3 text-[9px] font-bold">
-                          <div className="flex items-center gap-1">State Code<span className="border-b border-black w-10 text-center">08</span></div>
-                          <div className="flex items-center gap-1 flex-grow">GSTIN<span className="border-b border-black flex-grow"></span></div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="w-1/2 flex flex-col">
-                      <div className="bg-gray-100 border-b border-black px-2 py-0.5 text-[9px] font-bold italic uppercase">Place of Supply</div>
-                      <div className="p-3 space-y-2 flex-grow">
-                        <div className="flex items-start">
-                          <span className="text-[10px] font-bold mr-1">M/s.</span>
-                          <span className="text-xs font-black uppercase underline decoration-dotted underline-offset-4">{selectedChallan.partyName}</span>
-                        </div>
-                        <div className="border-b border-black h-4 mt-2"></div>
-                        <div className="border-b border-black h-4"></div>
-                        <div className="flex items-center gap-4 mt-3 text-[9px] font-bold">
-                          <div className="flex items-center gap-1">State Code<span className="border-b border-black w-10 text-center">08</span></div>
-                          <div className="flex items-center gap-1 flex-grow">GSTIN<span className="border-b border-black flex-grow"></span></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Instruction Message */}
-                  <div className="px-4 py-2 text-[9px] font-bold border-b border-black leading-tight">
-                    Kindly Count the following Material in presence our delegate. We are not responsible any complete in later. Please return one copy with our signature.
-                  </div>
-
-                  {/* Main Items Table */}
-                  <div className="flex-grow overflow-hidden flex flex-col border-x border-black border-b border-black">
-                    <table className="w-full border-collapse font-sans">
-                      <thead>
-                        <tr className="bg-gray-100 text-[9px] font-black border-b border-black text-center">
-                          <th className="border-r border-black w-12 py-1">S.No</th>
-                          <th className="border-r border-black py-1 px-4 text-black">Description of Goods</th>
-                          <th className="border-r border-black w-28 py-1">HSN/SAC Code</th>
-                          <th className="w-24 py-1">Qty.</th>
-                        </tr>
-                      </thead>
-                      <tbody className="flex-grow">
-                        <tr className="text-[10px] font-bold h-10">
-                          <td className="border-r border-black text-center">1</td>
-                          <td className="border-r border-black px-4 uppercase leading-relaxed font-black text-black">
-                            {selectedChallan.jobName}
-                            <div className="text-[8px] font-black text-gray-600 mt-0.5 tracking-wider">JOB CARD NO: {selectedChallan.jobNumber}</div>
+                  
+                  {/* Metadata Table */}
+                  <div className="w-48 border border-gray-200 rounded-lg overflow-hidden">
+                    <table className="w-full text-[10px]">
+                      <tbody className="divide-y divide-gray-200">
+                        <tr className="bg-gray-50/50">
+                          <td className="px-2 py-1.5 font-bold text-gray-500 uppercase tracking-tighter">DATE :</td>
+                          <td className="px-2 py-1.5 font-bold text-right text-gray-800">
+                            {new Date(selectedChallan.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
                           </td>
-                          <td className="border-r border-black text-center">4911</td>
-                          <td className="text-center font-black text-xs text-black">{selectedChallan.qty}</td>
                         </tr>
-                        {/* Empty spacing rows with vertical lines only */}
-                        {[...Array(18)].map((_, i) => (
-                          <tr key={`empty-${i}`} className="h-10">
-                            <td className="border-r border-black"></td>
-                            <td className="border-r border-black"></td>
-                            <td className="border-r border-black"></td>
-                            <td></td>
-                          </tr>
-                        ))}
+                        <tr>
+                          <td className="px-2 py-1.5 font-bold text-gray-500 uppercase tracking-tighter">Challan No :</td>
+                          <td className="px-2 py-1.5 font-bold text-right text-gray-800">#{selectedChallan.challanNo}</td>
+                        </tr>
+                        <tr className="bg-gray-50/50">
+                          <td className="px-2 py-1.5 font-bold text-gray-500 uppercase tracking-tighter">Job Ref :</td>
+                          <td className="px-2 py-1.5 font-bold text-right text-blue-700">{selectedChallan.jobNumber}</td>
+                        </tr>
                       </tbody>
                     </table>
                   </div>
+                </div>
 
-                  {/* Footer Section */}
-                  <div className="mt-auto border-t border-black p-4 pt-6">
-                    <div className="flex justify-between items-baseline mb-2">
-                      <div className="w-48 text-center flex flex-col items-center">
-                        <div className="h-12"></div>
-                        <div className="border-t border-black w-full mb-1"></div>
-                        <span className="text-[9px] font-black uppercase tracking-tighter">Receiver's Signature</span>
+                {/* --- ADDRESS SECTION --- */}
+                <div className="flex justify-between gap-10 mb-8 px-1">
+                  <div className="flex-1">
+                    <h4 className="text-[11px] font-black text-gray-900 border-b-2 mb-2 pb-0.5 inline-block uppercase tracking-wider">Address :</h4>
+                    <div className="text-[10px] space-y-0.5 font-medium text-gray-600">
+                      <p className="font-bold text-gray-800">Harihar Printers</p>
+                      <p>Office: J-97, Ashok Chowk, Adarsh Nagar, Jaipur</p>
+                      <p>Factory: G-139, Hirawala Ind. Area, Kanota, Jaipur</p>
+                      <p>Tel: +91 94140-43763</p>
+                    </div>
+                  </div>
+                  <div className="flex-1 text-right">
+                    <h4 className="text-[11px] font-black text-gray-900 border-b-2 mb-2 pb-0.5 inline-block uppercase tracking-wider">Deliver To :</h4>
+                    <div className="text-[10px] space-y-0.5 font-medium text-gray-600">
+                      <p className="font-bold uppercase text-xs" style={{ color: '#1e3a8a' }}>{selectedChallan.partyName}</p>
+                      <p className="uppercase">{selectedChallan.partyName}</p>
+                      <p>Jaipur, Rajasthan</p>
+                      <p>Tel: Contact Provided</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* --- INFO BAR --- */}
+                <div className="grid grid-cols-4 mb-8 border border-gray-200">
+                  {[
+                    { label: 'CHALLAN NO', value: selectedChallan.challanNo },
+                    { label: 'JOB Number', value: selectedChallan.jobNumber },
+                    { label: 'PAYMENT TERMS', value: '7 Days' },
+                    { label: 'DATE', value: new Date(selectedChallan.createdAt).toLocaleDateString() }
+                  ].map((item, i) => (
+                    <div key={i} className={`p-2 border-r border-gray-200 last:border-0 ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'}`}>
+                      <p className="text-[8px] font-black text-gray-400 uppercase mb-1" style={{ color: '#1e3a8a' }}>{item.label}</p>
+                      <p className="text-[10px] font-bold text-gray-800 uppercase">{item.value}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* --- ITEMS TABLE --- */}
+                <div className="mb-8 border border-gray-200 rounded-sm overflow-hidden min-h-[350px] flex flex-col">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="text-white text-[10px] font-black uppercase tracking-widest" style={{ backgroundColor: '#1e3a8a' }}>
+                        <th className="px-4 py-2.5 border-r border-teal-500/30 w-24">Quantity</th>
+                        <th className="px-4 py-2.5 border-r border-teal-500/30">Description of Goods</th>
+                        <th className="px-4 py-2.5 border-r border-teal-500/30 text-right w-28">Rate</th>
+                        <th className="px-4 py-2.5 text-right w-32">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 flex-grow">
+                      <tr className="text-[11px] group">
+                        <td className="px-4 py-8 border-r border-gray-50 font-bold align-top text-center text-gray-700">
+                          {selectedChallan.qty} NOS
+                        </td>
+                        <td className="px-4 py-8 border-r border-gray-50 align-top">
+                          <div className="space-y-1">
+                            <p className="font-black text-gray-900 uppercase text-xs" style={{ color: '#1e3a8a' }}>{selectedChallan.jobName}</p>
+                            <p className="text-[9px] text-gray-500 font-medium leading-relaxed italic uppercase">
+                              Standard Printing Specifications / Job Ref: {selectedChallan.jobNumber}
+                            </p>
+                          </div>
+                        </td>
+                        <td className="px-4 py-8 border-r border-gray-50 font-bold align-top text-right text-gray-700">
+                          ₹ {(selectedChallan.total / (selectedChallan.qty || 1)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="px-4 py-8 font-black align-top text-right text-gray-900 bg-gray-50/30">
+                          ₹ {selectedChallan.total?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                        </td>
+                      </tr>
+                      {/* Blank rows to fill space */}
+                      {[1, 2, 3, 4, 5, 6].map((i) => (
+                        <tr key={i} className="border-0">
+                          <td className="px-4 py-4 border-r border-gray-50">&nbsp;</td>
+                          <td className="px-4 py-4 border-r border-gray-50">&nbsp;</td>
+                          <td className="px-4 py-4 border-r border-gray-50">&nbsp;</td>
+                          <td className="px-4 py-4">&nbsp;</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  
+                  {/* Total Section */}
+                  <div className="border-t border-gray-200 mt-auto bg-gray-50/50">
+                    <div className="flex flex-col w-56 ml-auto border-l border-gray-200">
+                      <div className="flex justify-between px-4 py-2 border-b border-gray-200">
+                        <span className="text-[9px] font-bold text-gray-500 uppercase">Sub Total</span>
+                        <span className="text-[10px] font-bold text-gray-800">₹ {selectedChallan.total?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                       </div>
-                      <div className="w-56 text-right flex flex-col items-center">
-                        <p className="text-[10px] font-black uppercase mb-10 w-full text-right pr-4 text-black">For Harihar Printers</p>
-                        <div className="border-t border-black w-full mb-1"></div>
-                        <span className="text-[9px] font-black uppercase tracking-tighter text-black">Authorised Signatory</span>
+                      <div className="flex justify-between px-4 py-2 border-b border-gray-200">
+                        <span className="text-[9px] font-bold text-gray-500 uppercase">GST</span>
+                        <span className="text-[10px] font-bold text-gray-800">₹ 0.00</span>
+                      </div>
+                      <div className="flex justify-between px-4 py-3" style={{ backgroundColor: '#1e3a8a' }}>
+                        <span className="text-[10px] font-black text-white uppercase tracking-wider">Total Amount</span>
+                        <span className="text-xs font-black text-white">₹ {selectedChallan.total?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                       </div>
                     </div>
                   </div>
                 </div>
-               </div>
+
+                {/* --- FOOTER SECTION --- */}
+                <div className="mt-8 text-[9px] text-gray-500 space-y-4">
+                  <div className="pt-8 grid grid-cols-2 gap-20">
+                    <div className="border-t border-gray-300 pt-1">
+                      <p className="font-bold uppercase tracking-widest text-[#1e3a8a]">Receiver's Signature :</p>
+                    </div>
+                    <div className="border-t border-gray-300 pt-1 text-right">
+                      <p className="font-bold uppercase tracking-widest text-[#1e3a8a]">For Harihar Printers</p>
+                      <p className="mt-8 font-black text-gray-800">Authorised Signatory</p>
+                    </div>
+                  </div>
+
+                  <div className="pt-12 text-center">
+
+                    <p className="text-[8px] font-bold text-gray-400 mt-2 uppercase tracking-widest">Subject to Jaipur Jurisdiction Only</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
