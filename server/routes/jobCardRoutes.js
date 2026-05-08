@@ -152,7 +152,7 @@ router.patch('/:id/price', async (req, res) => {
       { totalAmount, updatedAt: new Date() },
       { new: true }
     );
-    
+
     if (!jobCard) return res.status(404).json({ error: "Job Card not found" });
 
     // Create Notification
@@ -168,6 +168,23 @@ router.patch('/:id/price', async (req, res) => {
 
     res.json(jobCard);
   } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+router.post('/sync-tally-direct', async (req, res) => {
+  try {
+    const jobCardData = req.body;
+    if (!jobCardData || !jobCardData.partyName) {
+      return res.status(400).json({ error: "Invalid Job Card data" });
+    }
+
+    const result = await syncJobCardToTally(jobCardData);
+
+    res.json({ message: "Successfully synced to Tally Prime", details: result });
+  } catch (err) {
+    console.error(`❌ Tally Sync Error: ${err.message}`);
     res.status(500).json({ error: err.message });
   }
 });

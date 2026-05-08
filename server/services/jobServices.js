@@ -1,63 +1,41 @@
-import fs from 'fs/promises';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import JobCard from '../models/JobCard.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DATA_FILE = path.join(__dirname, '../data/jobs.json');
-
-// Ensure directory exists
-const ensureDirectory = async () => {
-  const dir = path.dirname(DATA_FILE);
-  try {
-    await fs.access(dir);
-  } catch {
-    await fs.mkdir(dir, { recursive: true });
-  }
-};
-
-// Read jobs from file
+// Read all jobs from MongoDB
 export const getAllJobs = async () => {
   try {
-    await ensureDirectory();
-    const data = await fs.readFile(DATA_FILE, 'utf-8');
-    return JSON.parse(data);
+    return await JobCard.find().sort({ createdAt: -1 });
   } catch (error) {
-    return []; // Return empty array if file doesn't exist
+    console.error('Error in getAllJobs:', error);
+    return [];
   }
 };
 
-// Save a new job
+// Save a new job to MongoDB
 export const createJob = async (jobData) => {
-  await ensureDirectory();
-  const jobs = await getAllJobs();
-  
-  const newJob = {
-    _id: Date.now().toString(), // Generate a simple ID
-    ...jobData,
-    createdAt: new Date().toISOString()
-  };
-  
-  // Check for duplicate Job Number
-  if (jobData.jobNumber && jobs.some(j => j.jobNumber === jobData.jobNumber)) {
-    const error = new Error("Job Number already exists");
-    error.code = 11000;
+  try {
+    // Note: Job Number unique constraint is handled by MongoDB schema if defined,
+    // otherwise we can check it here. 
+    const newJob = new JobCard(jobData);
+    return await newJob.save();
+  } catch (error) {
+    // Mapping MongoDB unique error to match the previous error code
+    if (error.code === 11000) {
+      const customError = new Error("Job Number already exists");
+      customError.code = 11000;
+      throw customError;
+    }
     throw error;
   }
-  
-  jobs.push(newJob);
-  await fs.writeFile(DATA_FILE, JSON.stringify(jobs, null, 2));
-  return newJob;
 };
 
-// Delete a job
+// Delete a job from MongoDB
 export const deleteJob = async (id) => {
-  await ensureDirectory();
-  let jobs = await getAllJobs();
-  const initialLength = jobs.length;
-  jobs = jobs.filter(j => j._id !== id);
-  
-  if (jobs.length === initialLength) return null;
-  
-  await fs.writeFile(DATA_FILE, JSON.stringify(jobs, null, 2));
-  return { id };
+  try {
+    const result = await JobCard.findByIdAndDelete(id);
+    return result ? { id } : null;
+  } catch (error) {
+    console.error('Error in deleteJob:', error);
+    throw error;
+  }
 };
+

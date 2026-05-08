@@ -7,10 +7,19 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
 dist
 dist-ssr
-*.local
+dist_electron
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*
 
 # Editor directories and files
 .vscode/*
@@ -22,4 +31,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-dist_electron/
+
+# Project specific
+server/scratch/
+server/data/*.json
+output.log
