@@ -25,18 +25,18 @@ import {
 import { useState, useRef, useEffect } from 'react';
 
 const revenueData = [
-  { name: 'Jan', Revenue: 4000, Expenses: 2400 },
-  { name: 'Feb', Revenue: 3000, Expenses: 1398 },
-  { name: 'Mar', Revenue: 5000, Expenses: 8000 },
-  { name: 'Apr', Revenue: 8780, Expenses: 3908 },
-  { name: 'May', Revenue: 7890, Expenses: 4800 },
-  { name: 'Jun', Revenue: 13900, Expenses: 3800 },
-  { name: 'Jul', Revenue: 14900, Expenses: 4300 },
-  { name: 'Aug', Revenue: 16000, Expenses: 9800 },
-  { name: 'Sep', Revenue: 19000, Expenses: 12000 },
-  { name: 'Oct', Revenue: 21000, Expenses: 10080 },
-  { name: 'Nov', Revenue: 24000, Expenses: 16000 },
-  { name: 'Dec', Revenue: 26000, Expenses: 18000 },
+  { name: 'Jan', "Monthly Revenue": 4000, "Yearly Revenue": 2400 },
+  { name: 'Feb', "Monthly Revenue": 3000, "Yearly Revenue": 1398 },
+  { name: 'Mar', "Monthly Revenue": 5000, "Yearly Revenue": 8000 },
+  { name: 'Apr', "Monthly Revenue": 8780, "Yearly Revenue": 3908 },
+  { name: 'May', "Monthly Revenue": 7890, "Yearly Revenue": 4800 },
+  { name: 'Jun', "Monthly Revenue": 13900, "Yearly Revenue": 3800 },
+  { name: 'Jul', "Monthly Revenue": 14900, "Yearly Revenue": 4300 },
+  { name: 'Aug', "Monthly Revenue": 16000, "Yearly Revenue": 9800 },
+  { name: 'Sep', "Monthly Revenue": 19000, "Yearly Revenue": 12000 },
+  { name: 'Oct', "Monthly Revenue": 21000, "Yearly Revenue": 10080 },
+  { name: 'Nov', "Monthly Revenue": 24000, "Yearly Revenue": 16000 },
+  { name: 'Dec', "Monthly Revenue": 26000, "Yearly Revenue": 18000 },
 ];
 
 const dealsData = [
@@ -127,6 +127,13 @@ export default function Dashboard() {
 
   const [latestJobCards, setLatestJobCards] = useState([]);
   const [loadingJobCards, setLoadingJobCards] = useState(true);
+  const [stats, setStats] = useState({
+    monthlyRevenue: 0,
+    monthlyDiff: 0,
+    yearlyRevenue: 0,
+    yearlyDiff: 0,
+    chartData: []
+  });
 
   useEffect(() => {
     const fetchLatestJobCards = async () => {
@@ -134,9 +141,90 @@ export default function Dashboard() {
         const res = await fetch(`${API_BASE_URL}/api/jobcard`);
         if (res.ok) {
           const data = await res.json();
-          // Sort by createdAt descending and slice to 5
-          const sorted = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5);
-          setLatestJobCards(sorted);
+          
+          // Sort by createdAt descending and slice to 5 for the latest list
+          const sorted = [...data].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          setLatestJobCards(sorted.slice(0, 5));
+          
+          // --- CALCULATE REAL STATS ---
+          const now = new Date();
+          const currentYear = now.getFullYear();
+          const currentMonth = now.getMonth(); // 0-indexed
+
+          // Filter jobs for current year, current month, previous month, current year, previous year
+          let curMonthSum = 0;
+          let prevMonthSum = 0;
+          let curYearSum = 0;
+          let prevYearSum = 0;
+
+          // Chart data initialization for 12 months of current year
+          const monthsNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          const monthlyTotals = Array(12).fill(0);
+
+          data.forEach(card => {
+            const cardDate = new Date(card.jobDate || card.createdAt);
+            const amt = Number(card.totalAmount) || 0;
+            const cardYear = cardDate.getFullYear();
+            const cardMonth = cardDate.getMonth();
+
+            // Check current year
+            if (cardYear === currentYear) {
+              curYearSum += amt;
+              monthlyTotals[cardMonth] += amt;
+            }
+
+            // Check previous year
+            if (cardYear === currentYear - 1) {
+              prevYearSum += amt;
+            }
+
+            // Check current month & year
+            if (cardYear === currentYear && cardMonth === currentMonth) {
+              curMonthSum += amt;
+            }
+
+            // Check previous month
+            const isPrevMonth = (currentMonth === 0) 
+              ? (cardYear === currentYear - 1 && cardMonth === 11)
+              : (cardYear === currentYear && cardMonth === currentMonth - 1);
+            if (isPrevMonth) {
+              prevMonthSum += amt;
+            }
+          });
+
+          // Calculate percentage differences
+          let mDiff = 0;
+          if (prevMonthSum > 0) {
+            mDiff = ((curMonthSum - prevMonthSum) / prevMonthSum) * 100;
+          } else if (curMonthSum > 0) {
+            mDiff = 100;
+          }
+
+          let yDiff = 0;
+          if (prevYearSum > 0) {
+            yDiff = ((curYearSum - prevYearSum) / prevYearSum) * 100;
+          } else if (curYearSum > 0) {
+            yDiff = 100;
+          }
+
+          // Build cumulative yearly revenue array for the chart
+          let cumulativeYearly = 0;
+          const chartData = monthsNames.map((name, idx) => {
+            cumulativeYearly += monthlyTotals[idx];
+            return {
+              name,
+              "Monthly Revenue": monthlyTotals[idx],
+              "Yearly Revenue": cumulativeYearly
+            };
+          });
+
+          setStats({
+            monthlyRevenue: curMonthSum,
+            monthlyDiff: mDiff,
+            yearlyRevenue: curYearSum,
+            yearlyDiff: yDiff,
+            chartData
+          });
         }
       } catch (err) {
         console.error("Error fetching latest job cards:", err);
@@ -166,7 +254,7 @@ export default function Dashboard() {
           <p className="font-semibold text-gray-800 mb-1">{label}</p>
           {payload.map((entry, index) => (
             <p key={index} className="text-sm font-medium" style={{ color: entry.color }}>
-              {entry.name}: ₹{(entry.value / 1000).toFixed(1)}k
+              {entry.name}: ₹{Number(entry.value).toLocaleString('en-IN')}
             </p>
           ))}
         </div>
@@ -222,10 +310,12 @@ export default function Dashboard() {
                 <span className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider">Monthly Revenue</span>
               </div>
               <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 truncate">
-                <CountUp end={59526564} prefix="₹" />
+                <CountUp end={stats.monthlyRevenue} prefix="₹" />
               </div>
               <div className="flex items-center gap-2 text-sm">
-                <span className="bg-red-100 text-red-600 px-2 py-0.5 rounded text-xs font-semibold">-3.5%</span>
+                <span className={`px-2 py-0.5 rounded text-xs font-semibold ${stats.monthlyDiff >= 0 ? 'bg-teal-100 text-teal-600' : 'bg-red-100 text-red-600'}`}>
+                  {stats.monthlyDiff >= 0 ? '+' : ''}{stats.monthlyDiff.toFixed(1)}%
+                </span>
                 <span className="text-gray-400 text-xs sm:text-sm">vs prev. month</span>
               </div>
             </div>
@@ -239,10 +329,12 @@ export default function Dashboard() {
                 <span className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider">Yearly Revenue</span>
               </div>
               <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 truncate">
-                <CountUp end={24562564} prefix="₹" />
+                <CountUp end={stats.yearlyRevenue} prefix="₹" />
               </div>
               <div className="flex items-center gap-2 text-sm">
-                <span className="bg-teal-100 text-teal-600 px-2 py-0.5 rounded text-xs font-semibold">+12.5%</span>
+                <span className={`px-2 py-0.5 rounded text-xs font-semibold ${stats.yearlyDiff >= 0 ? 'bg-teal-100 text-teal-600' : 'bg-red-100 text-red-600'}`}>
+                  {stats.yearlyDiff >= 0 ? '+' : ''}{stats.yearlyDiff.toFixed(1)}%
+                </span>
                 <span className="text-gray-400 text-xs sm:text-sm">vs prev. year</span>
               </div>
             </div>
@@ -255,21 +347,15 @@ export default function Dashboard() {
             <h3 className="text-lg font-bold text-gray-900">Balance Overview</h3>
             <div className="flex flex-wrap gap-4 sm:gap-6">
               <div className="text-center">
-                <div className="text-xs sm:text-sm text-gray-500 mb-1">Revenue</div>
+                <div className="text-xs sm:text-sm text-gray-500 mb-1">Monthly Revenue</div>
                 <div className="font-bold text-gray-900">
-                  <CountUp end={584000} prefix="₹" />
+                  <CountUp end={stats.monthlyRevenue} prefix="₹" />
                 </div>
               </div>
               <div className="text-center border-l pl-4 sm:pl-6">
-                <div className="text-xs sm:text-sm text-gray-500 mb-1">Expenses</div>
+                <div className="text-xs sm:text-sm text-gray-500 mb-1">Yearly Revenue</div>
                 <div className="font-bold text-gray-900">
-                  <CountUp end={457000} prefix="₹" />
-                </div>
-              </div>
-              <div className="text-center border-l pl-4 sm:pl-6">
-                <div className="text-xs sm:text-sm text-gray-500 mb-1">Profit Ratio</div>
-                <div className="font-bold text-green-500">
-                  <CountUp end={3.6} suffix="%" />
+                  <CountUp end={stats.yearlyRevenue} prefix="₹" />
                 </div>
               </div>
             </div>
@@ -277,7 +363,7 @@ export default function Dashboard() {
 
           <div className="h-[250px] sm:h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={revenueData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+              <LineChart data={stats.chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 11 }} dy={10} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 11 }} tickFormatter={(val) => `₹${val / 1000}k`} dx={-5} />
@@ -285,7 +371,7 @@ export default function Dashboard() {
                 <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px', fontSize: '12px' }} />
                 <Line
                   type="monotone"
-                  dataKey="Revenue"
+                  dataKey="Monthly Revenue"
                   stroke="#14b8a6"
                   strokeWidth={3}
                   dot={false}
@@ -293,7 +379,7 @@ export default function Dashboard() {
                 />
                 <Line
                   type="monotone"
-                  dataKey="Expenses"
+                  dataKey="Yearly Revenue"
                   stroke="#f97316"
                   strokeWidth={3}
                   dot={false}
