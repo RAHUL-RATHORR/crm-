@@ -154,7 +154,7 @@ export default function App() {
   const [siteSettings, setSiteSettings] = useState(() => {
     const saved = localStorage.getItem('siteSettings');
     return saved ? JSON.parse(saved) : {
-      siteTitle: 'TRICKWRICK',
+      siteTitle: 'Harihar Printers',
       logo: null,
       whiteLogo: null,
       favicon: null
@@ -163,7 +163,7 @@ export default function App() {
 
   useEffect(() => {
     // Update Document Title
-    document.title = siteSettings.siteTitle || 'TRICKWRICK';
+    document.title = siteSettings.siteTitle || 'Harihar Printers';
 
     // Update Favicon
     if (siteSettings.favicon) {
@@ -330,7 +330,16 @@ export default function App() {
                 <Building size={20} />
               </div>
             )}
-            <span className="truncate hidden sm:block">{siteSettings.siteTitle || 'TRICKWRICK'}</span>
+            <span className="truncate hidden sm:block">
+              {(!siteSettings.siteTitle || siteSettings.siteTitle === 'TRICKWRICK' || siteSettings.siteTitle === 'Harihar Printers') ? (
+                <>
+                  <span className="text-[#111827] font-black">Harihar</span>{' '}
+                  <span className="text-[#2563eb] font-black">Printers</span>
+                </>
+              ) : (
+                siteSettings.siteTitle
+              )}
+            </span>
           </div>
         </div>
 

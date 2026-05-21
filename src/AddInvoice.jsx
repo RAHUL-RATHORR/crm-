@@ -23,8 +23,12 @@ const AddInvoice = () => {
     gstType: editData ? (editData.gstType || 'CGST/SGST') : 'CGST/SGST',
   });
 
-  const [items, setItems] = useState(editData ? editData.items : [
-    { id: Date.now(), description: '', qty: 0, rate: 0, total: 0 }
+  const [items, setItems] = useState(editData ? editData.items.map(item => ({
+    ...item,
+    id: item.id || item._id || Date.now() + Math.random(),
+    hsn: item.hsn || ''
+  })) : [
+    { id: Date.now(), description: '', hsn: '', qty: 0, rate: 0, total: 0 }
   ]);
 
   useEffect(() => {
@@ -55,7 +59,7 @@ const AddInvoice = () => {
   };
 
   const addRow = () => {
-    setItems([...items, { id: Date.now(), description: '', qty: 0, rate: 0, total: 0 }]);
+    setItems([...items, { id: Date.now(), description: '', hsn: '', qty: 0, rate: 0, total: 0 }]);
   };
 
   const removeRow = (id) => {
@@ -176,10 +180,11 @@ const AddInvoice = () => {
         {/* Items Section */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[800px]">
+            <table className="w-full text-left border-collapse min-w-[950px]">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider w-64">Description *</th>
+                  <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider w-64">HSN/SAC</th>
                   <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider text-center w-28">Qty *</th>
                   <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider text-center w-32">Rate *</th>
                   <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider text-center w-36">Total</th>
@@ -196,6 +201,15 @@ const AddInvoice = () => {
                         onChange={(e) => handleItemChange(item.id, 'description', e.target.value)}
                         required
                         placeholder="Description"
+                        className="w-full bg-white border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+                      />
+                    </td>
+                    <td className="px-6 py-4">
+                      <input
+                        type="text"
+                        value={item.hsn || ''}
+                        onChange={(e) => handleItemChange(item.id, 'hsn', e.target.value)}
+                        placeholder="HSN/SAC"
                         className="w-full bg-white border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
                       />
                     </td>

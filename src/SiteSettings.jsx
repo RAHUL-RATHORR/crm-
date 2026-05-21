@@ -82,7 +82,7 @@ const SiteSettings = () => {
     localStorage.setItem('siteSettings', JSON.stringify(fullSettings));
 
     // Update dynamically
-    document.title = fullSettings.siteTitle || 'TRICKWRICK CRM';
+    document.title = fullSettings.siteTitle || 'Harihar Printers';
 
     // Update favicon tag
     if (fullSettings.favicon) {
@@ -227,7 +227,7 @@ const SiteSettings = () => {
                   name="siteTitle"
                   value={formData.siteTitle}
                   onChange={handleInputChange}
-                  placeholder="e.g. TRICKWRICK CRM"
+                  placeholder="e.g. Harihar Printers"
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium"
                   required
                 />

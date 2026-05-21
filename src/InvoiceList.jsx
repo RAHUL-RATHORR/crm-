@@ -420,6 +420,7 @@ const InvoiceList = () => {
                       <tr className="text-white text-[10px] font-black uppercase tracking-widest" style={{ backgroundColor: '#1e3a8a' }}>
                         <th className="px-4 py-2.5 border-r border-teal-500/30 w-12 text-center">S.No</th>
                         <th className="px-4 py-2.5 border-r border-teal-500/30">Description of Goods/Services</th>
+                        <th className="px-4 py-2.5 border-r border-teal-500/30 text-center w-36">HSN/SAC</th>
                         <th className="px-4 py-2.5 border-r border-teal-500/30 text-center w-20">Qty</th>
                         <th className="px-4 py-2.5 border-r border-teal-500/30 text-right w-24">Rate</th>
                         <th className="px-4 py-2.5 text-right w-32">Amount</th>
@@ -434,10 +435,10 @@ const InvoiceList = () => {
                           <td className="px-4 py-4 border-r border-gray-50 align-top">
                             <div className="space-y-1">
                               <p className="font-black text-gray-900 uppercase" style={{ color: '#1e3a8a' }}>{item.description}</p>
-                              <p className="text-[9px] text-gray-500 font-medium leading-relaxed italic uppercase">
-                                HSN: 4911 • High Fidelity Offset Printing
-                              </p>
                             </div>
+                          </td>
+                          <td className="px-4 py-4 border-r border-gray-50 text-center font-medium align-top text-gray-700 uppercase">
+                            {item.hsn || ''}
                           </td>
                           <td className="px-4 py-4 border-r border-gray-50 text-center font-bold align-top text-gray-700">
                             {item.qty}
@@ -453,6 +454,7 @@ const InvoiceList = () => {
                       {/* Blank rows to fill space */}
                       {[...Array(Math.max(0, 8 - (selectedInvoice.items?.length || 0)))].map((_, i) => (
                         <tr key={`empty-${i}`} className="border-0">
+                          <td className="px-4 py-4 border-r border-gray-50">&nbsp;</td>
                           <td className="px-4 py-4 border-r border-gray-50">&nbsp;</td>
                           <td className="px-4 py-4 border-r border-gray-50">&nbsp;</td>
                           <td className="px-4 py-4 border-r border-gray-50">&nbsp;</td>

@@ -250,6 +250,32 @@ export default function JobCardForm() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-gray-700 mb-2">Paper Type</label>
+              <div className="flex items-center gap-6 h-10">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="paperSource"
+                    value="Party paper"
+                    defaultChecked={editData?.paperSource === 'Party paper'}
+                    className="w-4 h-4 text-sky-600 border-gray-300 focus:ring-sky-500"
+                  />
+                  <span className="text-sm text-gray-700">Party paper</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="paperSource"
+                    value="Company paper"
+                    defaultChecked={editData?.paperSource !== 'Party paper'}
+                    className="w-4 h-4 text-sky-600 border-gray-300 focus:ring-sky-500"
+                  />
+                  <span className="text-sm text-gray-700">Company paper</span>
+                </label>
+              </div>
+            </div>
+
             <div className="flex flex-col relative" ref={paperDropdownRef}>
               <label className="text-sm font-medium text-gray-700 mb-1">Select Paper (From Stock)</label>
               <div className="relative">
@@ -359,31 +385,6 @@ export default function JobCardForm() {
                 className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
                 placeholder="e.g. Size, Type"
               />
-            </div>
-            <div className="flex flex-col">
-              <label className="text-sm font-medium text-gray-700 mb-2">Paper Type</label>
-              <div className="flex items-center gap-6 h-10">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="paperSource"
-                    value="Party paper"
-                    defaultChecked={editData?.paperSource === 'Party paper'}
-                    className="w-4 h-4 text-sky-600 border-gray-300 focus:ring-sky-500"
-                  />
-                  <span className="text-sm text-gray-700">Party paper</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="paperSource"
-                    value="Company paper"
-                    defaultChecked={editData?.paperSource !== 'Party paper'}
-                    className="w-4 h-4 text-sky-600 border-gray-300 focus:ring-sky-500"
-                  />
-                  <span className="text-sm text-gray-700">Company paper</span>
-                </label>
-              </div>
             </div>
             <div className="flex flex-col">
               <label className="text-sm font-medium text-gray-700 mb-1">Inner paper gsm</label>

@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 
 const itemSchema = new mongoose.Schema({
   description: { type: String, required: true },
+  hsn: { type: String, default: '' },
   qty: { type: Number, default: 0 },
   rate: { type: Number, default: 0 },
   total: { type: Number, default: 0 }
@@ -15,6 +16,7 @@ const invoiceSchema = new mongoose.Schema({
   items: [itemSchema],
   subTotal: { type: Number, default: 0 },
   gstPercent: { type: Number, default: 0 },
+  gstType: { type: String, default: 'CGST/SGST' },
   gstAmount: { type: Number, default: 0 },
   totalAmount: { type: Number, default: 0 },
   paidAmount: { type: Number, default: 0 },
