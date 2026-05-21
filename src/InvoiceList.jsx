@@ -21,22 +21,33 @@ const NumberToWords = (num) => {
   return str.trim();
 };
 
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:5011'
+  : 'https://crm-qpw8.onrender.com';
+
 const InvoiceList = () => {
   const navigate = useNavigate();
   const [invoices, setInvoices] = useState([]);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [tempGstType, setTempGstType] = useState('CGST/SGST');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [invoiceToDelete, setInvoiceToDelete] = useState(null);
   const [openDropdownId, setOpenDropdownId] = useState(null);
 
+  const gstPercent = selectedInvoice ? (selectedInvoice.gstPercent !== undefined ? selectedInvoice.gstPercent : 18) : 18;
+  const taxableValue = selectedInvoice ? (selectedInvoice.totalAmount / (1 + (gstPercent / 100))) : 0;
+  const totalGstAmount = selectedInvoice ? (selectedInvoice.totalAmount - taxableValue) : 0;
+  const halfGstAmount = totalGstAmount / 2;
+  const isIGST = tempGstType === 'IGST';
+
   useEffect(() => {
     fetchInvoice();
   }, []);
 
   const fetchInvoice = () => {
-    fetch('https://crm-qpw8.onrender.com/api/invoice')
+    fetch(`${API_BASE_URL}/api/invoice`)
       .then(res => res.json())
       .then(data => setInvoices(data))
       .catch(err => console.error("Error fetching Invoices:", err));
@@ -50,7 +61,7 @@ const InvoiceList = () => {
   const confirmDelete = async () => {
     if (invoiceToDelete) {
       try {
-        const response = await fetch(`https://crm-qpw8.onrender.com/api/invoice/${invoiceToDelete}`, {
+        const response = await fetch(`${API_BASE_URL}/api/invoice/${invoiceToDelete}`, {
           method: 'DELETE'
         });
         if (response.ok) {
@@ -73,7 +84,7 @@ const InvoiceList = () => {
     setOpenDropdownId(null);
 
     try {
-      const response = await fetch(`https://crm-qpw8.onrender.com/api/invoice/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/invoice/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ paymentStatus: newStatus })
@@ -90,6 +101,7 @@ const InvoiceList = () => {
 
   const openPreview = (inv) => {
     setSelectedInvoice(inv);
+    setTempGstType(inv.gstType || 'CGST/SGST');
     setIsModalOpen(true);
   };
 
@@ -267,6 +279,32 @@ const InvoiceList = () => {
             <div className="p-4 border-b flex justify-between items-center bg-white modal-header no-print">
               <h2 className="text-xl font-bold text-gray-800">Invoice Preview</h2>
               <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5 bg-gray-100 px-3 py-2 rounded-xl text-sm font-bold border border-gray-200">
+                  <span className="text-gray-500 font-medium">GST Mode:</span>
+                  <select
+                    value={tempGstType}
+                    onChange={async (e) => {
+                      const newType = e.target.value;
+                      setTempGstType(newType);
+                      // Update state locally
+                      setInvoices(prev => prev.map(inv => inv._id === selectedInvoice._id ? { ...inv, gstType: newType } : inv));
+                      // Update on server
+                      try {
+                        await fetch(`${API_BASE_URL}/api/invoice/${selectedInvoice._id}`, {
+                          method: 'PUT',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ gstType: newType })
+                        });
+                      } catch (err) {
+                        console.error("Error updating GST Type on server:", err);
+                      }
+                    }}
+                    className="bg-transparent text-blue-700 outline-none cursor-pointer font-bold"
+                  >
+                    <option value="CGST/SGST">CGST + SGST</option>
+                    <option value="IGST">IGST</option>
+                  </select>
+                </div>
                 <button
                   onClick={handleDownloadPDF}
                   disabled={isGenerating}
@@ -435,15 +473,19 @@ const InvoiceList = () => {
                       <div className="flex flex-col w-56 border-l border-gray-200">
                         <div className="flex justify-between px-4 py-1.5 border-b border-gray-200">
                           <span className="text-[9px] font-bold text-gray-500 uppercase">Taxable Value</span>
-                          <span className="text-[10px] font-bold text-gray-800">₹ {(selectedInvoice.totalAmount / (1 + (selectedInvoice.gstRate / 100))).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                          <span className="text-[10px] font-bold text-gray-800">₹ {taxableValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                         </div>
                         <div className="flex justify-between px-4 py-1.5 border-b border-gray-200">
-                          <span className="text-[9px] font-bold text-gray-500 uppercase">CGST ({selectedInvoice.gstRate / 2}%)</span>
-                          <span className="text-[10px] font-bold text-gray-800">₹ {((selectedInvoice.totalAmount - (selectedInvoice.totalAmount / (1 + (selectedInvoice.gstRate / 100)))) / 2).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                          <span className="text-[9px] font-bold text-gray-500 uppercase">CGST {isIGST ? '(0%)' : `(${gstPercent / 2}%)`}</span>
+                          <span className="text-[10px] font-bold text-gray-800">₹ {isIGST ? '0.00' : halfGstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                         </div>
                         <div className="flex justify-between px-4 py-1.5 border-b border-gray-200">
-                          <span className="text-[9px] font-bold text-gray-500 uppercase">SGST ({selectedInvoice.gstRate / 2}%)</span>
-                          <span className="text-[10px] font-bold text-gray-800">₹ {((selectedInvoice.totalAmount - (selectedInvoice.totalAmount / (1 + (selectedInvoice.gstRate / 100)))) / 2).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                          <span className="text-[9px] font-bold text-gray-500 uppercase">SGST {isIGST ? '(0%)' : `(${gstPercent / 2}%)`}</span>
+                          <span className="text-[10px] font-bold text-gray-800">₹ {isIGST ? '0.00' : halfGstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                        </div>
+                        <div className="flex justify-between px-4 py-1.5 border-b border-gray-200">
+                          <span className="text-[9px] font-bold text-gray-500 uppercase">IGST {isIGST ? `(${gstPercent}%)` : '(0%)'}</span>
+                          <span className="text-[10px] font-bold text-gray-800">₹ {isIGST ? totalGstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 }) : '0.00'}</span>
                         </div>
                         <div className="flex justify-between px-4 py-3" style={{ backgroundColor: '#1e3a8a' }}>
                           <span className="text-[10px] font-black text-white uppercase tracking-wider">Grand Total</span>

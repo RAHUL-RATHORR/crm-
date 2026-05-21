@@ -4,6 +4,10 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { Plus, Trash2 } from 'lucide-react';
 
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:5011'
+  : 'https://crm-qpw8.onrender.com';
+
 const AddInvoice = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -16,6 +20,7 @@ const AddInvoice = () => {
     jobCard: editData ? editData.jobCard : '',
     party: editData ? editData.partyName : '',
     gstPercent: editData ? editData.gstPercent : 18,
+    gstType: editData ? (editData.gstType || 'CGST/SGST') : 'CGST/SGST',
   });
 
   const [items, setItems] = useState(editData ? editData.items : [
@@ -23,7 +28,7 @@ const AddInvoice = () => {
   ]);
 
   useEffect(() => {
-    fetch('https://crm-qpw8.onrender.com/api/jobcard')
+    fetch(`${API_BASE_URL}/api/jobcard`)
       .then(res => res.json())
       .then(data => setJobCards(data))
       .catch(err => console.error("Error fetching Job Cards:", err));
@@ -73,12 +78,13 @@ const AddInvoice = () => {
       items: items,
       subTotal: subTotal,
       gstPercent: formData.gstPercent,
+      gstType: formData.gstType,
       gstAmount: gstAmount,
       totalAmount: grandTotal
     };
 
     try {
-      const response = await fetch('https://crm-qpw8.onrender.com/api/invoice', {
+      const response = await fetch(`${API_BASE_URL}/api/invoice`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(invoice)
@@ -253,7 +259,7 @@ const AddInvoice = () => {
         </div>
 
         {/* Calculations */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 space-y-2">
             <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Sub Total *</label>
             <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-base sm:text-lg font-semibold text-gray-800">
@@ -271,6 +277,18 @@ const AddInvoice = () => {
               <option value="0">0%</option>
               <option value="5">5%</option>
               <option value="18">18%</option>
+            </select>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 space-y-2">
+            <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">GST Type *</label>
+            <select
+              name="gstType"
+              value={formData.gstType}
+              onChange={handleInputChange}
+              className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-base sm:text-lg font-semibold text-gray-800 outline-none cursor-pointer"
+            >
+              <option value="CGST/SGST">CGST + SGST</option>
+              <option value="IGST">IGST</option>
             </select>
           </div>
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 space-y-2">
