@@ -1,4 +1,7 @@
 import React from 'react';
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:5011'
+  : 'https://crm-qpw8.onrender.com';
 import { useNavigate } from 'react-router-dom';
 import {
   LineChart,
@@ -121,6 +124,28 @@ export default function Dashboard() {
   const [isDateDropdownOpen, setIsDateDropdownOpen] = useState(false);
   const [selectedRange, setSelectedRange] = useState('01 Nov 2023 to 30 Dec 2023');
   const dateDropdownRef = useRef(null);
+
+  const [latestJobCards, setLatestJobCards] = useState([]);
+  const [loadingJobCards, setLoadingJobCards] = useState(true);
+
+  useEffect(() => {
+    const fetchLatestJobCards = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/jobcard`);
+        if (res.ok) {
+          const data = await res.json();
+          // Sort by createdAt descending and slice to 5
+          const sorted = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5);
+          setLatestJobCards(sorted);
+        }
+      } catch (err) {
+        console.error("Error fetching latest job cards:", err);
+      } finally {
+        setLoadingJobCards(false);
+      }
+    };
+    fetchLatestJobCards();
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -284,44 +309,9 @@ export default function Dashboard() {
           {/* Deals Table */}
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex-1 hover:shadow-md transition-shadow overflow-hidden">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-bold text-gray-900">Deals Status</h3>
-              <div className="relative" ref={dateDropdownRef}>
-                <button
-                  onClick={() => setIsDateDropdownOpen(!isDateDropdownOpen)}
-                  className="bg-gray-50 border border-gray-200 text-sm rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600 flex items-center gap-2 hover:bg-gray-100 transition-all font-medium"
-                >
-                  <Calendar size={16} className="text-gray-400" />
-                  {selectedRange}
-                  <ChevronDown size={14} className={`transition-transform duration-200 ${isDateDropdownOpen ? 'rotate-180' : ''}`} />
-                </button>
-
-                {isDateDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-20 py-2 animate-in fade-in zoom-in-95 duration-200">
-                    {ranges.map((range) => (
-                      <button
-                        key={range}
-                        onClick={() => {
-                          setSelectedRange(range);
-                          setIsDateDropdownOpen(false);
-                        }}
-                        className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors ${selectedRange === range ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'
-                          }`}
-                      >
-                        {range}
-                      </button>
-                    ))}
-                    <div className="border-t border-gray-50 my-1"></div>
-                    <button
-                      onClick={() => {
-                        setSelectedRange('01 Nov 2023 to 30 Dec 2023');
-                        setIsDateDropdownOpen(false);
-                      }}
-                      className="w-full text-left px-4 py-2.5 text-xs text-gray-400 hover:bg-gray-50"
-                    >
-                      Custom Range
-                    </button>
-                  </div>
-                )}
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Latest Job Cards</h3>
+                <p className="text-xs text-gray-400 mt-0.5 font-medium">Top 5 recently added job cards</p>
               </div>
             </div>
 
@@ -329,30 +319,49 @@ export default function Dashboard() {
               <table className="w-full text-left text-sm whitespace-nowrap">
                 <thead>
                   <tr className="text-gray-400 border-b border-gray-100">
-                    <th className="pb-3 font-medium px-2">Name</th>
-                    <th className="pb-3 font-medium px-2">Last Contacted</th>
-                    <th className="pb-3 font-medium px-2">Sales Representative</th>
-                    <th className="pb-3 font-medium px-2">Status</th>
-                    <th className="pb-3 font-medium px-2">Deal Value</th>
+                    <th className="pb-3 font-medium px-2">Client Name</th>
+                    <th className="pb-3 font-medium px-2">Job Name</th>
+                    <th className="pb-3 font-medium px-2">Job Number</th>
+                    <th className="pb-3 font-medium px-2">Job Qty</th>
+                    <th className="pb-3 font-medium px-2">Job Date</th>
                   </tr>
                 </thead>
                 <tbody className="text-gray-700">
-                  {dealsData.map((deal, idx) => (
-                    <tr key={idx} className="border-b last:border-0 border-gray-50 hover:bg-gray-50 transition-colors">
-                      <td className="py-4 px-2 font-medium">{deal.name}</td>
-                      <td className="py-4 px-2 text-gray-500">{deal.date}</td>
-                      <td className="py-4 px-2">{deal.salesRep}</td>
-                      <td className="py-4 px-2">
-                        <span className={`px-2.5 py-1 rounded-md text-xs font-semibold ${deal.status === 'Won' ? 'bg-green-100 text-green-700' :
-                          deal.status === 'Lost' ? 'bg-red-100 text-red-700' :
-                            'bg-amber-100 text-amber-700'
-                          }`}>
-                          {deal.status}
-                        </span>
+                  {loadingJobCards ? (
+                    <tr>
+                      <td colSpan="5" className="py-8 text-center text-gray-400 animate-pulse font-medium">
+                        Loading Latest Job Cards...
                       </td>
-                      <td className="py-4 px-2 font-semibold">{deal.value}</td>
                     </tr>
-                  ))}
+                  ) : latestJobCards.length === 0 ? (
+                    <tr>
+                      <td colSpan="5" className="py-8 text-center text-gray-400 italic">
+                        No Job Cards found.
+                      </td>
+                    </tr>
+                  ) : (
+                    latestJobCards.map((card, idx) => (
+                      <tr key={card._id || idx} className="border-b last:border-0 border-gray-50 hover:bg-gray-50 transition-colors">
+                        <td className="py-4 px-2 font-bold text-gray-900">{card.partyName}</td>
+                        <td className="py-4 px-2 text-gray-700 font-semibold">{card.jobName || 'N/A'}</td>
+                        <td className="py-4 px-2">
+                          <span className="font-mono text-xs text-blue-600 bg-blue-50/50 px-2 py-0.5 rounded font-bold">
+                            {card.jobNumber || 'N/A'}
+                          </span>
+                        </td>
+                        <td className="py-4 px-2 font-semibold text-gray-900">
+                          {Number(card.jobQty || 0).toLocaleString()}
+                        </td>
+                        <td className="py-4 px-2 text-gray-500 font-medium">
+                          {new Date(card.jobDate || card.createdAt).toLocaleDateString('en-IN', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric'
+                          })}
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
