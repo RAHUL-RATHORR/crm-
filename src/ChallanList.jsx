@@ -135,7 +135,6 @@ const ChallanList = () => {
                   <th className="px-4 sm:px-6 py-4">Job Card</th>
                   <th className="px-4 sm:px-6 py-4">Party Name</th>
                   <th className="px-4 sm:px-6 py-4">Total Amount</th>
-                  <th className="px-4 sm:px-6 py-4">Status</th>
                   <th className="px-4 sm:px-6 py-4">Created At</th>
                   <th className="px-4 sm:px-6 py-4 text-center">Action</th>
                 </tr>
@@ -143,7 +142,7 @@ const ChallanList = () => {
               <tbody className="divide-y divide-gray-50">
                 {challans.length === 0 ? (
                   <tr>
-                    <td colSpan="8" className="px-4 sm:px-6 py-10 text-center text-gray-500">
+                    <td colSpan="7" className="px-4 sm:px-6 py-10 text-center text-gray-500">
                       No challans found.
                     </td>
                   </tr>
@@ -160,42 +159,6 @@ const ChallanList = () => {
                       </td>
                       <td className="px-4 sm:px-6 py-4 text-sm font-medium text-gray-800">{ch.partyName}</td>
                       <td className="px-4 sm:px-6 py-4 text-sm font-bold text-gray-900">₹ {ch.total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-                      <td className="px-4 sm:px-6 py-4 relative">
-                        <div className="relative inline-block">
-                          <button
-                            onClick={() => setOpenDropdownId(openDropdownId === ch._id ? null : ch._id)}
-                            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-white text-xs font-bold transition-all shadow-sm ${(ch.paymentStatus === 'Completed') ? 'bg-emerald-500' : 'bg-orange-500'}`}
-                          >
-                            <div className="flex items-center gap-1.5">
-                              {ch.paymentStatus === 'Completed' ? 'Completed' : 'Pending'}
-                              {ch.paymentStatus === 'Completed' && <Check size={12} strokeWidth={3} />}
-                            </div>
-                            <ChevronDown size={14} className={`transition-transform duration-200 ${openDropdownId === ch._id ? 'rotate-180' : ''}`} />
-                          </button>
-
-                          {openDropdownId === ch._id && (
-                            <div className="absolute top-full left-0 mt-2 w-32 bg-white border border-gray-100 rounded-xl shadow-xl z-50 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
-                              {ch.paymentStatus === 'Completed' ? (
-                                <button
-                                  onClick={() => handleStatusUpdate(ch._id, 'Pending')}
-                                  className="flex items-center justify-between w-full px-4 py-2 text-xs font-bold text-orange-600 hover:bg-orange-50 transition-colors"
-                                >
-                                  Pending
-                                  <AlertCircle size={14} className="opacity-50" />
-                                </button>
-                              ) : (
-                                <button
-                                  onClick={() => handleStatusUpdate(ch._id, 'Completed')}
-                                  className="flex items-center justify-between w-full px-4 py-2 text-xs font-bold text-emerald-600 hover:bg-emerald-50 transition-colors"
-                                >
-                                  Completed
-                                  <Check size={14} />
-                                </button>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </td>
                       <td className="px-4 sm:px-6 py-4 text-xs sm:text-sm text-gray-500">
                         {new Date(ch.createdAt).toLocaleDateString()}
                       </td>

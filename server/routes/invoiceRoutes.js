@@ -38,6 +38,21 @@ router.get('/', async (req, res) => {
   }
 });
 
+// UPDATE /api/invoice/:id - Update Invoice Status / Fields
+router.put('/:id', async (req, res) => {
+  try {
+    const updated = await Invoice.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+    if (!updated) return res.status(404).json({ message: "Invoice not found" });
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // DELETE /api/invoice/:id - Delete an Invoice
 router.delete('/:id', async (req, res) => {
   try {

@@ -18,6 +18,7 @@ const invoiceSchema = new mongoose.Schema({
   gstAmount: { type: Number, default: 0 },
   totalAmount: { type: Number, default: 0 },
   paidAmount: { type: Number, default: 0 },
+  paymentStatus: { type: String, default: 'Pending' },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 }, { timestamps: true });

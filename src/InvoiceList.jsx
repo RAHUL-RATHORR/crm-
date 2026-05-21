@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Trash2, MoreHorizontal, Pencil, Printer, Eye, X, Download, Phone, Mail, Globe, Building2, MapPin, Calendar, FileDigit, AlertCircle } from 'lucide-react';
+import { Plus, Trash2, MoreHorizontal, Pencil, Printer, Eye, X, Download, Phone, Mail, Globe, Building2, MapPin, Calendar, FileDigit, AlertCircle, ChevronDown, Check } from 'lucide-react';
 import { downloadAsPDF } from './utils/pdfExport';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
 
@@ -147,6 +147,7 @@ const InvoiceList = () => {
                   <th className="px-4 sm:px-6 py-4">Invoice Number</th>
                   <th className="px-4 sm:px-6 py-4">Party Name</th>
                   <th className="px-4 sm:px-6 py-4">Total Amount</th>
+                  <th className="px-4 sm:px-6 py-4">Status</th>
                   <th className="px-4 sm:px-6 py-4">Created At</th>
                   <th className="px-4 sm:px-6 py-4 text-center">Action</th>
                 </tr>
@@ -154,7 +155,7 @@ const InvoiceList = () => {
               <tbody className="divide-y divide-gray-50">
                 {invoices.length === 0 ? (
                   <tr>
-                    <td colSpan="5" className="px-6 py-10 text-center text-gray-500">
+                    <td colSpan="7" className="px-6 py-10 text-center text-gray-500">
                       No invoices found. Click &quot;Add New&quot; to create one.
                     </td>
                   </tr>
@@ -165,6 +166,42 @@ const InvoiceList = () => {
                       <td className="px-4 sm:px-6 py-4 text-sm font-semibold text-blue-600 underline underline-offset-4 decoration-blue-100">{inv.invoiceNumber}</td>
                       <td className="px-4 sm:px-6 py-4 text-sm font-medium text-gray-800">{inv.partyName}</td>
                       <td className="px-4 sm:px-6 py-4 text-sm font-bold text-gray-900">₹ {inv.totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                      <td className="px-4 sm:px-6 py-4 relative">
+                        <div className="relative inline-block">
+                          <button
+                            onClick={() => setOpenDropdownId(openDropdownId === inv._id ? null : inv._id)}
+                            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-white text-xs font-bold transition-all shadow-sm ${(inv.paymentStatus === 'Completed') ? 'bg-emerald-500' : 'bg-orange-500'}`}
+                          >
+                            <div className="flex items-center gap-1.5">
+                              {inv.paymentStatus === 'Completed' ? 'Completed' : 'Pending'}
+                              {inv.paymentStatus === 'Completed' && <Check size={12} strokeWidth={3} />}
+                            </div>
+                            <ChevronDown size={14} className={`transition-transform duration-200 ${openDropdownId === inv._id ? 'rotate-180' : ''}`} />
+                          </button>
+
+                          {openDropdownId === inv._id && (
+                            <div className="absolute top-full left-0 mt-2 w-32 bg-white border border-gray-100 rounded-xl shadow-xl z-50 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                              {inv.paymentStatus === 'Completed' ? (
+                                <button
+                                  onClick={() => handleStatusUpdate(inv._id, 'Pending')}
+                                  className="flex items-center justify-between w-full px-4 py-2 text-xs font-bold text-orange-600 hover:bg-orange-50 transition-colors"
+                                >
+                                  Pending
+                                  <AlertCircle size={14} className="opacity-50" />
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => handleStatusUpdate(inv._id, 'Completed')}
+                                  className="flex items-center justify-between w-full px-4 py-2 text-xs font-bold text-emerald-600 hover:bg-emerald-50 transition-colors"
+                                >
+                                  Completed
+                                  <Check size={14} />
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </td>
                       <td className="px-4 sm:px-6 py-4 text-xs sm:text-sm text-gray-500">
                         <div className="flex flex-col">
                           <span className="font-medium">{new Date(inv.createdAt).toLocaleDateString()}</span>
