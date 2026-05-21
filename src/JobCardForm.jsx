@@ -29,8 +29,14 @@ export default function JobCardForm() {
   const [innerPaperGSM, setInnerPaperGSM] = useState(editData?.innerPaperGSM || '');
   const [innerPaperCount, setInnerPaperCount] = useState(editData?.innerPaperCount || 0);
   const [innerPaperDetails, setInnerPaperDetails] = useState(editData?.innerPaperDetails || '');
+  const [paperSource, setPaperSource] = useState(editData?.paperSource || 'Company paper');
   const paperDropdownRef = useRef(null);
   const innerPaperDropdownRef = useRef(null);
+
+  const filteredStocks = paperStocks.filter(stock => {
+    const source = stock.paperSource || 'Company paper';
+    return source === paperSource;
+  });
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -275,7 +281,14 @@ export default function JobCardForm() {
                   type="radio"
                   name="paperSource"
                   value="Party paper"
-                  defaultChecked={editData?.paperSource === 'Party paper'}
+                  checked={paperSource === 'Party paper'}
+                  onChange={() => {
+                    setPaperSource('Party paper');
+                    setSelectedPaper('');
+                    setPaperGSM('');
+                    setSelectedInnerPaper('');
+                    setInnerPaperGSM('');
+                  }}
                   className="w-4 h-4 text-sky-600 border-gray-300 focus:ring-sky-500"
                 />
                 Party paper
@@ -285,7 +298,14 @@ export default function JobCardForm() {
                   type="radio"
                   name="paperSource"
                   value="Company paper"
-                  defaultChecked={editData?.paperSource !== 'Party paper'}
+                  checked={paperSource === 'Company paper'}
+                  onChange={() => {
+                    setPaperSource('Company paper');
+                    setSelectedPaper('');
+                    setPaperGSM('');
+                    setSelectedInnerPaper('');
+                    setInnerPaperGSM('');
+                  }}
                   className="w-4 h-4 text-sky-600 border-gray-300 focus:ring-sky-500"
                 />
                 Company paper
@@ -330,8 +350,8 @@ export default function JobCardForm() {
                         </div>
                       </div>
 
-                      {paperStocks.filter(s => s.name.toLowerCase().includes(paperSearchTerm.toLowerCase())).length > 0 ? (
-                        paperStocks
+                      {filteredStocks.filter(s => s.name.toLowerCase().includes(paperSearchTerm.toLowerCase())).length > 0 ? (
+                        filteredStocks
                           .filter(s => s.name.toLowerCase().includes(paperSearchTerm.toLowerCase()))
                           .map(stock => (
                             <button
@@ -449,8 +469,8 @@ export default function JobCardForm() {
                         </div>
                       </div>
 
-                      {paperStocks.filter(s => s.name.toLowerCase().includes(innerPaperSearchTerm.toLowerCase())).length > 0 ? (
-                        paperStocks
+                      {filteredStocks.filter(s => s.name.toLowerCase().includes(innerPaperSearchTerm.toLowerCase())).length > 0 ? (
+                        filteredStocks
                           .filter(s => s.name.toLowerCase().includes(innerPaperSearchTerm.toLowerCase()))
                           .map(stock => (
                             <button

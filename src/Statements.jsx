@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Search, 
-  CreditCard, 
-  Calendar, 
-  User, 
-  Hash, 
-  ArrowDownCircle, 
-  Trash2, 
-  CheckCircle2, 
+import {
+  Search,
+  CreditCard,
+  Calendar,
+  User,
+  Hash,
+  ArrowDownCircle,
+  Trash2,
+  CheckCircle2,
   AlertCircle,
   ChevronDown,
   FileText,
@@ -22,7 +22,7 @@ const Statements = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [invoiceSearch, setInvoiceSearch] = useState('');
-  const [dateFilter, setDateFilter] = useState('1m'); 
+  const [dateFilter, setDateFilter] = useState('1m');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [customRange, setCustomRange] = useState({ start: '', end: '' });
   const [activeTab, setActiveTab] = useState('transactions'); // 'transactions' | 'invoices'
@@ -63,27 +63,27 @@ const Statements = () => {
 
   const filteredStatements = statements.filter(s => {
     const matchesSearch = s.partyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         s.invoiceNumber.toLowerCase().includes(searchQuery.toLowerCase());
+      s.invoiceNumber.toLowerCase().includes(searchQuery.toLowerCase());
     if (!matchesSearch) return false;
     if (dateFilter === 'all') return true;
 
     const stmtDate = new Date(s.date);
     const now = new Date();
-    now.setHours(0,0,0,0);
+    now.setHours(0, 0, 0, 0);
     const diffDays = (now - stmtDate) / (1000 * 60 * 60 * 24);
 
-    switch(dateFilter) {
+    switch (dateFilter) {
       case '1v': return diffDays <= 7 && diffDays >= 0;
       case '1m': return diffDays <= 30 && diffDays >= 0;
       case '3m': return diffDays <= 90 && diffDays >= 0;
       case '6m': return diffDays <= 180 && diffDays >= 0;
       case '12m': return diffDays <= 365 && diffDays >= 0;
-      case 'custom': 
+      case 'custom':
         if (!customRange.start || !customRange.end) return true;
         const start = new Date(customRange.start);
         const end = new Date(customRange.end);
-        start.setHours(0,0,0,0);
-        end.setHours(23,59,59,999);
+        start.setHours(0, 0, 0, 0);
+        end.setHours(23, 59, 59, 999);
         return stmtDate >= start && stmtDate <= end;
       default: return true;
     }
@@ -92,7 +92,7 @@ const Statements = () => {
   // Show all invoices in statements listing
   const filteredInvoices = invoices.filter(inv => {
     const matchesSearch = inv.partyName?.toLowerCase().includes(invoiceSearch.toLowerCase()) ||
-                          inv.invoiceNumber?.toLowerCase().includes(invoiceSearch.toLowerCase());
+      inv.invoiceNumber?.toLowerCase().includes(invoiceSearch.toLowerCase());
     return matchesSearch;
   });
 
@@ -156,22 +156,20 @@ const Statements = () => {
       <div className="flex gap-2 mb-6">
         <button
           onClick={() => setActiveTab('transactions')}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${
-            activeTab === 'transactions'
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${activeTab === 'transactions'
               ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-100'
               : 'bg-white text-gray-500 border border-gray-200 hover:border-emerald-400'
-          }`}
+            }`}
         >
           <CreditCard size={16} />
           Transaction History
         </button>
         <button
           onClick={() => setActiveTab('invoices')}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${
-            activeTab === 'invoices'
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${activeTab === 'invoices'
               ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-100'
               : 'bg-white text-gray-500 border border-gray-200 hover:border-emerald-400'
-          }`}
+            }`}
         >
           <FileText size={16} />
           Invoice Statements
@@ -198,11 +196,11 @@ const Statements = () => {
                     <Calendar size={16} className="text-emerald-500" />
                     <span>
                       {dateFilter === 'custom' ? 'Custom Range' :
-                       dateFilter === '1v' ? 'Last Week' :
-                       dateFilter === '1m' ? 'Last Month' :
-                       dateFilter === '3m' ? 'Last 3 Months' :
-                       dateFilter === '6m' ? 'Last 6 Months' :
-                       'Last 12 Months'}
+                        dateFilter === '1v' ? 'Last Week' :
+                          dateFilter === '1m' ? 'Last Month' :
+                            dateFilter === '3m' ? 'Last 3 Months' :
+                              dateFilter === '6m' ? 'Last 6 Months' :
+                                'Last 12 Months'}
                     </span>
                   </div>
                   <ChevronDown size={14} className={`text-gray-400 transition-transform ${isFilterOpen ? 'rotate-180' : ''}`} />
@@ -220,9 +218,8 @@ const Statements = () => {
                       <button
                         key={opt.id}
                         onClick={() => { setDateFilter(opt.id); setIsFilterOpen(false); }}
-                        className={`flex items-center justify-between w-full px-5 py-2.5 text-sm font-medium hover:bg-emerald-50 ${
-                          dateFilter === opt.id ? 'text-emerald-600 font-bold' : 'text-gray-600'
-                        }`}
+                        className={`flex items-center justify-between w-full px-5 py-2.5 text-sm font-medium hover:bg-emerald-50 ${dateFilter === opt.id ? 'text-emerald-600 font-bold' : 'text-gray-600'
+                          }`}
                       >
                         {opt.label}
                         {dateFilter === opt.id && <CheckCircle2 size={14} className="text-emerald-500" />}
@@ -236,14 +233,14 @@ const Statements = () => {
                 <div className="flex items-center gap-2 bg-gray-50 p-1.5 rounded-xl border border-gray-100">
                   <input type="date" className="px-2 py-1 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
                     value={customRange.start}
-                    onChange={(e) => setCustomRange({...customRange, start: e.target.value})}
-                    onClick={(e) => { try { e.target.showPicker(); } catch(_) {} }}
+                    onChange={(e) => setCustomRange({ ...customRange, start: e.target.value })}
+                    onClick={(e) => { try { e.target.showPicker(); } catch (_) { } }}
                   />
                   <span className="text-gray-400 text-sm">to</span>
                   <input type="date" className="px-2 py-1 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
                     value={customRange.end}
-                    onChange={(e) => setCustomRange({...customRange, end: e.target.value})}
-                    onClick={(e) => { try { e.target.showPicker(); } catch(_) {} }}
+                    onChange={(e) => setCustomRange({ ...customRange, end: e.target.value })}
+                    onClick={(e) => { try { e.target.showPicker(); } catch (_) { } }}
                   />
                 </div>
               )}
@@ -330,13 +327,13 @@ const Statements = () => {
               <h2 className="text-lg font-bold text-gray-900">Invoice Statements</h2>
               <p className="text-xs text-gray-500 mt-0.5">Showing all invoice records and balances</p>
             </div>
-              <div className="relative w-full md:w-64">
-                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input type="text" placeholder="Search invoices..."
-                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500/20"
-                  value={invoiceSearch} onChange={(e) => setInvoiceSearch(e.target.value)}
-                />
-              </div>
+            <div className="relative w-full md:w-64">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input type="text" placeholder="Search invoices..."
+                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500/20"
+                value={invoiceSearch} onChange={(e) => setInvoiceSearch(e.target.value)}
+              />
+            </div>
           </div>
 
           <div className="overflow-x-auto min-h-[300px]">

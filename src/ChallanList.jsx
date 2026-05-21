@@ -253,7 +253,7 @@ const ChallanList = () => {
                       <p className="text-[10px] text-gray-700 font-medium italic">Your Vision, Our Print.</p>
                     </div>
                   </div>
-                  
+
                   {/* Metadata Table */}
                   <div className="w-48 border border-gray-200 rounded-lg overflow-hidden">
                     <table className="w-full text-[12px]">
@@ -356,7 +356,7 @@ const ChallanList = () => {
                       ))}
                     </tbody>
                   </table>
-                  
+
                   {/* Total Section */}
                   <div className="border-t border-gray-200 mt-auto bg-gray-50/50">
                     <div className="flex flex-col w-56 ml-auto border-l border-gray-200">
