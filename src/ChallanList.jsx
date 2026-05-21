@@ -250,26 +250,26 @@ const ChallanList = () => {
                     </h1>
                     <div className="mt-2">
                       <h2 className="text-xl font-bold text-gray-800 tracking-tight">Harihar Printers</h2>
-                      <p className="text-[10px] text-gray-500 font-medium italic">Your Vision, Our Print.</p>
+                      <p className="text-[10px] text-gray-700 font-medium italic">Your Vision, Our Print.</p>
                     </div>
                   </div>
                   
                   {/* Metadata Table */}
                   <div className="w-48 border border-gray-200 rounded-lg overflow-hidden">
-                    <table className="w-full text-[10px]">
+                    <table className="w-full text-[12px]">
                       <tbody className="divide-y divide-gray-200">
                         <tr className="bg-gray-50/50">
-                          <td className="px-2 py-1.5 font-bold text-gray-500 uppercase tracking-tighter">DATE :</td>
+                          <td className="px-2 py-1.5 font-bold text-gray-700 uppercase tracking-tighter">DATE :</td>
                           <td className="px-2 py-1.5 font-bold text-right text-gray-800">
                             {new Date(selectedChallan.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
                           </td>
                         </tr>
                         <tr>
-                          <td className="px-2 py-1.5 font-bold text-gray-500 uppercase tracking-tighter">Challan No :</td>
+                          <td className="px-2 py-1.5 font-bold text-gray-700 uppercase tracking-tighter">Challan No :</td>
                           <td className="px-2 py-1.5 font-bold text-right text-gray-800">#{selectedChallan.challanNo}</td>
                         </tr>
                         <tr className="bg-gray-50/50">
-                          <td className="px-2 py-1.5 font-bold text-gray-500 uppercase tracking-tighter">Job Ref :</td>
+                          <td className="px-2 py-1.5 font-bold text-gray-700 uppercase tracking-tighter">Job Ref :</td>
                           <td className="px-2 py-1.5 font-bold text-right text-blue-700">{selectedChallan.jobNumber}</td>
                         </tr>
                       </tbody>
@@ -281,7 +281,7 @@ const ChallanList = () => {
                 <div className="flex justify-between gap-10 mb-8 px-1">
                   <div className="flex-1">
                     <h4 className="text-[11px] font-black text-gray-900 border-b-2 mb-2 pb-0.5 inline-block uppercase tracking-wider">Address :</h4>
-                    <div className="text-[10px] space-y-0.5 font-medium text-gray-600">
+                    <div className="text-[12px] space-y-1 font-medium text-gray-600">
                       <p className="font-bold text-gray-800">Harihar Printers</p>
                       <p>Office: J-97, Ashok Chowk, Adarsh Nagar, Jaipur</p>
                       <p>Factory: G-139, Hirawala Ind. Area, Kanota, Jaipur</p>
@@ -290,7 +290,7 @@ const ChallanList = () => {
                   </div>
                   <div className="flex-1 text-right">
                     <h4 className="text-[11px] font-black text-gray-900 border-b-2 mb-2 pb-0.5 inline-block uppercase tracking-wider">Deliver To :</h4>
-                    <div className="text-[10px] space-y-0.5 font-medium text-gray-600">
+                    <div className="text-[12px] space-y-1 font-medium text-gray-600">
                       <p className="font-bold uppercase text-xs" style={{ color: '#1e3a8a' }}>{selectedChallan.partyName}</p>
                       <p className="uppercase">{selectedChallan.partyName}</p>
                       <p>Jaipur, Rajasthan</p>
@@ -308,8 +308,8 @@ const ChallanList = () => {
                     { label: 'DATE', value: new Date(selectedChallan.createdAt).toLocaleDateString() }
                   ].map((item, i) => (
                     <div key={i} className={`p-2 border-r border-gray-200 last:border-0 ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'}`}>
-                      <p className="text-[8px] font-black text-gray-400 uppercase mb-1" style={{ color: '#1e3a8a' }}>{item.label}</p>
-                      <p className="text-[10px] font-bold text-gray-800 uppercase">{item.value}</p>
+                      <p className="text-[10px] font-black text-gray-600 uppercase mb-1" style={{ color: '#1e3a8a' }}>{item.label}</p>
+                      <p className="text-[12px] font-bold text-gray-800 uppercase">{item.value}</p>
                     </div>
                   ))}
                 </div>
@@ -318,7 +318,7 @@ const ChallanList = () => {
                 <div className="mb-8 border border-gray-200 rounded-sm overflow-hidden min-h-[350px] flex flex-col">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="text-white text-[10px] font-black uppercase tracking-widest" style={{ backgroundColor: '#1e3a8a' }}>
+                      <tr className="text-white text-[12px] font-black uppercase tracking-widest" style={{ backgroundColor: '#1e3a8a' }}>
                         <th className="px-4 py-2.5 border-r border-teal-500/30 w-24">Quantity</th>
                         <th className="px-4 py-2.5 border-r border-teal-500/30">Description of Goods</th>
                         <th className="px-4 py-2.5 border-r border-teal-500/30 text-right w-28">Rate</th>
@@ -326,14 +326,14 @@ const ChallanList = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 flex-grow">
-                      <tr className="text-[11px] group">
+                      <tr className="text-[13px] group">
                         <td className="px-4 py-8 border-r border-gray-50 font-bold align-top text-center text-gray-700">
                           {selectedChallan.qty} NOS
                         </td>
                         <td className="px-4 py-8 border-r border-gray-50 align-top">
                           <div className="space-y-1">
                             <p className="font-black text-gray-900 uppercase text-xs" style={{ color: '#1e3a8a' }}>{selectedChallan.jobName}</p>
-                            <p className="text-[9px] text-gray-500 font-medium leading-relaxed italic uppercase">
+                            <p className="text-[11px] text-gray-700 font-medium leading-relaxed italic uppercase">
                               Standard Printing Specifications / Job Ref: {selectedChallan.jobNumber}
                             </p>
                           </div>
@@ -361,23 +361,23 @@ const ChallanList = () => {
                   <div className="border-t border-gray-200 mt-auto bg-gray-50/50">
                     <div className="flex flex-col w-56 ml-auto border-l border-gray-200">
                       <div className="flex justify-between px-4 py-2 border-b border-gray-200">
-                        <span className="text-[9px] font-bold text-gray-500 uppercase">Sub Total</span>
-                        <span className="text-[10px] font-bold text-gray-800">₹ {selectedChallan.total?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                        <span className="text-[11px] font-bold text-gray-700 uppercase">Sub Total</span>
+                        <span className="text-[12px] font-bold text-gray-800">₹ {selectedChallan.total?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                       </div>
                       <div className="flex justify-between px-4 py-2 border-b border-gray-200">
-                        <span className="text-[9px] font-bold text-gray-500 uppercase">GST</span>
-                        <span className="text-[10px] font-bold text-gray-800">₹ 0.00</span>
+                        <span className="text-[11px] font-bold text-gray-700 uppercase">GST</span>
+                        <span className="text-[12px] font-bold text-gray-800">₹ 0.00</span>
                       </div>
                       <div className="flex justify-between px-4 py-3" style={{ backgroundColor: '#1e3a8a' }}>
-                        <span className="text-[10px] font-black text-white uppercase tracking-wider">Total Amount</span>
-                        <span className="text-xs font-black text-white">₹ {selectedChallan.total?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                        <span className="text-[12px] font-black text-white uppercase tracking-wider">Total Amount</span>
+                        <span className="text-sm font-black text-white">₹ {selectedChallan.total?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 {/* --- FOOTER SECTION --- */}
-                <div className="mt-8 text-[9px] text-gray-500 space-y-4">
+                <div className="mt-8 text-[11px] text-gray-700 space-y-4">
                   <div className="pt-8 grid grid-cols-2 gap-20">
                     <div className="border-t border-gray-300 pt-1">
                       <p className="font-bold uppercase tracking-widest text-[#1e3a8a]">Receiver's Signature :</p>
@@ -390,7 +390,7 @@ const ChallanList = () => {
 
                   <div className="pt-12 text-center">
 
-                    <p className="text-[8px] font-bold text-gray-400 mt-2 uppercase tracking-widest">Subject to Jaipur Jurisdiction Only</p>
+                    <p className="text-[10px] font-bold text-gray-600 mt-2 uppercase tracking-widest">Subject to Jaipur Jurisdiction Only</p>
                   </div>
                 </div>
               </div>

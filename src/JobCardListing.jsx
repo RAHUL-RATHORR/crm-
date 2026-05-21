@@ -463,29 +463,29 @@ export default function JobCardListing() {
                 {/* Top Info Grid - Premium Style */}
                 <div className="grid grid-cols-2 gap-x-8 gap-y-3 mb-6 bg-gray-50/50 p-4 rounded-xl border border-gray-100">
                   <div className="flex flex-col gap-1">
-                    <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Party Name</span>
-                    <span className="text-sm font-black text-gray-900 leading-tight uppercase">{selectedCard.partyName}</span>
+                    <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest leading-none mb-1">Party Name</span>
+                    <span className="text-base font-black text-gray-900 leading-tight uppercase">{selectedCard.partyName}</span>
                   </div>
                   <div className="flex flex-col gap-1 text-right">
-                    <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Job Date</span>
-                    <span className="text-sm font-black text-gray-900">{new Date(selectedCard.jobDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                    <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest leading-none mb-1">Job Date</span>
+                    <span className="text-base font-black text-gray-900">{new Date(selectedCard.jobDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
                   </div>
                   <div className="col-span-1 flex flex-col gap-1">
-                    <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Address</span>
-                    <span className="text-[10px] font-bold text-gray-600 uppercase">{selectedCard.address || 'Address Not Provided'}</span>
+                    <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest leading-none mb-1">Address</span>
+                    <span className="text-[12px] font-bold text-gray-600 uppercase">{selectedCard.address || 'Address Not Provided'}</span>
                   </div>
                   <div className="col-span-1 flex justify-end gap-6 text-right">
                     <div className="flex flex-col gap-1">
-                      <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Contact</span>
-                      <span className="text-[10px] font-bold text-gray-900">{selectedCard.contactNo || '-'}</span>
+                      <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest leading-none mb-1">Contact</span>
+                      <span className="text-[12px] font-bold text-gray-900">{selectedCard.contactNo || '-'}</span>
                     </div>
                     <div className="flex flex-col gap-1">
-                      <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">GST No.</span>
-                      <span className="text-[10px] font-bold text-gray-900">{selectedCard.gstNo || '-'}</span>
+                      <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest leading-none mb-1">GST No.</span>
+                      <span className="text-[12px] font-bold text-gray-900">{selectedCard.gstNo || '-'}</span>
                     </div>
                     <div className="flex flex-col gap-1">
-                      <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Job Qty</span>
-                      <span className="text-[10px] font-black text-blue-600">{selectedCard.jobQty || '-'}</span>
+                      <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest leading-none mb-1">Job Qty</span>
+                      <span className="text-[12px] font-black text-blue-600">{selectedCard.jobQty || '-'}</span>
                     </div>
                   </div>
                 </div>
@@ -505,8 +505,8 @@ export default function JobCardListing() {
                         { label: 'Item Size', value: selectedCard.pageSize || '-' },
                         { label: 'Color Detail', value: selectedCard.printingType || '-' }
                       ].map((row, i) => (
-                        <div key={i} className="flex justify-between items-end gap-2 text-[11px] border-b border-gray-100 pb-2">
-                          <span className="font-bold uppercase text-gray-400 min-w-fit">{row.label}</span>
+                        <div key={i} className="flex justify-between items-end gap-2 text-[13px] border-b border-gray-100 pb-2">
+                          <span className="font-bold uppercase text-gray-600 min-w-fit">{row.label}</span>
                           <span className={`text-right ${row.bold ? 'font-black' : 'font-bold'} ${row.color || 'text-gray-900'} ${row.uppercase ? 'uppercase' : ''}`}>
                             {row.value}
                           </span>
@@ -522,31 +522,31 @@ export default function JobCardListing() {
                       </h4>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <span className="text-[9px] font-black text-gray-400 uppercase block">Source</span>
-                          <div className={`px-2 py-1 rounded border text-[10px] font-black text-center uppercase ${selectedCard.paperSource === 'Company paper' ? 'bg-cyan-50 border-cyan-100 text-cyan-700' : 'bg-orange-50 border-orange-100 text-orange-700'}`}>
+                          <span className="text-[11px] font-black text-gray-600 uppercase block">Source</span>
+                          <div className={`px-2 py-1 rounded border text-[12px] font-black text-center uppercase ${selectedCard.paperSource === 'Company paper' ? 'bg-cyan-50 border-cyan-100 text-cyan-700' : 'bg-orange-50 border-orange-100 text-orange-700'}`}>
                             {selectedCard.paperSource || 'Company paper'}
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <span className="text-[9px] font-black text-gray-400 uppercase block">Page & GSM</span>
-                          <div className="text-[11px] font-bold text-gray-900 border-b border-gray-100 pb-2">
+                          <span className="text-[11px] font-black text-gray-600 uppercase block">Page & GSM</span>
+                          <div className="text-[13px] font-bold text-gray-900 border-b border-gray-100 pb-2">
                             C: {selectedCard.coverPaperCount || 0} ({selectedCard.paperGSM || '-'}) / I: {selectedCard.innerPaperCount || 0} ({selectedCard.innerPaperGSM || '-'})
                           </div>
                         </div>
                       </div>
                       <div className="mt-3 grid grid-cols-2 gap-4 border-t border-gray-50 pt-2">
                         <div className="flex flex-col gap-1">
-                          <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none">Cover Details</span>
-                          <span className="text-[10px] font-bold text-gray-900">{selectedCard.coverPaperDetails || '-'}</span>
+                          <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest leading-none">Cover Details</span>
+                          <span className="text-[12px] font-bold text-gray-900">{selectedCard.coverPaperDetails || '-'}</span>
                         </div>
                         <div className="flex flex-col gap-1">
-                          <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none">Inner Details</span>
-                          <span className="text-[10px] font-bold text-gray-900">{selectedCard.innerPaperDetails || '-'}</span>
+                          <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest leading-none">Inner Details</span>
+                          <span className="text-[12px] font-bold text-gray-900">{selectedCard.innerPaperDetails || '-'}</span>
                         </div>
                       </div>
                       <div className="mt-2 border-t border-gray-50 pt-2">
-                        <div className="flex justify-between items-center text-[10px]">
-                          <span className="font-bold text-gray-400 uppercase">Paper Type</span>
+                        <div className="flex justify-between items-center text-[12px]">
+                          <span className="font-bold text-gray-600 uppercase">Paper Type</span>
                           <span className="font-bold text-gray-900 uppercase">{selectedCard.paper || '-'}</span>
                         </div>
                       </div>
@@ -599,14 +599,14 @@ export default function JobCardListing() {
                         { label: 'Lamination', value: selectedCard.lamination || '-' }
                       ].map((row, i) => (
                         <div key={i} className="flex flex-col gap-1 border-b border-gray-100 pb-2.5">
-                          <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none">{row.label}</span>
-                          <span className="text-[11px] font-bold text-gray-900 leading-tight">{row.value}</span>
+                          <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest leading-none">{row.label}</span>
+                          <span className="text-[13px] font-bold text-gray-900 leading-tight">{row.value}</span>
                         </div>
                       ))}
                       </div>
                       <div className="mt-4 p-3 bg-indigo-50/50 rounded-lg border border-indigo-100 text-center">
-                        <span className="text-[9px] font-black text-gray-400 uppercase block mb-1">Printing Quantity</span>
-                        <span className="text-xl font-black text-indigo-700">{selectedCard.printingQty || 0}</span>
+                        <span className="text-[11px] font-black text-gray-600 uppercase block mb-1">Printing Quantity</span>
+                        <span className="text-2xl font-black text-indigo-700">{selectedCard.printingQty || 0}</span>
                       </div>
                     </section>
 
@@ -626,11 +626,11 @@ export default function JobCardListing() {
                     <div className="pt-8 grid grid-cols-2 gap-4">
                       <div className="text-center">
                         <div className="border-b-2 border-gray-100 h-10 mb-2"></div>
-                        <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Office Signature</span>
+                        <span className="text-[11px] font-black text-gray-600 uppercase tracking-widest">Office Signature</span>
                       </div>
                       <div className="text-center">
                         <div className="border-b-2 border-gray-100 h-10 mb-2"></div>
-                        <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Press Signature</span>
+                        <span className="text-[11px] font-black text-gray-600 uppercase tracking-widest">Press Signature</span>
                       </div>
                     </div>
                   </div>

@@ -342,38 +342,37 @@ const InvoiceList = () => {
                     </h1>
                     <div className="mt-2">
                       <h2 className="text-xl font-bold text-gray-800 tracking-tight">Harihar Printers</h2>
-                      <p className="text-[10px] text-gray-500 font-medium italic">Your Vision, Our Print.</p>
+                      <p className="text-[10px] text-gray-700 font-medium italic">Your Vision, Our Print.</p>
                     </div>
                   </div>
                   
                   {/* Metadata Table */}
                   <div className="w-48 border border-gray-200 rounded-lg overflow-hidden">
-                    <table className="w-full text-[10px]">
+                    <table className="w-full text-[12px]">
                       <tbody className="divide-y divide-gray-200">
                         <tr className="bg-gray-50/50">
-                          <td className="px-2 py-1.5 font-bold text-gray-500 uppercase tracking-tighter">DATE :</td>
+                          <td className="px-2 py-1.5 font-bold text-gray-700 uppercase tracking-tighter">DATE :</td>
                           <td className="px-2 py-1.5 font-bold text-right text-gray-800">
                             {new Date(selectedInvoice.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
                           </td>
                         </tr>
                         <tr>
-                          <td className="px-2 py-1.5 font-bold text-gray-500 uppercase tracking-tighter">Invoice No :</td>
+                          <td className="px-2 py-1.5 font-bold text-gray-700 uppercase tracking-tighter">Invoice No :</td>
                           <td className="px-2 py-1.5 font-bold text-right text-gray-800">#{selectedInvoice.invoiceNumber}</td>
                         </tr>
                         <tr className="bg-gray-50/50">
-                          <td className="px-2 py-1.5 font-bold text-gray-500 uppercase tracking-tighter">GSTIN :</td>
+                          <td className="px-2 py-1.5 font-bold text-gray-700 uppercase tracking-tighter">GSTIN :</td>
                           <td className="px-2 py-1.5 font-bold text-right text-blue-700 uppercase">08AALPC9959M1ZV</td>
                         </tr>
                       </tbody>
                     </table>
                   </div>
                 </div>
-
-                {/* --- ADDRESS SECTION --- */}
+                 {/* --- ADDRESS SECTION --- */}
                 <div className="flex justify-between gap-10 mb-8 px-1">
                   <div className="flex-1">
                     <h4 className="text-[11px] font-black text-gray-900 border-b-2 mb-2 pb-0.5 inline-block uppercase tracking-wider">Address :</h4>
-                    <div className="text-[10px] space-y-0.5 font-medium text-gray-600">
+                    <div className="text-[12px] space-y-1 font-medium text-gray-600">
                       <p className="font-bold text-gray-800">Harihar Printers</p>
                       <p>Office: J-97, Ashok Chowk, Adarsh Nagar, Jaipur</p>
                       <p>Factory: G-139, Hirawala Ind. Area, Kanota, Jaipur</p>
@@ -382,7 +381,7 @@ const InvoiceList = () => {
                   </div>
                   <div className="flex-1 text-right">
                     <h4 className="text-[11px] font-black text-gray-900 border-b-2 mb-2 pb-0.5 inline-block uppercase tracking-wider">Bill To :</h4>
-                    <div className="text-[10px] space-y-0.5 font-medium text-gray-600">
+                    <div className="text-[12px] space-y-1 font-medium text-gray-600">
                       <p className="font-bold uppercase text-xs" style={{ color: '#1e3a8a' }}>{selectedInvoice.partyName}</p>
                       <p className="uppercase">{selectedInvoice.partyName}</p>
                       <p>GSTIN: <span className="font-bold">{selectedInvoice.partyGstin || 'URP'}</span></p>
@@ -395,21 +394,21 @@ const InvoiceList = () => {
                 <div className="mb-8 p-3 border border-gray-200 rounded-lg bg-gray-50/30 flex justify-between items-center">
                   <div className="flex gap-8">
                     <div>
-                      <p className="text-[8px] font-black text-gray-400 uppercase mb-1">Bank Name</p>
-                      <p className="text-[10px] font-bold text-gray-800">Indusind Bank</p>
+                      <p className="text-[10px] font-black text-gray-600 uppercase mb-1">Bank Name</p>
+                      <p className="text-[12px] font-bold text-gray-800">Indusind Bank</p>
                     </div>
                     <div>
-                      <p className="text-[8px] font-black text-gray-400 uppercase mb-1">Account Number</p>
-                      <p className="text-[10px] font-bold text-gray-800">650014092175</p>
+                      <p className="text-[10px] font-black text-gray-600 uppercase mb-1">Account Number</p>
+                      <p className="text-[12px] font-bold text-gray-800">650014092175</p>
                     </div>
                     <div>
-                      <p className="text-[8px] font-black text-gray-400 uppercase mb-1">IFSC Code</p>
-                      <p className="text-[10px] font-bold text-gray-800 uppercase">INDB0000278</p>
+                      <p className="text-[10px] font-black text-gray-600 uppercase mb-1">IFSC Code</p>
+                      <p className="text-[12px] font-bold text-gray-800 uppercase">INDB0000278</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-[8px] font-black text-gray-400 uppercase mb-1">Branch</p>
-                    <p className="text-[10px] font-bold text-gray-800">Raja Park, Jaipur</p>
+                    <p className="text-[10px] font-black text-gray-600 uppercase mb-1">Branch</p>
+                    <p className="text-[12px] font-bold text-gray-800">Raja Park, Jaipur</p>
                   </div>
                 </div>
 
@@ -417,7 +416,7 @@ const InvoiceList = () => {
                 <div className="mb-8 border border-gray-200 rounded-sm overflow-hidden min-h-[350px] flex flex-col">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="text-white text-[10px] font-black uppercase tracking-widest" style={{ backgroundColor: '#1e3a8a' }}>
+                      <tr className="text-white text-[12px] font-black uppercase tracking-widest" style={{ backgroundColor: '#1e3a8a' }}>
                         <th className="px-4 py-2.5 border-r border-teal-500/30 w-12 text-center">S.No</th>
                         <th className="px-4 py-2.5 border-r border-teal-500/30">Description of Goods/Services</th>
                         <th className="px-4 py-2.5 border-r border-teal-500/30 text-center w-36">HSN/SAC</th>
@@ -428,8 +427,8 @@ const InvoiceList = () => {
                     </thead>
                     <tbody className="divide-y divide-gray-100 flex-grow">
                       {selectedInvoice.items?.map((item, idx) => (
-                        <tr key={idx} className="text-[11px] group">
-                          <td className="px-4 py-4 border-r border-gray-50 text-center font-bold text-gray-400 align-top">
+                        <tr key={idx} className="text-[13px] group">
+                          <td className="px-4 py-4 border-r border-gray-50 text-center font-bold text-gray-600 align-top">
                             {idx + 1}
                           </td>
                           <td className="px-4 py-4 border-r border-gray-50 align-top">
@@ -464,34 +463,33 @@ const InvoiceList = () => {
                       ))}
                     </tbody>
                   </table>
-                  
-                  {/* Total Section */}
+                                 {/* Total Section */}
                   <div className="border-t border-gray-200 mt-auto bg-gray-50/50">
                     <div className="flex">
                       <div className="flex-grow p-4">
-                        <p className="text-[8px] font-black text-gray-400 uppercase mb-1 tracking-widest">Amount in Words</p>
-                        <p className="text-[10px] font-bold text-gray-700 italic capitalize">{NumberToWords(selectedInvoice.totalAmount)} Only</p>
+                        <p className="text-[10px] font-black text-gray-600 uppercase mb-1 tracking-widest">Amount in Words</p>
+                        <p className="text-[12px] font-bold text-gray-700 italic capitalize">{NumberToWords(selectedInvoice.totalAmount)} Only</p>
                       </div>
                       <div className="flex flex-col w-56 border-l border-gray-200">
                         <div className="flex justify-between px-4 py-1.5 border-b border-gray-200">
-                          <span className="text-[9px] font-bold text-gray-500 uppercase">Taxable Value</span>
-                          <span className="text-[10px] font-bold text-gray-800">₹ {taxableValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                          <span className="text-[11px] font-bold text-gray-700 uppercase">Taxable Value</span>
+                          <span className="text-[12px] font-bold text-gray-800">₹ {taxableValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                         </div>
                         <div className="flex justify-between px-4 py-1.5 border-b border-gray-200">
-                          <span className="text-[9px] font-bold text-gray-500 uppercase">CGST {isIGST ? '(0%)' : `(${gstPercent / 2}%)`}</span>
-                          <span className="text-[10px] font-bold text-gray-800">₹ {isIGST ? '0.00' : halfGstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                          <span className="text-[11px] font-bold text-gray-700 uppercase">CGST {isIGST ? '(0%)' : `(${gstPercent / 2}%)`}</span>
+                          <span className="text-[12px] font-bold text-gray-800">₹ {isIGST ? '0.00' : halfGstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                         </div>
                         <div className="flex justify-between px-4 py-1.5 border-b border-gray-200">
-                          <span className="text-[9px] font-bold text-gray-500 uppercase">SGST {isIGST ? '(0%)' : `(${gstPercent / 2}%)`}</span>
-                          <span className="text-[10px] font-bold text-gray-800">₹ {isIGST ? '0.00' : halfGstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                          <span className="text-[11px] font-bold text-gray-700 uppercase">SGST {isIGST ? '(0%)' : `(${gstPercent / 2}%)`}</span>
+                          <span className="text-[12px] font-bold text-gray-800">₹ {isIGST ? '0.00' : halfGstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                         </div>
                         <div className="flex justify-between px-4 py-1.5 border-b border-gray-200">
-                          <span className="text-[9px] font-bold text-gray-500 uppercase">IGST {isIGST ? `(${gstPercent}%)` : '(0%)'}</span>
-                          <span className="text-[10px] font-bold text-gray-800">₹ {isIGST ? totalGstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 }) : '0.00'}</span>
+                          <span className="text-[11px] font-bold text-gray-700 uppercase">IGST {isIGST ? `(${gstPercent}%)` : '(0%)'}</span>
+                          <span className="text-[12px] font-bold text-gray-800">₹ {isIGST ? totalGstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 }) : '0.00'}</span>
                         </div>
                         <div className="flex justify-between px-4 py-3" style={{ backgroundColor: '#1e3a8a' }}>
-                          <span className="text-[10px] font-black text-white uppercase tracking-wider">Grand Total</span>
-                          <span className="text-xs font-black text-white">₹ {selectedInvoice.totalAmount?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                          <span className="text-[12px] font-black text-white uppercase tracking-wider">Grand Total</span>
+                          <span className="text-sm font-black text-white">₹ {selectedInvoice.totalAmount?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                         </div>
                       </div>
                     </div>
@@ -499,7 +497,7 @@ const InvoiceList = () => {
                 </div>
 
                 {/* --- FOOTER SECTION --- */}
-                <div className="mt-8 text-[9px] text-gray-500 space-y-4">
+                <div className="mt-8 text-[11px] text-gray-700 space-y-4">
                   <div className="grid grid-cols-2 gap-12">
                     <div className="space-y-1">
                       <p className="font-bold text-gray-800 underline uppercase tracking-tighter">Terms & Conditions :</p>
@@ -515,7 +513,7 @@ const InvoiceList = () => {
 
                   <div className="pt-8 text-center">
 
-                    <p className="text-[8px] font-bold text-gray-400 mt-2 uppercase tracking-widest">E. & O. E.</p>
+                    <p className="text-[10px] font-bold text-gray-600 mt-2 uppercase tracking-widest">E. & O. E.</p>
                   </div>
                 </div>
               </div>
