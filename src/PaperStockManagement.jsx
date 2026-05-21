@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Layers, Plus, Search, AlertTriangle, Edit2, Trash2, CheckCircle2, Info, ArrowUpRight } from 'lucide-react';
 
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:5011'
+  : 'https://crm-qpw8.onrender.com';
+
 const PaperStockManagement = () => {
   const [stock, setStock] = useState([]);
   const [isAdding, setIsAdding] = useState(false);
@@ -10,10 +14,17 @@ const PaperStockManagement = () => {
     name: '',
     gsm: '',
     quantity: '',
+    coverGSM: '',
+    coverQuantity: '',
+    innerGSM: '',
+    innerQuantity: '',
     description: '',
-    lowStockThreshold: 100
+    lowStockThreshold: 100,
+    paperSource: 'Company paper'
   });
 
+  const [activeTab, setActiveTab] = useState('Company paper');
+  const [searchQuery, setSearchQuery] = useState('');
   const [message, setMessage] = useState({ type: '', text: '' });
 
   const gsmGuide = [
@@ -29,7 +40,7 @@ const PaperStockManagement = () => {
 
   const fetchStock = async () => {
     try {
-      const res = await fetch('https://crm-qpw8.onrender.com/api/paper-stock');
+      const res = await fetch(`${API_BASE_URL}/api/paper-stock`);
       const data = await res.json();
       setStock(data);
     } catch (err) {
@@ -42,22 +53,40 @@ const PaperStockManagement = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const url = editingId 
-      ? `https://crm-qpw8.onrender.com/api/paper-stock/${editingId}`
-      : 'https://crm-qpw8.onrender.com/api/paper-stock';
+      ? `${API_BASE_URL}/api/paper-stock/${editingId}`
+      : `${API_BASE_URL}/api/paper-stock`;
     
     const method = editingId ? 'PUT' : 'POST';
+
+    // Set fallback standard gsm/quantity for legacy compat
+    const submissionData = {
+      ...formData,
+      gsm: formData.coverGSM || formData.innerGSM || 0,
+      quantity: (Number(formData.coverQuantity) || 0) + (Number(formData.innerQuantity) || 0)
+    };
 
     try {
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(submissionData)
       });
       const data = await res.json();
 
       if (res.ok) {
         setMessage({ type: 'success', text: editingId ? 'Stock updated!' : 'Paper added to stock!' });
-        setFormData({ name: '', gsm: '', quantity: '', description: '', lowStockThreshold: 100 });
+        setFormData({ 
+          name: '', 
+          gsm: '', 
+          quantity: '', 
+          coverGSM: '', 
+          coverQuantity: '', 
+          innerGSM: '', 
+          innerQuantity: '', 
+          description: '', 
+          lowStockThreshold: 100, 
+          paperSource: 'Company paper' 
+        });
         setIsAdding(false);
         setEditingId(null);
         fetchStock();
@@ -74,10 +103,15 @@ const PaperStockManagement = () => {
   const handleEdit = (item) => {
     setFormData({
       name: item.name,
-      gsm: item.gsm,
-      quantity: item.quantity,
+      gsm: item.gsm || '',
+      quantity: item.quantity || '',
+      coverGSM: item.coverGSM !== undefined ? item.coverGSM : (item.gsm || ''),
+      coverQuantity: item.coverQuantity !== undefined ? item.coverQuantity : (item.quantity || ''),
+      innerGSM: item.innerGSM || '',
+      innerQuantity: item.innerQuantity || '',
       description: item.description || '',
-      lowStockThreshold: item.lowStockThreshold || 100
+      lowStockThreshold: item.lowStockThreshold || 100,
+      paperSource: item.paperSource || 'Company paper'
     });
     setEditingId(item._id);
     setIsAdding(true);
@@ -87,7 +121,7 @@ const PaperStockManagement = () => {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this paper stock?")) return;
     try {
-      await fetch(`https://crm-qpw8.onrender.com/api/paper-stock/${id}`, { method: 'DELETE' });
+      await fetch(`${API_BASE_URL}/api/paper-stock/${id}`, { method: 'DELETE' });
       fetchStock();
     } catch (err) {
       console.error("Delete error:", err);
@@ -134,47 +168,111 @@ const PaperStockManagement = () => {
               </h2>
             </div>
             <form onSubmit={handleSubmit} className="p-8 space-y-6">
+              <div className="mb-4">
+                <label className="block text-[10px] font-black uppercase text-gray-400 mb-2 pl-1 tracking-widest">Paper Source</label>
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setFormData({...formData, paperSource: 'Company paper'})}
+                    className={`flex items-center justify-center gap-2 p-3.5 rounded-xl border-2 transition-all font-bold uppercase tracking-wider text-xs ${
+                      formData.paperSource === 'Company paper'
+                        ? 'border-blue-600 bg-blue-50/30 text-blue-700 shadow-sm'
+                        : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+                    }`}
+                  >
+                    🏢 Company Paper
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({...formData, paperSource: 'Party paper'})}
+                    className={`flex items-center justify-center gap-2 p-3.5 rounded-xl border-2 transition-all font-bold uppercase tracking-wider text-xs ${
+                      formData.paperSource === 'Party paper'
+                        ? 'border-blue-600 bg-blue-50/30 text-blue-700 shadow-sm'
+                        : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+                    }`}
+                  >
+                    🎉 Party Paper
+                  </button>
+                </div>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                 <div>
-                    <label className="block text-[10px] font-black uppercase text-gray-400 mb-2 pl-1 tracking-widest">Paper Name</label>
+                <div className="md:col-span-2">
+                  <label className="block text-[10px] font-black uppercase text-gray-400 mb-2 pl-1 tracking-widest">Paper Name</label>
+                  <input 
+                    type="text" required
+                    placeholder="e.g. Art Card, Glossy, Offset"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-semibold"
+                    value={formData.name}
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  />
+                </div>
+
+                {/* Cover Paper Section */}
+                <div className="bg-sky-50/30 p-5 rounded-2xl border border-sky-100/50 space-y-4">
+                  <h3 className="text-xs font-black text-sky-700 uppercase tracking-wider flex items-center gap-2">
+                    <span className="w-1.5 h-3 bg-sky-500 rounded-full" />
+                    Cover Paper
+                  </h3>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 pl-1 tracking-widest">Cover GSM</label>
                     <input 
-                      type="text" required
-                      placeholder="e.g. Art Card, Glossy, Offset"
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-semibold"
-                      value={formData.name}
-                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      type="number"
+                      placeholder="e.g. 350, 300"
+                      className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-semibold"
+                      value={formData.coverGSM}
+                      onChange={(e) => setFormData({...formData, coverGSM: e.target.value})}
                     />
-                 </div>
-                 <div>
-                    <label className="block text-[10px] font-black uppercase text-gray-400 mb-2 pl-1 tracking-widest">GSM</label>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 pl-1 tracking-widest">Cover Initial Sheet Count</label>
                     <input 
-                      type="number" required
-                      placeholder="e.g. 350, 130, 70"
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-semibold"
-                      value={formData.gsm}
-                      onChange={(e) => setFormData({...formData, gsm: e.target.value})}
+                      type="number"
+                      placeholder="e.g. 2000, 5000"
+                      className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-semibold"
+                      value={formData.coverQuantity}
+                      onChange={(e) => setFormData({...formData, coverQuantity: e.target.value})}
                     />
-                 </div>
-                 <div>
-                    <label className="block text-[10px] font-black uppercase text-gray-400 mb-2 pl-1 tracking-widest">Initial Sheet Count</label>
+                  </div>
+                </div>
+
+                {/* Inner Paper Section */}
+                <div className="bg-indigo-50/30 p-5 rounded-2xl border border-indigo-100/50 space-y-4">
+                  <h3 className="text-xs font-black text-indigo-700 uppercase tracking-wider flex items-center gap-2">
+                    <span className="w-1.5 h-3 bg-indigo-500 rounded-full" />
+                    Inner Paper
+                  </h3>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 pl-1 tracking-widest">Inner GSM</label>
                     <input 
-                      type="number" required
-                      placeholder="e.g. 1200, 5000"
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-semibold"
-                      value={formData.quantity}
-                      onChange={(e) => setFormData({...formData, quantity: e.target.value})}
+                      type="number"
+                      placeholder="e.g. 90, 70"
+                      className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-semibold"
+                      value={formData.innerGSM}
+                      onChange={(e) => setFormData({...formData, innerGSM: e.target.value})}
                     />
-                 </div>
-                 <div>
-                    <label className="block text-[10px] font-black uppercase text-gray-400 mb-2 pl-1 tracking-widest">Low Stock Alert (Value)</label>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 pl-1 tracking-widest">Inner Initial Sheet Count</label>
                     <input 
-                      type="number" required
-                      placeholder="Alert when below..."
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-semibold"
-                      value={formData.lowStockThreshold}
-                      onChange={(e) => setFormData({...formData, lowStockThreshold: e.target.value})}
+                      type="number"
+                      placeholder="e.g. 5000, 10000"
+                      className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-semibold"
+                      value={formData.innerQuantity}
+                      onChange={(e) => setFormData({...formData, innerQuantity: e.target.value})}
                     />
-                 </div>
+                  </div>
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-[10px] font-black uppercase text-gray-400 mb-2 pl-1 tracking-widest">Low Stock Alert (Value)</label>
+                  <input 
+                    type="number" required
+                    placeholder="Alert when below..."
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-semibold"
+                    value={formData.lowStockThreshold}
+                    onChange={(e) => setFormData({...formData, lowStockThreshold: e.target.value})}
+                  />
+                </div>
               </div>
               <div>
                 <label className="block text-[10px] font-black uppercase text-gray-400 mb-2 pl-1 tracking-widest">Description / Best Use</label>
@@ -214,6 +312,40 @@ const PaperStockManagement = () => {
             ))}
           </div>
 
+          {/* Tab Selection */}
+          <div className="flex border-b border-gray-100 mb-6 bg-white p-2 rounded-2xl shadow-sm gap-2">
+            <button
+              onClick={() => setActiveTab('Company paper')}
+              className={`flex-1 flex items-center justify-center gap-3 py-3.5 px-6 rounded-xl font-bold uppercase tracking-wider transition-all duration-300 ${
+                activeTab === 'Company paper'
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
+                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+              }`}
+            >
+              🏢 Company Paper
+              <span className={`px-2 py-0.5 text-xs font-black rounded-md ${
+                activeTab === 'Company paper' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'
+              }`}>
+                {stock.filter(item => (item.paperSource || 'Company paper') === 'Company paper').length}
+              </span>
+            </button>
+            <button
+              onClick={() => setActiveTab('Party paper')}
+              className={`flex-1 flex items-center justify-center gap-3 py-3.5 px-6 rounded-xl font-bold uppercase tracking-wider transition-all duration-300 ${
+                activeTab === 'Party paper'
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
+                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+              }`}
+            >
+              🎉 Party Paper
+              <span className={`px-2 py-0.5 text-xs font-black rounded-md ${
+                activeTab === 'Party paper' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'
+              }`}>
+                {stock.filter(item => (item.paperSource || 'Company paper') === 'Party paper').length}
+              </span>
+            </button>
+          </div>
+
           {/* Stock Table */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="p-6 border-b border-gray-50 flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -225,6 +357,8 @@ const PaperStockManagement = () => {
                 <input 
                   type="text" 
                   placeholder="Search stock..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-100 rounded-full text-xs outline-none focus:ring-2 focus:ring-blue-100"
                 />
               </div>
@@ -244,11 +378,26 @@ const PaperStockManagement = () => {
                 <tbody className="divide-y divide-gray-50">
                   {loading ? (
                     <tr><td colSpan="5" className="px-6 py-20 text-center text-gray-400 font-bold animate-pulse uppercase tracking-[0.2em]">Loading Inventory...</td></tr>
-                  ) : stock.length === 0 ? (
-                    <tr><td colSpan="5" className="px-6 py-20 text-center text-gray-400 italic">No inventory records found. Feed new stock to start tracking.</td></tr>
+                  ) : stock.filter(item => {
+                    const matchesTab = (item.paperSource || 'Company paper') === activeTab;
+                    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                          (item.gsm && item.gsm.toString().includes(searchQuery)) ||
+                                          (item.coverGSM && item.coverGSM.toString().includes(searchQuery)) ||
+                                          (item.innerGSM && item.innerGSM.toString().includes(searchQuery));
+                    return matchesTab && matchesSearch;
+                  }).length === 0 ? (
+                    <tr><td colSpan="5" className="px-6 py-20 text-center text-gray-400 italic">No inventory records found for {activeTab === 'Company paper' ? 'Company Paper' : 'Party Paper'}.</td></tr>
                   ) : (
-                    stock.map((item) => {
-                      const isLow = item.quantity <= item.lowStockThreshold;
+                    stock.filter(item => {
+                      const matchesTab = (item.paperSource || 'Company paper') === activeTab;
+                      const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                            (item.gsm && item.gsm.toString().includes(searchQuery)) ||
+                                            (item.coverGSM && item.coverGSM.toString().includes(searchQuery)) ||
+                                            (item.innerGSM && item.innerGSM.toString().includes(searchQuery));
+                      return matchesTab && matchesSearch;
+                    }).map((item) => {
+                      const isLow = ((item.coverQuantity !== undefined ? item.coverQuantity : item.quantity) <= item.lowStockThreshold || 
+                                     (item.innerGSM && (item.innerQuantity || 0) <= item.lowStockThreshold));
                       return (
                         <tr key={item._id} className="hover:bg-blue-50/10 transition-colors group">
                           <td className="px-6 py-5">
@@ -257,17 +406,44 @@ const PaperStockManagement = () => {
                                    <Layers size={18} />
                                 </div>
                                 <div>
-                                   <p className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors uppercase text-sm">{item.name}</p>
-                                   <p className="text-[10px] font-black text-blue-400 tracking-widest">{item.gsm} GSM</p>
+                                   <p className="font-black text-gray-950 group-hover:text-blue-600 transition-colors uppercase text-sm">{item.name}</p>
+                                   <div className="flex items-center gap-2 mt-1.5 text-[10px] font-bold">
+                                     {(item.coverGSM !== undefined || item.gsm) ? (
+                                       <span className="bg-sky-50 text-sky-700 px-2 py-0.5 rounded border border-sky-100">Cover: {item.coverGSM !== undefined ? item.coverGSM : item.gsm} GSM</span>
+                                     ) : (
+                                       <span className="bg-gray-50 text-gray-400 px-2 py-0.5 rounded border border-gray-200">Cover: --</span>
+                                     )}
+                                     {item.innerGSM ? (
+                                       <span className="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded border border-indigo-100">Inner: {item.innerGSM} GSM</span>
+                                     ) : (
+                                       <span className="bg-gray-50 text-gray-400 px-2 py-0.5 rounded border border-gray-200">Inner: --</span>
+                                     )}
+                                   </div>
                                 </div>
                              </div>
                           </td>
                           <td className="px-6 py-5">
-                             <p className="text-xl font-black text-gray-900 tracking-tighter">
-                               {item.quantity.toLocaleString()} 
-                               <span className="text-[10px] ml-1 text-gray-400 uppercase font-black">{item.unit}</span>
-                             </p>
-                             {item.description && <p className="text-[9px] text-gray-400 font-medium italic mt-0.5">{item.description}</p>}
+                             <div className="space-y-1.5">
+                               {(item.coverGSM !== undefined || item.gsm) && (
+                                 <div className="flex items-center gap-2">
+                                   <span className="text-[10px] font-black text-gray-400 uppercase w-12">Cover:</span>
+                                   <span className={`text-sm font-black tracking-tight ${(item.coverQuantity !== undefined ? item.coverQuantity : item.quantity) <= item.lowStockThreshold ? 'text-red-600' : 'text-gray-900'}`}>
+                                     {(item.coverQuantity !== undefined ? item.coverQuantity : item.quantity).toLocaleString()} Sheets
+                                   </span>
+                                 </div>
+                               )}
+                               <div className="flex items-center gap-2">
+                                 <span className="text-[10px] font-black text-gray-400 uppercase w-12">Inner:</span>
+                                 {item.innerGSM ? (
+                                   <span className={`text-sm font-black tracking-tight ${(item.innerQuantity || 0) <= item.lowStockThreshold ? 'text-red-600' : 'text-gray-900'}`}>
+                                     {(item.innerQuantity || 0).toLocaleString()} Sheets
+                                   </span>
+                                 ) : (
+                                   <span className="text-xs font-bold text-gray-400 italic">Not set</span>
+                                 )}
+                               </div>
+                             </div>
+                             {item.description && <p className="text-[9px] text-gray-400 font-medium italic mt-1.5">{item.description}</p>}
                           </td>
                           <td className="px-6 py-5">
                              {isLow ? (

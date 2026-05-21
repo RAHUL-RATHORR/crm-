@@ -4,6 +4,10 @@ import { PlusSquare, Trash2, Printer, X, Download, Pencil, RefreshCw, Filter, Se
 import { downloadAsPDF } from './utils/pdfExport';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
 
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:5011'
+  : 'https://crm-qpw8.onrender.com';
+
 export default function JobCardListing() {
   const navigate = useNavigate();
   const [jobCards, setJobCards] = useState([]);
@@ -44,7 +48,7 @@ export default function JobCardListing() {
 
   const loadData = async () => {
     try {
-      const response = await fetch("https://crm-qpw8.onrender.com/api/jobcard");
+      const response = await fetch(`${API_BASE_URL}/api/jobcard`);
       const data = await response.json();
       setJobCards(data);
     } catch (error) {
@@ -140,7 +144,7 @@ export default function JobCardListing() {
   const confirmDelete = async () => {
     if (cardToDelete) {
       try {
-        const response = await fetch(`https://crm-qpw8.onrender.com/api/jobcard/${cardToDelete}`, {
+        const response = await fetch(`${API_BASE_URL}/api/jobcard/${cardToDelete}`, {
           method: "DELETE"
         });
         if (response.ok) {

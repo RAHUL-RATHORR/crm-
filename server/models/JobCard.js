@@ -19,6 +19,7 @@ const jobCardSchema = new mongoose.Schema({
   design: { type: String, default: 'No' },
   coverPaperCount: { type: Number, default: 0 },
   coverPaperDetails: { type: String },
+  innerPaper: { type: String },
   innerPaperCount: { type: Number, default: 0 },
   innerPaperGSM: { type: String },
   innerPaperDetails: { type: String },

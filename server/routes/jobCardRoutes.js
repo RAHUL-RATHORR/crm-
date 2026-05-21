@@ -62,19 +62,51 @@ router.post('/', async (req, res) => {
 
     // --- AUTO STOCK DEDUCTION LOGIC ---
     try {
-      const { paper, paperGSM, jobQty, paperSource } = req.body;
+      const { paper, paperGSM, coverPaperCount, innerPaper, innerPaperGSM, innerPaperCount, jobQty, paperSource } = req.body;
 
       // We only deduct if it's "Company paper" (meaning the printer provides it)
-      if (paperSource === "Company paper" && paper && paperGSM && jobQty > 0) {
-        const stockItem = await PaperStock.findOne({
-          name: { $regex: new RegExp(`^${paper}$`, 'i') },
-          gsm: Number(paperGSM)
-        });
+      if (paperSource === "Company paper") {
+        // 1. Cover Paper Deduction
+        if (paper && paperGSM) {
+          const deductQty = Number(coverPaperCount) > 0 ? Number(coverPaperCount) : Number(jobQty);
+          if (deductQty > 0) {
+            const stockItem = await PaperStock.findOne({
+              name: { $regex: new RegExp(`^${paper}$`, 'i') },
+              paperSource: "Company paper"
+            });
 
-        if (stockItem) {
-          stockItem.quantity = Math.max(0, stockItem.quantity - Number(jobQty));
-          await stockItem.save();
-          console.log(`📉 Stock Deducted: ${paper} (${paperGSM} GSM) - ${jobQty} sheets used.`);
+            if (stockItem) {
+              if (stockItem.coverGSM === Number(paperGSM)) {
+                stockItem.coverQuantity = Math.max(0, stockItem.coverQuantity - deductQty);
+                await stockItem.save();
+                console.log(`📉 Cover Stock Deducted: ${paper} (${paperGSM} GSM) - ${deductQty} sheets used from coverQuantity.`);
+              } else if (stockItem.gsm === Number(paperGSM)) {
+                stockItem.quantity = Math.max(0, stockItem.quantity - deductQty);
+                await stockItem.save();
+                console.log(`📉 Cover Stock Deducted: ${paper} (${paperGSM} GSM) - ${deductQty} sheets used from legacy quantity.`);
+              }
+            }
+          }
+        }
+
+        // 2. Inner Paper Deduction
+        if (innerPaper && innerPaperGSM && Number(innerPaperCount) > 0) {
+          const stockItem = await PaperStock.findOne({
+            name: { $regex: new RegExp(`^${innerPaper}$`, 'i') },
+            paperSource: "Company paper"
+          });
+
+          if (stockItem) {
+            if (stockItem.innerGSM === Number(innerPaperGSM)) {
+              stockItem.innerQuantity = Math.max(0, stockItem.innerQuantity - Number(innerPaperCount));
+              await stockItem.save();
+              console.log(`📉 Inner Stock Deducted: ${innerPaper} (${innerPaperGSM} GSM) - ${innerPaperCount} sheets used from innerQuantity.`);
+            } else if (stockItem.gsm === Number(innerPaperGSM)) {
+              stockItem.quantity = Math.max(0, stockItem.quantity - Number(innerPaperCount));
+              await stockItem.save();
+              console.log(`📉 Inner Stock Deducted: ${innerPaper} (${innerPaperGSM} GSM) - ${innerPaperCount} sheets used from legacy quantity.`);
+            }
+          }
         }
       }
     } catch (stockErr) {

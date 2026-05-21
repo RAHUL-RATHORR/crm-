@@ -7,12 +7,24 @@ const paperStockSchema = new mongoose.Schema({
     trim: true
   },
   gsm: { 
-    type: Number, 
-    required: true 
+    type: Number
   },
   quantity: { 
     type: Number, 
-    required: true, 
+    default: 0 
+  },
+  coverGSM: { 
+    type: Number 
+  },
+  coverQuantity: { 
+    type: Number, 
+    default: 0 
+  },
+  innerGSM: { 
+    type: Number 
+  },
+  innerQuantity: { 
+    type: Number, 
     default: 0 
   },
   unit: { 
@@ -26,6 +38,11 @@ const paperStockSchema = new mongoose.Schema({
   lowStockThreshold: {
     type: Number,
     default: 100
+  },
+  paperSource: {
+    type: String,
+    enum: ['Company paper', 'Party paper'],
+    default: 'Company paper'
   },
   createdAt: { 
     type: Date, 
