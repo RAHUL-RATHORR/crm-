@@ -5,7 +5,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import { Plus, Trash2 } from 'lucide-react';
 
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost:5011'
+  ? 'https://crm-qpw8.onrender.com'
   : 'https://crm-qpw8.onrender.com';
 
 const AddInvoice = () => {
@@ -180,7 +180,7 @@ const AddInvoice = () => {
         {/* Items Section */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[950px]">
+            <table className="w-full text-left border-collapse min-w-237.5">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider w-64">Description *</th>

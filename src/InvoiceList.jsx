@@ -22,7 +22,7 @@ const NumberToWords = (num) => {
 };
 
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost:5011'
+  ? 'https://crm-qpw8.onrender.com'
   : 'https://crm-qpw8.onrender.com';
 
 const InvoiceList = () => {
@@ -152,7 +152,7 @@ const InvoiceList = () => {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left whitespace-nowrap min-w-[700px]">
+            <table className="w-full text-left whitespace-nowrap min-w-175">
               <thead>
                 <tr className="bg-gray-50 text-gray-600 uppercase text-[10px] sm:text-xs font-bold tracking-wider">
                   <th className="px-4 sm:px-6 py-4">S.No.</th>
@@ -273,7 +273,7 @@ const InvoiceList = () => {
 
       {/* Invoice Preview & Print Modal */}
       {isModalOpen && selectedInvoice && (
-        <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 bg-black/60 z-100 flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-white border border-gray-300 w-full max-w-4xl relative max-h-[95vh] flex flex-col shadow-none">
             {/* Modal Header */}
             <div className="p-4 border-b flex justify-between items-center bg-white modal-header no-print">
@@ -328,7 +328,7 @@ const InvoiceList = () => {
               </div>
             </div>
 
-            <div className="p-8 overflow-y-auto flex-grow a4-page-container">
+            <div className="p-8 overflow-y-auto grow a4-page-container">
               <div
                 id="printable-invoice"
                 className="bg-white mx-auto shadow-none a4-page font-sans"
@@ -413,7 +413,7 @@ const InvoiceList = () => {
                 </div>
 
                 {/* --- ITEMS TABLE --- */}
-                <div className="mb-8 border border-gray-200 rounded-sm overflow-hidden min-h-[350px] flex flex-col">
+                <div className="mb-8 border border-gray-200 rounded-sm overflow-hidden min-h-87.5 flex flex-col">
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="text-white text-[12px] font-black uppercase tracking-widest" style={{ backgroundColor: '#1e3a8a' }}>
@@ -425,7 +425,7 @@ const InvoiceList = () => {
                         <th className="px-4 py-2.5 text-right w-32">Amount</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100 flex-grow">
+                    <tbody className="divide-y divide-gray-100 grow">
                       {selectedInvoice.items?.map((item, idx) => (
                         <tr key={idx} className="text-[13px] group">
                           <td className="px-4 py-4 border-r border-gray-50 text-center font-bold text-gray-600 align-top">
@@ -466,7 +466,7 @@ const InvoiceList = () => {
                                  {/* Total Section */}
                   <div className="border-t border-gray-200 mt-auto bg-gray-50/50">
                     <div className="flex">
-                      <div className="flex-grow p-4">
+                      <div className="grow p-4">
                         <p className="text-[10px] font-black text-gray-600 uppercase mb-1 tracking-widest">Amount in Words</p>
                         <p className="text-[12px] font-bold text-gray-700 italic capitalize">{NumberToWords(selectedInvoice.totalAmount)} Only</p>
                       </div>

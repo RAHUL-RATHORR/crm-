@@ -5,7 +5,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronDown, Layers, Search, FileText } from 'lucide-react';
 
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost:5011'
+  ? 'https://crm-qpw8.onrender.com'
   : 'https://crm-qpw8.onrender.com';
 
 export default function JobCardForm() {
@@ -646,7 +646,7 @@ export default function JobCardForm() {
           </div>
 
           <div className="w-full">
-            <label className="text-sm font-medium text-gray-700 mb-2 block font-semibold tracking-wide">Extra Instructions / Notes</label>
+            <label className="text-sm text-gray-700 mb-2 block font-semibold tracking-wide">Extra Instructions / Notes</label>
             <textarea
               name="notes"
               defaultValue={editData?.notes}

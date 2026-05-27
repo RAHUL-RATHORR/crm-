@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Layers, Plus, Search, AlertTriangle, Edit2, Trash2, CheckCircle2, Info, ArrowUpRight } from 'lucide-react';
 
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost:5011'
+  ? 'https://crm-qpw8.onrender.com'
   : 'https://crm-qpw8.onrender.com';
 
 const PaperStockManagement = () => {
@@ -364,7 +364,7 @@ const PaperStockManagement = () => {
               </div>
             </div>
 
-            <div className="overflow-x-auto min-h-[400px]">
+            <div className="overflow-x-auto min-h-100">
               <table className="w-full text-left whitespace-nowrap">
                 <thead>
                   <tr className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 tracking-widest">

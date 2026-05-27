@@ -1,6 +1,6 @@
 import React from 'react';
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost:5011'
+  ? 'https://crm-qpw8.onrender.com'
   : 'https://crm-qpw8.onrender.com';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -278,7 +278,7 @@ export default function Dashboard() {
         {/* Cards Section */}
         <div className="flex flex-col lg:flex-row gap-6 mb-8 items-stretch">
           <div className="w-full lg:w-1/2">
-            <div className="bg-white rounded-2xl p-6 h-full min-h-[200px] flex flex-col justify-center shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-shadow">
+            <div className="bg-white rounded-2xl p-6 h-full min-h-50 flex flex-col justify-center shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-shadow">
               <div className="relative z-10">
                 <h2 className="text-xl sm:text-2xl font-bold mb-2">
                   Design, Print, Promote and Build<br className="hidden sm:block" /> your own <span className="text-teal-500">Brand Identity.</span>
@@ -296,7 +296,7 @@ export default function Dashboard() {
                   </button>
                 </div>
               </div>
-              <div className="absolute right-0 top-0 h-full w-1/4 sm:w-1/3 opacity-10 bg-gradient-to-l from-teal-500 to-transparent z-0 rounded-r-2xl transform group-hover:scale-105 transition-transform duration-500"></div>
+              <div className="absolute right-0 top-0 h-full w-1/4 sm:w-1/3 opacity-10 bg-linear-to-l from-teal-500 to-transparent z-0 rounded-r-2xl transform group-hover:scale-105 transition-transform duration-500"></div>
             </div>
           </div>
 
@@ -361,7 +361,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="h-[250px] sm:h-[300px] w-full">
+          <div className="h-62.5 sm:h-75 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={stats.chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
@@ -456,7 +456,7 @@ export default function Dashboard() {
           {/* Forecast Chart */}
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:w-1/3 hover:shadow-md transition-shadow">
             <h3 className="text-lg font-bold text-gray-900 mb-6">Sales Forecast</h3>
-            <div className="h-[250px] w-full">
+            <div className="h-62.5 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={forecastData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />

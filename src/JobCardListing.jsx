@@ -5,7 +5,7 @@ import { downloadAsPDF } from './utils/pdfExport';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
 
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost:5011'
+  ? 'https://crm-qpw8.onrender.com'
   : 'https://crm-qpw8.onrender.com';
 
 export default function JobCardListing() {
@@ -358,7 +358,7 @@ export default function JobCardListing() {
                       </td>
                     )}
                     {columnVisibility.binding && (
-                      <td className="py-4 px-6 max-w-[160px]">
+                      <td className="py-4 px-6 max-w-40">
                         {(() => {
                           const chips = getBindingText(card);
                           return chips ? (
@@ -372,7 +372,7 @@ export default function JobCardListing() {
                       </td>
                     )}
                     {columnVisibility.createdAt && (
-                      <td className="py-4 px-6 text-gray-500 text-xs text-wrap max-w-[120px]">
+                      <td className="py-4 px-6 text-gray-500 text-xs text-wrap max-w-30">
                         {new Date(card.createdAt).toLocaleString()}
                       </td>
                     )}
@@ -423,14 +423,14 @@ export default function JobCardListing() {
             </div>
 
             {/* Modal Body - Printable Content */}
-            <div className="p-8 overflow-y-auto flex-grow a4-page-container" id="printable-content">
+            <div className="p-8 overflow-y-auto grow a4-page-container" id="printable-content">
               <div
                 id="printable-inner"
                 className="bg-white mx-auto shadow-none a4-page"
               >
                 {/* Header Branding */}
                 <div className="flex justify-between items-start mb-6 border-b-2 pb-4 px-2" style={{ borderColor: '#1e293b' }}>
-                  <div className="flex-grow">
+                  <div className="grow">
                     <div className="flex items-center gap-4 mb-2">
                       <h1 className="text-4xl font-black tracking-tight text-gray-900 leading-none">
                         Harihar <span className="text-blue-600">Printers</span>
@@ -619,7 +619,7 @@ export default function JobCardListing() {
                       <h4 className="text-[10px] font-black uppercase text-rose-600 border-b pb-1 mb-3 tracking-widest flex items-center gap-2">
                         <AlertCircle size={12} /> Work Instructions
                       </h4>
-                      <div className="border border-rose-100 p-4 rounded-xl bg-rose-50/20 min-h-[100px]">
+                      <div className="border border-rose-100 p-4 rounded-xl bg-rose-50/20 min-h-25">
                         <p className="text-[11px] italic leading-relaxed text-gray-700 font-medium">
                           {selectedCard.notes || 'Handle with care. Ensure high quality print and accurate alignment.'}
                         </p>
