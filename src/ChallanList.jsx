@@ -33,6 +33,7 @@ const ChallanList = () => {
   const [tempGstType, setTempGstType] = useState('CGST/SGST');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [jobCards, setJobCards] = useState([]);
 
   const gstPercent = selectedChallan ? (selectedChallan.gstPercent ?? 18) : 18;
   const totalAmount = selectedChallan ? (selectedChallan.total ?? 0) : 0;
@@ -43,8 +44,16 @@ const ChallanList = () => {
   const grandTotal = Math.round(rawGrandTotal);
   const roundOff = grandTotal - rawGrandTotal;
 
+  const linkedJobCard = selectedChallan
+    ? jobCards.find((card) => card.jobNumber === selectedChallan.jobNumber)
+    : null;
+
   useEffect(() => {
     fetchChallans();
+    fetch('https://crm-qpw8.onrender.com/api/jobcard')
+      .then((res) => res.json())
+      .then((data) => setJobCards(Array.isArray(data) ? data : []))
+      .catch((err) => console.error('Error fetching job cards:', err));
   }, []);
 
   const fetchChallans = () => {
@@ -325,15 +334,29 @@ const ChallanList = () => {
                       </tbody>
                     </table>
                   </div>
+                    </div>
+                  </div>
 
-                      <div className="mt-3 text-right">
-                        <h4 className="text-[11px] font-black text-gray-900 border-b-2 mb-2 pb-0.5 inline-block uppercase tracking-wider">Deliver To :</h4>
-                        <div className="text-[12px] space-y-1 font-medium text-gray-600">
-                          <p className="font-bold uppercase text-xs" style={{ color: '#1e3a8a' }}>{selectedChallan.partyName}</p>
-                          <p className="uppercase">{selectedChallan.partyName}</p>
-                          <p>Jaipur, Rajasthan</p>
-                          <p>Tel: Contact Provided</p>
-                        </div>
+                  <div className="flex justify-between items-start gap-10 mt-4">
+                    <div className="flex-1">
+                      <h4 className="text-[11px] font-black text-gray-900 border-b-2 mb-2 pb-0.5 inline-block uppercase tracking-wider">Bill To :</h4>
+                      <div className="text-[12px] space-y-1 font-medium text-gray-600">
+                        <p className="font-bold uppercase text-xs" style={{ color: '#1e3a8a' }}>{selectedChallan.partyName}</p>
+                        <p className="uppercase">{linkedJobCard?.address || selectedChallan.partyName}</p>
+                        <p>Jaipur, Rajasthan</p>
+                        <p>Tel: {linkedJobCard?.contactNo || 'Contact Provided'}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex-1 flex justify-end">
+                      <div className="w-48">
+                      <h4 className="text-[11px] font-black text-gray-900 border-b-2 mb-2 pb-0.5 inline-block uppercase tracking-wider">Ship To :</h4>
+                      <div className="text-[12px] space-y-1 font-medium text-gray-600">
+                        <p className="font-bold uppercase text-xs" style={{ color: '#1e3a8a' }}>{selectedChallan.partyName}</p>
+                        <p className="uppercase">{linkedJobCard?.address || selectedChallan.partyName}</p>
+                        <p>Jaipur, Rajasthan</p>
+                        <p>Tel: {linkedJobCard?.contactNo || 'Contact Provided'}</p>
+                      </div>
                       </div>
                     </div>
                   </div>

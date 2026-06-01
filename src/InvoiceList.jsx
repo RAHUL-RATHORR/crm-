@@ -35,6 +35,7 @@ const InvoiceList = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [invoiceToDelete, setInvoiceToDelete] = useState(null);
   const [openDropdownId, setOpenDropdownId] = useState(null);
+  const [jobCards, setJobCards] = useState([]);
 
   const gstPercent = selectedInvoice ? (selectedInvoice.gstPercent !== undefined ? selectedInvoice.gstPercent : 18) : 18;
   const taxableValue = selectedInvoice ? (selectedInvoice.totalAmount / (1 + (gstPercent / 100))) : 0;
@@ -46,8 +47,16 @@ const InvoiceList = () => {
     ? (selectedInvoice.totalAmount - (totalAmount + (selectedInvoice.gstAmount ?? totalGstAmount)))
     : 0;
 
+  const linkedJobCard = selectedInvoice
+    ? jobCards.find((card) => card.jobNumber === selectedInvoice.jobCard)
+    : null;
+
   useEffect(() => {
     fetchInvoice();
+    fetch(`${API_BASE_URL}/api/jobcard`)
+      .then((res) => res.json())
+      .then((data) => setJobCards(Array.isArray(data) ? data : []))
+      .catch((err) => console.error('Error fetching job cards:', err));
   }, []);
 
   const fetchInvoice = () => {
@@ -382,15 +391,29 @@ const InvoiceList = () => {
                       </tbody>
                     </table>
                       </div>
+                    </div>
+                  </div>
 
-                      <div className="mt-3 text-right">
-                        <h4 className="text-[11px] font-black text-gray-900 border-b-2 mb-2 pb-0.5 inline-block uppercase tracking-wider">Bill To :</h4>
-                        <div className="text-[12px] space-y-1 font-medium text-gray-600">
-                          <p className="font-bold uppercase text-xs" style={{ color: '#1e3a8a' }}>{selectedInvoice.partyName}</p>
-                          <p className="uppercase">{selectedInvoice.partyName}</p>
-                          <p>GSTIN: <span className="font-bold">{selectedInvoice.partyGstin || 'URP'}</span></p>
-                          <p>Jaipur, Rajasthan</p>
-                        </div>
+                  <div className="flex justify-between items-start gap-10 mt-4">
+                    <div className="flex-1">
+                      <h4 className="text-[11px] font-black text-gray-900 border-b-2 mb-2 pb-0.5 inline-block uppercase tracking-wider">Bill To :</h4>
+                      <div className="text-[12px] space-y-1 font-medium text-gray-600">
+                        <p className="font-bold uppercase text-xs" style={{ color: '#1e3a8a' }}>{selectedInvoice.partyName}</p>
+                        <p className="uppercase">{linkedJobCard?.address || selectedInvoice.partyName}</p>
+                        <p>GSTIN: <span className="font-bold">{selectedInvoice.partyGstin || 'URP'}</span></p>
+                        <p>Jaipur, Rajasthan</p>
+                      </div>
+                    </div>
+
+                    <div className="flex-1 flex justify-end">
+                      <div className="w-48">
+                      <h4 className="text-[11px] font-black text-gray-900 border-b-2 mb-2 pb-0.5 inline-block uppercase tracking-wider">Ship To :</h4>
+                      <div className="text-[12px] space-y-1 font-medium text-gray-600">
+                        <p className="font-bold uppercase text-xs" style={{ color: '#1e3a8a' }}>{selectedInvoice.partyName}</p>
+                        <p className="uppercase">{linkedJobCard?.address || selectedInvoice.partyName}</p>
+                        {linkedJobCard?.contactNo && <p>Tel: {linkedJobCard.contactNo}</p>}
+                        <p>Jaipur, Rajasthan</p>
+                      </div>
                       </div>
                     </div>
                   </div>
