@@ -3,6 +3,7 @@ const router = express.Router();
 import JobCard from '../models/JobCard.js';
 import Notification from '../models/Notification.js';
 import PaperStock from '../models/PaperStock.js';
+import { logPaperStockTransaction } from '../utils/paperStockTransactions.js';
 
 const computePlateUseCount = async (plateSize, editingId) => {
   if (!plateSize) return undefined;
@@ -56,39 +57,81 @@ const findInnerStock = async (paper) => {
   });
 };
 
-const applyCoverDelta = async (paper, paperGSM, delta) => {
+const applyCoverDelta = async (paper, paperGSM, delta, meta = {}) => {
   if (!paper || !paperGSM || !delta) return;
   const stockItem = await findCoverStock(paper);
   if (!stockItem) return;
 
   const gsm = Number(paperGSM);
+  let balanceAfter = 0;
+
   if (stockItem.coverGSM === gsm) {
     stockItem.coverQuantity = Math.max(0, (stockItem.coverQuantity || 0) - delta);
     stockItem.quantity = Math.max(0, (stockItem.quantity || 0) - delta);
+    balanceAfter = stockItem.coverQuantity;
     await stockItem.save();
     console.log(`📦 Cover stock adjusted: ${paper} (${paperGSM} GSM) delta ${delta}, remaining ${stockItem.coverQuantity}`);
   } else if (stockItem.gsm === gsm) {
     stockItem.quantity = Math.max(0, (stockItem.quantity || 0) - delta);
+    balanceAfter = stockItem.quantity;
     await stockItem.save();
     console.log(`📦 Cover stock adjusted (legacy): ${paper} (${paperGSM} GSM) delta ${delta}, remaining ${stockItem.quantity}`);
+  } else {
+    return;
   }
+
+  await logPaperStockTransaction({
+    paperStockId: stockItem._id,
+    stockName: stockItem.name,
+    paperName: paper,
+    paperType: 'cover',
+    transactionType: delta > 0 ? 'deduct' : 'add',
+    quantity: Math.abs(delta),
+    partyName: meta.partyName || '',
+    jobNumber: meta.jobNumber || '',
+    jobCardId: meta.jobCardId,
+    paperSource: stockItem.paperSource || 'Company paper',
+    balanceAfter,
+    note: meta.note || (delta > 0 ? 'Deducted for job card' : 'Restored from job card update'),
+  });
 };
 
-const applyInnerDelta = async (paper, paperGSM, delta) => {
+const applyInnerDelta = async (paper, paperGSM, delta, meta = {}) => {
   if (!paper || !paperGSM || !delta) return;
   const stockItem = await findInnerStock(paper);
   if (!stockItem) return;
 
   const gsm = Number(paperGSM);
+  let balanceAfter = 0;
+
   if (stockItem.innerGSM === gsm) {
     stockItem.innerQuantity = Math.max(0, (stockItem.innerQuantity || 0) - delta);
+    balanceAfter = stockItem.innerQuantity;
     await stockItem.save();
     console.log(`📦 Inner stock adjusted: ${paper} (${paperGSM} GSM) delta ${delta}, remaining ${stockItem.innerQuantity}`);
   } else if (stockItem.gsm === gsm) {
     stockItem.quantity = Math.max(0, (stockItem.quantity || 0) - delta);
+    balanceAfter = stockItem.quantity;
     await stockItem.save();
     console.log(`📦 Inner stock adjusted (legacy): ${paper} (${paperGSM} GSM) delta ${delta}, remaining ${stockItem.quantity}`);
+  } else {
+    return;
   }
+
+  await logPaperStockTransaction({
+    paperStockId: stockItem._id,
+    stockName: stockItem.name,
+    paperName: paper,
+    paperType: 'inner',
+    transactionType: delta > 0 ? 'deduct' : 'add',
+    quantity: Math.abs(delta),
+    partyName: meta.partyName || '',
+    jobNumber: meta.jobNumber || '',
+    jobCardId: meta.jobCardId,
+    paperSource: stockItem.paperSource || 'Company paper',
+    balanceAfter,
+    note: meta.note || (delta > 0 ? 'Deducted for job card' : 'Restored from job card update'),
+  });
 };
 
 const syncStockFromJobChange = async (previousJob, newBody) => {
@@ -100,10 +143,38 @@ const syncStockFromJobChange = async (previousJob, newBody) => {
   const oldInner = getInnerUsage(previousJob);
   const newInner = getInnerUsage({ ...newBody, paperSource });
 
-  if (oldCover) await applyCoverDelta(oldCover.paper, oldCover.paperGSM, -oldCover.qty);
-  if (oldInner) await applyInnerDelta(oldInner.paper, oldInner.paperGSM, -oldInner.qty);
-  if (newCover) await applyCoverDelta(newCover.paper, newCover.paperGSM, newCover.qty);
-  if (newInner) await applyInnerDelta(newInner.paper, newInner.paperGSM, newInner.qty);
+  if (oldCover) {
+    await applyCoverDelta(oldCover.paper, oldCover.paperGSM, -oldCover.qty, {
+      partyName: previousJob?.partyName || previousJob?.companyName || '',
+      jobNumber: previousJob?.jobNumber || '',
+      jobCardId: previousJob?._id,
+      note: 'Restored from job card update',
+    });
+  }
+  if (oldInner) {
+    await applyInnerDelta(oldInner.paper, oldInner.paperGSM, -oldInner.qty, {
+      partyName: previousJob?.partyName || previousJob?.companyName || '',
+      jobNumber: previousJob?.jobNumber || '',
+      jobCardId: previousJob?._id,
+      note: 'Restored from job card update',
+    });
+  }
+  if (newCover) {
+    await applyCoverDelta(newCover.paper, newCover.paperGSM, newCover.qty, {
+      partyName: newBody.partyName || newBody.companyName || '',
+      jobNumber: newBody.jobNumber || '',
+      jobCardId: newBody._id,
+      note: 'Deducted for job card',
+    });
+  }
+  if (newInner) {
+    await applyInnerDelta(newInner.paper, newInner.paperGSM, newInner.qty, {
+      partyName: newBody.partyName || newBody.companyName || '',
+      jobNumber: newBody.jobNumber || '',
+      jobCardId: newBody._id,
+      note: 'Deducted for job card',
+    });
+  }
 };
 
 // POST /api/jobcard - Save or Update Job Card
@@ -175,7 +246,11 @@ router.post('/', async (req, res) => {
 
     // --- AUTO STOCK DEDUCTION LOGIC ---
     try {
-      await syncStockFromJobChange(previousJob, req.body);
+      await syncStockFromJobChange(previousJob, {
+        ...req.body,
+        _id: jobCard?._id || req.body._id,
+        jobNumber: jobCard?.jobNumber || req.body.jobNumber,
+      });
     } catch (stockErr) {
       console.error("⚠️ Stock deduction failed:", stockErr.message);
       // We don't fail the whole job creation just because stock update failed

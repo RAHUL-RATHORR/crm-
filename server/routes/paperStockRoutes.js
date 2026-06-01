@@ -1,6 +1,18 @@
 import express from 'express';
 const router = express.Router();
 import PaperStock from '../models/PaperStock.js';
+import PaperStockTransaction from '../models/PaperStockTransaction.js';
+import { logPaperStockTransaction } from '../utils/paperStockTransactions.js';
+
+// GET /api/paper-stock/transactions - Stock add/deduct history
+router.get('/transactions', async (req, res) => {
+  try {
+    const transactions = await PaperStockTransaction.find().sort({ createdAt: -1 });
+    res.json(transactions);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // GET /api/paper-stock - Get all stock items
 router.get('/', async (req, res) => {
@@ -48,6 +60,35 @@ router.post('/', async (req, res) => {
     });
 
     await newItem.save();
+
+    if (Number(coverQuantity) > 0) {
+      await logPaperStockTransaction({
+        paperStockId: newItem._id,
+        stockName: resolvedName,
+        paperName: resolvedCoverName || resolvedName,
+        paperType: 'cover',
+        transactionType: 'add',
+        quantity: Number(coverQuantity),
+        paperSource: paperSource || 'Company paper',
+        balanceAfter: Number(coverQuantity),
+        note: 'Initial cover stock added',
+      });
+    }
+
+    if (Number(innerQuantity) > 0) {
+      await logPaperStockTransaction({
+        paperStockId: newItem._id,
+        stockName: resolvedName,
+        paperName: resolvedInnerName || resolvedName,
+        paperType: 'inner',
+        transactionType: 'add',
+        quantity: Number(innerQuantity),
+        paperSource: paperSource || 'Company paper',
+        balanceAfter: Number(innerQuantity),
+        note: 'Initial inner stock added',
+      });
+    }
+
     res.status(201).json(newItem);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -64,6 +105,9 @@ router.put('/:id', async (req, res) => {
       || [resolvedCoverName, resolvedInnerName].filter((value, index, arr) => value && arr.indexOf(value) === index).join(' / ')
       || 'Unnamed Paper';
 
+    const existing = await PaperStock.findById(req.params.id);
+    if (!existing) return res.status(404).json({ error: "Item not found" });
+
     const updated = await PaperStock.findByIdAndUpdate(
       req.params.id,
       {
@@ -74,7 +118,38 @@ router.put('/:id', async (req, res) => {
       },
       { new: true }
     );
-    if (!updated) return res.status(404).json({ error: "Item not found" });
+
+    const coverAdded = Number(coverQuantity) - Number(existing.coverQuantity || 0);
+    const innerAdded = Number(innerQuantity) - Number(existing.innerQuantity || 0);
+
+    if (coverAdded > 0) {
+      await logPaperStockTransaction({
+        paperStockId: updated._id,
+        stockName: resolvedName,
+        paperName: resolvedCoverName || resolvedName,
+        paperType: 'cover',
+        transactionType: 'add',
+        quantity: coverAdded,
+        paperSource: paperSource || existing.paperSource || 'Company paper',
+        balanceAfter: Number(updated.coverQuantity || 0),
+        note: 'Cover stock added',
+      });
+    }
+
+    if (innerAdded > 0) {
+      await logPaperStockTransaction({
+        paperStockId: updated._id,
+        stockName: resolvedName,
+        paperName: resolvedInnerName || resolvedName,
+        paperType: 'inner',
+        transactionType: 'add',
+        quantity: innerAdded,
+        paperSource: paperSource || existing.paperSource || 'Company paper',
+        balanceAfter: Number(updated.innerQuantity || 0),
+        note: 'Inner stock added',
+      });
+    }
+
     res.json(updated);
   } catch (err) {
     res.status(500).json({ error: err.message });

@@ -55,6 +55,10 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/paper-stock", paperStockRoutes);
 app.use("/api/statements", statementRoutes);
 
+app.all("/api/*", (req, res) => {
+  res.status(404).json({ error: "API route not found" });
+});
+
 /* ================= STATIC FILES & SPA ROUTING ================= */
 const distPath = path.join(__dirname, "..", "dist");
 

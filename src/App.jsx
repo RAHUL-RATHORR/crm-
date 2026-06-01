@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import {
   Bell,
   UserCircle,
@@ -35,6 +35,7 @@ import SocialSettings from './SocialSettings';
 import PaymentTypeManagement from './PaymentTypeManagement';
 import PaperStockManagement from './PaperStockManagement';
 import Statements from './Statements';
+import PaperStockStatements from './PaperStockStatements';
 import Estimates from './Estimates';
 import { LogOut } from 'lucide-react';
 
@@ -238,7 +239,15 @@ export default function App() {
     },
     { name: 'Payments', icon: Wallet, path: '/payment-type' },
     { name: 'Paper Stock', icon: Layers, path: '/paper-stock' },
-    { name: 'Statements', icon: FileLock, path: '/statements' },
+    {
+      name: 'Statements',
+      icon: FileLock,
+      isDropdown: true,
+      dropdownItems: [
+        { label: 'Invoice Statements', icon: FileText, onClick: () => navigate('/statements/invoice') },
+        { label: 'Paper Stock Statements', icon: Layers, onClick: () => navigate('/statements/paper-stock') },
+      ],
+    },
     {
       name: 'More',
       icon: MoreHorizontal,
@@ -359,6 +368,7 @@ export default function App() {
                     (item.name === 'Job Card' && location.pathname.includes('/job-card')) ||
                     (item.name === 'Invoices' && location.pathname.includes('/invoice')) ||
                     (item.name === 'Challan' && location.pathname.includes('/challan')) ||
+                    (item.name === 'Statements' && location.pathname.includes('/statements')) ||
                     (item.name === 'More' && location.pathname.includes('/settings'))
                   }
                 />
@@ -551,7 +561,9 @@ export default function App() {
           <Route path="/settings/social" element={<SocialSettings />} />
           <Route path="/payment-type" element={<PaymentTypeManagement />} />
           <Route path="/paper-stock" element={<PaperStockManagement />} />
-          <Route path="/statements" element={<Statements />} />
+          <Route path="/statements" element={<Navigate to="/statements/invoice" replace />} />
+          <Route path="/statements/invoice" element={<Statements defaultTab="invoices" />} />
+          <Route path="/statements/paper-stock" element={<PaperStockStatements />} />
           <Route path="/estimates" element={<Estimates />} />
         </Routes>
       </div>

@@ -16,7 +16,7 @@ import {
   TrendingUp
 } from 'lucide-react';
 
-const Statements = () => {
+const Statements = ({ defaultTab = 'transactions' }) => {
   const [statements, setStatements] = useState([]);
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,7 +25,8 @@ const Statements = () => {
   const [dateFilter, setDateFilter] = useState('1m');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [customRange, setCustomRange] = useState({ start: '', end: '' });
-  const [activeTab, setActiveTab] = useState('transactions'); // 'transactions' | 'invoices'
+  const [activeTab, setActiveTab] = useState(defaultTab);
+  const showTabs = defaultTab === 'transactions';
 
   useEffect(() => {
     fetchData();
@@ -117,7 +118,11 @@ const Statements = () => {
             <div className="bg-emerald-600 w-2 h-8 rounded-full" />
             Financial Statements
           </h1>
-          <p className="text-sm text-gray-500 mt-1 font-medium italic">Track payment records, invoice balances, and revenue logs.</p>
+          <p className="text-sm text-gray-500 mt-1 font-medium italic">
+            {defaultTab === 'invoices'
+              ? 'View all invoice records, balances, and payment status.'
+              : 'Track payment records, invoice balances, and revenue logs.'}
+          </p>
         </div>
       </div>
 
@@ -153,6 +158,7 @@ const Statements = () => {
       </div>
 
       {/* Tabs */}
+      {showTabs && (
       <div className="flex gap-2 mb-6">
         <button
           onClick={() => setActiveTab('transactions')}
@@ -178,9 +184,10 @@ const Statements = () => {
           </span>
         </button>
       </div>
+      )}
 
       {/* TRANSACTIONS TAB */}
-      {activeTab === 'transactions' && (
+      {(showTabs ? activeTab === 'transactions' : false) && (
         <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="p-6 border-b border-gray-50 flex flex-col md:flex-row justify-between items-center gap-4">
             <h2 className="text-lg font-bold text-gray-900">Transaction History</h2>
@@ -320,7 +327,7 @@ const Statements = () => {
       )}
 
       {/* INVOICE STATEMENTS TAB */}
-      {activeTab === 'invoices' && (
+      {(!showTabs || activeTab === 'invoices') && (
         <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="p-6 border-b border-gray-50 flex flex-col md:flex-row justify-between items-center gap-4">
             <div>
