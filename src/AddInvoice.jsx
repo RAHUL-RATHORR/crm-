@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Search, ChevronDown } from 'lucide-react';
 
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'https://crm-qpw8.onrender.com'
@@ -28,8 +28,43 @@ const AddInvoice = () => {
     id: item.id || item._id || Date.now() + Math.random(),
     hsn: item.hsn || ''
   })) : [
-    { id: Date.now(), description: '', hsn: '', qty: 0, rate: 0, total: 0 }
+    { id: Date.now(), description: 'Paper Sheet', hsn: '', qty: 0, rate: 0, total: 0 }
   ]);
+
+  const [jobCardSearchTerm, setJobCardSearchTerm] = useState('');
+  const [isJobCardDropdownOpen, setIsJobCardDropdownOpen] = useState(false);
+  const jobCardDropdownRef = useRef(null);
+
+  const filteredJobCards = jobCards.filter((card) => {
+    const query = jobCardSearchTerm.toLowerCase();
+    return (
+      card.jobNumber?.toLowerCase().includes(query) ||
+      card.partyName?.toLowerCase().includes(query) ||
+      card.jobName?.toLowerCase().includes(query)
+    );
+  });
+
+  const selectedJobCard = jobCards.find((card) => card.jobNumber === formData.jobCard);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (jobCardDropdownRef.current && !jobCardDropdownRef.current.contains(event.target)) {
+        setIsJobCardDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (!isJobCardDropdownOpen) {
+      setJobCardSearchTerm('');
+    }
+  }, [isJobCardDropdownOpen]);
+
+  const openJobCardDropdown = () => {
+    setIsJobCardDropdownOpen(true);
+  };
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/api/jobcard`)
@@ -41,6 +76,16 @@ const AddInvoice = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleJobCardSelect = (card) => {
+    setFormData((prev) => ({
+      ...prev,
+      jobCard: card.jobNumber,
+      party: card.partyName || '',
+    }));
+    setIsJobCardDropdownOpen(false);
+    setJobCardSearchTerm('');
   };
 
   const handleItemChange = (id, field, value) => {
@@ -122,7 +167,7 @@ const AddInvoice = () => {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Details */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-visible">
           <div className="bg-blue-900 text-white px-6 py-2 w-fit relative font-semibold text-xs sm:text-sm rounded-br-2xl">
             Basic Details
           </div>
@@ -148,20 +193,66 @@ const AddInvoice = () => {
                 className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
               />
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1 relative z-30" ref={jobCardDropdownRef}>
               <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Job Card *</label>
-              <select
-                name="jobCard"
-                value={formData.jobCard}
-                onChange={handleInputChange}
-                required
-                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
-              >
-                <option value="">Select Job</option>
-                {jobCards.map(card => (
-                  <option key={card.id} value={card.jobNumber}>{card.jobNumber} - {card.partyName}</option>
-                ))}
-              </select>
+              <input type="hidden" name="jobCard" value={formData.jobCard} required />
+
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+                <input
+                  type="text"
+                  value={jobCardSearchTerm}
+                  onChange={(e) => {
+                    setJobCardSearchTerm(e.target.value);
+                    setIsJobCardDropdownOpen(true);
+                  }}
+                  onFocus={openJobCardDropdown}
+                  placeholder={selectedJobCard ? `${selectedJobCard.jobNumber} - ${selectedJobCard.partyName}` : 'Search job no, party, item...'}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg pl-9 pr-10 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+                />
+                <button
+                  type="button"
+                  onClick={() => setIsJobCardDropdownOpen(!isJobCardDropdownOpen)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 rounded"
+                  aria-label="Toggle job card list"
+                >
+                  <ChevronDown size={18} className={`transition-transform ${isJobCardDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+              </div>
+
+              {selectedJobCard && !isJobCardDropdownOpen && (
+                <p className="text-[11px] text-blue-700 font-semibold px-1 truncate">
+                  Selected: {selectedJobCard.jobNumber} - {selectedJobCard.partyName}
+                </p>
+              )}
+
+              {isJobCardDropdownOpen && (
+                <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden">
+                  <div className="px-3 py-2 bg-gray-50 border-b border-gray-100 text-[10px] font-bold text-gray-500 uppercase tracking-wide">
+                    {filteredJobCards.length} job card{filteredJobCards.length !== 1 ? 's' : ''} found
+                  </div>
+                  <div className="max-h-60 overflow-y-auto">
+                    {filteredJobCards.length > 0 ? (
+                      filteredJobCards.map((card) => (
+                        <button
+                          key={card._id || card.jobNumber}
+                          type="button"
+                          onClick={() => handleJobCardSelect(card)}
+                          className={`w-full text-left px-4 py-2.5 text-sm hover:bg-blue-50 transition-colors border-b border-gray-50 last:border-0 ${formData.jobCard === card.jobNumber ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'}`}
+                        >
+                          <span className="font-semibold text-blue-700">{card.jobNumber}</span>
+                          <span className="text-gray-500"> - {card.partyName}</span>
+                          {card.jobName && <span className="block text-xs text-gray-400 mt-0.5 truncate">{card.jobName}</span>}
+                        </button>
+                      ))
+                    ) : (
+                      <div className="px-4 py-6 text-center text-sm text-gray-400 italic">
+                        No job card found
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
             <div className="space-y-1">
               <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Party *</label>
