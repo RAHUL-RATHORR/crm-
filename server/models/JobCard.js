@@ -6,11 +6,17 @@ const jobCardSchema = new mongoose.Schema({
   address: { type: String },
   contactNo: { type: String },
   emailId: { type: String },
-  gstNo: { type: String },
+  gstNo: { type: String, default: '' },
   jobName: { type: String },
   jobNumber: { type: String },
   jobQty: { type: String, default: "0" },
   jobDate: { type: Date, default: Date.now },
+  useShipAddress: { type: Boolean, default: false },
+  shipPartyName: { type: String, default: '' },
+  shipAddress: { type: String, default: '' },
+  shipContactNo: { type: String, default: '' },
+  shipEmailId: { type: String, default: '' },
+  shipGstNo: { type: String, default: '' },
   paperType: { type: String }, // Company Paper / Paper Party
 
   // Printing Details (Renamed to Type of Work)

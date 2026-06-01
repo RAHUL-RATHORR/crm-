@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Trash2, MoreHorizontal, Truck, Pencil, ChevronDown, Check, AlertCircle, Printer, X, Download, Phone, Mail, Globe, Building2, MapPin, Calendar, FileDigit } from 'lucide-react';
 import { downloadAsPDF } from './utils/pdfExport';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
+import { getBillToDetails, getShipToDetails } from './utils/shipAddress';
 
 const NumberToWords = (num) => {
   const a = ['', 'one ', 'two ', 'three ', 'four ', 'five ', 'six ', 'seven ', 'eight ', 'nine ', 'ten ', 'eleven ', 'twelve ', 'thirteen ', 'fourteen ', 'fifteen ', 'sixteen ', 'seventeen ', 'eighteen ', 'nineteen '];
@@ -47,6 +48,10 @@ const ChallanList = () => {
   const linkedJobCard = selectedChallan
     ? jobCards.find((card) => card.jobNumber === selectedChallan.jobNumber)
     : null;
+
+  const challanPartyFallback = selectedChallan ? { partyName: selectedChallan.partyName } : {};
+  const billTo = getBillToDetails(linkedJobCard, challanPartyFallback);
+  const shipTo = getShipToDetails(linkedJobCard, challanPartyFallback);
 
   useEffect(() => {
     fetchChallans();
@@ -341,10 +346,10 @@ const ChallanList = () => {
                     <div className="flex-1">
                       <h4 className="text-[11px] font-black text-gray-900 border-b-2 mb-2 pb-0.5 inline-block uppercase tracking-wider">Bill To :</h4>
                       <div className="text-[12px] space-y-1 font-medium text-gray-600">
-                        <p className="font-bold uppercase text-xs" style={{ color: '#1e3a8a' }}>{selectedChallan.partyName}</p>
-                        <p className="uppercase">{linkedJobCard?.address || selectedChallan.partyName}</p>
+                        <p className="font-bold uppercase text-xs" style={{ color: '#1e3a8a' }}>{billTo.partyName}</p>
+                        <p className="uppercase">{billTo.address || billTo.partyName}</p>
                         <p>Jaipur, Rajasthan</p>
-                        <p>Tel: {linkedJobCard?.contactNo || 'Contact Provided'}</p>
+                        <p>Tel: {billTo.contactNo || 'Contact Provided'}</p>
                       </div>
                     </div>
 
@@ -352,10 +357,10 @@ const ChallanList = () => {
                       <div className="w-48">
                       <h4 className="text-[11px] font-black text-gray-900 border-b-2 mb-2 pb-0.5 inline-block uppercase tracking-wider">Ship To :</h4>
                       <div className="text-[12px] space-y-1 font-medium text-gray-600">
-                        <p className="font-bold uppercase text-xs" style={{ color: '#1e3a8a' }}>{selectedChallan.partyName}</p>
-                        <p className="uppercase">{linkedJobCard?.address || selectedChallan.partyName}</p>
+                        <p className="font-bold uppercase text-xs" style={{ color: '#1e3a8a' }}>{shipTo.partyName}</p>
+                        <p className="uppercase">{shipTo.address || shipTo.partyName}</p>
                         <p>Jaipur, Rajasthan</p>
-                        <p>Tel: {linkedJobCard?.contactNo || 'Contact Provided'}</p>
+                        <p>Tel: {shipTo.contactNo || 'Contact Provided'}</p>
                       </div>
                       </div>
                     </div>

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Trash2, MoreHorizontal, Pencil, Printer, Eye, X, Download, Phone, Mail, Globe, Building2, MapPin, Calendar, FileDigit, AlertCircle, ChevronDown, Check } from 'lucide-react';
 import { downloadAsPDF } from './utils/pdfExport';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
+import { getBillToDetails, getShipToDetails } from './utils/shipAddress';
 
 const NumberToWords = (num) => {
   const a = ['', 'one ', 'two ', 'three ', 'four ', 'five ', 'six ', 'seven ', 'eight ', 'nine ', 'ten ', 'eleven ', 'twelve ', 'thirteen ', 'fourteen ', 'fifteen ', 'sixteen ', 'seventeen ', 'eighteen ', 'nineteen '];
@@ -55,6 +56,8 @@ const InvoiceList = () => {
 
   const displayOrderNo = selectedInvoice?.orderNo || linkedJobCard?.jobNumber || selectedInvoice?.jobCard || '-';
   const displayOrderDate = selectedInvoice?.orderDate || linkedJobCard?.jobDate || selectedInvoice?.date;
+  const billTo = getBillToDetails(linkedJobCard, selectedInvoice || {});
+  const shipTo = getShipToDetails(linkedJobCard, selectedInvoice || {});
 
   useEffect(() => {
     fetchInvoice();
@@ -416,9 +419,10 @@ const InvoiceList = () => {
                     <div className="flex-1">
                       <h4 className="text-[11px] font-black text-gray-900 border-b-2 mb-2 pb-0.5 inline-block uppercase tracking-wider">Bill To :</h4>
                       <div className="text-[12px] space-y-1 font-medium text-gray-600">
-                        <p className="font-bold uppercase text-xs" style={{ color: '#1e3a8a' }}>{selectedInvoice.partyName}</p>
-                        <p className="uppercase">{linkedJobCard?.address || selectedInvoice.partyName}</p>
-                        <p>GSTIN: <span className="font-bold">{selectedInvoice.partyGstin || 'URP'}</span></p>
+                        <p className="font-bold uppercase text-xs" style={{ color: '#1e3a8a' }}>{billTo.partyName}</p>
+                        <p className="uppercase">{billTo.address || billTo.partyName}</p>
+                        <p>GSTIN: <span className="font-bold">{billTo.gstNo || 'URP'}</span></p>
+                        {billTo.contactNo && <p>Tel: {billTo.contactNo}</p>}
                         <p>Jaipur, Rajasthan</p>
                       </div>
                     </div>
@@ -427,9 +431,12 @@ const InvoiceList = () => {
                       <div className="w-48">
                       <h4 className="text-[11px] font-black text-gray-900 border-b-2 mb-2 pb-0.5 inline-block uppercase tracking-wider">Ship To :</h4>
                       <div className="text-[12px] space-y-1 font-medium text-gray-600">
-                        <p className="font-bold uppercase text-xs" style={{ color: '#1e3a8a' }}>{selectedInvoice.partyName}</p>
-                        <p className="uppercase">{linkedJobCard?.address || selectedInvoice.partyName}</p>
-                        {linkedJobCard?.contactNo && <p>Tel: {linkedJobCard.contactNo}</p>}
+                        <p className="font-bold uppercase text-xs" style={{ color: '#1e3a8a' }}>{shipTo.partyName}</p>
+                        <p className="uppercase">{shipTo.address || shipTo.partyName}</p>
+                        {shipTo.contactNo && <p>Tel: {shipTo.contactNo}</p>}
+                        {shipTo.gstNo && shipTo.gstNo !== billTo.gstNo && (
+                          <p>GSTIN: <span className="font-bold">{shipTo.gstNo}</span></p>
+                        )}
                         <p>Jaipur, Rajasthan</p>
                       </div>
                       </div>

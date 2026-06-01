@@ -34,6 +34,9 @@ export default function JobCardForm() {
   const [innerPaperCount, setInnerPaperCount] = useState(editData?.innerPaperCount || 0);
   const [innerPaperDetails, setInnerPaperDetails] = useState(editData?.innerPaperDetails || '');
   const [paperSource, setPaperSource] = useState(editData?.paperSource || 'Company paper');
+  const [useShipAddress, setUseShipAddress] = useState(
+    editData?.useShipAddress || !!(editData?.shipAddress || editData?.shipPartyName)
+  );
   const [plateSize, setPlateSize] = useState(editData?.plateSize || '');
   const [plateUseCount, setPlateUseCount] = useState(editData?.plateUseCount || '');
   const paperDropdownRef = useRef(null);
@@ -174,6 +177,12 @@ export default function JobCardForm() {
       ...Object.fromEntries(fd.entries()),
       jobDate: jobDate.toISOString(),
       companyName: fd.get('partyName'), // alias for backward compatibility
+      useShipAddress,
+      shipPartyName: useShipAddress ? (fd.get('shipPartyName') || '') : '',
+      shipAddress: useShipAddress ? (fd.get('shipAddress') || '') : '',
+      shipContactNo: useShipAddress ? (fd.get('shipContactNo') || '') : '',
+      shipEmailId: useShipAddress ? (fd.get('shipEmailId') || '') : '',
+      shipGstNo: useShipAddress ? (fd.get('shipGstNo') || '') : '',
       plateSize: plateSize || undefined,
       plateUseCount: plateUseCount ? Number(plateUseCount) : undefined,
       // Boolean conversion for binding checkboxes
@@ -271,6 +280,76 @@ export default function JobCardForm() {
               />
             </div>
           </div>
+
+          <div className="mt-4">
+            <label className="inline-flex items-center gap-2.5 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={useShipAddress}
+                onChange={(e) => setUseShipAddress(e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-sm font-semibold text-gray-800">Select Ship Address</span>
+            </label>
+          </div>
+
+          {useShipAddress && (
+            <div className="mt-5 pt-5 border-t border-gray-100">
+              <p className="text-sm font-semibold text-blue-700 mb-4">Ship Address Details</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                <div className="flex flex-col">
+                  <label className="text-sm font-medium text-gray-700 mb-1">Party Name</label>
+                  <input
+                    type="text"
+                    name="shipPartyName"
+                    defaultValue={editData?.shipPartyName}
+                    className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    placeholder="Enter ship party name"
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <label className="text-sm font-medium text-gray-700 mb-1">Address</label>
+                  <input
+                    type="text"
+                    name="shipAddress"
+                    defaultValue={editData?.shipAddress}
+                    className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    placeholder="Enter ship address"
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <label className="text-sm font-medium text-gray-700 mb-1">Contact No.</label>
+                  <input
+                    type="text"
+                    name="shipContactNo"
+                    defaultValue={editData?.shipContactNo}
+                    className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    placeholder="Enter ship phone"
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <label className="text-sm font-medium text-gray-700 mb-1">Gmail ID</label>
+                  <input
+                    type="email"
+                    name="shipEmailId"
+                    defaultValue={editData?.shipEmailId}
+                    className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    placeholder="Enter ship Gmail ID"
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <label className="text-sm font-medium text-gray-700 mb-1">GST No.</label>
+                  <input
+                    type="text"
+                    name="shipGstNo"
+                    defaultValue={editData?.shipGstNo}
+                    className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    placeholder="Enter ship GST number"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Section 2: Type Of Work */}
