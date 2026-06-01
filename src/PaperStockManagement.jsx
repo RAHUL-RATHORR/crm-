@@ -5,13 +5,22 @@ const API_BASE_URL = window.location.hostname === 'localhost' || window.location
   ? 'https://crm-qpw8.onrender.com'
   : 'https://crm-qpw8.onrender.com';
 
+const buildStockName = (coverName, innerName) => {
+  const cover = (coverName || '').trim();
+  const inner = (innerName || '').trim();
+  if (cover && inner && cover !== inner) return `${cover} / ${inner}`;
+  return cover || inner || '';
+};
+
 const PaperStockManagement = () => {
   const [stock, setStock] = useState([]);
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [currentStock, setCurrentStock] = useState({ cover: 0, inner: 0 });
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
-    name: '',
+    coverName: '',
+    innerName: '',
     gsm: '',
     quantity: '',
     coverGSM: '',
@@ -52,17 +61,33 @@ const PaperStockManagement = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!formData.coverName.trim() && !formData.innerName.trim()) {
+      setMessage({ type: 'error', text: 'Enter at least one paper name in Cover or Inner section.' });
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+      return;
+    }
+
     const url = editingId 
       ? `${API_BASE_URL}/api/paper-stock/${editingId}`
       : `${API_BASE_URL}/api/paper-stock`;
     
     const method = editingId ? 'PUT' : 'POST';
 
-    // Set fallback standard gsm/quantity for legacy compat
+    const finalCoverQty = editingId
+      ? (Number(currentStock.cover) || 0) + (Number(formData.coverQuantity) || 0)
+      : (Number(formData.coverQuantity) || 0);
+    const finalInnerQty = editingId
+      ? (Number(currentStock.inner) || 0) + (Number(formData.innerQuantity) || 0)
+      : (Number(formData.innerQuantity) || 0);
+
     const submissionData = {
       ...formData,
+      name: buildStockName(formData.coverName, formData.innerName),
       gsm: formData.coverGSM || formData.innerGSM || 0,
-      quantity: (Number(formData.coverQuantity) || 0) + (Number(formData.innerQuantity) || 0)
+      coverQuantity: finalCoverQty,
+      innerQuantity: finalInnerQty,
+      quantity: finalCoverQty + finalInnerQty
     };
 
     try {
@@ -76,7 +101,8 @@ const PaperStockManagement = () => {
       if (res.ok) {
         setMessage({ type: 'success', text: editingId ? 'Stock updated!' : 'Paper added to stock!' });
         setFormData({ 
-          name: '', 
+          coverName: '',
+          innerName: '',
           gsm: '', 
           quantity: '', 
           coverGSM: '', 
@@ -89,6 +115,7 @@ const PaperStockManagement = () => {
         });
         setIsAdding(false);
         setEditingId(null);
+        setCurrentStock({ cover: 0, inner: 0 });
         fetchStock();
       } else {
         setMessage({ type: 'error', text: data.error || 'Something went wrong' });
@@ -101,14 +128,19 @@ const PaperStockManagement = () => {
   };
 
   const handleEdit = (item) => {
+    setCurrentStock({
+      cover: item.coverQuantity !== undefined ? Number(item.coverQuantity) : Number(item.quantity || 0),
+      inner: Number(item.innerQuantity || 0),
+    });
     setFormData({
-      name: item.name,
+      coverName: item.coverName || item.name || '',
+      innerName: item.innerName || item.name || '',
       gsm: item.gsm || '',
       quantity: item.quantity || '',
       coverGSM: item.coverGSM !== undefined ? item.coverGSM : (item.gsm || ''),
-      coverQuantity: item.coverQuantity !== undefined ? item.coverQuantity : (item.quantity || ''),
+      coverQuantity: '',
       innerGSM: item.innerGSM || '',
-      innerQuantity: item.innerQuantity || '',
+      innerQuantity: '',
       description: item.description || '',
       lowStockThreshold: item.lowStockThreshold || 100,
       paperSource: item.paperSource || 'Company paper'
@@ -140,7 +172,7 @@ const PaperStockManagement = () => {
           <p className="text-sm text-gray-500 mt-1 font-medium italic">Track inventory and auto-deduct sheets from Job Cards.</p>
         </div>
         <button
-          onClick={() => { setIsAdding(!isAdding); setEditingId(null); }}
+          onClick={() => { setIsAdding(!isAdding); setEditingId(null); setCurrentStock({ cover: 0, inner: 0 }); }}
           className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all shadow-lg active:scale-95 ${
             isAdding ? 'bg-gray-100 text-gray-600' : 'bg-blue-600 text-white hover:bg-blue-700'
           }`}
@@ -196,23 +228,22 @@ const PaperStockManagement = () => {
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="md:col-span-2">
-                  <label className="block text-[10px] font-black uppercase text-gray-400 mb-2 pl-1 tracking-widest">Paper Name</label>
-                  <input 
-                    type="text" required
-                    placeholder="e.g. Art Card, Glossy, Offset"
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-semibold"
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  />
-                </div>
-
                 {/* Cover Paper Section */}
                 <div className="bg-sky-50/30 p-5 rounded-2xl border border-sky-100/50 space-y-4">
                   <h3 className="text-xs font-black text-sky-700 uppercase tracking-wider flex items-center gap-2">
                     <span className="w-1.5 h-3 bg-sky-500 rounded-full" />
                     Cover Paper
                   </h3>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 pl-1 tracking-widest">Paper Name</label>
+                    <input 
+                      type="text"
+                      placeholder="e.g. Art Card, Glossy"
+                      className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-semibold"
+                      value={formData.coverName}
+                      onChange={(e) => setFormData({...formData, coverName: e.target.value})}
+                    />
+                  </div>
                   <div>
                     <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 pl-1 tracking-widest">Cover GSM</label>
                     <input 
@@ -224,10 +255,21 @@ const PaperStockManagement = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 pl-1 tracking-widest">Cover Initial Sheet Count</label>
+                    <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 pl-1 tracking-widest">
+                      {editingId ? 'Add More Cover Sheets' : 'Cover Initial Sheet Count'}
+                    </label>
+                    {editingId && (
+                      <p className="text-xs font-bold text-sky-700 mb-2 px-1">
+                        Current remaining: {currentStock.cover.toLocaleString()} sheets
+                        {formData.coverQuantity ? (
+                          <span className="text-emerald-700"> → New total: {(currentStock.cover + Number(formData.coverQuantity || 0)).toLocaleString()} sheets</span>
+                        ) : null}
+                      </p>
+                    )}
                     <input 
                       type="number"
-                      placeholder="e.g. 2000, 5000"
+                      min="0"
+                      placeholder={editingId ? 'e.g. 4000 to add more stock' : 'e.g. 2000, 5000'}
                       className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-semibold"
                       value={formData.coverQuantity}
                       onChange={(e) => setFormData({...formData, coverQuantity: e.target.value})}
@@ -242,6 +284,16 @@ const PaperStockManagement = () => {
                     Inner Paper
                   </h3>
                   <div>
+                    <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 pl-1 tracking-widest">Paper Name</label>
+                    <input 
+                      type="text"
+                      placeholder="e.g. Offset, Maplitho"
+                      className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-semibold"
+                      value={formData.innerName}
+                      onChange={(e) => setFormData({...formData, innerName: e.target.value})}
+                    />
+                  </div>
+                  <div>
                     <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 pl-1 tracking-widest">Inner GSM</label>
                     <input 
                       type="number"
@@ -252,10 +304,21 @@ const PaperStockManagement = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 pl-1 tracking-widest">Inner Initial Sheet Count</label>
+                    <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 pl-1 tracking-widest">
+                      {editingId ? 'Add More Inner Sheets' : 'Inner Initial Sheet Count'}
+                    </label>
+                    {editingId && (
+                      <p className="text-xs font-bold text-indigo-700 mb-2 px-1">
+                        Current remaining: {currentStock.inner.toLocaleString()} sheets
+                        {formData.innerQuantity ? (
+                          <span className="text-emerald-700"> → New total: {(currentStock.inner + Number(formData.innerQuantity || 0)).toLocaleString()} sheets</span>
+                        ) : null}
+                      </p>
+                    )}
                     <input 
                       type="number"
-                      placeholder="e.g. 5000, 10000"
+                      min="0"
+                      placeholder={editingId ? 'e.g. 4000 to add more stock' : 'e.g. 5000, 10000'}
                       className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-semibold"
                       value={formData.innerQuantity}
                       onChange={(e) => setFormData({...formData, innerQuantity: e.target.value})}
@@ -287,7 +350,7 @@ const PaperStockManagement = () => {
               <div className="pt-4">
                 <button type="submit" className="w-full bg-blue-600 text-white py-4 rounded-xl font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg active:scale-95 flex items-center justify-center gap-3">
                   <CheckCircle2 size={20} />
-                  {editingId ? 'Update Inventory' : 'Save To Stock'}
+                  {editingId ? 'Add Stock & Save' : 'Save To Stock'}
                 </button>
               </div>
             </form>
@@ -369,7 +432,7 @@ const PaperStockManagement = () => {
                 <thead>
                   <tr className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 tracking-widest">
                     <th className="px-6 py-4">Paper Name & GSM</th>
-                    <th className="px-6 py-4">Current Stock</th>
+                    <th className="px-6 py-4">Remaining Stock</th>
                     <th className="px-6 py-4">Status</th>
                     <th className="px-6 py-4">Last Updated</th>
                     <th className="px-6 py-4 text-center">Action</th>
@@ -380,7 +443,8 @@ const PaperStockManagement = () => {
                     <tr><td colSpan="5" className="px-6 py-20 text-center text-gray-400 font-bold animate-pulse uppercase tracking-[0.2em]">Loading Inventory...</td></tr>
                   ) : stock.filter(item => {
                     const matchesTab = (item.paperSource || 'Company paper') === activeTab;
-                    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                    const matchesSearch = (item.coverName || item.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                          (item.innerName || item.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
                                           (item.gsm && item.gsm.toString().includes(searchQuery)) ||
                                           (item.coverGSM && item.coverGSM.toString().includes(searchQuery)) ||
                                           (item.innerGSM && item.innerGSM.toString().includes(searchQuery));
@@ -390,7 +454,8 @@ const PaperStockManagement = () => {
                   ) : (
                     stock.filter(item => {
                       const matchesTab = (item.paperSource || 'Company paper') === activeTab;
-                      const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                      const matchesSearch = (item.coverName || item.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                            (item.innerName || item.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
                                             (item.gsm && item.gsm.toString().includes(searchQuery)) ||
                                             (item.coverGSM && item.coverGSM.toString().includes(searchQuery)) ||
                                             (item.innerGSM && item.innerGSM.toString().includes(searchQuery));
@@ -406,15 +471,19 @@ const PaperStockManagement = () => {
                                    <Layers size={18} />
                                 </div>
                                 <div>
-                                   <p className="font-black text-gray-950 group-hover:text-blue-600 transition-colors uppercase text-sm">{item.name}</p>
+                                   <p className="font-black text-gray-950 group-hover:text-blue-600 transition-colors uppercase text-sm">
+                                     {(item.coverName || item.name) === (item.innerName || item.name)
+                                       ? (item.coverName || item.name)
+                                       : `${item.coverName || item.name || '--'} / ${item.innerName || '--'}`}
+                                   </p>
                                    <div className="flex items-center gap-2 mt-1.5 text-[10px] font-bold">
                                      {(item.coverGSM !== undefined || item.gsm) ? (
-                                       <span className="bg-sky-50 text-sky-700 px-2 py-0.5 rounded border border-sky-100">Cover: {item.coverGSM !== undefined ? item.coverGSM : item.gsm} GSM</span>
+                                       <span className="bg-sky-50 text-sky-700 px-2 py-0.5 rounded border border-sky-100">Cover: {item.coverName || item.name || '--'} · {item.coverGSM !== undefined ? item.coverGSM : item.gsm} GSM</span>
                                      ) : (
                                        <span className="bg-gray-50 text-gray-400 px-2 py-0.5 rounded border border-gray-200">Cover: --</span>
                                      )}
                                      {item.innerGSM ? (
-                                       <span className="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded border border-indigo-100">Inner: {item.innerGSM} GSM</span>
+                                       <span className="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded border border-indigo-100">Inner: {item.innerName || item.name || '--'} · {item.innerGSM} GSM</span>
                                      ) : (
                                        <span className="bg-gray-50 text-gray-400 px-2 py-0.5 rounded border border-gray-200">Inner: --</span>
                                      )}

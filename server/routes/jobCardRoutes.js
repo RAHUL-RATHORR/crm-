@@ -18,6 +18,94 @@ const computePlateUseCount = async (plateSize, editingId) => {
   return existingCount + 1;
 };
 
+const escapeRegex = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const getCoverUsage = (job) => {
+  if (!job || job.paperSource !== 'Company paper' || !job.paper || !job.paperGSM) return null;
+  const qty = Number(job.coverPaperCount) > 0 ? Number(job.coverPaperCount) : Number(job.jobQty) || 0;
+  if (qty <= 0) return null;
+  return { paper: job.paper, paperGSM: String(job.paperGSM), qty };
+};
+
+const getInnerUsage = (job) => {
+  if (!job || job.paperSource !== 'Company paper' || !job.innerPaper || !job.innerPaperGSM) return null;
+  const qty = Number(job.innerPaperCount) || 0;
+  if (qty <= 0) return null;
+  return { paper: job.innerPaper, paperGSM: String(job.innerPaperGSM), qty };
+};
+
+const findCoverStock = async (paper) => {
+  if (!paper) return null;
+  return PaperStock.findOne({
+    $or: [
+      { coverName: { $regex: new RegExp(`^${escapeRegex(paper)}$`, 'i') } },
+      { name: { $regex: new RegExp(`^${escapeRegex(paper)}$`, 'i') } }
+    ],
+    paperSource: 'Company paper'
+  });
+};
+
+const findInnerStock = async (paper) => {
+  if (!paper) return null;
+  return PaperStock.findOne({
+    $or: [
+      { innerName: { $regex: new RegExp(`^${escapeRegex(paper)}$`, 'i') } },
+      { name: { $regex: new RegExp(`^${escapeRegex(paper)}$`, 'i') } }
+    ],
+    paperSource: 'Company paper'
+  });
+};
+
+const applyCoverDelta = async (paper, paperGSM, delta) => {
+  if (!paper || !paperGSM || !delta) return;
+  const stockItem = await findCoverStock(paper);
+  if (!stockItem) return;
+
+  const gsm = Number(paperGSM);
+  if (stockItem.coverGSM === gsm) {
+    stockItem.coverQuantity = Math.max(0, (stockItem.coverQuantity || 0) - delta);
+    stockItem.quantity = Math.max(0, (stockItem.quantity || 0) - delta);
+    await stockItem.save();
+    console.log(`📦 Cover stock adjusted: ${paper} (${paperGSM} GSM) delta ${delta}, remaining ${stockItem.coverQuantity}`);
+  } else if (stockItem.gsm === gsm) {
+    stockItem.quantity = Math.max(0, (stockItem.quantity || 0) - delta);
+    await stockItem.save();
+    console.log(`📦 Cover stock adjusted (legacy): ${paper} (${paperGSM} GSM) delta ${delta}, remaining ${stockItem.quantity}`);
+  }
+};
+
+const applyInnerDelta = async (paper, paperGSM, delta) => {
+  if (!paper || !paperGSM || !delta) return;
+  const stockItem = await findInnerStock(paper);
+  if (!stockItem) return;
+
+  const gsm = Number(paperGSM);
+  if (stockItem.innerGSM === gsm) {
+    stockItem.innerQuantity = Math.max(0, (stockItem.innerQuantity || 0) - delta);
+    await stockItem.save();
+    console.log(`📦 Inner stock adjusted: ${paper} (${paperGSM} GSM) delta ${delta}, remaining ${stockItem.innerQuantity}`);
+  } else if (stockItem.gsm === gsm) {
+    stockItem.quantity = Math.max(0, (stockItem.quantity || 0) - delta);
+    await stockItem.save();
+    console.log(`📦 Inner stock adjusted (legacy): ${paper} (${paperGSM} GSM) delta ${delta}, remaining ${stockItem.quantity}`);
+  }
+};
+
+const syncStockFromJobChange = async (previousJob, newBody) => {
+  const paperSource = newBody.paperSource || 'Company paper';
+  if (paperSource !== 'Company paper') return;
+
+  const oldCover = getCoverUsage(previousJob);
+  const newCover = getCoverUsage({ ...newBody, paperSource });
+  const oldInner = getInnerUsage(previousJob);
+  const newInner = getInnerUsage({ ...newBody, paperSource });
+
+  if (oldCover) await applyCoverDelta(oldCover.paper, oldCover.paperGSM, -oldCover.qty);
+  if (oldInner) await applyInnerDelta(oldInner.paper, oldInner.paperGSM, -oldInner.qty);
+  if (newCover) await applyCoverDelta(newCover.paper, newCover.paperGSM, newCover.qty);
+  if (newInner) await applyInnerDelta(newInner.paper, newInner.paperGSM, newInner.qty);
+};
+
 // POST /api/jobcard - Save or Update Job Card
 router.post('/', async (req, res) => {
   try {
@@ -33,6 +121,11 @@ router.post('/', async (req, res) => {
     let jobCard;
     let isUpdate = false;
     const { _id } = req.body;
+    let previousJob = null;
+
+    if (_id) {
+      previousJob = await JobCard.findById(_id);
+    }
 
     if (req.body.plateSize) {
       req.body.plateSize = String(req.body.plateSize).trim();
@@ -54,6 +147,7 @@ router.post('/', async (req, res) => {
       if (existingJob) {
         // UPDATE by jobNumber (fallback)
         isUpdate = true;
+        previousJob = previousJob || existingJob;
         jobCard = await JobCard.findOneAndUpdate(
           { jobNumber },
           { ...req.body, updatedAt: new Date() },
@@ -81,53 +175,7 @@ router.post('/', async (req, res) => {
 
     // --- AUTO STOCK DEDUCTION LOGIC ---
     try {
-      const { paper, paperGSM, coverPaperCount, innerPaper, innerPaperGSM, innerPaperCount, jobQty, paperSource } = req.body;
-
-      // We only deduct if it's "Company paper" (meaning the printer provides it)
-      if (paperSource === "Company paper") {
-        // 1. Cover Paper Deduction
-        if (paper && paperGSM) {
-          const deductQty = Number(coverPaperCount) > 0 ? Number(coverPaperCount) : Number(jobQty);
-          if (deductQty > 0) {
-            const stockItem = await PaperStock.findOne({
-              name: { $regex: new RegExp(`^${paper}$`, 'i') },
-              paperSource: "Company paper"
-            });
-
-            if (stockItem) {
-              if (stockItem.coverGSM === Number(paperGSM)) {
-                stockItem.coverQuantity = Math.max(0, stockItem.coverQuantity - deductQty);
-                await stockItem.save();
-                console.log(`📉 Cover Stock Deducted: ${paper} (${paperGSM} GSM) - ${deductQty} sheets used from coverQuantity.`);
-              } else if (stockItem.gsm === Number(paperGSM)) {
-                stockItem.quantity = Math.max(0, stockItem.quantity - deductQty);
-                await stockItem.save();
-                console.log(`📉 Cover Stock Deducted: ${paper} (${paperGSM} GSM) - ${deductQty} sheets used from legacy quantity.`);
-              }
-            }
-          }
-        }
-
-        // 2. Inner Paper Deduction
-        if (innerPaper && innerPaperGSM && Number(innerPaperCount) > 0) {
-          const stockItem = await PaperStock.findOne({
-            name: { $regex: new RegExp(`^${innerPaper}$`, 'i') },
-            paperSource: "Company paper"
-          });
-
-          if (stockItem) {
-            if (stockItem.innerGSM === Number(innerPaperGSM)) {
-              stockItem.innerQuantity = Math.max(0, stockItem.innerQuantity - Number(innerPaperCount));
-              await stockItem.save();
-              console.log(`📉 Inner Stock Deducted: ${innerPaper} (${innerPaperGSM} GSM) - ${innerPaperCount} sheets used from innerQuantity.`);
-            } else if (stockItem.gsm === Number(innerPaperGSM)) {
-              stockItem.quantity = Math.max(0, stockItem.quantity - Number(innerPaperCount));
-              await stockItem.save();
-              console.log(`📉 Inner Stock Deducted: ${innerPaper} (${innerPaperGSM} GSM) - ${innerPaperCount} sheets used from legacy quantity.`);
-            }
-          }
-        }
-      }
+      await syncStockFromJobChange(previousJob, req.body);
     } catch (stockErr) {
       console.error("⚠️ Stock deduction failed:", stockErr.message);
       // We don't fail the whole job creation just because stock update failed

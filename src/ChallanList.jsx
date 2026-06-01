@@ -4,6 +4,23 @@ import { Plus, Trash2, MoreHorizontal, Truck, Pencil, ChevronDown, Check, AlertC
 import { downloadAsPDF } from './utils/pdfExport';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
 
+const NumberToWords = (num) => {
+  const a = ['', 'one ', 'two ', 'three ', 'four ', 'five ', 'six ', 'seven ', 'eight ', 'nine ', 'ten ', 'eleven ', 'twelve ', 'thirteen ', 'fourteen ', 'fifteen ', 'sixteen ', 'seventeen ', 'eighteen ', 'nineteen '];
+  const b = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+
+  if ((num = num.toString()).length > 9) return 'overflow';
+  let n = ('000000000' + num).substr(-9).match(/^(\d{2})(\d{1})(\d{1})(\d{2})(\d{1})(\d{2})$/);
+  if (!n) return;
+  let str = '';
+  str += (n[1] != 0) ? (a[Number(n[1])] || b[n[1][0]] + ' ' + a[n[1][1]]) + 'crore ' : '';
+  str += (n[2] != 0) ? (a[Number(n[2])] || b[n[2][0]] + ' ' + a[n[2][1]]) + 'lakh ' : '';
+  str += (n[3] != 0) ? (a[Number(n[3])] || b[n[3][0]] + ' ' + a[n[3][1]]) + 'lakh ' : '';
+  str += (n[4] != 0) ? (a[Number(n[4])] || b[n[4][0]] + ' ' + a[n[4][1]]) + 'thousand ' : '';
+  str += (n[5] != 0) ? (a[Number(n[5])] || b[n[5][0]] + ' ' + a[n[5][1]]) + 'hundred ' : '';
+  str += (n[6] != 0) ? ((str != '') ? 'and ' : '') + (a[Number(n[6])] || b[n[6][0]] + ' ' + a[n[6][1]]) + 'only ' : '';
+  return str.trim();
+};
+
 const ChallanList = () => {
   const navigate = useNavigate();
   const [challans, setChallans] = useState([]);
@@ -13,8 +30,18 @@ const ChallanList = () => {
 
   // New states for Printing
   const [selectedChallan, setSelectedChallan] = useState(null);
+  const [tempGstType, setTempGstType] = useState('CGST/SGST');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+
+  const gstPercent = selectedChallan ? (selectedChallan.gstPercent ?? 18) : 18;
+  const totalAmount = selectedChallan ? (selectedChallan.total ?? 0) : 0;
+  const totalGstAmount = (totalAmount * gstPercent) / 100;
+  const halfGstAmount = totalGstAmount / 2;
+  const isIGST = tempGstType === 'IGST';
+  const rawGrandTotal = totalAmount + totalGstAmount;
+  const grandTotal = Math.round(rawGrandTotal);
+  const roundOff = grandTotal - rawGrandTotal;
 
   useEffect(() => {
     fetchChallans();
@@ -77,6 +104,7 @@ const ChallanList = () => {
   // Printing functions
   const openPreview = (ch) => {
     setSelectedChallan(ch);
+    setTempGstType(ch.gstType || 'CGST/SGST');
     setIsModalOpen(true);
   };
 
@@ -212,6 +240,17 @@ const ChallanList = () => {
             <div className="p-4 border-b flex justify-between items-center bg-white modal-header no-print">
               <h2 className="text-xl font-bold text-gray-800">Challan Preview</h2>
               <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5 bg-gray-100 px-3 py-2 rounded-xl text-sm font-bold border border-gray-200">
+                  <span className="text-gray-500 font-medium">GST Mode:</span>
+                  <select
+                    value={tempGstType}
+                    onChange={(e) => setTempGstType(e.target.value)}
+                    className="bg-transparent text-blue-700 outline-none cursor-pointer font-bold"
+                  >
+                    <option value="CGST/SGST">CGST + SGST</option>
+                    <option value="IGST">IGST</option>
+                  </select>
+                </div>
                 <button
                   onClick={handleDownloadPDF}
                   disabled={isGenerating}
@@ -243,19 +282,30 @@ const ChallanList = () => {
                 style={{ color: '#334155' }}
               >
                 {/* Traditional Green/Teal Design - Matching Estimates */}
-                <div className="flex justify-between items-start mb-8">
-                  <div>
-                    <h1 className="text-4xl font-bold mb-1" style={{ color: '#1e3a8a' }}>
-                      Delivery Challan
-                    </h1>
-                    <div className="mt-2">
-                      <h2 className="text-xl font-bold text-gray-800 tracking-tight">Harihar Printers</h2>
-                      <p className="text-[10px] text-gray-700 font-medium italic">Your Vision, Our Print.</p>
-                    </div>
-                  </div>
+                <div className="mb-6">
+                  <h1 className="text-4xl font-bold text-center mb-3" style={{ color: '#1e3a8a' }}>
+                    Delivery Challan
+                  </h1>
 
-                  {/* Metadata Table */}
-                  <div className="w-48 border border-gray-200 rounded-lg overflow-hidden">
+                  <div className="flex justify-between items-start gap-10">
+                    <div className="flex-1">
+                      <h2 className="text-xl font-black text-gray-900 tracking-tight">Harihar Printers</h2>
+                      <p className="text-[10px] text-gray-700 font-medium italic">Your Vision, Our Print.</p>
+
+                      <div className="mt-2">
+                        <h4 className="text-[11px] font-black text-gray-900 border-b-2 mb-2 pb-0.5 inline-block uppercase tracking-wider">Address :</h4>
+                        <div className="text-[12px] space-y-1 font-medium text-gray-600">
+                          <p className="font-bold text-gray-800">Harihar Printers</p>
+                          <p>Office: J-97, Ashok Chowk, Adarsh Nagar, Jaipur</p>
+                          <p>Factory: G-139, Hirawala Ind. Area, Kanota, Jaipur</p>
+                          <p>Tel: +91 94140-43763</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex-1 flex flex-col items-end">
+                      {/* Metadata Table */}
+                      <div className="w-48 border border-gray-200 rounded-lg overflow-hidden">
                     <table className="w-full text-[12px]">
                       <tbody className="divide-y divide-gray-200">
                         <tr className="bg-gray-50/50">
@@ -275,43 +325,18 @@ const ChallanList = () => {
                       </tbody>
                     </table>
                   </div>
-                </div>
 
-                {/* --- ADDRESS SECTION --- */}
-                <div className="flex justify-between gap-10 mb-8 px-1">
-                  <div className="flex-1">
-                    <h4 className="text-[11px] font-black text-gray-900 border-b-2 mb-2 pb-0.5 inline-block uppercase tracking-wider">Address :</h4>
-                    <div className="text-[12px] space-y-1 font-medium text-gray-600">
-                      <p className="font-bold text-gray-800">Harihar Printers</p>
-                      <p>Office: J-97, Ashok Chowk, Adarsh Nagar, Jaipur</p>
-                      <p>Factory: G-139, Hirawala Ind. Area, Kanota, Jaipur</p>
-                      <p>Tel: +91 94140-43763</p>
+                      <div className="mt-3 text-right">
+                        <h4 className="text-[11px] font-black text-gray-900 border-b-2 mb-2 pb-0.5 inline-block uppercase tracking-wider">Deliver To :</h4>
+                        <div className="text-[12px] space-y-1 font-medium text-gray-600">
+                          <p className="font-bold uppercase text-xs" style={{ color: '#1e3a8a' }}>{selectedChallan.partyName}</p>
+                          <p className="uppercase">{selectedChallan.partyName}</p>
+                          <p>Jaipur, Rajasthan</p>
+                          <p>Tel: Contact Provided</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex-1 text-right">
-                    <h4 className="text-[11px] font-black text-gray-900 border-b-2 mb-2 pb-0.5 inline-block uppercase tracking-wider">Deliver To :</h4>
-                    <div className="text-[12px] space-y-1 font-medium text-gray-600">
-                      <p className="font-bold uppercase text-xs" style={{ color: '#1e3a8a' }}>{selectedChallan.partyName}</p>
-                      <p className="uppercase">{selectedChallan.partyName}</p>
-                      <p>Jaipur, Rajasthan</p>
-                      <p>Tel: Contact Provided</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* --- INFO BAR --- */}
-                <div className="grid grid-cols-4 mb-8 border border-gray-200">
-                  {[
-                    { label: 'CHALLAN NO', value: selectedChallan.challanNo },
-                    { label: 'JOB Number', value: selectedChallan.jobNumber },
-                    { label: 'PAYMENT TERMS', value: '7 Days' },
-                    { label: 'DATE', value: new Date(selectedChallan.createdAt).toLocaleDateString() }
-                  ].map((item, i) => (
-                    <div key={i} className={`p-2 border-r border-gray-200 last:border-0 ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'}`}>
-                      <p className="text-[10px] font-black text-gray-600 uppercase mb-1" style={{ color: '#1e3a8a' }}>{item.label}</p>
-                      <p className="text-[12px] font-bold text-gray-800 uppercase">{item.value}</p>
-                    </div>
-                  ))}
                 </div>
 
                 {/* --- ITEMS TABLE --- */}
@@ -359,20 +384,60 @@ const ChallanList = () => {
 
                   {/* Total Section */}
                   <div className="border-t border-gray-200 mt-auto bg-gray-50/50">
-                    <div className="flex flex-col w-56 ml-auto border-l border-gray-200">
-                      <div className="flex justify-between px-4 py-2 border-b border-gray-200">
-                        <span className="text-[11px] font-bold text-gray-700 uppercase">Sub Total</span>
-                        <span className="text-[12px] font-bold text-gray-800">₹ {selectedChallan.total?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                    <div className="flex">
+                      <div className="grow p-4">
+                        <p className="text-[10px] font-black text-gray-600 uppercase mb-1 tracking-widest">Amount in Words</p>
+                        <p className="text-[12px] font-bold text-gray-700 italic capitalize">{NumberToWords(grandTotal)} Only</p>
                       </div>
-                      <div className="flex justify-between px-4 py-2 border-b border-gray-200">
-                        <span className="text-[11px] font-bold text-gray-700 uppercase">GST</span>
-                        <span className="text-[12px] font-bold text-gray-800">₹ 0.00</span>
-                      </div>
-                      <div className="flex justify-between px-4 py-3" style={{ backgroundColor: '#1e3a8a' }}>
-                        <span className="text-[12px] font-black text-white uppercase tracking-wider">Total Amount</span>
-                        <span className="text-sm font-black text-white">₹ {selectedChallan.total?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                      <div className="flex flex-col w-56 border-l border-gray-200">
+                        <div className="flex justify-between px-4 py-1.5 border-b border-gray-200">
+                          <span className="text-[11px] font-bold text-gray-700 uppercase">Total Amount</span>
+                          <span className="text-[12px] font-bold text-gray-800">₹ {totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                        </div>
+                        <div className="flex justify-between px-4 py-1.5 border-b border-gray-200">
+                          <span className="text-[11px] font-bold text-gray-700 uppercase">CGST {isIGST ? '(0%)' : `(${gstPercent / 2}%)`}</span>
+                          <span className="text-[12px] font-bold text-gray-800">₹ {isIGST ? '0.00' : halfGstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                        </div>
+                        <div className="flex justify-between px-4 py-1.5 border-b border-gray-200">
+                          <span className="text-[11px] font-bold text-gray-700 uppercase">SGST {isIGST ? '(0%)' : `(${gstPercent / 2}%)`}</span>
+                          <span className="text-[12px] font-bold text-gray-800">₹ {isIGST ? '0.00' : halfGstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                        </div>
+                        <div className="flex justify-between px-4 py-1.5 border-b border-gray-200">
+                          <span className="text-[11px] font-bold text-gray-700 uppercase">IGST {isIGST ? `(${gstPercent}%)` : '(0%)'}</span>
+                          <span className="text-[12px] font-bold text-gray-800">₹ {isIGST ? totalGstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 }) : '0.00'}</span>
+                        </div>
+                        <div className="flex justify-between px-4 py-1.5 border-b border-gray-200">
+                          <span className="text-[11px] font-bold text-gray-700 uppercase">Round Off</span>
+                          <span className="text-[12px] font-bold text-gray-800">₹ {roundOff.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </div>
+                        <div className="flex justify-between px-4 py-3" style={{ backgroundColor: '#1e3a8a' }}>
+                          <span className="text-[12px] font-black text-white uppercase tracking-wider">Grand Total</span>
+                          <span className="text-sm font-black text-white">₹ {grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                        </div>
                       </div>
                     </div>
+                  </div>
+                </div>
+
+                {/* --- BANK DETAILS BAR --- */}
+                <div className="mb-6 p-3 border border-gray-200 rounded-lg bg-gray-50/30 flex justify-between items-center">
+                  <div className="flex gap-8">
+                    <div>
+                      <p className="text-[10px] font-black text-gray-600 uppercase mb-1">Bank Name</p>
+                      <p className="text-[12px] font-bold text-gray-800">Indusind Bank</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black text-gray-600 uppercase mb-1">Account Number</p>
+                      <p className="text-[12px] font-bold text-gray-800">650014092175</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black text-gray-600 uppercase mb-1">IFSC Code</p>
+                      <p className="text-[12px] font-bold text-gray-800 uppercase">INDB0000278</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] font-black text-gray-600 uppercase mb-1">Branch</p>
+                    <p className="text-[12px] font-bold text-gray-800">Raja Park, Jaipur</p>
                   </div>
                 </div>
 

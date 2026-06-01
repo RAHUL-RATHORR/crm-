@@ -57,6 +57,9 @@ export default function JobCardForm() {
     return source === paperSource;
   });
 
+  const getCoverPaperLabel = (stock) => stock.coverName || stock.name || '';
+  const getInnerPaperLabel = (stock) => stock.innerName || stock.name || '';
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (paperDropdownRef.current && !paperDropdownRef.current.contains(event.target)) {
@@ -385,25 +388,25 @@ export default function JobCardForm() {
                         </div>
                       </div>
 
-                      {filteredStocks.filter(s => s.name.toLowerCase().includes(paperSearchTerm.toLowerCase())).length > 0 ? (
+                      {filteredStocks.filter(s => getCoverPaperLabel(s).toLowerCase().includes(paperSearchTerm.toLowerCase())).length > 0 ? (
                         filteredStocks
-                          .filter(s => s.name.toLowerCase().includes(paperSearchTerm.toLowerCase()))
+                          .filter(s => getCoverPaperLabel(s).toLowerCase().includes(paperSearchTerm.toLowerCase()))
                           .map(stock => (
                             <button
                               key={stock._id}
                               type="button"
                               onClick={() => {
-                                setSelectedPaper(stock.name);
-                                setPaperGSM(stock.gsm || '');
+                                setSelectedPaper(getCoverPaperLabel(stock));
+                                setPaperGSM(stock.coverGSM || stock.gsm || '');
                                 setIsPaperDropdownOpen(false);
                               }}
-                              className={`w-full px-4 py-2.5 text-left text-sm flex items-center justify-between hover:bg-sky-50 transition-colors ${selectedPaper === stock.name ? 'bg-sky-50/50 text-sky-700 font-bold' : 'text-gray-700'}`}
+                              className={`w-full px-4 py-2.5 text-left text-sm flex items-center justify-between hover:bg-sky-50 transition-colors ${selectedPaper === getCoverPaperLabel(stock) ? 'bg-sky-50/50 text-sky-700 font-bold' : 'text-gray-700'}`}
                             >
                               <div className="flex items-center gap-3">
-                                <FileText size={14} className={selectedPaper === stock.name ? 'text-sky-500' : 'text-gray-300'} />
-                                <span>{stock.name} <span className="text-[10px] text-gray-400 ml-1">({stock.gsm} GSM)</span></span>
+                                <FileText size={14} className={selectedPaper === getCoverPaperLabel(stock) ? 'text-sky-500' : 'text-gray-300'} />
+                                <span>{getCoverPaperLabel(stock)} <span className="text-[10px] text-gray-400 ml-1">({stock.coverGSM || stock.gsm} GSM)</span></span>
                               </div>
-                              {selectedPaper === stock.name && <div className="w-1.5 h-1.5 rounded-full bg-sky-500" />}
+                              {selectedPaper === getCoverPaperLabel(stock) && <div className="w-1.5 h-1.5 rounded-full bg-sky-500" />}
                             </button>
                           ))
                       ) : (
@@ -504,25 +507,25 @@ export default function JobCardForm() {
                         </div>
                       </div>
 
-                      {filteredStocks.filter(s => s.name.toLowerCase().includes(innerPaperSearchTerm.toLowerCase())).length > 0 ? (
+                      {filteredStocks.filter(s => getInnerPaperLabel(s).toLowerCase().includes(innerPaperSearchTerm.toLowerCase())).length > 0 ? (
                         filteredStocks
-                          .filter(s => s.name.toLowerCase().includes(innerPaperSearchTerm.toLowerCase()))
+                          .filter(s => getInnerPaperLabel(s).toLowerCase().includes(innerPaperSearchTerm.toLowerCase()))
                           .map(stock => (
                             <button
                               key={stock._id}
                               type="button"
                               onClick={() => {
-                                setSelectedInnerPaper(stock.name);
-                                setInnerPaperGSM(stock.gsm || '');
+                                setSelectedInnerPaper(getInnerPaperLabel(stock));
+                                setInnerPaperGSM(stock.innerGSM || stock.gsm || '');
                                 setIsInnerPaperDropdownOpen(false);
                               }}
-                              className={`w-full px-4 py-2.5 text-left text-sm flex items-center justify-between hover:bg-sky-50 transition-colors ${selectedInnerPaper === stock.name ? 'bg-sky-50/50 text-sky-700 font-bold' : 'text-gray-700'}`}
+                              className={`w-full px-4 py-2.5 text-left text-sm flex items-center justify-between hover:bg-sky-50 transition-colors ${selectedInnerPaper === getInnerPaperLabel(stock) ? 'bg-sky-50/50 text-sky-700 font-bold' : 'text-gray-700'}`}
                             >
                               <div className="flex items-center gap-3">
-                                <FileText size={14} className={selectedInnerPaper === stock.name ? 'text-sky-500' : 'text-gray-300'} />
-                                <span>{stock.name} <span className="text-[10px] text-gray-400 ml-1">({stock.gsm} GSM)</span></span>
+                                <FileText size={14} className={selectedInnerPaper === getInnerPaperLabel(stock) ? 'text-sky-500' : 'text-gray-300'} />
+                                <span>{getInnerPaperLabel(stock)} <span className="text-[10px] text-gray-400 ml-1">({stock.innerGSM || stock.gsm} GSM)</span></span>
                               </div>
-                              {selectedInnerPaper === stock.name && <div className="w-1.5 h-1.5 rounded-full bg-sky-500" />}
+                              {selectedInnerPaper === getInnerPaperLabel(stock) && <div className="w-1.5 h-1.5 rounded-full bg-sky-500" />}
                             </button>
                           ))
                       ) : (

@@ -15,16 +15,24 @@ router.get('/', async (req, res) => {
 // POST /api/paper-stock - Add new stock item
 router.post('/', async (req, res) => {
   try {
-    const { name, gsm, quantity, coverGSM, coverQuantity, innerGSM, innerQuantity, unit, description, lowStockThreshold, paperSource } = req.body;
+    const { name, coverName, innerName, gsm, quantity, coverGSM, coverQuantity, innerGSM, innerQuantity, unit, description, lowStockThreshold, paperSource } = req.body;
     
+    const resolvedCoverName = (coverName || '').trim();
+    const resolvedInnerName = (innerName || '').trim();
+    const resolvedName = name?.trim()
+      || [resolvedCoverName, resolvedInnerName].filter((value, index, arr) => value && arr.indexOf(value) === index).join(' / ')
+      || 'Unnamed Paper';
+
     // Check if item with same name and paperSource already exists
-    const existing = await PaperStock.findOne({ name, paperSource: paperSource || 'Company paper' });
+    const existing = await PaperStock.findOne({ name: resolvedName, paperSource: paperSource || 'Company paper' });
     if (existing) {
       return res.status(400).json({ error: "Paper with this name and Source already exists. Please update the existing entry." });
     }
 
     const newItem = new PaperStock({
-      name,
+      name: resolvedName,
+      coverName: resolvedCoverName || resolvedName,
+      innerName: resolvedInnerName || resolvedName,
       gsm,
       quantity,
       coverGSM,
@@ -47,10 +55,21 @@ router.post('/', async (req, res) => {
 // PUT /api/paper-stock/:id - Update stock item
 router.put('/:id', async (req, res) => {
   try {
-    const { name, gsm, quantity, coverGSM, coverQuantity, innerGSM, innerQuantity, unit, description, lowStockThreshold, paperSource } = req.body;
+    const { name, coverName, innerName, gsm, quantity, coverGSM, coverQuantity, innerGSM, innerQuantity, unit, description, lowStockThreshold, paperSource } = req.body;
+    const resolvedCoverName = (coverName || '').trim();
+    const resolvedInnerName = (innerName || '').trim();
+    const resolvedName = name?.trim()
+      || [resolvedCoverName, resolvedInnerName].filter((value, index, arr) => value && arr.indexOf(value) === index).join(' / ')
+      || 'Unnamed Paper';
+
     const updated = await PaperStock.findByIdAndUpdate(
       req.params.id,
-      { name, gsm, quantity, coverGSM, coverQuantity, innerGSM, innerQuantity, unit, description, lowStockThreshold, paperSource, updatedAt: Date.now() },
+      {
+        name: resolvedName,
+        coverName: resolvedCoverName || resolvedName,
+        innerName: resolvedInnerName || resolvedName,
+        gsm, quantity, coverGSM, coverQuantity, innerGSM, innerQuantity, unit, description, lowStockThreshold, paperSource, updatedAt: Date.now()
+      },
       { new: true }
     );
     if (!updated) return res.status(404).json({ error: "Item not found" });

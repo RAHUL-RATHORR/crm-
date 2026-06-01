@@ -6,6 +6,14 @@ const paperStockSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  coverName: {
+    type: String,
+    trim: true
+  },
+  innerName: {
+    type: String,
+    trim: true
+  },
   gsm: { 
     type: Number
   },
