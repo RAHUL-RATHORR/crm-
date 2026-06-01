@@ -15,7 +15,7 @@ router.get('/', async (req, res) => {
 // POST /api/paper-stock - Add new stock item
 router.post('/', async (req, res) => {
   try {
-    const { name, coverName, innerName, gsm, quantity, coverGSM, coverQuantity, innerGSM, innerQuantity, unit, description, lowStockThreshold, paperSource } = req.body;
+    const { name, coverName, innerName, gsm, quantity, coverGSM, coverQuantity, coverPaperSize, innerGSM, innerQuantity, innerPaperSize, unit, description, lowStockThreshold, paperSource } = req.body;
     
     const resolvedCoverName = (coverName || '').trim();
     const resolvedInnerName = (innerName || '').trim();
@@ -37,8 +37,10 @@ router.post('/', async (req, res) => {
       quantity,
       coverGSM,
       coverQuantity,
+      coverPaperSize,
       innerGSM,
       innerQuantity,
+      innerPaperSize,
       unit,
       description,
       lowStockThreshold,
@@ -55,7 +57,7 @@ router.post('/', async (req, res) => {
 // PUT /api/paper-stock/:id - Update stock item
 router.put('/:id', async (req, res) => {
   try {
-    const { name, coverName, innerName, gsm, quantity, coverGSM, coverQuantity, innerGSM, innerQuantity, unit, description, lowStockThreshold, paperSource } = req.body;
+    const { name, coverName, innerName, gsm, quantity, coverGSM, coverQuantity, coverPaperSize, innerGSM, innerQuantity, innerPaperSize, unit, description, lowStockThreshold, paperSource } = req.body;
     const resolvedCoverName = (coverName || '').trim();
     const resolvedInnerName = (innerName || '').trim();
     const resolvedName = name?.trim()
@@ -68,7 +70,7 @@ router.put('/:id', async (req, res) => {
         name: resolvedName,
         coverName: resolvedCoverName || resolvedName,
         innerName: resolvedInnerName || resolvedName,
-        gsm, quantity, coverGSM, coverQuantity, innerGSM, innerQuantity, unit, description, lowStockThreshold, paperSource, updatedAt: Date.now()
+        gsm, quantity, coverGSM, coverQuantity, coverPaperSize, innerGSM, innerQuantity, innerPaperSize, unit, description, lowStockThreshold, paperSource, updatedAt: Date.now()
       },
       { new: true }
     );

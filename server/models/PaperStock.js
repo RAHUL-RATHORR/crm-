@@ -28,12 +28,20 @@ const paperStockSchema = new mongoose.Schema({
     type: Number, 
     default: 0 
   },
+  coverPaperSize: {
+    type: String,
+    trim: true
+  },
   innerGSM: { 
     type: Number 
   },
   innerQuantity: { 
     type: Number, 
     default: 0 
+  },
+  innerPaperSize: {
+    type: String,
+    trim: true
   },
   unit: { 
     type: String, 

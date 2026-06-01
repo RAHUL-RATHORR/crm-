@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Layers, Plus, Search, AlertTriangle, Edit2, Trash2, CheckCircle2, Info, ArrowUpRight } from 'lucide-react';
+import { mergePaperSizes, rememberPaperSizes } from './utils/paperStockSizes';
 
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'https://crm-qpw8.onrender.com'
@@ -25,8 +26,10 @@ const PaperStockManagement = () => {
     quantity: '',
     coverGSM: '',
     coverQuantity: '',
+    coverPaperSize: '',
     innerGSM: '',
     innerQuantity: '',
+    innerPaperSize: '',
     description: '',
     lowStockThreshold: 100,
     paperSource: 'Company paper'
@@ -51,7 +54,7 @@ const PaperStockManagement = () => {
     try {
       const res = await fetch(`${API_BASE_URL}/api/paper-stock`);
       const data = await res.json();
-      setStock(data);
+      setStock(mergePaperSizes(data));
     } catch (err) {
       console.error("Fetch error:", err);
     } finally {
@@ -99,6 +102,7 @@ const PaperStockManagement = () => {
       const data = await res.json();
 
       if (res.ok) {
+        rememberPaperSizes(data._id, formData.coverPaperSize, formData.innerPaperSize);
         setMessage({ type: 'success', text: editingId ? 'Stock updated!' : 'Paper added to stock!' });
         setFormData({ 
           coverName: '',
@@ -106,9 +110,11 @@ const PaperStockManagement = () => {
           gsm: '', 
           quantity: '', 
           coverGSM: '', 
-          coverQuantity: '', 
+          coverQuantity: '',
+          coverPaperSize: '',
           innerGSM: '', 
-          innerQuantity: '', 
+          innerQuantity: '',
+          innerPaperSize: '',
           description: '', 
           lowStockThreshold: 100, 
           paperSource: 'Company paper' 
@@ -139,8 +145,10 @@ const PaperStockManagement = () => {
       quantity: item.quantity || '',
       coverGSM: item.coverGSM !== undefined ? item.coverGSM : (item.gsm || ''),
       coverQuantity: '',
+      coverPaperSize: item.coverPaperSize || '',
       innerGSM: item.innerGSM || '',
       innerQuantity: '',
+      innerPaperSize: item.innerPaperSize || '',
       description: item.description || '',
       lowStockThreshold: item.lowStockThreshold || 100,
       paperSource: item.paperSource || 'Company paper'
@@ -275,6 +283,16 @@ const PaperStockManagement = () => {
                       onChange={(e) => setFormData({...formData, coverQuantity: e.target.value})}
                     />
                   </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 pl-1 tracking-widest">Cover Paper Size</label>
+                    <input 
+                      type="text"
+                      placeholder="e.g. 12x18, 13x19"
+                      className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-semibold"
+                      value={formData.coverPaperSize}
+                      onChange={(e) => setFormData({...formData, coverPaperSize: e.target.value})}
+                    />
+                  </div>
                 </div>
 
                 {/* Inner Paper Section */}
@@ -322,6 +340,16 @@ const PaperStockManagement = () => {
                       className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-semibold"
                       value={formData.innerQuantity}
                       onChange={(e) => setFormData({...formData, innerQuantity: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 pl-1 tracking-widest">Inner Paper Size</label>
+                    <input 
+                      type="text"
+                      placeholder="e.g. 18x23, 23x36"
+                      className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-semibold"
+                      value={formData.innerPaperSize}
+                      onChange={(e) => setFormData({...formData, innerPaperSize: e.target.value})}
                     />
                   </div>
                 </div>
@@ -447,7 +475,9 @@ const PaperStockManagement = () => {
                                           (item.innerName || item.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
                                           (item.gsm && item.gsm.toString().includes(searchQuery)) ||
                                           (item.coverGSM && item.coverGSM.toString().includes(searchQuery)) ||
-                                          (item.innerGSM && item.innerGSM.toString().includes(searchQuery));
+                                          (item.innerGSM && item.innerGSM.toString().includes(searchQuery)) ||
+                                          (item.coverPaperSize && item.coverPaperSize.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                                          (item.innerPaperSize && item.innerPaperSize.toLowerCase().includes(searchQuery.toLowerCase()));
                     return matchesTab && matchesSearch;
                   }).length === 0 ? (
                     <tr><td colSpan="5" className="px-6 py-20 text-center text-gray-400 italic">No inventory records found for {activeTab === 'Company paper' ? 'Company Paper' : 'Party Paper'}.</td></tr>
@@ -458,7 +488,9 @@ const PaperStockManagement = () => {
                                             (item.innerName || item.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
                                             (item.gsm && item.gsm.toString().includes(searchQuery)) ||
                                             (item.coverGSM && item.coverGSM.toString().includes(searchQuery)) ||
-                                            (item.innerGSM && item.innerGSM.toString().includes(searchQuery));
+                                            (item.innerGSM && item.innerGSM.toString().includes(searchQuery)) ||
+                                            (item.coverPaperSize && item.coverPaperSize.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                                            (item.innerPaperSize && item.innerPaperSize.toLowerCase().includes(searchQuery.toLowerCase()));
                       return matchesTab && matchesSearch;
                     }).map((item) => {
                       const isLow = ((item.coverQuantity !== undefined ? item.coverQuantity : item.quantity) <= item.lowStockThreshold || 
@@ -478,12 +510,16 @@ const PaperStockManagement = () => {
                                    </p>
                                    <div className="flex items-center gap-2 mt-1.5 text-[10px] font-bold">
                                      {(item.coverGSM !== undefined || item.gsm) ? (
-                                       <span className="bg-sky-50 text-sky-700 px-2 py-0.5 rounded border border-sky-100">Cover: {item.coverName || item.name || '--'} · {item.coverGSM !== undefined ? item.coverGSM : item.gsm} GSM</span>
+                                       <span className="bg-sky-50 text-sky-700 px-2 py-0.5 rounded border border-sky-100">
+                                         Cover: {item.coverName || item.name || '--'} · {item.coverGSM !== undefined ? item.coverGSM : item.gsm} GSM{item.coverPaperSize ? ` · ${item.coverPaperSize}` : ''}
+                                       </span>
                                      ) : (
                                        <span className="bg-gray-50 text-gray-400 px-2 py-0.5 rounded border border-gray-200">Cover: --</span>
                                      )}
                                      {item.innerGSM ? (
-                                       <span className="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded border border-indigo-100">Inner: {item.innerName || item.name || '--'} · {item.innerGSM} GSM</span>
+                                       <span className="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded border border-indigo-100">
+                                         Inner: {item.innerName || item.name || '--'} · {item.innerGSM} GSM{item.innerPaperSize ? ` · ${item.innerPaperSize}` : ''}
+                                       </span>
                                      ) : (
                                        <span className="bg-gray-50 text-gray-400 px-2 py-0.5 rounded border border-gray-200">Inner: --</span>
                                      )}

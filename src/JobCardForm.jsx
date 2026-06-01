@@ -4,6 +4,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronDown, Layers, Search, FileText } from 'lucide-react';
 import { rememberPlateUsage, resolvePlateUseCount } from './utils/plateUsage';
+import { mergePaperSizes } from './utils/paperStockSizes';
 
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'https://crm-qpw8.onrender.com'
@@ -17,10 +18,12 @@ export default function JobCardForm() {
   const [jobDate, setJobDate] = useState(editData ? new Date(editData.jobDate) : new Date());
   const [paperStocks, setPaperStocks] = useState([]);
   const [selectedPaper, setSelectedPaper] = useState(editData?.paper || '');
+  const [selectedPaperLabel, setSelectedPaperLabel] = useState(editData?.paper || '');
   const [paperGSM, setPaperGSM] = useState(editData?.paperGSM || '');
   const [paperSearchTerm, setPaperSearchTerm] = useState('');
   const [isPaperDropdownOpen, setIsPaperDropdownOpen] = useState(false);
   const [selectedInnerPaper, setSelectedInnerPaper] = useState(editData?.innerPaper || '');
+  const [selectedInnerPaperLabel, setSelectedInnerPaperLabel] = useState(editData?.innerPaper || '');
   const [innerPaperSearchTerm, setInnerPaperSearchTerm] = useState('');
   const [isInnerPaperDropdownOpen, setIsInnerPaperDropdownOpen] = useState(false);
   const [compose, setCompose] = useState(editData?.compose || 'No');
@@ -60,6 +63,42 @@ export default function JobCardForm() {
   const getCoverPaperLabel = (stock) => stock.coverName || stock.name || '';
   const getInnerPaperLabel = (stock) => stock.innerName || stock.name || '';
 
+  const formatCoverPaperOption = (stock) => {
+    const name = getCoverPaperLabel(stock);
+    const gsm = stock.coverGSM || stock.gsm;
+    if (!name) return '';
+    const gsmText = gsm ? ` (${gsm} GSM)` : '';
+    const sizeText = stock.coverPaperSize ? ` · ${stock.coverPaperSize}` : '';
+    return `${name}${gsmText}${sizeText}`;
+  };
+
+  const formatInnerPaperOption = (stock) => {
+    const name = getInnerPaperLabel(stock);
+    const gsm = stock.innerGSM || stock.gsm;
+    if (!name) return '';
+    const gsmText = gsm ? ` (${gsm} GSM)` : '';
+    const sizeText = stock.innerPaperSize ? ` · ${stock.innerPaperSize}` : '';
+    return `${name}${gsmText}${sizeText}`;
+  };
+
+  const matchesCoverSearch = (stock, term) => {
+    const query = term.toLowerCase();
+    return (
+      getCoverPaperLabel(stock).toLowerCase().includes(query) ||
+      String(stock.coverGSM || stock.gsm || '').includes(query) ||
+      (stock.coverPaperSize || '').toLowerCase().includes(query)
+    );
+  };
+
+  const matchesInnerSearch = (stock, term) => {
+    const query = term.toLowerCase();
+    return (
+      getInnerPaperLabel(stock).toLowerCase().includes(query) ||
+      String(stock.innerGSM || stock.gsm || '').includes(query) ||
+      (stock.innerPaperSize || '').toLowerCase().includes(query)
+    );
+  };
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (paperDropdownRef.current && !paperDropdownRef.current.contains(event.target)) {
@@ -90,13 +129,35 @@ export default function JobCardForm() {
       try {
         const res = await fetch(`${API_BASE_URL}/api/paper-stock`);
         const data = await res.json();
-        setPaperStocks(data);
+        setPaperStocks(mergePaperSizes(data));
       } catch (err) {
         console.error("Stock fetch error:", err);
       }
     };
     fetchStocks();
   }, []);
+
+  useEffect(() => {
+    if (!paperStocks.length) return;
+
+    if (editData?.paper) {
+      const coverMatch = paperStocks.find(
+        (stock) => getCoverPaperLabel(stock).toLowerCase() === editData.paper.toLowerCase()
+      );
+      if (coverMatch) {
+        setSelectedPaperLabel(formatCoverPaperOption(coverMatch));
+      }
+    }
+
+    if (editData?.innerPaper) {
+      const innerMatch = paperStocks.find(
+        (stock) => getInnerPaperLabel(stock).toLowerCase() === editData.innerPaper.toLowerCase()
+      );
+      if (innerMatch) {
+        setSelectedInnerPaperLabel(formatInnerPaperOption(innerMatch));
+      }
+    }
+  }, [paperStocks, editData?.paper, editData?.innerPaper]);
 
   useEffect(() => {
     refreshPlateUseCount(plateSize);
@@ -323,8 +384,10 @@ export default function JobCardForm() {
                   onChange={() => {
                     setPaperSource('Party paper');
                     setSelectedPaper('');
+                    setSelectedPaperLabel('');
                     setPaperGSM('');
                     setSelectedInnerPaper('');
+                    setSelectedInnerPaperLabel('');
                     setInnerPaperGSM('');
                   }}
                   className="w-4 h-4 text-sky-600 border-gray-300 focus:ring-sky-500"
@@ -340,8 +403,10 @@ export default function JobCardForm() {
                   onChange={() => {
                     setPaperSource('Company paper');
                     setSelectedPaper('');
+                    setSelectedPaperLabel('');
                     setPaperGSM('');
                     setSelectedInnerPaper('');
+                    setSelectedInnerPaperLabel('');
                     setInnerPaperGSM('');
                   }}
                   className="w-4 h-4 text-sky-600 border-gray-300 focus:ring-sky-500"
@@ -365,8 +430,8 @@ export default function JobCardForm() {
                   >
                     <div className="flex items-center gap-2">
                       <Layers size={16} className={selectedPaper ? 'text-sky-500' : 'text-gray-400'} />
-                      <span className={`text-sm ${selectedPaper ? 'text-gray-900 font-bold' : 'text-gray-400'}`}>
-                        {selectedPaper || 'Choose Paper'}
+                      <span className={`text-sm truncate ${selectedPaper ? 'text-gray-900 font-bold' : 'text-gray-400'}`}>
+                        {selectedPaperLabel || selectedPaper || 'Choose Paper'}
                       </span>
                     </div>
                     <ChevronDown size={18} className={`text-gray-400 transition-transform duration-200 ${isPaperDropdownOpen ? 'rotate-180' : ''}`} />
@@ -388,25 +453,39 @@ export default function JobCardForm() {
                         </div>
                       </div>
 
-                      {filteredStocks.filter(s => getCoverPaperLabel(s).toLowerCase().includes(paperSearchTerm.toLowerCase())).length > 0 ? (
+                      {filteredStocks.filter((s) => matchesCoverSearch(s, paperSearchTerm)).length > 0 ? (
                         filteredStocks
-                          .filter(s => getCoverPaperLabel(s).toLowerCase().includes(paperSearchTerm.toLowerCase()))
+                          .filter((s) => matchesCoverSearch(s, paperSearchTerm))
                           .map(stock => (
                             <button
                               key={stock._id}
                               type="button"
                               onClick={() => {
                                 setSelectedPaper(getCoverPaperLabel(stock));
+                                setSelectedPaperLabel(formatCoverPaperOption(stock));
                                 setPaperGSM(stock.coverGSM || stock.gsm || '');
+                                if (stock.coverPaperSize) {
+                                  setCoverPaperDetails(stock.coverPaperSize);
+                                }
                                 setIsPaperDropdownOpen(false);
                               }}
                               className={`w-full px-4 py-2.5 text-left text-sm flex items-center justify-between hover:bg-sky-50 transition-colors ${selectedPaper === getCoverPaperLabel(stock) ? 'bg-sky-50/50 text-sky-700 font-bold' : 'text-gray-700'}`}
                             >
-                              <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-3 min-w-0">
                                 <FileText size={14} className={selectedPaper === getCoverPaperLabel(stock) ? 'text-sky-500' : 'text-gray-300'} />
-                                <span>{getCoverPaperLabel(stock)} <span className="text-[10px] text-gray-400 ml-1">({stock.coverGSM || stock.gsm} GSM)</span></span>
+                                <span className="truncate">
+                                  {getCoverPaperLabel(stock)}{' '}
+                                  <span className="text-[10px] text-gray-500">
+                                    ({stock.coverGSM || stock.gsm} GSM)
+                                  </span>
+                                  {stock.coverPaperSize && (
+                                    <span className="text-[10px] font-bold text-sky-600 ml-1">
+                                      · {stock.coverPaperSize}
+                                    </span>
+                                  )}
+                                </span>
                               </div>
-                              {selectedPaper === getCoverPaperLabel(stock) && <div className="w-1.5 h-1.5 rounded-full bg-sky-500" />}
+                              {selectedPaper === getCoverPaperLabel(stock) && <div className="w-1.5 h-1.5 rounded-full bg-sky-500 shrink-0" />}
                             </button>
                           ))
                       ) : (
@@ -418,6 +497,7 @@ export default function JobCardForm() {
                           type="button"
                           onClick={() => {
                             setSelectedPaper('Custom');
+                            setSelectedPaperLabel('Custom');
                             setIsPaperDropdownOpen(false);
                           }}
                           className={`w-full px-4 py-2 text-left text-xs font-black uppercase tracking-widest transition-colors ${selectedPaper === 'Custom' ? 'text-purple-600 bg-purple-50' : 'text-gray-400 hover:text-purple-600 hover:bg-purple-50'}`}
@@ -484,8 +564,8 @@ export default function JobCardForm() {
                   >
                     <div className="flex items-center gap-2">
                       <Layers size={16} className={selectedInnerPaper ? 'text-sky-500' : 'text-gray-400'} />
-                      <span className={`text-sm ${selectedInnerPaper ? 'text-gray-900 font-bold' : 'text-gray-400'}`}>
-                        {selectedInnerPaper || 'Choose Paper'}
+                      <span className={`text-sm truncate ${selectedInnerPaper ? 'text-gray-900 font-bold' : 'text-gray-400'}`}>
+                        {selectedInnerPaperLabel || selectedInnerPaper || 'Choose Paper'}
                       </span>
                     </div>
                     <ChevronDown size={18} className={`text-gray-400 transition-transform duration-200 ${isInnerPaperDropdownOpen ? 'rotate-180' : ''}`} />
@@ -507,25 +587,39 @@ export default function JobCardForm() {
                         </div>
                       </div>
 
-                      {filteredStocks.filter(s => getInnerPaperLabel(s).toLowerCase().includes(innerPaperSearchTerm.toLowerCase())).length > 0 ? (
+                      {filteredStocks.filter((s) => matchesInnerSearch(s, innerPaperSearchTerm)).length > 0 ? (
                         filteredStocks
-                          .filter(s => getInnerPaperLabel(s).toLowerCase().includes(innerPaperSearchTerm.toLowerCase()))
+                          .filter((s) => matchesInnerSearch(s, innerPaperSearchTerm))
                           .map(stock => (
                             <button
                               key={stock._id}
                               type="button"
                               onClick={() => {
                                 setSelectedInnerPaper(getInnerPaperLabel(stock));
+                                setSelectedInnerPaperLabel(formatInnerPaperOption(stock));
                                 setInnerPaperGSM(stock.innerGSM || stock.gsm || '');
+                                if (stock.innerPaperSize) {
+                                  setInnerPaperDetails(stock.innerPaperSize);
+                                }
                                 setIsInnerPaperDropdownOpen(false);
                               }}
                               className={`w-full px-4 py-2.5 text-left text-sm flex items-center justify-between hover:bg-sky-50 transition-colors ${selectedInnerPaper === getInnerPaperLabel(stock) ? 'bg-sky-50/50 text-sky-700 font-bold' : 'text-gray-700'}`}
                             >
-                              <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-3 min-w-0">
                                 <FileText size={14} className={selectedInnerPaper === getInnerPaperLabel(stock) ? 'text-sky-500' : 'text-gray-300'} />
-                                <span>{getInnerPaperLabel(stock)} <span className="text-[10px] text-gray-400 ml-1">({stock.innerGSM || stock.gsm} GSM)</span></span>
+                                <span className="truncate">
+                                  {getInnerPaperLabel(stock)}{' '}
+                                  <span className="text-[10px] text-gray-500">
+                                    ({stock.innerGSM || stock.gsm} GSM)
+                                  </span>
+                                  {stock.innerPaperSize && (
+                                    <span className="text-[10px] font-bold text-indigo-600 ml-1">
+                                      · {stock.innerPaperSize}
+                                    </span>
+                                  )}
+                                </span>
                               </div>
-                              {selectedInnerPaper === getInnerPaperLabel(stock) && <div className="w-1.5 h-1.5 rounded-full bg-sky-500" />}
+                              {selectedInnerPaper === getInnerPaperLabel(stock) && <div className="w-1.5 h-1.5 rounded-full bg-sky-500 shrink-0" />}
                             </button>
                           ))
                       ) : (
@@ -537,6 +631,7 @@ export default function JobCardForm() {
                           type="button"
                           onClick={() => {
                             setSelectedInnerPaper('Custom');
+                            setSelectedInnerPaperLabel('Custom');
                             setIsInnerPaperDropdownOpen(false);
                           }}
                           className={`w-full px-4 py-2 text-left text-xs font-black uppercase tracking-widest transition-colors ${selectedInnerPaper === 'Custom' ? 'text-purple-600 bg-purple-50' : 'text-gray-400 hover:text-purple-600 hover:bg-purple-50'}`}
