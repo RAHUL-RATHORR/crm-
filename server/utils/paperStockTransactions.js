@@ -13,6 +13,7 @@ export const logPaperStockTransaction = async ({
   paperSource = 'Company paper',
   balanceAfter = 0,
   note = '',
+  createdAt,
 }) => {
   const qty = Number(quantity) || 0;
   if (!qty) return;
@@ -30,5 +31,6 @@ export const logPaperStockTransaction = async ({
     paperSource,
     balanceAfter,
     note,
+    createdAt: createdAt || Date.now(),
   });
 };

@@ -8,6 +8,7 @@ import {
   Hash,
   Layers,
 } from 'lucide-react';
+import { buildPaperStockHistory } from './utils/buildPaperStockHistory.js';
 
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'https://crm-qpw8.onrender.com'
@@ -26,19 +27,35 @@ const PaperStockStatements = () => {
     setError('');
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000);
+    const fetchOptions = { signal: controller.signal };
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/paper-stock/transactions`, {
-        signal: controller.signal,
-      });
+      const [txRes, stockRes, jobRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/api/paper-stock/transactions`, fetchOptions),
+        fetch(`${API_BASE_URL}/api/paper-stock`, fetchOptions),
+        fetch(`${API_BASE_URL}/api/jobcard`, fetchOptions),
+      ]);
       clearTimeout(timeoutId);
 
-      if (!res.ok) {
-        throw new Error(res.status === 404 ? 'Transaction history API abhi server par available nahi hai.' : `Server error (${res.status})`);
+      if (!stockRes.ok || !jobRes.ok) {
+        throw new Error('Stock ya job card data load nahi ho payi.');
       }
 
-      const data = await res.json();
-      setTransactions(Array.isArray(data) ? data : []);
+      let data = [];
+      if (txRes.ok) {
+        const txData = await txRes.json();
+        data = Array.isArray(txData) ? txData : [];
+      }
+
+      if (data.length === 0) {
+        const [stocks, jobs] = await Promise.all([stockRes.json(), jobRes.json()]);
+        data = buildPaperStockHistory(
+          Array.isArray(stocks) ? stocks : [],
+          Array.isArray(jobs) ? jobs : [],
+        );
+      }
+
+      setTransactions(data);
     } catch (err) {
       clearTimeout(timeoutId);
       console.error('Fetch error:', err);

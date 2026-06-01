@@ -3,10 +3,12 @@ const router = express.Router();
 import PaperStock from '../models/PaperStock.js';
 import PaperStockTransaction from '../models/PaperStockTransaction.js';
 import { logPaperStockTransaction } from '../utils/paperStockTransactions.js';
+import { backfillPaperStockTransactionsIfEmpty } from '../utils/backfillPaperStockTransactions.js';
 
 // GET /api/paper-stock/transactions - Stock add/deduct history
 router.get('/transactions', async (req, res) => {
   try {
+    await backfillPaperStockTransactionsIfEmpty();
     const transactions = await PaperStockTransaction.find().sort({ createdAt: -1 });
     res.json(transactions);
   } catch (err) {
