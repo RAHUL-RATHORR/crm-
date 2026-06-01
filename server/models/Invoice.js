@@ -12,9 +12,13 @@ const invoiceSchema = new mongoose.Schema({
   invoiceNumber: { type: String, required: true, unique: true },
   date: { type: Date, default: Date.now },
   jobCard: { type: String }, // Can be JobNumber or reference
+  orderNo: { type: String, default: '' },
+  orderDate: { type: Date },
   partyName: { type: String, required: true },
   items: [itemSchema],
   subTotal: { type: Number, default: 0 },
+  freight: { type: Number, default: 0 },
+  reverseCharge: { type: String, default: 'No' },
   gstPercent: { type: Number, default: 0 },
   gstType: { type: String, default: 'CGST/SGST' },
   gstAmount: { type: Number, default: 0 },

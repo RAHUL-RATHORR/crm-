@@ -14,13 +14,19 @@ const AddInvoice = () => {
   const editData = location.state?.editData;
 
   const [invoiceDate, setInvoiceDate] = useState(editData ? new Date(editData.date) : new Date());
+  const [orderDate, setOrderDate] = useState(
+    editData?.orderDate ? new Date(editData.orderDate) : (editData?.date ? new Date(editData.date) : new Date())
+  );
   const [jobCards, setJobCards] = useState([]);
   const [formData, setFormData] = useState({
     invoiceNo: editData ? editData.invoiceNumber : 'INVN' + String(Date.now()).slice(-4),
     jobCard: editData ? editData.jobCard : '',
+    orderNo: editData ? (editData.orderNo || editData.jobCard || '') : '',
     party: editData ? editData.partyName : '',
     gstPercent: editData ? editData.gstPercent : 18,
     gstType: editData ? (editData.gstType || 'CGST/SGST') : 'CGST/SGST',
+    freight: editData ? (editData.freight || 0) : 0,
+    reverseCharge: editData ? (editData.reverseCharge || 'No') : 'No',
   });
 
   const [items, setItems] = useState(editData ? editData.items.map(item => ({
@@ -82,8 +88,12 @@ const AddInvoice = () => {
     setFormData((prev) => ({
       ...prev,
       jobCard: card.jobNumber,
+      orderNo: card.jobNumber || '',
       party: card.partyName || '',
     }));
+    if (card.jobDate) {
+      setOrderDate(new Date(card.jobDate));
+    }
     setIsJobCardDropdownOpen(false);
     setJobCardSearchTerm('');
   };
@@ -114,8 +124,10 @@ const AddInvoice = () => {
   };
 
   const subTotal = items.reduce((sum, item) => sum + (item.total || 0), 0);
-  const gstAmount = (subTotal * (formData.gstPercent || 0)) / 100;
-  const grandTotal = subTotal + gstAmount;
+  const freight = Number(formData.freight) || 0;
+  const taxableAmount = subTotal + freight;
+  const gstAmount = (taxableAmount * (formData.gstPercent || 0)) / 100;
+  const grandTotal = taxableAmount + gstAmount;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -123,9 +135,13 @@ const AddInvoice = () => {
       invoiceNumber: formData.invoiceNo,
       date: invoiceDate.toISOString(),
       jobCard: formData.jobCard,
+      orderNo: formData.orderNo,
+      orderDate: orderDate.toISOString(),
       partyName: formData.party,
       items: items,
       subTotal: subTotal,
+      freight,
+      reverseCharge: formData.reverseCharge || 'No',
       gstPercent: formData.gstPercent,
       gstType: formData.gstType,
       gstAmount: gstAmount,
@@ -189,6 +205,26 @@ const AddInvoice = () => {
               <DatePicker
                 selected={invoiceDate}
                 onChange={(date) => setInvoiceDate(date)}
+                wrapperClassName="w-full"
+                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Order No.</label>
+              <input
+                type="text"
+                name="orderNo"
+                value={formData.orderNo}
+                onChange={handleInputChange}
+                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+                placeholder="Order number"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Order Date</label>
+              <DatePicker
+                selected={orderDate}
+                onChange={(date) => setOrderDate(date || new Date())}
                 wrapperClassName="w-full"
                 className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
               />
@@ -364,12 +400,25 @@ const AddInvoice = () => {
         </div>
 
         {/* Calculations */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 sm:gap-6">
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 space-y-2">
             <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Sub Total *</label>
             <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-base sm:text-lg font-semibold text-gray-800">
               ₹ {subTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
             </div>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 space-y-2">
+            <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Freight</label>
+            <input
+              type="number"
+              name="freight"
+              min="0"
+              step="0.01"
+              value={formData.freight}
+              onChange={handleInputChange}
+              className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-base sm:text-lg font-semibold text-gray-800"
+              placeholder="0.00"
+            />
           </div>
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 space-y-2">
             <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">GST (%) *</label>
@@ -394,6 +443,18 @@ const AddInvoice = () => {
             >
               <option value="CGST/SGST">CGST + SGST</option>
               <option value="IGST">IGST</option>
+            </select>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 space-y-2">
+            <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Reverse Charge</label>
+            <select
+              name="reverseCharge"
+              value={formData.reverseCharge}
+              onChange={handleInputChange}
+              className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-base sm:text-lg font-semibold text-gray-800 outline-none cursor-pointer"
+            >
+              <option value="No">No</option>
+              <option value="Yes">Yes</option>
             </select>
           </div>
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 space-y-2">

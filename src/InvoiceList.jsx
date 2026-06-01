@@ -38,18 +38,23 @@ const InvoiceList = () => {
   const [jobCards, setJobCards] = useState([]);
 
   const gstPercent = selectedInvoice ? (selectedInvoice.gstPercent !== undefined ? selectedInvoice.gstPercent : 18) : 18;
+  const freight = selectedInvoice ? (Number(selectedInvoice.freight) || 0) : 0;
   const taxableValue = selectedInvoice ? (selectedInvoice.totalAmount / (1 + (gstPercent / 100))) : 0;
   const totalGstAmount = selectedInvoice ? (selectedInvoice.totalAmount - taxableValue) : 0;
   const halfGstAmount = totalGstAmount / 2;
   const isIGST = tempGstType === 'IGST';
-  const totalAmount = selectedInvoice ? (selectedInvoice.subTotal ?? taxableValue) : 0;
+  const itemsSubTotal = selectedInvoice ? (Number(selectedInvoice.subTotal) || Math.max(0, taxableValue - freight)) : 0;
+  const totalAmount = itemsSubTotal;
   const roundOff = selectedInvoice
-    ? (selectedInvoice.totalAmount - (totalAmount + (selectedInvoice.gstAmount ?? totalGstAmount)))
+    ? (selectedInvoice.totalAmount - (itemsSubTotal + freight + (selectedInvoice.gstAmount ?? totalGstAmount)))
     : 0;
 
   const linkedJobCard = selectedInvoice
     ? jobCards.find((card) => card.jobNumber === selectedInvoice.jobCard)
     : null;
+
+  const displayOrderNo = selectedInvoice?.orderNo || linkedJobCard?.jobNumber || selectedInvoice?.jobCard || '-';
+  const displayOrderDate = selectedInvoice?.orderDate || linkedJobCard?.jobDate || selectedInvoice?.date;
 
   useEffect(() => {
     fetchInvoice();
@@ -371,7 +376,7 @@ const InvoiceList = () => {
                   
                     <div className="flex-1 flex flex-col items-end">
                       {/* Metadata Table */}
-                      <div className="w-48 border border-gray-200 rounded-lg overflow-hidden">
+                      <div className="w-56 border border-gray-200 rounded-lg overflow-hidden">
                     <table className="w-full text-[12px]">
                       <tbody className="divide-y divide-gray-200">
                         <tr className="bg-gray-50/50">
@@ -385,9 +390,22 @@ const InvoiceList = () => {
                           <td className="px-2 py-1.5 font-bold text-right text-gray-800">#{selectedInvoice.invoiceNumber}</td>
                         </tr>
                         <tr className="bg-gray-50/50">
+                          <td className="px-2 py-1.5 font-bold text-gray-700 uppercase tracking-tighter">Order No. :</td>
+                          <td className="px-2 py-1.5 font-bold text-right text-gray-800">{displayOrderNo}</td>
+                        </tr>
+                        <tr>
+                          <td className="px-2 py-1.5 font-bold text-gray-700 uppercase tracking-tighter">Order Date :</td>
+                          <td className="px-2 py-1.5 font-bold text-right text-gray-800">
+                            {displayOrderDate
+                              ? new Date(displayOrderDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                              : '-'}
+                          </td>
+                        </tr>
+                        <tr className="bg-gray-50/50">
                           <td className="px-2 py-1.5 font-bold text-gray-700 uppercase tracking-tighter">GSTIN :</td>
                           <td className="px-2 py-1.5 font-bold text-right text-blue-700 uppercase">08AALPC9959M1ZV</td>
                         </tr>
+
                       </tbody>
                     </table>
                       </div>
@@ -479,6 +497,10 @@ const InvoiceList = () => {
                       </div>
                       <div className="flex flex-col w-56 border-l border-gray-200">
                         <div className="flex justify-between px-4 py-1.5 border-b border-gray-200">
+                          <span className="text-[11px] font-bold text-gray-700 uppercase">Freight</span>
+                          <span className="text-[12px] font-bold text-gray-800">₹ {freight.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                        </div>
+                        <div className="flex justify-between px-4 py-1.5 border-b border-gray-200">
                           <span className="text-[11px] font-bold text-gray-700 uppercase">Total Amount</span>
                           <span className="text-[12px] font-bold text-gray-800">₹ {totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                         </div>
@@ -501,6 +523,10 @@ const InvoiceList = () => {
                         <div className="flex justify-between px-4 py-3" style={{ backgroundColor: '#1e3a8a' }}>
                           <span className="text-[12px] font-black text-white uppercase tracking-wider">Grand Total</span>
                           <span className="text-sm font-black text-white">₹ {selectedInvoice.totalAmount?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                        </div>
+                        <div className="flex justify-between px-4 py-2 border-t border-gray-200 bg-gray-50/80">
+                          <span className="text-[11px] font-bold text-gray-700 uppercase">Reverse Charge</span>
+                          <span className="text-[12px] font-bold text-gray-800">{selectedInvoice.reverseCharge || 'No'}</span>
                         </div>
                       </div>
                     </div>
