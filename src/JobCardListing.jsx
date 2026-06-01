@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { PlusSquare, Trash2, Printer, X, Download, Pencil, RefreshCw, Filter, Search, Check, Share2, Loader2, Building2, Hash, Calendar, Layers, FileText, Globe, Phone, Mail, MapPin, FileDigit, Calculator, List, FileCheck, AlertCircle } from 'lucide-react';
 import { downloadAsPDF } from './utils/pdfExport';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
+import { syncPlateUsageFromCards } from './utils/plateUsage';
 
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'https://crm-qpw8.onrender.com'
@@ -50,6 +51,7 @@ export default function JobCardListing() {
     try {
       const response = await fetch(`${API_BASE_URL}/api/jobcard`);
       const data = await response.json();
+      syncPlateUsageFromCards(data);
       setJobCards(data);
     } catch (error) {
       console.error("Error loading job cards:", error);
@@ -510,9 +512,15 @@ export default function JobCardListing() {
                     <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest leading-none mb-1">Job Date</span>
                     <span className="text-base font-black text-gray-900">{new Date(selectedCard.jobDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
                   </div>
-                  <div className="col-span-1 flex flex-col gap-1">
-                    <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest leading-none mb-1">Address</span>
-                    <span className="text-[12px] font-bold text-gray-600 uppercase">{selectedCard.address || 'Address Not Provided'}</span>
+                  <div className="col-span-1 flex flex-col gap-2">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest leading-none mb-1">Address</span>
+                      <span className="text-[12px] font-bold text-gray-600 uppercase">{selectedCard.address || 'Address Not Provided'}</span>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest leading-none mb-1">Gmail ID</span>
+                      <span className="text-[12px] font-bold text-gray-900 break-all">{selectedCard.emailId || '-'}</span>
+                    </div>
                   </div>
                   <div className="col-span-1 flex justify-end gap-6 text-right">
                     <div className="flex flex-col gap-1">
@@ -634,6 +642,8 @@ export default function JobCardListing() {
                         { label: 'Compose', value: selectedCard.compose || 'No' },
                         { label: 'Design', value: selectedCard.design || 'No' },
                         { label: 'Plate Type', value: selectedCard.plateType || 'New' },
+                        { label: 'Plate Size', value: selectedCard.plateSize || '-' },
+                        { label: 'Plate Used', value: selectedCard.plateUseCount || '-' },
                         { label: 'Plate Number', value: selectedCard.plateNo || '-' },
                         { label: 'Plate Qty', value: selectedCard.plateQty || 0 },
                         { label: 'Lamination', value: selectedCard.lamination || '-' }

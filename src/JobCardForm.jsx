@@ -3,6 +3,7 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronDown, Layers, Search, FileText } from 'lucide-react';
+import { rememberPlateUsage, resolvePlateUseCount } from './utils/plateUsage';
 
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'https://crm-qpw8.onrender.com'
@@ -30,8 +31,26 @@ export default function JobCardForm() {
   const [innerPaperCount, setInnerPaperCount] = useState(editData?.innerPaperCount || 0);
   const [innerPaperDetails, setInnerPaperDetails] = useState(editData?.innerPaperDetails || '');
   const [paperSource, setPaperSource] = useState(editData?.paperSource || 'Company paper');
+  const [plateSize, setPlateSize] = useState(editData?.plateSize || '');
+  const [plateUseCount, setPlateUseCount] = useState(editData?.plateUseCount || '');
   const paperDropdownRef = useRef(null);
   const innerPaperDropdownRef = useRef(null);
+
+  const refreshPlateUseCount = async (size) => {
+    if (!size) {
+      setPlateUseCount('');
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/jobcard`);
+      const cards = await res.json();
+      setPlateUseCount(resolvePlateUseCount(size, cards, editData));
+    } catch (err) {
+      console.error('Job card fetch error:', err);
+      setPlateUseCount(resolvePlateUseCount(size, [], editData));
+    }
+  };
 
   const filteredStocks = paperStocks.filter(stock => {
     const source = stock.paperSource || 'Company paper';
@@ -76,6 +95,14 @@ export default function JobCardForm() {
     fetchStocks();
   }, []);
 
+  useEffect(() => {
+    refreshPlateUseCount(plateSize);
+  }, [plateSize, editData?._id]);
+
+  const handlePlateSizeChange = (e) => {
+    setPlateSize(e.target.value);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
@@ -83,6 +110,8 @@ export default function JobCardForm() {
       ...Object.fromEntries(fd.entries()),
       jobDate: jobDate.toISOString(),
       companyName: fd.get('partyName'), // alias for backward compatibility
+      plateSize: plateSize || undefined,
+      plateUseCount: plateUseCount ? Number(plateUseCount) : undefined,
       // Boolean conversion for binding checkboxes
       bindingCenterPin: fd.get('bindingCenterPin') === 'on',
       bindingSilai: fd.get('bindingSilai') === 'on',
@@ -102,6 +131,8 @@ export default function JobCardForm() {
         body: JSON.stringify(jobCard)
       });
       if (response.ok) {
+        const saved = await response.json();
+        rememberPlateUsage(saved.plateSize || plateSize, saved.plateUseCount || plateUseCount);
         window.dispatchEvent(new Event('fetchNotifications'));
         navigate('/job-card-list');
       } else {
@@ -146,6 +177,10 @@ export default function JobCardForm() {
             <div className="flex flex-col">
               <label className="text-sm font-medium text-gray-700 mb-1">Contact No.</label>
               <input type="text" name="contactNo" defaultValue={editData?.contactNo} className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" placeholder="Enter Phone" />
+            </div>
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-gray-700 mb-1">Gmail ID</label>
+              <input type="email" name="emailId" defaultValue={editData?.emailId} className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" placeholder="Enter Gmail ID" />
             </div>
             <div className="flex flex-col">
               <label className="text-sm font-medium text-gray-700 mb-1">GST No.</label>
@@ -559,6 +594,33 @@ export default function JobCardForm() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-gray-700 mb-1">Plate Size</label>
+              <select
+                name="plateSize"
+                value={plateSize}
+                onChange={handlePlateSizeChange}
+                className="h-10 border border-gray-200 rounded-lg px-4 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+              >
+                <option value="">Select Plate Size</option>
+                <option value="500*670">500*670</option>
+                <option value="800*1030">800*1030</option>
+                <option value="820*1030">820*1030</option>
+                <option value="540*780">540*780</option>
+                <option value="608*890">608*890</option>
+                <option value="715*915">715*915</option>
+              </select>
+            </div>
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-gray-700 mb-1">Plate Used</label>
+              <input
+                type="text"
+                readOnly
+                value={plateSize ? plateUseCount : ''}
+                placeholder="Auto"
+                className="h-10 border border-gray-200 rounded-lg px-4 bg-gray-50 text-gray-800 font-semibold focus:outline-none cursor-default"
+              />
+            </div>
             <div className="flex flex-col">
               <label className="text-sm font-medium text-gray-700 mb-1">Plate Number</label>
               <input type="text" name="plateNo" defaultValue={editData?.plateNo} className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" placeholder="Enter plate no" />

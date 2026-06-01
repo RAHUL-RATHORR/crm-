@@ -5,6 +5,7 @@ const jobCardSchema = new mongoose.Schema({
   companyName: { type: String }, // redundant alias for backward compatibility
   address: { type: String },
   contactNo: { type: String },
+  emailId: { type: String },
   gstNo: { type: String },
   jobName: { type: String },
   jobNumber: { type: String },
@@ -43,6 +44,8 @@ const jobCardSchema = new mongoose.Schema({
   bindingNo: { type: String },
   bindingNote: { type: String },
   filePath: { type: String },
+  plateSize: { type: String },
+  plateUseCount: { type: Number },
   plateNo: { type: String },
   platePrice: { type: Number, default: 0 },
 

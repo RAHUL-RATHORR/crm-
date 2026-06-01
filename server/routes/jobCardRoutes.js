@@ -4,6 +4,20 @@ import JobCard from '../models/JobCard.js';
 import Notification from '../models/Notification.js';
 import PaperStock from '../models/PaperStock.js';
 
+const computePlateUseCount = async (plateSize, editingId) => {
+  if (!plateSize) return undefined;
+
+  const normalizedSize = String(plateSize).trim();
+  const existingCount = await JobCard.countDocuments({ plateSize: normalizedSize });
+
+  if (!editingId) return existingCount + 1;
+
+  const editingCard = await JobCard.findById(editingId).select('plateSize');
+  if (String(editingCard?.plateSize || '').trim() === normalizedSize) return existingCount;
+
+  return existingCount + 1;
+};
+
 // POST /api/jobcard - Save or Update Job Card
 router.post('/', async (req, res) => {
   try {
@@ -19,6 +33,11 @@ router.post('/', async (req, res) => {
     let jobCard;
     let isUpdate = false;
     const { _id } = req.body;
+
+    if (req.body.plateSize) {
+      req.body.plateSize = String(req.body.plateSize).trim();
+      req.body.plateUseCount = await computePlateUseCount(req.body.plateSize, _id);
+    }
 
     if (_id) {
       // UPDATE by _id (most reliable)
@@ -137,6 +156,19 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: "Job Number already exists" });
     }
     console.error(`❌ Save Error: ${err.message}`);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/jobcard/plate-used-count?plateSize=500*670&editingId=optional
+router.get('/plate-used-count', async (req, res) => {
+  try {
+    const { plateSize, editingId } = req.query;
+    if (!plateSize) return res.json({ plateUseCount: '' });
+
+    const plateUseCount = await computePlateUseCount(String(plateSize).trim(), editingId);
+    res.json({ plateUseCount });
+  } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
