@@ -86,6 +86,17 @@ export default function JobCardListing() {
     return bindings.length > 0 ? bindings : null;
   };
 
+  const formatShortDate = (value) =>
+    new Date(value).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: '2-digit' });
+
+  const formatShortDateTime = (value) => {
+    const d = new Date(value);
+    return {
+      date: d.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: '2-digit' }),
+      time: d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }),
+    };
+  };
+
   const exportToCSV = () => {
     const visibleData = jobCards.map(card => {
       const exportRow = {};
@@ -189,7 +200,7 @@ export default function JobCardListing() {
   };
 
   return (
-    <div className="w-full px-4 mt-8 pb-12">
+    <div className="w-full px-0 mt-8 pb-12 max-w-full">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 no-print">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 group flex items-center gap-3">
@@ -281,123 +292,148 @@ export default function JobCardListing() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden no-print">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm whitespace-nowrap">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden no-print max-w-full">
+        <div className="w-full overflow-hidden">
+          <table className="w-full table-fixed text-xs text-left">
+            <colgroup>
+              <col style={{ width: '28px' }} />
+              {columnVisibility.partyName && <col style={{ width: '13%' }} />}
+              {columnVisibility.jobNumber && <col style={{ width: '9%' }} />}
+              {columnVisibility.jobDate && <col style={{ width: '7%' }} />}
+              {columnVisibility.jobQty && <col style={{ width: '5%' }} />}
+              {columnVisibility.jobName && <col style={{ width: '17%' }} />}
+              {columnVisibility.pageSize && <col style={{ width: '7%' }} />}
+              {columnVisibility.pageCount && <col style={{ width: '5%' }} />}
+              {columnVisibility.printingType && <col style={{ width: '7%' }} />}
+              {columnVisibility.paper && <col style={{ width: '7%' }} />}
+              {columnVisibility.paperGSM && <col style={{ width: '5%' }} />}
+              {columnVisibility.innerPaperGSM && <col style={{ width: '5%' }} />}
+              {columnVisibility.lamination && <col style={{ width: '7%' }} />}
+              {columnVisibility.binding && <col style={{ width: '8%' }} />}
+              {columnVisibility.createdAt && <col style={{ width: '9%' }} />}
+              <col style={{ width: '56px' }} />
+            </colgroup>
             <thead>
-              <tr className="bg-gray-50 text-gray-500 font-medium border-b border-gray-100 uppercase tracking-wider text-xs">
-                <th className="py-4 px-6">S.No.</th>
-                {columnVisibility.partyName && <th className="py-4 px-6">Party Name</th>}
-                {columnVisibility.jobNumber && <th className="py-4 px-6">Job Number</th>}
-                {columnVisibility.jobDate && <th className="py-4 px-6">Job Date</th>}
-                {columnVisibility.jobQty && <th className="py-4 px-6">Job Qty</th>}
-                {columnVisibility.jobName && <th className="py-4 px-6">Item Name</th>}
-                {columnVisibility.pageSize && <th className="py-4 px-6">Item Size</th>}
-                {columnVisibility.pageCount && <th className="py-4 px-6">Page Count</th>}
-                {columnVisibility.printingType && <th className="py-4 px-6">Color</th>}
-                {columnVisibility.paper && <th className="py-4 px-6">Paper</th>}
-                {columnVisibility.paperGSM && <th className="py-4 px-6">Cover GSM</th>}
-                {columnVisibility.innerPaperGSM && <th className="py-4 px-6">Inner GSM</th>}
-                {columnVisibility.lamination && <th className="py-4 px-6">Lamination</th>}
-                {columnVisibility.binding && <th className="py-4 px-6">Binding</th>}
-                {columnVisibility.createdAt && <th className="py-4 px-6">Created At</th>}
-                <th className="py-4 px-6 text-center">Action</th>
+              <tr className="bg-gray-50 text-gray-500 font-semibold border-b border-gray-100 uppercase tracking-wide text-[10px]">
+                <th className="py-2 px-0.5 text-center normal-case tracking-normal">#</th>
+                {columnVisibility.partyName && <th className="py-2 px-1.5 break-words whitespace-normal leading-tight">Party Name</th>}
+                {columnVisibility.jobNumber && <th className="py-2 px-1.5 whitespace-normal leading-tight">Job No.</th>}
+                {columnVisibility.jobDate && <th className="py-2 px-1.5 leading-tight">Date</th>}
+                {columnVisibility.jobQty && <th className="py-2 px-1.5 leading-tight">Qty</th>}
+                {columnVisibility.jobName && <th className="py-2 px-1.5 break-words whitespace-normal leading-tight">Item Name</th>}
+                {columnVisibility.pageSize && <th className="py-2 px-1.5 break-words whitespace-normal leading-tight">Size</th>}
+                {columnVisibility.pageCount && <th className="py-2 px-1.5 leading-tight">Pages</th>}
+                {columnVisibility.printingType && <th className="py-2 px-1.5 break-words whitespace-normal leading-tight">Color</th>}
+                {columnVisibility.paper && <th className="py-2 px-1.5 break-words whitespace-normal leading-tight">Paper</th>}
+                {columnVisibility.paperGSM && <th className="py-2 px-1.5 leading-tight">C.GSM</th>}
+                {columnVisibility.innerPaperGSM && <th className="py-2 px-1.5 leading-tight">I.GSM</th>}
+                {columnVisibility.lamination && <th className="py-2 px-1.5 break-words whitespace-normal leading-tight">Lam.</th>}
+                {columnVisibility.binding && <th className="py-2 px-1.5 break-words whitespace-normal leading-tight">Binding</th>}
+                {columnVisibility.createdAt && <th className="py-2 px-1.5 break-words whitespace-normal leading-tight">Created</th>}
+                <th className="py-2 px-1 text-center leading-tight">Action</th>
               </tr>
             </thead>
             <tbody className="text-gray-700">
               {filteredCards.length === 0 ? (
                 <tr>
-                  <td colSpan="12" className="py-8 text-center text-gray-500">
+                  <td colSpan="20" className="py-8 text-center text-gray-500 text-sm">
                     No job cards found.
                   </td>
                 </tr>
               ) : (
                 filteredCards.map((card, index) => (
                   <tr key={card._id} className="border-b last:border-0 border-gray-50 hover:bg-gray-50 transition-colors">
-                    <td className="py-4 px-6 text-gray-500">{index + 1}</td>
-                    {columnVisibility.partyName && <td className="py-4 px-6 font-medium text-gray-900">{card.partyName}</td>}
+                    <td className="py-2 px-0.5 text-gray-500 align-top text-center text-[11px]">{index + 1}</td>
+                    {columnVisibility.partyName && (
+                      <td className="py-2 px-1.5 font-medium text-gray-900 align-top break-words whitespace-normal leading-snug">{card.partyName}</td>
+                    )}
                     {columnVisibility.jobNumber && (
-                      <td className="py-4 px-6">
-                        <span className="bg-blue-50 text-blue-700 px-2.5 py-1 rounded-md text-xs font-semibold">
+                      <td className="py-2 px-1.5 align-top break-words whitespace-normal leading-snug">
+                        <span className="bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded text-[10px] font-semibold inline-block break-all">
                           {card.jobNumber}
                         </span>
                       </td>
                     )}
                     {columnVisibility.jobDate && (
-                      <td className="py-4 px-6 text-gray-500">
-                        {new Date(card.jobDate).toLocaleDateString()}
+                      <td className="py-2 px-1.5 text-gray-500 align-top whitespace-normal leading-snug">
+                        {formatShortDate(card.jobDate)}
                       </td>
                     )}
                     {columnVisibility.jobQty && (
-                      <td className="py-4 px-6 text-gray-800 font-semibold">{card.jobQty || 0}</td>
+                      <td className="py-2 px-1.5 text-gray-800 font-semibold align-top">{card.jobQty || 0}</td>
                     )}
                     {columnVisibility.jobName && (
-                      <td className="py-4 px-6 text-gray-900 font-medium">{card.jobName || '-'}</td>
+                      <td className="py-2 px-1.5 text-gray-900 align-top break-words whitespace-normal leading-snug">{card.jobName || '-'}</td>
                     )}
                     {columnVisibility.pageSize && (
-                      <td className="py-4 px-6 text-gray-700">{card.pageSize || '-'}</td>
+                      <td className="py-2 px-1.5 text-gray-700 align-top break-words whitespace-normal leading-snug">{card.pageSize || '-'}</td>
                     )}
                     {columnVisibility.pageCount && (
-                      <td className="py-4 px-6 text-gray-700">{card.pageCount || '-'}</td>
+                      <td className="py-2 px-1.5 text-gray-700 align-top">{card.pageCount || '-'}</td>
                     )}
                     {columnVisibility.printingType && (
-                      <td className="py-4 px-6">
+                      <td className="py-2 px-1.5 align-top break-words whitespace-normal leading-snug">
                         {card.printingType ? (
-                          <span className="bg-purple-50 text-purple-700 px-2 py-0.5 rounded text-xs font-medium">{card.printingType}</span>
+                          <span className="bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded text-[10px] font-medium inline-block">{card.printingType}</span>
                         ) : '-'}
                       </td>
                     )}
-                    {columnVisibility.paper && <td className="py-4 px-6 text-gray-700">{card.paper || '-'}</td>}
-                    {columnVisibility.paperGSM && <td className="py-4 px-6 text-gray-700">{card.paperGSM || '-'}</td>}
-                    {columnVisibility.innerPaperGSM && <td className="py-4 px-6 text-gray-700">{card.innerPaperGSM || '-'}</td>}
+                    {columnVisibility.paper && (
+                      <td className="py-2 px-1.5 text-gray-700 align-top break-words whitespace-normal leading-snug">{card.paper || '-'}</td>
+                    )}
+                    {columnVisibility.paperGSM && <td className="py-2 px-1.5 text-gray-700 align-top">{card.paperGSM || '-'}</td>}
+                    {columnVisibility.innerPaperGSM && <td className="py-2 px-1.5 text-gray-700 align-top">{card.innerPaperGSM || '-'}</td>}
                     {columnVisibility.lamination && (
-                      <td className="py-4 px-6">
+                      <td className="py-2 px-1.5 align-top break-words whitespace-normal leading-snug">
                         {card.lamination ? (
-                          <span className="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded text-xs font-medium">{card.lamination}</span>
-                        ) : <span className="text-gray-400 text-xs">None</span>}
+                          <span className="bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded text-[10px] font-medium inline-block">{card.lamination}</span>
+                        ) : <span className="text-gray-400">-</span>}
                       </td>
                     )}
                     {columnVisibility.binding && (
-                      <td className="py-4 px-6 max-w-40">
+                      <td className="py-2 px-1.5 align-top break-words whitespace-normal leading-snug">
                         {(() => {
                           const chips = getBindingText(card);
                           return chips ? (
-                            <div className="flex flex-wrap gap-1">
+                            <div className="flex flex-wrap gap-0.5">
                               {chips.map((b, i) => (
-                                <span key={i} className="bg-amber-50 text-amber-700 border border-amber-100 px-1.5 py-0.5 rounded text-[10px] font-semibold">{b}</span>
+                                <span key={i} className="bg-amber-50 text-amber-700 border border-amber-100 px-1 py-0.5 rounded text-[9px] font-semibold">{b}</span>
                               ))}
                             </div>
-                          ) : <span className="text-gray-400 text-xs">None</span>;
+                          ) : <span className="text-gray-400">-</span>;
                         })()}
                       </td>
                     )}
                     {columnVisibility.createdAt && (
-                      <td className="py-4 px-6 text-gray-500 text-xs text-wrap max-w-30">
-                        {new Date(card.createdAt).toLocaleString()}
+                      <td className="py-2 px-1.5 text-gray-500 align-top break-words whitespace-normal leading-tight">
+                        <span className="block">{formatShortDateTime(card.createdAt).date}</span>
+                        <span className="block text-[10px] text-gray-400">{formatShortDateTime(card.createdAt).time}</span>
                       </td>
                     )}
-                    <td className="py-4 px-6 text-center flex items-center justify-center gap-2">
-                      <button
-                        onClick={() => openPreview(card)}
-                        className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-2 rounded-lg transition-colors focus:outline-none"
-                        title="Print Preview"
-                      >
-                        <Printer size={18} />
-                      </button>
-                      <button
-                        onClick={() => navigate('/job-card', { state: { editData: card } })}
-                        className="text-teal-500 hover:text-teal-700 hover:bg-teal-50 p-2 rounded-lg transition-colors focus:outline-none"
-                        title="Edit"
-                      >
-                        <Pencil size={18} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(card._id)}
-                        className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors focus:outline-none"
-                        title="Delete"
-                      >
-                        <Trash2 size={18} />
-                      </button>
+                    <td className="py-2 px-0.5 align-top">
+                      <div className="flex items-center justify-center gap-0.5">
+                        <button
+                          onClick={() => openPreview(card)}
+                          className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-0.5 rounded transition-colors focus:outline-none"
+                          title="Print Preview"
+                        >
+                          <Printer size={13} />
+                        </button>
+                        <button
+                          onClick={() => navigate('/job-card', { state: { editData: card } })}
+                          className="text-teal-500 hover:text-teal-700 hover:bg-teal-50 p-0.5 rounded transition-colors focus:outline-none"
+                          title="Edit"
+                        >
+                          <Pencil size={13} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(card._id)}
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50 p-0.5 rounded transition-colors focus:outline-none"
+                          title="Delete"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
