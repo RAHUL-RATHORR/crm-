@@ -427,7 +427,7 @@ const InvoiceList = () => {
                       </div>
                     </div>
 
-                    <div className="flex-1 flex justify-end">
+                    <div className="flex-1 flex justify-end pr-6">
                       <div className="w-48">
                       <h4 className="text-[11px] font-black text-gray-900 border-b-2 mb-2 pb-0.5 inline-block uppercase tracking-wider">Ship To :</h4>
                       <div className="text-[12px] space-y-1 font-medium text-gray-600">
@@ -541,7 +541,9 @@ const InvoiceList = () => {
                 </div>
 
                 {/* --- BANK DETAILS BAR --- */}
-                <div className="mb-6 p-3 border border-gray-200 rounded-lg bg-gray-50/30 flex justify-between items-center">
+                <div className="mb-6">
+                  <h4 className="text-[11px] font-black text-gray-900 border-b-2 mb-3 pb-0.5 inline-block uppercase tracking-wider">Account Details :</h4>
+                  <div className="p-3 border border-gray-200 rounded-lg bg-gray-50/30 flex justify-between items-center">
                   <div className="flex gap-8">
                     <div>
                       <p className="text-[10px] font-black text-gray-600 uppercase mb-1">Bank Name</p>
@@ -559,6 +561,7 @@ const InvoiceList = () => {
                   <div className="text-right">
                     <p className="text-[10px] font-black text-gray-600 uppercase mb-1">Branch</p>
                     <p className="text-[12px] font-bold text-gray-800">Raja Park, Jaipur</p>
+                  </div>
                   </div>
                 </div>
 
