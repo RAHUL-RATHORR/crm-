@@ -100,25 +100,22 @@ export function printElement(elementId) {
           tr { display: table-row !important; page-break-inside: avoid; }
           td, th { display: table-cell !important; }
           ${sanitizedStyles}
-          .invoice-print-page,
-          .invoice-print-page table,
-          .invoice-print-page tr,
-          .invoice-print-page td,
-          .invoice-print-page th,
-          .invoice-print-page div {
-            background-color: #ffffff !important;
-            background-image: none !important;
+          .invoice-print-page {
+            background: #ffffff !important;
           }
-          .invoice-print-page thead th {
-            color: #111827 !important;
-            border: 1px solid #9ca3af !important;
-            font-weight: 700 !important;
+          .invoice-print-page .invoice-table-header,
+          .invoice-print-page .invoice-table-header th {
+            background-color: #1e3a8a !important;
+            color: #ffffff !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
-          .invoice-print-page [style*="background"] {
-            background-color: #ffffff !important;
-          }
-          .invoice-print-page .text-white {
-            color: #111827 !important;
+          .invoice-print-page .invoice-grand-total,
+          .invoice-print-page .invoice-grand-total span {
+            background-color: #1e3a8a !important;
+            color: #ffffff !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
         </style>
       </head>
