@@ -60,6 +60,10 @@
   border-color: #000;
 }
 
+#print-root-temp {
+  display: none;
+}
+
 @media print {
   @page {
     size: A4;
@@ -74,6 +78,33 @@
     background-color: white !important;
     width: auto !important;
     height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Cloned invoice/challan — print only this, not the modal */
+  body.is-printing #root {
+    display: none !important;
+  }
+
+  body.is-printing #print-root-temp {
+    display: block !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    overflow: visible !important;
+  }
+
+  body.is-printing #print-root-temp .a4-page {
+    width: 208mm !important;
+    min-height: auto !important;
+    height: auto !important;
+    padding: 12mm !important;
+    margin: 0 auto !important;
+    box-sizing: border-box !important;
     overflow: visible !important;
   }
 
@@ -103,9 +134,34 @@
     overflow: visible !important;
   }
 
-  /* Fix for modal positioning during print */
-  .fixed,
-  [class*="fixed"] {
+  /* Invoice/challan print modal - do not clip scrollable preview area */
+  .print-modal-overlay {
+    position: static !important;
+    inset: auto !important;
+    width: auto !important;
+    min-height: 0 !important;
+    height: auto !important;
+    display: block !important;
+    overflow: visible !important;
+    background: white !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    z-index: auto !important;
+  }
+
+  .print-modal-shell {
+    max-height: none !important;
+    max-width: none !important;
+    width: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+    border: none !important;
+    box-shadow: none !important;
+    display: block !important;
+  }
+
+  /* Legacy fixed modals (job card, estimates) — do NOT use [class*="fixed"] (breaks table-fixed) */
+  .fixed.inset-0:not(.print-modal-overlay) {
     position: absolute !important;
     top: 0 !important;
     left: 0 !important;
@@ -147,12 +203,23 @@
     border: none !important;
   }
 
-  /* Invoice print - show full content including totals & bank details */
+  /* Invoice/challan print - show full content including totals & bank details */
   .invoice-print-page,
-  #printable-content:has(#printable-invoice) {
+  #printable-content,
+  #printable-content:has(#printable-invoice),
+  #printable-content:has(#printable-challan) {
     min-height: auto !important;
     height: auto !important;
+    max-height: none !important;
     overflow: visible !important;
+    flex: none !important;
+  }
+
+  #printable-invoice,
+  #printable-challan,
+  #printable-inner {
+    visibility: visible !important;
+    display: block !important;
   }
 
   /* Prevent sections from breaking awkwardly */

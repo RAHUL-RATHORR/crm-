@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Trash2, MoreHorizontal, Truck, Pencil, ChevronDown, Check, AlertCircle, Printer, X, Download, Phone, Mail, Globe, Building2, MapPin, Calendar, FileDigit } from 'lucide-react';
 import { downloadAsPDF } from './utils/pdfExport';
+import { printElement } from './utils/printDocument';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
 import { getBillToDetails, getShipToDetails } from './utils/shipAddress';
 
@@ -128,10 +129,7 @@ const ChallanList = () => {
   };
 
   const handlePrint = () => {
-    window.scrollTo(0, 0);
-    const container = document.querySelector('.a4-page-container');
-    if (container) container.scrollTop = 0;
-    window.print();
+    printElement('printable-challan');
   };
 
   const handleDownloadPDF = async () => {
@@ -248,8 +246,8 @@ const ChallanList = () => {
 
       {/* Challan Preview & Print Modal */}
       {isModalOpen && selectedChallan && (
-        <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white border border-gray-300 w-full max-w-4xl relative max-h-[95vh] flex flex-col shadow-none">
+        <div className="print-modal-overlay fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 overflow-y-auto print:static print:overflow-visible print:bg-white print:p-0">
+          <div className="print-modal-shell bg-white border border-gray-300 w-full max-w-4xl relative max-h-[95vh] flex flex-col shadow-none print:max-h-none print:overflow-visible print:border-0 print:shadow-none">
             {/* Modal Header */}
             <div className="p-4 border-b flex justify-between items-center bg-white modal-header no-print">
               <h2 className="text-xl font-bold text-gray-800">Challan Preview</h2>
@@ -289,7 +287,7 @@ const ChallanList = () => {
             </div>
 
             {/* Modal Body - Printable Content */}
-            <div className="p-8 overflow-y-auto flex-grow a4-page-container" id="printable-content">
+            <div className="p-8 overflow-y-auto flex-grow a4-page-container print:overflow-visible print:max-h-none print:h-auto print:p-0 print:grow-0" id="printable-content">
               <div
                 id="printable-challan"
                 className="bg-white mx-auto shadow-none a4-page font-sans"

@@ -185,22 +185,6 @@
 
 /* Print Styles */
 @media print {
-  body * {
-    visibility: hidden;
-  }
-  #printable-content, #printable-content *,
-  #printable-invoice, #printable-invoice * {
-    visibility: visible;
-  }
-  #printable-content,
-  #printable-invoice {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    margin: 0;
-    padding: 0;
-  }
   .no-print {
     display: none !important;
   }

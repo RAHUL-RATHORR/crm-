@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Trash2, MoreHorizontal, Pencil, Printer, Eye, X, Download, Phone, Mail, Globe, Building2, MapPin, Calendar, FileDigit, AlertCircle, ChevronDown, Check } from 'lucide-react';
 import { downloadAsPDF } from './utils/pdfExport';
+import { printElement } from './utils/printDocument';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
 import { getBillToDetails, getShipToDetails } from './utils/shipAddress';
 
@@ -132,10 +133,7 @@ const InvoiceList = () => {
   };
 
   const handlePrint = () => {
-    window.scrollTo(0, 0);
-    const container = document.querySelector('.a4-page-container');
-    if (container) container.scrollTop = 0;
-    window.print();
+    printElement('printable-invoice');
   };
 
   const handleDownloadPDF = async () => {
@@ -147,8 +145,8 @@ const InvoiceList = () => {
   };
 
   return (
-    <div className="w-full px-4 mt-8 pb-12 text-gray-800">
-      <div className="no-print">
+    <div className="w-full px-4 mt-8 pb-12 text-gray-800 print:p-0 print:m-0">
+      <div className="no-print print:hidden">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 group flex items-center gap-3">
@@ -294,8 +292,8 @@ const InvoiceList = () => {
 
       {/* Invoice Preview & Print Modal */}
       {isModalOpen && selectedInvoice && (
-        <div className="fixed inset-0 bg-black/60 z-100 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white border border-gray-300 w-full max-w-4xl relative max-h-[95vh] flex flex-col shadow-none">
+        <div className="print-modal-overlay fixed inset-0 bg-black/60 z-100 flex items-center justify-center p-4 overflow-y-auto print:static print:overflow-visible print:bg-white print:p-0">
+          <div className="print-modal-shell bg-white border border-gray-300 w-full max-w-4xl relative max-h-[95vh] flex flex-col shadow-none print:max-h-none print:overflow-visible print:border-0 print:shadow-none">
             {/* Modal Header */}
             <div className="p-4 border-b flex justify-between items-center bg-white modal-header no-print">
               <h2 className="text-xl font-bold text-gray-800">Invoice Preview</h2>
@@ -349,7 +347,7 @@ const InvoiceList = () => {
               </div>
             </div>
 
-            <div className="p-8 overflow-y-auto grow a4-page-container" id="printable-content">
+            <div className="p-8 overflow-y-auto grow a4-page-container print:overflow-visible print:max-h-none print:h-auto print:p-0 print:grow-0" id="printable-content">
               <div
                 id="printable-invoice"
                 className="bg-white mx-auto shadow-none a4-page invoice-print-page font-sans"
@@ -380,13 +378,13 @@ const InvoiceList = () => {
                     <div className="shrink-0 flex flex-col items-end">
                       {/* Metadata Table */}
                       <div className="w-72 min-w-72 border border-gray-200 rounded-lg overflow-hidden">
-                    <table className="w-full table-fixed text-[11px]">
+                    <table className="w-full text-[11px]" style={{ tableLayout: 'fixed' }}>
                       <colgroup>
                         <col className="w-[38%]" />
                         <col className="w-[62%]" />
                       </colgroup>
                       <tbody className="divide-y divide-gray-200">
-                        <tr className="bg-gray-50/50">
+                        <tr>
                           <td className="px-2 py-1.5 font-bold text-gray-700 uppercase whitespace-nowrap">DATE :</td>
                           <td className="px-2 py-1.5 font-bold text-right text-gray-800 whitespace-nowrap">
                             {new Date(selectedInvoice.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
@@ -396,7 +394,7 @@ const InvoiceList = () => {
                           <td className="px-2 py-1.5 font-bold text-gray-700 uppercase whitespace-nowrap">Invoice No :</td>
                           <td className="px-2 py-1.5 font-bold text-right text-gray-800 whitespace-nowrap">#{selectedInvoice.invoiceNumber}</td>
                         </tr>
-                        <tr className="bg-gray-50/50">
+                        <tr>
                           <td className="px-2 py-1.5 font-bold text-gray-700 uppercase whitespace-nowrap">Order No. :</td>
                           <td className="px-2 py-1.5 font-bold text-right text-gray-800 whitespace-nowrap">{displayOrderNo}</td>
                         </tr>
@@ -408,9 +406,9 @@ const InvoiceList = () => {
                               : '-'}
                           </td>
                         </tr>
-                        <tr className="bg-gray-50/50">
+                        <tr>
                           <td className="px-2 py-1.5 font-bold text-gray-700 uppercase whitespace-nowrap">GSTIN :</td>
-                          <td className="px-2 py-1.5 font-bold text-right text-blue-700 uppercase text-[10px] whitespace-nowrap">08AALPC9959M1ZV</td>
+                          <td className="px-2 py-1.5 font-bold text-right text-gray-800 uppercase text-[10px] whitespace-nowrap">08AALPC9959M1ZV</td>
                         </tr>
 
                       </tbody>
@@ -449,16 +447,16 @@ const InvoiceList = () => {
                 </div>
 
                 {/* --- ITEMS TABLE --- */}
-                <div className="mb-8 border border-gray-200 rounded-sm overflow-hidden min-h-87.5 print:min-h-0 flex flex-col">
+                <div className="mb-8 border border-gray-200 rounded-sm overflow-hidden flex flex-col">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="text-white text-[12px] font-black uppercase tracking-widest" style={{ backgroundColor: '#1e3a8a' }}>
-                        <th className="px-4 py-2.5 border-r border-teal-500/30 w-12 text-center">S.No</th>
-                        <th className="px-4 py-2.5 border-r border-teal-500/30">Description of Goods/Services</th>
-                        <th className="px-4 py-2.5 border-r border-teal-500/30 text-center w-36">HSN/SAC</th>
-                        <th className="px-4 py-2.5 border-r border-teal-500/30 text-center w-20">Qty</th>
-                        <th className="px-4 py-2.5 border-r border-teal-500/30 text-right w-24">Rate</th>
-                        <th className="px-4 py-2.5 text-right w-32">Amount</th>
+                      <tr className="text-[12px] font-black uppercase tracking-widest text-gray-900 bg-white">
+                        <th className="px-4 py-2.5 border border-gray-300 w-12 text-center">S.No</th>
+                        <th className="px-4 py-2.5 border border-gray-300">Description of Goods/Services</th>
+                        <th className="px-4 py-2.5 border border-gray-300 text-center w-36">HSN/SAC</th>
+                        <th className="px-4 py-2.5 border border-gray-300 text-center w-20">Qty</th>
+                        <th className="px-4 py-2.5 border border-gray-300 text-right w-24">Rate</th>
+                        <th className="px-4 py-2.5 border border-gray-300 text-right w-32">Amount</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 grow">
@@ -481,7 +479,7 @@ const InvoiceList = () => {
                           <td className="px-4 py-4 border-r border-gray-50 font-bold align-top text-right text-gray-700">
                             ₹ {item.rate?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                           </td>
-                          <td className="px-4 py-4 font-black align-top text-right text-gray-900 bg-gray-50/30">
+                          <td className="px-4 py-4 font-black align-top text-right text-gray-900 bg-white">
                             ₹ {item.total?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                           </td>
                         </tr>
@@ -500,7 +498,7 @@ const InvoiceList = () => {
                     </tbody>
                   </table>
                                  {/* Total Section */}
-                  <div className="border-t border-gray-200 mt-auto bg-gray-50/50">
+                  <div className="border-t border-gray-200 mt-auto bg-white">
                     <div className="flex">
                       <div className="grow p-4">
                         <p className="text-[10px] font-black text-gray-600 uppercase mb-1 tracking-widest">Amount in Words</p>
@@ -531,11 +529,11 @@ const InvoiceList = () => {
                           <span className="text-[11px] font-bold text-gray-700 uppercase">Round Off</span>
                           <span className="text-[12px] font-bold text-gray-800">₹ {roundOff.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                         </div>
-                        <div className="flex justify-between px-4 py-3" style={{ backgroundColor: '#1e3a8a' }}>
-                          <span className="text-[12px] font-black text-white uppercase tracking-wider">Grand Total</span>
-                          <span className="text-sm font-black text-white">₹ {selectedInvoice.totalAmount?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                        <div className="flex justify-between px-4 py-3 bg-white border-t-2 border-gray-800">
+                          <span className="text-[12px] font-black text-gray-900 uppercase tracking-wider">Grand Total</span>
+                          <span className="text-sm font-black text-gray-900">₹ {selectedInvoice.totalAmount?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                         </div>
-                        <div className="flex justify-between px-4 py-2 border-t border-gray-200 bg-gray-50/80">
+                        <div className="flex justify-between px-4 py-2 border-t border-gray-200 bg-white">
                           <span className="text-[11px] font-bold text-gray-700 uppercase">Reverse Charge</span>
                           <span className="text-[12px] font-bold text-gray-800">{selectedInvoice.reverseCharge || 'No'}</span>
                         </div>
@@ -547,7 +545,7 @@ const InvoiceList = () => {
                 {/* --- BANK DETAILS BAR --- */}
                 <div className="mb-6">
                   <h4 className="text-[11px] font-black text-gray-900 border-b-2 mb-3 pb-0.5 inline-block uppercase tracking-wider">Account Details :</h4>
-                  <div className="p-3 border border-gray-200 rounded-lg bg-gray-50/30 flex justify-between items-center">
+                  <div className="p-3 border border-gray-200 rounded-lg bg-white flex justify-between items-center">
                   <div className="flex gap-8">
                     <div>
                       <p className="text-[10px] font-black text-gray-600 uppercase mb-1">Bank Name</p>
