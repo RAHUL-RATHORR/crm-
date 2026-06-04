@@ -413,7 +413,7 @@ const InvoiceList = () => {
                       </div>
                     </div>
 
-                    <div className="flex-1 flex justify-end pr-6">
+                    <div className="flex-1 flex justify-end pr-22">
                       <div className="w-48">
                       <h4 className="text-[11px] font-black text-gray-900 border-b-2 mb-2 pb-0.5 inline-block uppercase tracking-wider">Ship To :</h4>
                       <div className="text-[12px] space-y-1 font-medium text-gray-600">
