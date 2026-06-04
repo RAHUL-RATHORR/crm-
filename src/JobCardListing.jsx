@@ -302,8 +302,8 @@ export default function JobCardListing() {
               {columnVisibility.partyName && <col style={{ width: '13%' }} />}
               {columnVisibility.jobNumber && <col style={{ width: '9%' }} />}
               {columnVisibility.jobDate && <col style={{ width: '7%' }} />}
-              {columnVisibility.jobQty && <col style={{ width: '5%' }} />}
-              {columnVisibility.jobName && <col style={{ width: '17%' }} />}
+              {columnVisibility.jobQty && <col style={{ width: '10%' }} />}
+              {columnVisibility.jobName && <col style={{ width: '14%' }} />}
               {columnVisibility.pageSize && <col style={{ width: '7%' }} />}
               {columnVisibility.pageCount && <col style={{ width: '5%' }} />}
               {columnVisibility.printingType && <col style={{ width: '7%' }} />}
@@ -321,7 +321,7 @@ export default function JobCardListing() {
                 {columnVisibility.partyName && <th className="py-2 px-1.5 break-words whitespace-normal leading-tight">Party Name</th>}
                 {columnVisibility.jobNumber && <th className="py-2 px-1.5 whitespace-normal leading-tight">Job No.</th>}
                 {columnVisibility.jobDate && <th className="py-2 px-1.5 leading-tight">Date</th>}
-                {columnVisibility.jobQty && <th className="py-2 px-1.5 leading-tight">Qty</th>}
+                {columnVisibility.jobQty && <th className="py-2 px-1.5 break-words whitespace-normal leading-tight">Qty</th>}
                 {columnVisibility.jobName && <th className="py-2 px-1.5 break-words whitespace-normal leading-tight">Item Name</th>}
                 {columnVisibility.pageSize && <th className="py-2 px-1.5 break-words whitespace-normal leading-tight">Size</th>}
                 {columnVisibility.pageCount && <th className="py-2 px-1.5 leading-tight">Pages</th>}
@@ -362,7 +362,9 @@ export default function JobCardListing() {
                       </td>
                     )}
                     {columnVisibility.jobQty && (
-                      <td className="py-2 px-1.5 text-gray-800 font-semibold align-top">{card.jobQty || 0}</td>
+                      <td className="py-2 px-1.5 text-gray-800 font-semibold align-top break-all whitespace-normal overflow-hidden max-w-0 leading-snug">
+                        {card.jobQty || 0}
+                      </td>
                     )}
                     {columnVisibility.jobName && (
                       <td className="py-2 px-1.5 text-gray-900 align-top break-words whitespace-normal leading-snug">{card.jobName || '-'}</td>

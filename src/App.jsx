@@ -80,8 +80,7 @@ const DropdownMenu = ({ title, icon: Icon, items, isActive }) => {
       </button>
 
       <div
-        className={`absolute top-full left-0 w-max transition-all duration-200 ease-out z-50 ${isOpen ? 'opacity-100 translate-y-0 visible' : 'opacity-0 translate-y-2 invisible'
-          }`}
+        className={`absolute top-full left-0 w-max transition-all duration-200 ease-out z-[100] ${isOpen ? 'opacity-100 translate-y-0 visible' : 'opacity-0 translate-y-2 invisible pointer-events-none'}`}
       >
         {/* Transparent bridge to prevent flickering */}
         <div className="h-2 w-full" />
@@ -321,7 +320,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#f4f7fa] font-sans pb-10 text-gray-800">
       {/* Top Navbar */}
-      <nav className="bg-white border-b border-gray-200 px-3 sm:px-5 py-2.5 flex items-center gap-2 sm:gap-3 sticky top-0 z-50 max-w-full overflow-hidden">
+      <nav className="bg-white border-b border-gray-200 px-3 sm:px-5 py-2.5 flex items-center gap-2 sm:gap-3 sticky top-0 z-50 max-w-full">
         <div className="flex items-center gap-2 sm:gap-3 shrink-0 min-w-0">
           {/* Mobile Menu Button */}
           <button
@@ -353,7 +352,7 @@ export default function App() {
         </div>
 
         {/* Desktop Navigation */}
-        <div className="hidden xl:flex flex-1 min-w-0 items-center justify-center gap-1 xl:gap-1.5 2xl:gap-2.5 whitespace-nowrap flex-nowrap overflow-x-auto overflow-y-hidden [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        <div className="hidden xl:flex flex-1 min-w-0 items-center justify-center gap-1 xl:gap-1.5 2xl:gap-2.5 whitespace-nowrap flex-nowrap">
           {navigationItems.map((item, idx) => {
             const isActive = location.pathname === item.path || (item.path && location.pathname.startsWith(item.path) && item.path !== '/');
 
