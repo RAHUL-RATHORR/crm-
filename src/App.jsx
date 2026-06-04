@@ -66,7 +66,7 @@ const DropdownMenu = ({ title, icon: Icon, items, isActive }) => {
     >
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-2 px-3 h-10 text-sm font-medium rounded-md transition-colors whitespace-nowrap flex-nowrap ${isOpen || isActive
+        className={`flex items-center gap-1.5 px-2 xl:px-2.5 2xl:px-3 h-9 text-[13px] font-medium rounded-md transition-colors whitespace-nowrap flex-nowrap shrink-0 ${isOpen || isActive
           ? 'bg-blue-50 text-blue-600'
           : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
           }`}
@@ -321,8 +321,8 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#f4f7fa] font-sans pb-10 text-gray-800">
       {/* Top Navbar */}
-      <nav className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex items-center justify-between sticky top-0 z-50">
-        <div className="flex items-center gap-3">
+      <nav className="bg-white border-b border-gray-200 px-3 sm:px-5 py-2.5 flex items-center gap-2 sm:gap-3 sticky top-0 z-50 max-w-full overflow-hidden">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0 min-w-0">
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -353,7 +353,7 @@ export default function App() {
         </div>
 
         {/* Desktop Navigation */}
-        <div className="hidden xl:flex items-center gap-4 whitespace-nowrap flex-nowrap">
+        <div className="hidden xl:flex flex-1 min-w-0 items-center justify-center gap-1 xl:gap-1.5 2xl:gap-2.5 whitespace-nowrap flex-nowrap overflow-x-auto overflow-y-hidden [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           {navigationItems.map((item, idx) => {
             const isActive = location.pathname === item.path || (item.path && location.pathname.startsWith(item.path) && item.path !== '/');
 
@@ -379,7 +379,7 @@ export default function App() {
               <button
                 key={item.name}
                 onClick={() => item.path && navigate(item.path)}
-                className={`flex items-center gap-2 px-3 h-10 text-sm font-medium rounded-md transition-colors whitespace-nowrap flex-nowrap ${isActive || (idx === 0 && location.pathname === '/')
+                className={`flex items-center gap-1.5 px-2 xl:px-2.5 2xl:px-3 h-9 text-[13px] font-medium rounded-md transition-colors whitespace-nowrap flex-nowrap shrink-0 ${isActive || (idx === 0 && location.pathname === '/')
                   ? 'bg-blue-50 text-blue-600'
                   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   }`}
@@ -391,7 +391,7 @@ export default function App() {
           })}
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-4">
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 ml-auto">
           <div className="relative" ref={notifRef}>
             <button
               onClick={() => setIsNotifOpen(!isNotifOpen)}
