@@ -361,8 +361,8 @@ const InvoiceList = () => {
                     Tax Invoice
                   </h1>
 
-                  <div className="flex justify-between items-start gap-10">
-                    <div className="flex-1">
+                  <div className="flex justify-between items-start gap-6">
+                    <div className="flex-1 min-w-0">
                       <h2 className="text-xl font-black text-gray-900 tracking-tight">Harihar Printers</h2>
                       <p className="text-[10px] text-gray-700 font-medium italic">Your Vision, Our Print.</p>
 
@@ -377,36 +377,40 @@ const InvoiceList = () => {
                       </div>
                     </div>
                   
-                    <div className="flex-1 flex flex-col items-end">
+                    <div className="shrink-0 flex flex-col items-end">
                       {/* Metadata Table */}
-                      <div className="w-56 border border-gray-200 rounded-lg overflow-hidden">
-                    <table className="w-full text-[12px]">
+                      <div className="w-72 min-w-72 border border-gray-200 rounded-lg overflow-hidden">
+                    <table className="w-full table-fixed text-[11px]">
+                      <colgroup>
+                        <col className="w-[38%]" />
+                        <col className="w-[62%]" />
+                      </colgroup>
                       <tbody className="divide-y divide-gray-200">
                         <tr className="bg-gray-50/50">
-                          <td className="px-2 py-1.5 font-bold text-gray-700 uppercase tracking-tighter">DATE :</td>
-                          <td className="px-2 py-1.5 font-bold text-right text-gray-800">
+                          <td className="px-2 py-1.5 font-bold text-gray-700 uppercase whitespace-nowrap">DATE :</td>
+                          <td className="px-2 py-1.5 font-bold text-right text-gray-800 whitespace-nowrap">
                             {new Date(selectedInvoice.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
                           </td>
                         </tr>
                         <tr>
-                          <td className="px-2 py-1.5 font-bold text-gray-700 uppercase tracking-tighter">Invoice No :</td>
-                          <td className="px-2 py-1.5 font-bold text-right text-gray-800">#{selectedInvoice.invoiceNumber}</td>
+                          <td className="px-2 py-1.5 font-bold text-gray-700 uppercase whitespace-nowrap">Invoice No :</td>
+                          <td className="px-2 py-1.5 font-bold text-right text-gray-800 whitespace-nowrap">#{selectedInvoice.invoiceNumber}</td>
                         </tr>
                         <tr className="bg-gray-50/50">
-                          <td className="px-2 py-1.5 font-bold text-gray-700 uppercase tracking-tighter">Order No. :</td>
-                          <td className="px-2 py-1.5 font-bold text-right text-gray-800">{displayOrderNo}</td>
+                          <td className="px-2 py-1.5 font-bold text-gray-700 uppercase whitespace-nowrap">Order No. :</td>
+                          <td className="px-2 py-1.5 font-bold text-right text-gray-800 whitespace-nowrap">{displayOrderNo}</td>
                         </tr>
                         <tr>
-                          <td className="px-2 py-1.5 font-bold text-gray-700 uppercase tracking-tighter">Order Date :</td>
-                          <td className="px-2 py-1.5 font-bold text-right text-gray-800">
+                          <td className="px-2 py-1.5 font-bold text-gray-700 uppercase whitespace-nowrap">Order Date :</td>
+                          <td className="px-2 py-1.5 font-bold text-right text-gray-800 whitespace-nowrap">
                             {displayOrderDate
                               ? new Date(displayOrderDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
                               : '-'}
                           </td>
                         </tr>
                         <tr className="bg-gray-50/50">
-                          <td className="px-2 py-1.5 font-bold text-gray-700 uppercase tracking-tighter">GSTIN :</td>
-                          <td className="px-2 py-1.5 font-bold text-right text-blue-700 uppercase">08AALPC9959M1ZV</td>
+                          <td className="px-2 py-1.5 font-bold text-gray-700 uppercase whitespace-nowrap">GSTIN :</td>
+                          <td className="px-2 py-1.5 font-bold text-right text-blue-700 uppercase text-[10px] whitespace-nowrap">08AALPC9959M1ZV</td>
                         </tr>
 
                       </tbody>
