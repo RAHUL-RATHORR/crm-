@@ -6,7 +6,15 @@ const paperStockSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  coverPartyName: {
+    type: String,
+    trim: true
+  },
   coverName: {
+    type: String,
+    trim: true
+  },
+  innerPartyName: {
     type: String,
     trim: true
   },

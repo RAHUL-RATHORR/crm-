@@ -29,7 +29,7 @@ router.get('/', async (req, res) => {
 // POST /api/paper-stock - Add new stock item
 router.post('/', async (req, res) => {
   try {
-    const { name, coverName, innerName, gsm, quantity, coverGSM, coverQuantity, coverPaperSize, innerGSM, innerQuantity, innerPaperSize, unit, description, lowStockThreshold, paperSource } = req.body;
+    const { name, coverPartyName, coverName, innerPartyName, innerName, gsm, quantity, coverGSM, coverQuantity, coverPaperSize, innerGSM, innerQuantity, innerPaperSize, unit, description, lowStockThreshold, paperSource } = req.body;
     
     const resolvedCoverName = (coverName || '').trim();
     const resolvedInnerName = (innerName || '').trim();
@@ -45,7 +45,9 @@ router.post('/', async (req, res) => {
 
     const newItem = new PaperStock({
       name: resolvedName,
+      coverPartyName: (coverPartyName || '').trim(),
       coverName: resolvedCoverName || resolvedName,
+      innerPartyName: (innerPartyName || '').trim(),
       innerName: resolvedInnerName || resolvedName,
       gsm,
       quantity,
@@ -100,7 +102,7 @@ router.post('/', async (req, res) => {
 // PUT /api/paper-stock/:id - Update stock item
 router.put('/:id', async (req, res) => {
   try {
-    const { name, coverName, innerName, gsm, quantity, coverGSM, coverQuantity, coverPaperSize, innerGSM, innerQuantity, innerPaperSize, unit, description, lowStockThreshold, paperSource } = req.body;
+    const { name, coverPartyName, coverName, innerPartyName, innerName, gsm, quantity, coverGSM, coverQuantity, coverPaperSize, innerGSM, innerQuantity, innerPaperSize, unit, description, lowStockThreshold, paperSource } = req.body;
     const resolvedCoverName = (coverName || '').trim();
     const resolvedInnerName = (innerName || '').trim();
     const resolvedName = name?.trim()
@@ -114,7 +116,9 @@ router.put('/:id', async (req, res) => {
       req.params.id,
       {
         name: resolvedName,
+        coverPartyName: (coverPartyName || '').trim(),
         coverName: resolvedCoverName || resolvedName,
+        innerPartyName: (innerPartyName || '').trim(),
         innerName: resolvedInnerName || resolvedName,
         gsm, quantity, coverGSM, coverQuantity, coverPaperSize, innerGSM, innerQuantity, innerPaperSize, unit, description, lowStockThreshold, paperSource, updatedAt: Date.now()
       },

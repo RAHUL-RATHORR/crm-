@@ -5,23 +5,7 @@ import { downloadAsPDF } from './utils/pdfExport';
 import { printElement } from './utils/printDocument';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
 import { getBillToDetails, getShipToDetails } from './utils/shipAddress';
-
-const NumberToWords = (num) => {
-  const a = ['', 'one ', 'two ', 'three ', 'four ', 'five ', 'six ', 'seven ', 'eight ', 'nine ', 'ten ', 'eleven ', 'twelve ', 'thirteen ', 'fourteen ', 'fifteen ', 'sixteen ', 'seventeen ', 'eighteen ', 'nineteen '];
-  const b = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
-
-  if ((num = num.toString()).length > 9) return 'overflow';
-  let n = ('000000000' + num).substr(-9).match(/^(\d{2})(\d{1})(\d{1})(\d{2})(\d{1})(\d{2})$/);
-  if (!n) return;
-  let str = '';
-  str += (n[1] != 0) ? (a[Number(n[1])] || b[n[1][0]] + ' ' + a[n[1][1]]) + 'crore ' : '';
-  str += (n[2] != 0) ? (a[Number(n[2])] || b[n[2][0]] + ' ' + a[n[2][1]]) + 'lakh ' : '';
-  str += (n[3] != 0) ? (a[Number(n[3])] || b[n[3][0]] + ' ' + a[n[3][1]]) + 'lakh ' : '';
-  str += (n[4] != 0) ? (a[Number(n[4])] || b[n[4][0]] + ' ' + a[n[4][1]]) + 'thousand ' : '';
-  str += (n[5] != 0) ? (a[Number(n[5])] || b[n[5][0]] + ' ' + a[n[5][1]]) + 'hundred ' : '';
-  str += (n[6] != 0) ? ((str != '') ? 'and ' : '') + (a[Number(n[6])] || b[n[6][0]] + ' ' + a[n[6][1]]) + 'only ' : '';
-  return str.trim();
-};
+import { numberToWords } from './utils/numberToWords';
 
 const ChallanList = () => {
   const navigate = useNavigate();
@@ -413,7 +397,7 @@ const ChallanList = () => {
                     <div className="flex">
                       <div className="grow p-4">
                         <p className="text-[10px] font-black text-gray-600 uppercase mb-1 tracking-widest">Amount in Words</p>
-                        <p className="text-[12px] font-bold text-gray-700 italic capitalize">{NumberToWords(grandTotal)} Only</p>
+                        <p className="text-[12px] font-bold text-gray-700 italic">{numberToWords(grandTotal)} Only</p>
                       </div>
                       <div className="flex flex-col w-56 border-l border-gray-200">
                         <div className="flex justify-between px-4 py-1.5 border-b border-gray-200">
