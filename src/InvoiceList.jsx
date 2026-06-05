@@ -338,8 +338,8 @@ const InvoiceList = () => {
                 style={{ color: '#334155' }}
               >
                 {/* Traditional Green/Teal Design - Matching Estimates */}
-                <div className="mb-6">
-                  <h1 className="text-4xl font-bold text-center mb-3" style={{ color: '#1e3a8a' }}>
+                <div className="mb-3 print:mb-1">
+                  <h1 className="text-3xl print:text-2xl font-bold text-center mb-2 print:mb-1" style={{ color: '#1e3a8a' }}>
                     Tax Invoice
                   </h1>
 
@@ -401,7 +401,7 @@ const InvoiceList = () => {
                     </div>
                   </div>
 
-                  <div className="flex justify-between items-start gap-10 mt-4">
+                  <div className="flex justify-between items-start gap-10 mt-3 print:mt-1">
                     <div className="flex-1">
                       <h4 className="text-[11px] font-black text-gray-900 border-b-2 mb-2 pb-0.5 inline-block uppercase tracking-wider">Bill To :</h4>
                       <div className="text-[12px] space-y-1 font-medium text-gray-600">
@@ -431,52 +431,52 @@ const InvoiceList = () => {
                 </div>
 
                 {/* --- ITEMS TABLE --- */}
-                <div className="mb-8 border border-gray-200 rounded-sm overflow-hidden min-h-[350px] flex flex-col">
+                <div className="mb-4 print:mb-2 border border-gray-200 rounded-sm overflow-hidden flex flex-col">
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="text-white text-[12px] font-black uppercase tracking-widest invoice-table-header" style={{ backgroundColor: '#1e3a8a' }}>
-                        <th className="px-4 py-2.5 border-r border-teal-500/30 w-12 text-center">S.No</th>
-                        <th className="px-4 py-2.5 border-r border-teal-500/30">Description of Goods/Services</th>
-                        <th className="px-4 py-2.5 border-r border-teal-500/30 text-center w-36">HSN/SAC</th>
-                        <th className="px-4 py-2.5 border-r border-teal-500/30 text-center w-20">Qty</th>
-                        <th className="px-4 py-2.5 border-r border-teal-500/30 text-right w-24">Rate</th>
-                        <th className="px-4 py-2.5 text-right w-32">Amount</th>
+                        <th className="px-3 py-2 print:py-1 border-r border-teal-500/30 w-12 text-center">S.No</th>
+                        <th className="px-3 py-2 print:py-1 border-r border-teal-500/30">Description of Goods/Services</th>
+                        <th className="px-3 py-2 print:py-1 border-r border-teal-500/30 text-center w-36">HSN/SAC</th>
+                        <th className="px-3 py-2 print:py-1 border-r border-teal-500/30 text-center w-20">Qty</th>
+                        <th className="px-3 py-2 print:py-1 border-r border-teal-500/30 text-right w-24">Rate</th>
+                        <th className="px-3 py-2 print:py-1 text-right w-32">Amount</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 grow">
                       {selectedInvoice.items?.map((item, idx) => (
                         <tr key={idx} className="text-[13px] group">
-                          <td className="px-4 py-4 border-r border-gray-50 text-center font-bold text-gray-600 align-top">
+                          <td className="px-3 py-2 print:py-1 border-r border-gray-50 text-center font-bold text-gray-600 align-top">
                             {idx + 1}
                           </td>
-                          <td className="px-4 py-4 border-r border-gray-50 align-top">
+                          <td className="px-3 py-2 print:py-1 border-r border-gray-50 align-top">
                             <div className="space-y-1">
                               <p className="font-black text-gray-900 uppercase" style={{ color: '#1e3a8a' }}>{item.description}</p>
                             </div>
                           </td>
-                          <td className="px-4 py-4 border-r border-gray-50 text-center font-medium align-top text-gray-700 uppercase">
+                          <td className="px-3 py-2 print:py-1 border-r border-gray-50 text-center font-medium align-top text-gray-700 uppercase">
                             {item.hsn || ''}
                           </td>
-                          <td className="px-4 py-4 border-r border-gray-50 text-center font-bold align-top text-gray-700">
+                          <td className="px-3 py-2 print:py-1 border-r border-gray-50 text-center font-bold align-top text-gray-700">
                             {item.qty}
                           </td>
-                          <td className="px-4 py-4 border-r border-gray-50 font-bold align-top text-right text-gray-700">
+                          <td className="px-3 py-2 print:py-1 border-r border-gray-50 font-bold align-top text-right text-gray-700">
                             ₹ {item.rate?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                           </td>
-                          <td className="px-4 py-4 font-black align-top text-right text-gray-900 bg-gray-50/30">
+                          <td className="px-3 py-2 print:py-1 font-black align-top text-right text-gray-900 bg-gray-50/30">
                             ₹ {item.total?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                           </td>
                         </tr>
                       ))}
-                      {/* Blank rows to fill space */}
-                      {[...Array(Math.max(0, 3 - (selectedInvoice.items?.length || 0)))].map((_, i) => (
-                        <tr key={`empty-${i}`} className="border-0">
-                          <td className="px-4 py-4 border-r border-gray-50">&nbsp;</td>
-                          <td className="px-4 py-4 border-r border-gray-50">&nbsp;</td>
-                          <td className="px-4 py-4 border-r border-gray-50">&nbsp;</td>
-                          <td className="px-4 py-4 border-r border-gray-50">&nbsp;</td>
-                          <td className="px-4 py-4 border-r border-gray-50">&nbsp;</td>
-                          <td className="px-4 py-4">&nbsp;</td>
+                      {/* Blank rows — preview only, hidden when printing */}
+                      {[...Array(Math.max(0, 2 - (selectedInvoice.items?.length || 0)))].map((_, i) => (
+                        <tr key={`empty-${i}`} className="invoice-fill-row print:hidden border-0">
+                          <td className="px-3 py-3 border-r border-gray-50">&nbsp;</td>
+                          <td className="px-3 py-3 border-r border-gray-50">&nbsp;</td>
+                          <td className="px-3 py-3 border-r border-gray-50">&nbsp;</td>
+                          <td className="px-3 py-3 border-r border-gray-50">&nbsp;</td>
+                          <td className="px-3 py-3 border-r border-gray-50">&nbsp;</td>
+                          <td className="px-3 py-3">&nbsp;</td>
                         </tr>
                       ))}
                     </tbody>
@@ -484,40 +484,40 @@ const InvoiceList = () => {
                                  {/* Total Section */}
                   <div className="border-t border-gray-200 mt-auto bg-gray-50/50">
                     <div className="flex">
-                      <div className="grow p-4">
+                      <div className="grow p-3 print:p-2">
                         <p className="text-[10px] font-black text-gray-600 uppercase mb-1 tracking-widest">Amount in Words</p>
                         <p className="text-[12px] font-bold text-gray-700 italic">{numberToWords(selectedInvoice.totalAmount)} Only</p>
                       </div>
                       <div className="flex flex-col w-56 border-l border-gray-200">
-                        <div className="flex justify-between px-4 py-1.5 border-b border-gray-200">
+                        <div className="flex justify-between px-3 py-1 print:py-0.5 border-b border-gray-200">
                           <span className="text-[11px] font-bold text-gray-700 uppercase">Freight</span>
                           <span className="text-[12px] font-bold text-gray-800">₹ {freight.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                         </div>
-                        <div className="flex justify-between px-4 py-1.5 border-b border-gray-200">
+                        <div className="flex justify-between px-3 py-1 print:py-0.5 border-b border-gray-200">
                           <span className="text-[11px] font-bold text-gray-700 uppercase">Total Amount</span>
                           <span className="text-[12px] font-bold text-gray-800">₹ {totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                         </div>
-                        <div className="flex justify-between px-4 py-1.5 border-b border-gray-200">
+                        <div className="flex justify-between px-3 py-1 print:py-0.5 border-b border-gray-200">
                           <span className="text-[11px] font-bold text-gray-700 uppercase">CGST {isIGST ? '(0%)' : `(${gstPercent / 2}%)`}</span>
                           <span className="text-[12px] font-bold text-gray-800">₹ {isIGST ? '0.00' : halfGstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                         </div>
-                        <div className="flex justify-between px-4 py-1.5 border-b border-gray-200">
+                        <div className="flex justify-between px-3 py-1 print:py-0.5 border-b border-gray-200">
                           <span className="text-[11px] font-bold text-gray-700 uppercase">SGST {isIGST ? '(0%)' : `(${gstPercent / 2}%)`}</span>
                           <span className="text-[12px] font-bold text-gray-800">₹ {isIGST ? '0.00' : halfGstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                         </div>
-                        <div className="flex justify-between px-4 py-1.5 border-b border-gray-200">
+                        <div className="flex justify-between px-3 py-1 print:py-0.5 border-b border-gray-200">
                           <span className="text-[11px] font-bold text-gray-700 uppercase">IGST {isIGST ? `(${gstPercent}%)` : '(0%)'}</span>
                           <span className="text-[12px] font-bold text-gray-800">₹ {isIGST ? totalGstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 }) : '0.00'}</span>
                         </div>
-                        <div className="flex justify-between px-4 py-1.5 border-b border-gray-200">
+                        <div className="flex justify-between px-3 py-1 print:py-0.5 border-b border-gray-200">
                           <span className="text-[11px] font-bold text-gray-700 uppercase">Round Off</span>
                           <span className="text-[12px] font-bold text-gray-800">₹ {roundOff.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                         </div>
-                        <div className="flex justify-between px-4 py-3 invoice-grand-total" style={{ backgroundColor: '#1e3a8a' }}>
+                        <div className="flex justify-between px-3 py-2 print:py-1.5 invoice-grand-total" style={{ backgroundColor: '#1e3a8a' }}>
                           <span className="text-[12px] font-black text-white uppercase tracking-wider">Grand Total</span>
                           <span className="text-sm font-black text-white">₹ {selectedInvoice.totalAmount?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                         </div>
-                        <div className="flex justify-between px-4 py-2 border-t border-gray-200 bg-gray-50/80">
+                        <div className="flex justify-between px-3 py-1 print:py-0.5 border-t border-gray-200 bg-gray-50/80">
                           <span className="text-[11px] font-bold text-gray-700 uppercase">Reverse Charge</span>
                           <span className="text-[12px] font-bold text-gray-800">{selectedInvoice.reverseCharge || 'No'}</span>
                         </div>
@@ -527,9 +527,9 @@ const InvoiceList = () => {
                 </div>
 
                 {/* --- BANK DETAILS BAR --- */}
-                <div className="mb-6">
-                  <h4 className="text-[11px] font-black text-gray-900 border-b-2 mb-3 pb-0.5 inline-block uppercase tracking-wider">Account Details :</h4>
-                  <div className="p-3 border border-gray-200 rounded-lg bg-gray-50/30 flex justify-between items-center">
+                <div className="mb-3 print:mb-1">
+                  <h4 className="text-[11px] font-black text-gray-900 border-b-2 mb-2 print:mb-1 pb-0.5 inline-block uppercase tracking-wider">Account Details :</h4>
+                  <div className="p-2 print:p-1.5 border border-gray-200 rounded-lg bg-gray-50/30 flex justify-between items-center">
                   <div className="flex gap-8">
                     <div>
                       <p className="text-[10px] font-black text-gray-600 uppercase mb-1">Bank Name</p>
@@ -552,8 +552,8 @@ const InvoiceList = () => {
                 </div>
 
                 {/* --- FOOTER SECTION --- */}
-                <div className="mt-8 text-[11px] text-gray-700 space-y-4">
-                  <div className="grid grid-cols-2 gap-12">
+                <div className="invoice-footer mt-4 print:mt-2 text-[11px] text-gray-700 space-y-2 print:space-y-1">
+                  <div className="grid grid-cols-2 gap-8 print:gap-4">
                     <div className="space-y-1">
                       <p className="font-bold text-gray-800 underline uppercase tracking-tighter">Terms & Conditions :</p>
                       <p>1. Goods once sold will not be taken back.</p>
@@ -562,13 +562,13 @@ const InvoiceList = () => {
                     </div>
                     <div className="text-right">
                        <p className="font-bold uppercase tracking-widest text-[#1e3a8a]">For Harihar Printers</p>
-                       <p className="mt-10 font-black text-gray-800">Authorised Signatory</p>
+                       <p className="mt-6 print:mt-3 font-black text-gray-800">Authorised Signatory</p>
                     </div>
                   </div>
 
-                  <div className="pt-8 text-center">
+                  <div className="pt-2 print:pt-1 text-center">
 
-                    <p className="text-[10px] font-bold text-gray-600 mt-2 uppercase tracking-widest">E. & O. E.</p>
+                    <p className="text-[10px] font-bold text-gray-600 mt-1 uppercase tracking-widest">E. & O. E.</p>
                   </div>
                 </div>
               </div>

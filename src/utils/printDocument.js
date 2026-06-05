@@ -63,7 +63,7 @@ export function printElement(elementId) {
         <meta charset="UTF-8" />
         <title>Print</title>
         <style>
-          @page { size: A4; margin: 10mm; }
+          @page { size: A4; margin: 12mm; }
           * {
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
@@ -79,18 +79,36 @@ export function printElement(elementId) {
           }
           .no-print, button, .lucide, [role="button"] { display: none !important; }
           .a4-page, .invoice-print-page {
-            width: 208mm !important;
+            width: 186mm !important;
+            max-width: 186mm !important;
             min-height: 0 !important;
             height: auto !important;
             max-height: none !important;
-            padding: 10mm 12mm !important;
+            padding: 6mm 8mm !important;
             margin: 0 auto !important;
             background: white !important;
             display: block !important;
             overflow: visible !important;
             position: static !important;
           }
-          .a4-page *, .invoice-print-page * {
+          .challan-print-page {
+            width: 208mm !important;
+            max-width: 208mm !important;
+            min-height: 0 !important;
+            height: auto !important;
+            max-height: none !important;
+            padding: 12mm !important;
+            margin: 0 auto !important;
+            background: white !important;
+            display: block !important;
+            overflow: visible !important;
+            position: static !important;
+          }
+          .challan-print-page .challan-items-table { min-height: 0 !important; }
+          .challan-print-page .invoice-footer { margin-top: 1rem !important; page-break-inside: avoid !important; }
+          .challan-print-page .invoice-footer > div:first-child { padding-top: 1.5rem !important; }
+          .challan-print-page .invoice-footer > div:last-child { padding-top: 0.5rem !important; }
+          .a4-page *, .invoice-print-page *, .challan-print-page * {
             overflow: visible !important;
             max-height: none !important;
           }
@@ -100,27 +118,35 @@ export function printElement(elementId) {
           tr { display: table-row !important; page-break-inside: avoid; }
           td, th { display: table-cell !important; }
           ${sanitizedStyles}
-          .invoice-print-page {
+          .invoice-print-page, .challan-print-page {
             background: #ffffff !important;
           }
           .invoice-print-page .invoice-table-header,
-          .invoice-print-page .invoice-table-header th {
+          .invoice-print-page .invoice-table-header th,
+          .challan-print-page thead tr,
+          .challan-print-page thead th {
             background-color: #1e3a8a !important;
             color: #ffffff !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
           .invoice-print-page .invoice-grand-total,
-          .invoice-print-page .invoice-grand-total span {
+          .invoice-print-page .invoice-grand-total span,
+          .challan-print-page .invoice-grand-total,
+          .challan-print-page .invoice-grand-total span {
             background-color: #1e3a8a !important;
             color: #ffffff !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
+          .invoice-fill-row { display: none !important; }
+          .invoice-print-page td,
+          .invoice-print-page th { padding-top: 3px !important; padding-bottom: 3px !important; }
+          .invoice-print-page .invoice-footer { page-break-inside: avoid !important; }
         </style>
       </head>
       <body class="bg-white">
-        <div style="width:210mm;margin:0 auto;background:white;">
+        <div style="width:210mm;max-width:210mm;margin:0 auto;padding:0;background:white;box-sizing:border-box;">
           ${element.innerHTML}
         </div>
       </body>

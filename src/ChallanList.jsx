@@ -274,7 +274,7 @@ const ChallanList = () => {
             <div className="p-8 overflow-y-auto flex-grow a4-page-container print:overflow-visible print:max-h-none print:h-auto print:p-0 print:grow-0" id="printable-content">
               <div
                 id="printable-challan"
-                className="bg-white mx-auto shadow-none a4-page font-sans"
+                className="bg-white mx-auto shadow-none a4-page challan-print-page font-sans"
                 style={{ color: '#334155' }}
               >
                 {/* Traditional Green/Teal Design - Matching Estimates */}
@@ -350,7 +350,7 @@ const ChallanList = () => {
                 </div>
 
                 {/* --- ITEMS TABLE --- */}
-                <div className="mb-8 border border-gray-200 rounded-sm overflow-hidden min-h-[350px] flex flex-col">
+                <div className="challan-items-table mb-8 border border-gray-200 rounded-sm overflow-hidden min-h-[350px] flex flex-col">
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="text-white text-[12px] font-black uppercase tracking-widest" style={{ backgroundColor: '#1e3a8a' }}>
@@ -380,9 +380,9 @@ const ChallanList = () => {
                           ₹ {selectedChallan.total?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                         </td>
                       </tr>
-                      {/* Blank rows to fill space */}
+                      {/* Blank rows to fill space — hidden only when printing */}
                       {[1, 2, 3, 4, 5, 6].map((i) => (
-                        <tr key={i} className="border-0">
+                        <tr key={i} className="invoice-fill-row border-0">
                           <td className="px-4 py-4 border-r border-gray-50">&nbsp;</td>
                           <td className="px-4 py-4 border-r border-gray-50">&nbsp;</td>
                           <td className="px-4 py-4 border-r border-gray-50">&nbsp;</td>
@@ -420,7 +420,7 @@ const ChallanList = () => {
                           <span className="text-[11px] font-bold text-gray-700 uppercase">Round Off</span>
                           <span className="text-[12px] font-bold text-gray-800">₹ {roundOff.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                         </div>
-                        <div className="flex justify-between px-4 py-3" style={{ backgroundColor: '#1e3a8a' }}>
+                        <div className="flex justify-between px-4 py-3 invoice-grand-total" style={{ backgroundColor: '#1e3a8a' }}>
                           <span className="text-[12px] font-black text-white uppercase tracking-wider">Grand Total</span>
                           <span className="text-sm font-black text-white">₹ {grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                         </div>
@@ -455,7 +455,7 @@ const ChallanList = () => {
                 </div>
 
                 {/* --- FOOTER SECTION --- */}
-                <div className="mt-8 text-[11px] text-gray-700 space-y-4">
+                <div className="invoice-footer mt-8 text-[11px] text-gray-700 space-y-4">
                   <div className="pt-8 grid grid-cols-2 gap-20">
                     <div className="border-t border-gray-300 pt-1">
                       <p className="font-bold uppercase tracking-widest text-[#1e3a8a]">Receiver's Signature :</p>

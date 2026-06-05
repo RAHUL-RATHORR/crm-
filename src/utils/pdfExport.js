@@ -99,7 +99,7 @@ export const downloadAsPDF = async (elementId, filename, onProgressChange = () =
       <html>
         <head>
           <style>
-            @page { margin: 0; size: A4; }
+            @page { margin: 12mm; size: A4; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; box-sizing: border-box !important; }
             body { 
               margin: 0; 
@@ -115,8 +115,9 @@ export const downloadAsPDF = async (elementId, filename, onProgressChange = () =
             
             /* GLOBAL CENTERING FOR ANY COMPONENT */
             .a4-page, .invoice-container, .challan-container, [style*="width: 210mm"] {
-              width: 208mm !important; /* Slight buffer for perfect centering */
-              padding: 10mm 15mm !important;
+              width: 186mm !important;
+              max-width: 186mm !important;
+              padding: 6mm 8mm !important;
               margin: 0 auto !important;
               background: white !important;
               display: block !important;
@@ -124,7 +125,7 @@ export const downloadAsPDF = async (elementId, filename, onProgressChange = () =
           </style>
         </head>
         <body class="bg-white">
-          <div style="width: 210mm; margin: 0 auto; background: white;">
+          <div style="width: 186mm; max-width: 186mm; margin: 0 auto; padding: 0 4mm; background: white; box-sizing: border-box;">
             ${element.innerHTML}
           </div>
         </body>
