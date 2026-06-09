@@ -285,6 +285,9 @@ export default function JobCardForm() {
       bindingPerforation: fd.get('bindingPerforation') === 'on',
       bindingNumbring: fd.get('bindingNumbring') === 'on',
       bindingRegister: fd.get('bindingRegister') === 'on',
+      bindingGlue: fd.get('bindingGlue') === 'on',
+      bindingKachhi: fd.get('bindingKachhi') === 'on',
+      bindingPukki: fd.get('bindingPukki') === 'on',
     };
 
     try {
@@ -911,7 +914,7 @@ export default function JobCardForm() {
                 className="h-10 border border-gray-200 rounded-lg px-4 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
               >
                 <option value="">Select Plate Size</option>
-                <option value="500*670">500*670</option>
+                <option value="560*670">560*670</option>
                 <option value="800*1030">800*1030</option>
                 <option value="820*1030">820*1030</option>
                 <option value="540*780">540*780</option>
@@ -986,7 +989,7 @@ export default function JobCardForm() {
             Binding
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {[
               { name: 'bindingCenterPin', label: 'Center Pin' },
               { name: 'bindingSilai', label: 'Silai' },
@@ -994,7 +997,10 @@ export default function JobCardForm() {
               { name: 'bindingFolding', label: 'Folding' },
               { name: 'bindingPerforation', label: 'Perforation' },
               { name: 'bindingNumbring', label: 'Numbring' },
-              { name: 'bindingRegister', label: 'Register' }
+              { name: 'bindingRegister', label: 'Register' },
+              { name: 'bindingGlue', label: 'Glue Binding' },
+              { name: 'bindingKachhi', label: 'Kechhi Binding' },
+              { name: 'bindingPukki', label: 'Pukki Binding' }
             ].map(item => (
               <label key={item.name} className="flex items-center gap-2 cursor-pointer group">
                 <input

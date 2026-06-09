@@ -83,7 +83,10 @@ export default function JobCardListing() {
       { key: 'bindingFolding', label: 'Folding' },
       { key: 'bindingPerforation', label: 'Perforation' },
       { key: 'bindingNumbring', label: 'Numbring' },
-      { key: 'bindingRegister', label: 'Register' }
+      { key: 'bindingRegister', label: 'Register' },
+      { key: 'bindingGlue', label: 'Glue Binding' },
+      { key: 'bindingKachhi', label: 'Kechhi Binding' },
+      { key: 'bindingPukki', label: 'Pukki Binding' }
     ].filter(b => card[b.key]).map(b => b.label);
     return bindings.length > 0 ? bindings : null;
   };
@@ -611,7 +614,10 @@ export default function JobCardListing() {
                         { key: 'bindingFolding', label: 'Folding' },
                         { key: 'bindingPerforation', label: 'Perforation' },
                         { key: 'bindingNumbring', label: 'Numbring' },
-                        { key: 'bindingRegister', label: 'Register' }
+                        { key: 'bindingRegister', label: 'Register' },
+                        { key: 'bindingGlue', label: 'Glue Binding' },
+                        { key: 'bindingKachhi', label: 'Kechhi Binding' },
+                        { key: 'bindingPukki', label: 'Pukki Binding' }
                       ].filter(item => selectedCard[item.key]);
 
                       if (selectedBinding.length === 0) return null;

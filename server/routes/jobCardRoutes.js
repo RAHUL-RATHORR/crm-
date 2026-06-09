@@ -283,7 +283,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-// GET /api/jobcard/plate-used-count?plateSize=500*670&editingId=optional
+// GET /api/jobcard/plate-used-count?plateSize=560*670&editingId=optional
 router.get('/plate-used-count', async (req, res) => {
   try {
     const { plateSize, editingId } = req.query;
