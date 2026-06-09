@@ -10,6 +10,39 @@ const API_BASE_URL = window.location.hostname === 'localhost' || window.location
   ? 'https://crm-qpw8.onrender.com'
   : 'https://crm-qpw8.onrender.com';
 
+const buildPartySuggestions = (jobCards = []) => {
+  const map = new Map();
+
+  jobCards.forEach((card) => {
+    const name = (card.partyName || card.companyName || '').trim();
+    if (!name) return;
+
+    const key = name.toLowerCase();
+    const cardDate = new Date(card.jobDate || card.createdAt || 0);
+    const existing = map.get(key);
+
+    if (!existing || cardDate > existing.date) {
+      map.set(key, {
+        partyName: name,
+        address: card.address || '',
+        contactNo: card.contactNo || '',
+        emailId: card.emailId || '',
+        gstNo: card.gstNo || '',
+        jobQty: card.jobQty || '',
+        useShipAddress: !!(card.useShipAddress || card.shipAddress || card.shipPartyName),
+        shipPartyName: card.shipPartyName || '',
+        shipAddress: card.shipAddress || '',
+        shipContactNo: card.shipContactNo || '',
+        shipEmailId: card.shipEmailId || '',
+        shipGstNo: card.shipGstNo || '',
+        date: cardDate,
+      });
+    }
+  });
+
+  return Array.from(map.values()).sort((a, b) => a.partyName.localeCompare(b.partyName));
+};
+
 export default function JobCardForm() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -39,23 +72,63 @@ export default function JobCardForm() {
   );
   const [plateSize, setPlateSize] = useState(editData?.plateSize || '');
   const [plateUseCount, setPlateUseCount] = useState(editData?.plateUseCount || '');
+  const [jobCards, setJobCards] = useState([]);
+  const [partySuggestions, setPartySuggestions] = useState([]);
+  const [isPartyDropdownOpen, setIsPartyDropdownOpen] = useState(false);
+  const [partyName, setPartyName] = useState(editData?.partyName || '');
+  const [address, setAddress] = useState(editData?.address || '');
+  const [contactNo, setContactNo] = useState(editData?.contactNo || '');
+  const [emailId, setEmailId] = useState(editData?.emailId || '');
+  const [gstNo, setGstNo] = useState(editData?.gstNo || '');
+  const [jobQty, setJobQty] = useState(editData?.jobQty || '');
+  const [shipPartyName, setShipPartyName] = useState(editData?.shipPartyName || '');
+  const [shipAddress, setShipAddress] = useState(editData?.shipAddress || '');
+  const [shipContactNo, setShipContactNo] = useState(editData?.shipContactNo || '');
+  const [shipEmailId, setShipEmailId] = useState(editData?.shipEmailId || '');
+  const [shipGstNo, setShipGstNo] = useState(editData?.shipGstNo || '');
   const paperDropdownRef = useRef(null);
   const innerPaperDropdownRef = useRef(null);
+  const partyDropdownRef = useRef(null);
 
-  const refreshPlateUseCount = async (size) => {
+  const filteredPartySuggestions = partySuggestions.filter((party) => {
+    const query = partyName.trim().toLowerCase();
+    if (!query) return true;
+    return party.partyName.toLowerCase().includes(query);
+  }).slice(0, 8);
+
+  const applyPartySuggestion = (party) => {
+    setPartyName(party.partyName);
+    setAddress(party.address);
+    setContactNo(party.contactNo);
+    setEmailId(party.emailId);
+    setGstNo(party.gstNo);
+    setJobQty(party.jobQty || '');
+
+    if (party.useShipAddress) {
+      setUseShipAddress(true);
+      setShipPartyName(party.shipPartyName || party.partyName);
+      setShipAddress(party.shipAddress);
+      setShipContactNo(party.shipContactNo);
+      setShipEmailId(party.shipEmailId);
+      setShipGstNo(party.shipGstNo);
+    } else {
+      setUseShipAddress(false);
+      setShipPartyName('');
+      setShipAddress('');
+      setShipContactNo('');
+      setShipEmailId('');
+      setShipGstNo('');
+    }
+
+    setIsPartyDropdownOpen(false);
+  };
+
+  const refreshPlateUseCount = (size, cards = []) => {
     if (!size) {
       setPlateUseCount('');
       return;
     }
-
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/jobcard`);
-      const cards = await res.json();
-      setPlateUseCount(resolvePlateUseCount(size, cards, editData));
-    } catch (err) {
-      console.error('Job card fetch error:', err);
-      setPlateUseCount(resolvePlateUseCount(size, [], editData));
-    }
+    setPlateUseCount(resolvePlateUseCount(size, cards, editData));
   };
 
   const filteredStocks = paperStocks.filter(stock => {
@@ -110,9 +183,28 @@ export default function JobCardForm() {
       if (innerPaperDropdownRef.current && !innerPaperDropdownRef.current.contains(event.target)) {
         setIsInnerPaperDropdownOpen(false);
       }
+      if (partyDropdownRef.current && !partyDropdownRef.current.contains(event.target)) {
+        setIsPartyDropdownOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    const fetchJobCards = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/jobcard`);
+        const cards = await res.json();
+        setJobCards(cards);
+        setPartySuggestions(buildPartySuggestions(cards));
+      } catch (err) {
+        console.error('Job card fetch error:', err);
+        setJobCards([]);
+        setPartySuggestions([]);
+      }
+    };
+    fetchJobCards();
   }, []);
 
   useEffect(() => {
@@ -163,8 +255,8 @@ export default function JobCardForm() {
   }, [paperStocks, editData?.paper, editData?.innerPaper]);
 
   useEffect(() => {
-    refreshPlateUseCount(plateSize);
-  }, [plateSize, editData?._id]);
+    refreshPlateUseCount(plateSize, jobCards);
+  }, [plateSize, jobCards, editData?._id]);
 
   const handlePlateSizeChange = (e) => {
     setPlateSize(e.target.value);
@@ -239,25 +331,58 @@ export default function JobCardForm() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            <div className="flex flex-col">
+            <div className="flex flex-col relative" ref={partyDropdownRef}>
               <label className="text-sm font-medium text-gray-700 mb-1">Party Name *</label>
-              <input type="text" name="partyName" defaultValue={editData?.partyName} required className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" placeholder="Enter party name" />
+              <input
+                type="text"
+                name="partyName"
+                value={partyName}
+                onChange={(e) => {
+                  setPartyName(e.target.value);
+                  setIsPartyDropdownOpen(true);
+                }}
+                onFocus={() => setIsPartyDropdownOpen(true)}
+                required
+                autoComplete="off"
+                className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                placeholder="Enter party name"
+              />
+              {isPartyDropdownOpen && filteredPartySuggestions.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-100 rounded-xl shadow-xl z-50 py-1 max-h-56 overflow-y-auto">
+                  {filteredPartySuggestions.map((party) => (
+                    <button
+                      key={party.partyName}
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => applyPartySuggestion(party)}
+                      className="w-full px-4 py-2.5 text-left hover:bg-blue-50 transition-colors"
+                    >
+                      <p className="text-sm font-bold text-gray-900">{party.partyName}</p>
+                      {(party.address || party.contactNo || party.jobQty) && (
+                        <p className="text-xs text-gray-500 truncate">
+                          {[party.address, party.contactNo, party.jobQty && `Qty: ${party.jobQty}`].filter(Boolean).join(' · ')}
+                        </p>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             <div className="flex flex-col">
               <label className="text-sm font-medium text-gray-700 mb-1">Address</label>
-              <input type="text" name="address" defaultValue={editData?.address} className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" placeholder="Enter address" />
+              <input type="text" name="address" value={address} onChange={(e) => setAddress(e.target.value)} className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" placeholder="Enter address" />
             </div>
             <div className="flex flex-col">
               <label className="text-sm font-medium text-gray-700 mb-1">Contact No.</label>
-              <input type="text" name="contactNo" defaultValue={editData?.contactNo} className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" placeholder="Enter Phone" />
+              <input type="text" name="contactNo" value={contactNo} onChange={(e) => setContactNo(e.target.value)} className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" placeholder="Enter Phone" />
             </div>
             <div className="flex flex-col">
               <label className="text-sm font-medium text-gray-700 mb-1">Gmail ID</label>
-              <input type="email" name="emailId" defaultValue={editData?.emailId} className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" placeholder="Enter Gmail ID" />
+              <input type="email" name="emailId" value={emailId} onChange={(e) => setEmailId(e.target.value)} className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" placeholder="Enter Gmail ID" />
             </div>
             <div className="flex flex-col">
               <label className="text-sm font-medium text-gray-700 mb-1">GST No.</label>
-              <input type="text" name="gstNo" defaultValue={editData?.gstNo} className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" placeholder="Enter GST number" />
+              <input type="text" name="gstNo" value={gstNo} onChange={(e) => setGstNo(e.target.value)} className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" placeholder="Enter GST number" />
             </div>
             <div className="flex flex-col">
               <label className="text-sm font-medium text-gray-700 mb-1">Date</label>
@@ -270,13 +395,14 @@ export default function JobCardForm() {
             </div>
             <div className="flex flex-col">
               <label className="text-sm font-medium text-gray-700 mb-1">Job Quantity *</label>
-              <input 
-                type="text" 
-                name="jobQty" 
-                defaultValue={editData?.jobQty} 
-                required 
-                className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" 
-                placeholder="e.g. 1000, 50 Books" 
+              <input
+                type="text"
+                name="jobQty"
+                value={jobQty}
+                onChange={(e) => setJobQty(e.target.value)}
+                required
+                className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                placeholder="e.g. 1000, 50 Books"
               />
             </div>
           </div>
@@ -302,7 +428,8 @@ export default function JobCardForm() {
                   <input
                     type="text"
                     name="shipPartyName"
-                    defaultValue={editData?.shipPartyName}
+                    value={shipPartyName}
+                    onChange={(e) => setShipPartyName(e.target.value)}
                     className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     placeholder="Enter ship party name"
                   />
@@ -312,7 +439,8 @@ export default function JobCardForm() {
                   <input
                     type="text"
                     name="shipAddress"
-                    defaultValue={editData?.shipAddress}
+                    value={shipAddress}
+                    onChange={(e) => setShipAddress(e.target.value)}
                     className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     placeholder="Enter ship address"
                   />
@@ -322,7 +450,8 @@ export default function JobCardForm() {
                   <input
                     type="text"
                     name="shipContactNo"
-                    defaultValue={editData?.shipContactNo}
+                    value={shipContactNo}
+                    onChange={(e) => setShipContactNo(e.target.value)}
                     className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     placeholder="Enter ship phone"
                   />
@@ -332,7 +461,8 @@ export default function JobCardForm() {
                   <input
                     type="email"
                     name="shipEmailId"
-                    defaultValue={editData?.shipEmailId}
+                    value={shipEmailId}
+                    onChange={(e) => setShipEmailId(e.target.value)}
                     className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     placeholder="Enter ship Gmail ID"
                   />
@@ -342,7 +472,8 @@ export default function JobCardForm() {
                   <input
                     type="text"
                     name="shipGstNo"
-                    defaultValue={editData?.shipGstNo}
+                    value={shipGstNo}
+                    onChange={(e) => setShipGstNo(e.target.value)}
                     className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     placeholder="Enter ship GST number"
                   />
