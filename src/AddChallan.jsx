@@ -14,9 +14,9 @@ const AddChallan = () => {
     challanNo: editData ? editData.challanNo : 'CHLN' + String(Date.now()).slice(-4),
     jobCardId: editData ? editData.jobCardId : '',
     partyName: editData ? editData.partyName : '',
-    description: editData ? editData.description : '',
-    qty: editData ? editData.qty : 0,
-    rate: editData ? editData.rate : 0,
+    items: editData && editData.items && editData.items.length > 0 
+      ? editData.items 
+      : (editData && editData.description ? [{ description: editData.description, qty: editData.qty || 0, rate: editData.rate || 0, total: editData.total || 0 }] : [{ description: '', qty: 0, rate: 0, total: 0 }]),
     total: editData ? editData.total : 0,
     note: editData ? editData.note : ''
   });
@@ -28,28 +28,65 @@ const AddChallan = () => {
       .catch(err => console.error("Error fetching Job Cards:", err));
   }, []);
 
-  // Auto-fill Party logic
+  // Unique parties for the datalist
+  const uniqueParties = [...new Set(jobCards.map(card => card.partyName).filter(Boolean))];
+
+  // Auto-fill Party logic when Job Card is selected
   useEffect(() => {
     if (formData.jobCardId) {
       const selectedCard = jobCards.find(card => (card._id === formData.jobCardId || card.id === parseInt(formData.jobCardId)));
-      if (selectedCard) {
+      if (selectedCard && formData.partyName !== selectedCard.partyName) {
         setFormData(prev => ({ ...prev, partyName: selectedCard.partyName }));
       }
-    } else {
-      setFormData(prev => ({ ...prev, partyName: '' }));
     }
   }, [formData.jobCardId, jobCards]);
 
+  // Filtered job cards based on entered Party Name
+  const filteredJobCards = formData.partyName
+    ? jobCards.filter(card => card.partyName && card.partyName.toLowerCase().includes(formData.partyName.toLowerCase()))
+    : jobCards;
+
   // Auto-calculate Total logic
   useEffect(() => {
-    const qty = parseFloat(formData.qty || 0);
-    const rate = parseFloat(formData.rate || 0);
-    setFormData(prev => ({ ...prev, total: qty * rate }));
-  }, [formData.qty, formData.rate]);
+    const newItems = formData.items.map(item => {
+      const qty = parseFloat(item.qty || 0);
+      const rate = parseFloat(item.rate || 0);
+      return { ...item, total: qty * rate };
+    });
+    
+    // Only update if there's a difference to prevent infinite loops
+    const hasChanged = newItems.some((item, idx) => item.total !== formData.items[idx].total);
+    if (hasChanged) {
+      setFormData(prev => ({ ...prev, items: newItems }));
+    } else {
+      const grandTotal = newItems.reduce((acc, curr) => acc + curr.total, 0);
+      if (grandTotal !== formData.total) {
+        setFormData(prev => ({ ...prev, total: grandTotal }));
+      }
+    }
+  }, [formData.items]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleItemChange = (index, field, value) => {
+    const updatedItems = [...formData.items];
+    updatedItems[index][field] = value;
+    setFormData(prev => ({ ...prev, items: updatedItems }));
+  };
+
+  const addItem = () => {
+    setFormData(prev => ({
+      ...prev,
+      items: [...prev.items, { description: '', qty: 0, rate: 0, total: 0 }]
+    }));
+  };
+
+  const removeItem = (index) => {
+    const updatedItems = formData.items.filter((_, i) => i !== index);
+    setFormData(prev => ({ ...prev, items: updatedItems }));
   };
 
   const handleSubmit = async (e) => {
@@ -63,11 +100,14 @@ const AddChallan = () => {
       jobNumber: selectedCard?.jobNumber || '',
       jobName: selectedCard?.jobName || '',
       partyName: formData.partyName,
-      description: formData.description,
-      qty: formData.qty,
-      rate: formData.rate,
+      partyName: formData.partyName,
+      items: formData.items,
       total: formData.total,
       note: formData.note,
+      // Backwards compatibility
+      description: formData.items.length > 0 ? formData.items[0].description : '',
+      qty: formData.items.length > 0 ? formData.items[0].qty : 0,
+      rate: formData.items.length > 0 ? formData.items[0].rate : 0,
       paymentStatus: editData ? (editData.paymentStatus || 'Pending') : 'Pending'
     };
 
@@ -133,6 +173,24 @@ const AddChallan = () => {
               />
             </div>
             <div className="space-y-1">
+              <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Party *</label>
+              <input
+                list="partyList"
+                type="text"
+                name="partyName"
+                value={formData.partyName}
+                onChange={handleInputChange}
+                required
+                placeholder="Type or select Party"
+                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm font-medium"
+              />
+              <datalist id="partyList">
+                {uniqueParties.map((party, idx) => (
+                  <option key={idx} value={party} />
+                ))}
+              </datalist>
+            </div>
+            <div className="space-y-1">
               <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Job Card *</label>
               <select
                 name="jobCardId"
@@ -141,63 +199,75 @@ const AddChallan = () => {
                 required
                 className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
               >
-                <option value="">Select Job</option>
-                {jobCards.map(card => (
-                  <option key={card._id || card.id} value={card._id || card.id}>({card.jobNumber}) {card.jobName}</option>
+                <option value="">{formData.partyName ? `Select Job (${filteredJobCards.length} found)` : "Select Job"}</option>
+                {filteredJobCards.map(card => (
+                  <option key={card._id || card.id} value={card._id || card.id}>({card.jobNumber}) {card.jobName} - {card.partyName}</option>
                 ))}
               </select>
             </div>
-            <div className="space-y-1">
-              <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Party *</label>
-              <input
-                type="text"
-                name="partyName"
-                value={formData.partyName}
-                readOnly
-                placeholder="Auto-filled"
-                className="w-full bg-gray-100 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none cursor-not-allowed text-sm font-medium text-gray-600"
-              />
-            </div>
           </div>
 
-          <div className="p-4 sm:p-6 pt-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 border-t border-gray-50 mt-4 pt-6">
-            <div className="sm:col-span-2 space-y-1">
-              <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Description *</label>
-              <input
-                type="text"
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                required
-                placeholder="Item description"
-                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
-              />
+          <div className="p-4 sm:p-6 border-t border-gray-50 mt-4 pt-6">
+            <div className="flex justify-between items-center mb-4">
+              <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Items</label>
+              <button type="button" onClick={addItem} className="text-sm bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1 rounded-md font-semibold transition-colors flex items-center gap-1">
+                <span className="text-lg leading-none">+</span> Add Row
+              </button>
             </div>
-            <div className="space-y-1">
-              <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Qty *</label>
-              <input
-                type="number"
-                name="qty"
-                value={formData.qty}
-                onChange={handleInputChange}
-                required
-                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Rate *</label>
-              <input
-                type="number"
-                name="rate"
-                value={formData.rate}
-                onChange={handleInputChange}
-                required
-                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
-              />
-            </div>
+            
+            {formData.items.map((item, index) => (
+              <div key={index} className="grid grid-cols-1 sm:grid-cols-12 gap-4 sm:gap-6 mb-4 items-end bg-gray-50 p-4 rounded-xl border border-gray-100 relative group">
+                <div className="sm:col-span-5 space-y-1">
+                  <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Description *</label>
+                  <input
+                    type="text"
+                    value={item.description}
+                    onChange={(e) => handleItemChange(index, 'description', e.target.value)}
+                    required
+                    placeholder="Item description"
+                    className="w-full bg-white border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+                  />
+                </div>
+                <div className="sm:col-span-2 space-y-1">
+                  <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Qty *</label>
+                  <input
+                    type="number"
+                    value={item.qty}
+                    onChange={(e) => handleItemChange(index, 'qty', e.target.value)}
+                    required
+                    className="w-full bg-white border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+                  />
+                </div>
+                <div className="sm:col-span-2 space-y-1">
+                  <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Rate *</label>
+                  <input
+                    type="number"
+                    value={item.rate}
+                    onChange={(e) => handleItemChange(index, 'rate', e.target.value)}
+                    required
+                    className="w-full bg-white border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+                  />
+                </div>
+                <div className="sm:col-span-2 space-y-1">
+                  <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Amount</label>
+                  <div className="w-full bg-transparent border border-transparent rounded-lg px-2 py-2.5 text-sm font-bold text-gray-700 flex items-center">
+                    ₹ {item.total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                  </div>
+                </div>
+                {formData.items.length > 1 && (
+                  <div className="sm:col-span-1 flex justify-end sm:justify-center mb-2">
+                    <button type="button" onClick={() => removeItem(index)} className="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
 
-          <div className="p-4 sm:p-6 pt-0 grid grid-cols-1 sm:grid-cols-4 gap-4 sm:gap-6 border-t border-gray-50 mt-4 pt-6">
+          <div className="p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-4 gap-4 sm:gap-6 border-t border-gray-50 mt-4 pt-6">
             <div className="sm:col-span-3 space-y-1">
               <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Note</label>
               <textarea

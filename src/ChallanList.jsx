@@ -150,8 +150,8 @@ const ChallanList = () => {
             </button>
           </div>
 
-          <div className="overflow-x-auto min-h-[400px] pb-40">
-            <table className="w-full text-left whitespace-nowrap min-w-[800px]">
+          <div className="overflow-x-auto min-h-100 pb-40">
+            <table className="w-full text-left whitespace-nowrap min-w-200">
               <thead>
                 <tr className="bg-gray-50 text-gray-600 uppercase text-[10px] sm:text-xs font-bold tracking-wider">
                   <th className="px-4 sm:px-6 py-4">S.No.</th>
@@ -230,7 +230,7 @@ const ChallanList = () => {
 
       {/* Challan Preview & Print Modal */}
       {isModalOpen && selectedChallan && (
-        <div className="print-modal-overlay fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 overflow-y-auto print:static print:overflow-visible print:bg-white print:p-0">
+        <div className="print-modal-overlay fixed inset-0 bg-black/60 z-100 flex items-center justify-center p-4 overflow-y-auto print:static print:overflow-visible print:bg-white print:p-0">
           <div className="print-modal-shell bg-white border border-gray-300 w-full max-w-4xl relative max-h-[95vh] flex flex-col shadow-none print:max-h-none print:overflow-visible print:border-0 print:shadow-none">
             {/* Modal Header */}
             <div className="p-4 border-b flex justify-between items-center bg-white modal-header no-print">
@@ -271,7 +271,7 @@ const ChallanList = () => {
             </div>
 
             {/* Modal Body - Printable Content */}
-            <div className="p-8 overflow-y-auto flex-grow a4-page-container print:overflow-visible print:max-h-none print:h-auto print:p-0 print:grow-0" id="printable-content">
+            <div className="p-8 overflow-y-auto grow a4-page-container print:overflow-visible print:max-h-none print:h-auto print:p-0 print:grow-0" id="printable-content">
               <div
                 id="printable-challan"
                 className="bg-white mx-auto shadow-none a4-page challan-print-page font-sans"
@@ -350,7 +350,7 @@ const ChallanList = () => {
                 </div>
 
                 {/* --- ITEMS TABLE --- */}
-                <div className="challan-items-table mb-8 border border-gray-200 rounded-sm overflow-hidden min-h-[350px] flex flex-col">
+                <div className="challan-items-table mb-8 border border-gray-200 rounded-sm overflow-hidden min-h-87.5 flex flex-col">
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="text-white text-[12px] font-black uppercase tracking-widest" style={{ backgroundColor: '#1e3a8a' }}>
@@ -360,26 +360,30 @@ const ChallanList = () => {
                         <th className="px-4 py-2.5 text-right w-32">Amount</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100 flex-grow">
-                      <tr className="text-[13px] group">
-                        <td className="px-4 py-8 border-r border-gray-50 font-bold align-top text-center text-gray-700">
-                          {selectedChallan.qty} NOS
-                        </td>
-                        <td className="px-4 py-8 border-r border-gray-50 align-top">
-                          <div className="space-y-1">
-                            <p className="font-black text-gray-900 uppercase text-xs" style={{ color: '#1e3a8a' }}>{selectedChallan.jobName}</p>
-                            <p className="text-[11px] text-gray-700 font-medium leading-relaxed italic uppercase">
-                              Standard Printing Specifications / Job Ref: {selectedChallan.jobNumber}
-                            </p>
-                          </div>
-                        </td>
-                        <td className="px-4 py-8 border-r border-gray-50 font-bold align-top text-right text-gray-700">
-                          ₹ {(selectedChallan.total / (selectedChallan.qty || 1)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                        </td>
-                        <td className="px-4 py-8 font-black align-top text-right text-gray-900 bg-gray-50/30">
-                          ₹ {selectedChallan.total?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                        </td>
-                      </tr>
+                    <tbody className="divide-y divide-gray-100 grow">
+                      {(selectedChallan.items && selectedChallan.items.length > 0 ? selectedChallan.items : [{ description: selectedChallan.description || selectedChallan.jobName, qty: selectedChallan.qty, rate: selectedChallan.rate, total: selectedChallan.total }]).map((item, idx) => (
+                        <tr key={idx} className="text-[13px] group">
+                          <td className="px-4 py-4 border-r border-gray-50 font-bold align-top text-center text-gray-700">
+                            {item.qty} NOS
+                          </td>
+                          <td className="px-4 py-4 border-r border-gray-50 align-top">
+                            <div className="space-y-1">
+                              <p className="font-black text-gray-900 uppercase text-xs" style={{ color: '#1e3a8a' }}>{item.description || selectedChallan.jobName}</p>
+                              {idx === 0 && selectedChallan.jobNumber && (
+                                <p className="text-[11px] text-gray-700 font-medium leading-relaxed italic uppercase">
+                                  Job Ref: {selectedChallan.jobNumber}
+                                </p>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 border-r border-gray-50 font-bold align-top text-right text-gray-700">
+                            ₹ {Number(item.rate || (item.total / (item.qty || 1)) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                          </td>
+                          <td className="px-4 py-4 font-black align-top text-right text-gray-900 bg-gray-50/30">
+                            ₹ {Number(item.total || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                          </td>
+                        </tr>
+                      ))}
                       {/* Blank rows to fill space — hidden only when printing */}
                       {[1, 2, 3, 4, 5, 6].map((i) => (
                         <tr key={i} className="invoice-fill-row border-0">

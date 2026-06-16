@@ -7,9 +7,15 @@ const challanSchema = new mongoose.Schema({
   jobNumber: { type: String },
   jobName: { type: String },
   partyName: { type: String, required: true },
-  description: { type: String, required: true },
+  description: { type: String }, // Optional for backward compatibility
   qty: { type: Number, default: 0 },
   rate: { type: Number, default: 0 },
+  items: [{
+    description: { type: String, required: true },
+    qty: { type: Number, default: 0 },
+    rate: { type: Number, default: 0 },
+    total: { type: Number, default: 0 }
+  }],
   total: { type: Number, default: 0 },
   note: { type: String },
   paymentStatus: { type: String, default: 'Pending' },
