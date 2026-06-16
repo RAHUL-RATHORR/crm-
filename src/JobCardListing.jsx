@@ -651,8 +651,7 @@ export default function JobCardListing() {
                         { label: 'Design', value: selectedCard.design || 'No' },
                         { label: 'Plate Type', value: selectedCard.plateType || 'New' },
                         { label: 'Plate Size', value: selectedCard.plateSize || '-' },
-                        { label: 'Plate Used', value: selectedCard.plateUseCount || '-' },
-                        { label: 'Plate Number', value: selectedCard.plateNo || '-' },
+                        { label: 'Plate Number', value: selectedCard.plateUseCount || '-' },
                         { label: 'Plate Qty', value: selectedCard.plateQty || 0 },
                         { label: 'Lamination', value: selectedCard.lamination || '-' }
                       ].map((row, i) => (

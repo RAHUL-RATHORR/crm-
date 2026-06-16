@@ -923,7 +923,7 @@ export default function JobCardForm() {
               </select>
             </div>
             <div className="flex flex-col">
-              <label className="text-sm font-medium text-gray-700 mb-1">Plate Used</label>
+              <label className="text-sm font-medium text-gray-700 mb-1">Plate Number</label>
               <input
                 type="text"
                 readOnly
@@ -931,10 +931,6 @@ export default function JobCardForm() {
                 placeholder="Auto"
                 className="h-10 border border-gray-200 rounded-lg px-4 bg-gray-50 text-gray-800 font-semibold focus:outline-none cursor-default"
               />
-            </div>
-            <div className="flex flex-col">
-              <label className="text-sm font-medium text-gray-700 mb-1">Plate Number</label>
-              <input type="text" name="plateNo" defaultValue={editData?.plateNo} className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" placeholder="Enter plate no" />
             </div>
             <div className="flex flex-col">
               <label className="text-sm font-medium text-gray-700 mb-1">Quantity Of Plates</label>
