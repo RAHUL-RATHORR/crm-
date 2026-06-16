@@ -83,6 +83,7 @@ app.whenReady().then(async () => {
   // Start the Express server directly in the main process to avoid asar path issues
   try {
     process.env.PORT = PORT.toString();
+    process.env.IS_ELECTRON = 'true';
     await import('./server/server.js');
   } catch (err) {
     fs.writeFileSync(path.join(os.homedir(), 'Desktop', 'crm_error.log'), String(err.stack || err));

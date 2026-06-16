@@ -5,6 +5,7 @@ import { fileURLToPath } from "url";
 import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
+import { readCache, writeCache, enqueueRequest, processQueue } from './utils/syncManager.js';
 
 // Fix __dirname for ES Modules
 const __filename = fileURLToPath(import.meta.url);
@@ -32,6 +33,49 @@ import statementRoutes from "./routes/statementRoutes.js";
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+/* ================= OFFLINE SYNC MIDDLEWARE ================= */
+app.use((req, res, next) => {
+  // Only apply offline sync in the Desktop App context and for API routes
+  if (process.env.IS_ELECTRON !== 'true' || !req.path.startsWith('/api') || req.headers['x-offline-sync']) {
+    return next();
+  }
+
+  // If connected, intercept GET responses to cache them
+  if (mongoose.connection.readyState === 1) {
+    if (req.method === 'GET') {
+      const originalSend = res.send;
+      res.send = function (data) {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          try {
+            writeCache(req.originalUrl, JSON.parse(data));
+          } catch (err) {} // Ignore parse errors
+        }
+        originalSend.apply(res, arguments);
+      };
+    }
+    return next();
+  }
+
+  // Mongoose is Disconnected
+  if (req.method === 'GET') {
+    const cachedData = readCache(req.originalUrl);
+    if (cachedData) {
+      return res.status(200).json(cachedData);
+    } else {
+      // Send empty array or object as fallback based on typical responses
+      return res.status(200).json([]);
+    }
+  } else {
+    // POST, PUT, DELETE
+    const queuedResponse = enqueueRequest(req);
+    if (queuedResponse) {
+      return res.status(200).json(queuedResponse);
+    } else {
+      return res.status(500).json({ error: "Offline mode: Failed to enqueue request." });
+    }
+  }
+});
 
 /* ================= DB CONNECT ================= */
 const connectDB = async () => {
@@ -113,6 +157,12 @@ const PORT = process.env.PORT || 5011;
 
 connectDB();      // ✅ ONLY ONE TIME
 startServer(PORT);
+
+if (process.env.IS_ELECTRON === 'true') {
+  setInterval(() => {
+    processQueue(mongoose);
+  }, 10000);
+}
 app.get('/ping', (req, res) => {
     res.status(200).send("I am awake!");
 });
