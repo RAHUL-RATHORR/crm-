@@ -55,6 +55,15 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/paper-stock", paperStockRoutes);
 app.use("/api/statements", statementRoutes);
 
+// API Test Route (Internal)
+app.get("/api/health", (req, res) => {
+    res.json({
+        status: "Active",
+        database: mongoose.connection.readyState === 1 ? "Connected" : "Disconnected",
+        message: "CRM API running stable 🚀"
+    });
+});
+
 app.all("/api/*", (req, res) => {
   res.status(404).json({ error: "API route not found" });
 });
@@ -65,14 +74,6 @@ const distPath = path.join(__dirname, "..", "dist");
 // Serve static assets
 app.use(express.static(distPath));
 
-// API Test Route (Internal)
-app.get("/api/health", (req, res) => {
-    res.json({
-        status: "Active",
-        database: mongoose.connection.readyState === 1 ? "Connected" : "Disconnected",
-        message: "CRM API running stable 🚀"
-    });
-});
 
 // The "catchall" handler: for any request that doesn't
 // match one above (like /invoices, /challans), send back index.html.

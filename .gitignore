@@ -36,3 +36,8 @@ dist_electron
 server/scratch/
 server/data/*.json
 output.log
+
+# Build and deploy folders
+release/
+crm_deploy.zip
+crm_deploy_temp/
