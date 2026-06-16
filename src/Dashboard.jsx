@@ -141,11 +141,11 @@ export default function Dashboard() {
         const res = await fetch(`${API_BASE_URL}/api/jobcard`);
         if (res.ok) {
           const data = await res.json();
-          
+
           // Sort by createdAt descending and slice to 5 for the latest list
           const sorted = [...data].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
           setLatestJobCards(sorted.slice(0, 5));
-          
+
           // --- CALCULATE REAL STATS ---
           const now = new Date();
           const currentYear = now.getFullYear();
@@ -184,7 +184,7 @@ export default function Dashboard() {
             }
 
             // Check previous month
-            const isPrevMonth = (currentMonth === 0) 
+            const isPrevMonth = (currentMonth === 0)
               ? (cardYear === currentYear - 1 && cardMonth === 11)
               : (cardYear === currentYear && cardMonth === currentMonth - 1);
             if (isPrevMonth) {
@@ -277,211 +277,216 @@ export default function Dashboard() {
 
         {/* Cards Section */}
         <div className="flex flex-col lg:flex-row gap-6 mb-8 items-stretch">
-          <div className="w-full lg:w-1/2">
+          <div className="w-full lg:w-[60%]">
             <div className="bg-white rounded-2xl p-6 h-full min-h-50 flex flex-col justify-center shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-shadow">
-              <div className="relative z-10">
+              <div className="relative z-10 w-[70%]">
                 <h2 className="text-xl sm:text-2xl font-bold mb-2">
                   Design, Print, Promote and Build<br className="hidden sm:block" /> your own <span className="text-teal-500">Brand Identity.</span>
                 </h2>
-                <p className="text-sm text-gray-500 mb-6">Premium printing services for marketing, branding and packaging.</p>
-                <div className="flex flex-wrap gap-4">
-                  <button onClick={() => navigate('/job-card')} className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium text-sm transition shadow-sm hover:shadow shrink-0">
-                    Add Card
-                  </button>
-                  <button 
-                    onClick={() => navigate('/paper-stock')}
-                    className="bg-teal-500 hover:bg-teal-600 text-white px-5 py-2.5 rounded-lg font-medium text-sm transition shadow-sm hover:shadow shrink-0"
-                  >
-                    Paper Stock
-                  </button>
-                </div>
-              </div>
-              <div className="absolute right-0 top-0 h-full w-1/4 sm:w-1/3 opacity-10 bg-linear-to-l from-teal-500 to-transparent z-0 rounded-r-2xl transform group-hover:scale-105 transition-transform duration-500"></div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full lg:w-1/2">
-            {/* Stat Card 1 */}
-            <div className="bg-white py-5 px-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-center hover:shadow-md transition-transform hover:-translate-y-1 duration-300">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center text-orange-500 shrink-0">
-                  <TrendingUp size={20} />
-                </div>
-                <span className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider">Monthly Revenue</span>
-              </div>
-              <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 truncate">
-                <CountUp end={stats.monthlyRevenue} prefix="₹" />
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <span className={`px-2 py-0.5 rounded text-xs font-semibold ${stats.monthlyDiff >= 0 ? 'bg-teal-100 text-teal-600' : 'bg-red-100 text-red-600'}`}>
-                  {stats.monthlyDiff >= 0 ? '+' : ''}{stats.monthlyDiff.toFixed(1)}%
-                </span>
-                <span className="text-gray-400 text-xs sm:text-sm">vs prev. month</span>
+                <p className="text-sm text-gray-500 mb-6">Premium printing services for marketing,<br></br> branding and packaging.</p>
+              <div className="flex flex-wrap gap-4">
+                <button onClick={() => navigate('/job-card')} className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium text-sm transition shadow-sm hover:shadow shrink-0">
+                  Add Card
+                </button>
+                <button
+                  onClick={() => navigate('/paper-stock')}
+                  className="bg-teal-500 hover:bg-teal-600 text-white px-5 py-2.5 rounded-lg font-medium text-sm transition shadow-sm hover:shadow shrink-0"
+                >
+                  Paper Stock
+                </button>
               </div>
             </div>
 
-            {/* Stat Card 2 */}
-            <div className="bg-white py-5 px-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-center hover:shadow-md transition-transform hover:-translate-y-1 duration-300">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-10 h-10 rounded-full bg-teal-50 flex items-center justify-center text-teal-600 shrink-0">
-                  <TrendingUp size={20} />
-                </div>
-                <span className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider">Yearly Revenue</span>
-              </div>
-              <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 truncate">
-                <CountUp end={stats.yearlyRevenue} prefix="₹" />
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <span className={`px-2 py-0.5 rounded text-xs font-semibold ${stats.yearlyDiff >= 0 ? 'bg-teal-100 text-teal-600' : 'bg-red-100 text-red-600'}`}>
-                  {stats.yearlyDiff >= 0 ? '+' : ''}{stats.yearlyDiff.toFixed(1)}%
-                </span>
-                <span className="text-gray-400 text-xs sm:text-sm">vs prev. year</span>
-              </div>
+            {/* Machine Image Background */}
+            <div className="absolute right-0 bottom-0 h-[90%] w-[45%] sm:w-[48%] z-0 transform group-hover:scale-105 transition-transform duration-500 pointer-events-none flex items-end justify-end opacity-100 pr-4 pb-2">
+              <img src="/machine.png" alt="Printing Machine" className="object-contain w-full h-full object-bottom-right" style={{ maskImage: 'linear-gradient(to right, transparent, black 15%)', WebkitMaskImage: 'linear-gradient(to right, transparent, black 15%)' }} />
             </div>
+
           </div>
         </div>
 
-        {/* Main Chart */}
-        <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-gray-100 mb-8 hover:shadow-md transition-shadow">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-            <h3 className="text-lg font-bold text-gray-900">Balance Overview</h3>
-            <div className="flex flex-wrap gap-4 sm:gap-6">
-              <div className="text-center">
-                <div className="text-xs sm:text-sm text-gray-500 mb-1">Monthly Revenue</div>
-                <div className="font-bold text-gray-900">
-                  <CountUp end={stats.monthlyRevenue} prefix="₹" />
-                </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full lg:w-[40%]">
+          {/* Stat Card 1 */}
+          <div className="bg-white py-5 px-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-center hover:shadow-md transition-transform hover:-translate-y-1 duration-300">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center text-orange-500 shrink-0">
+                <TrendingUp size={20} />
               </div>
-              <div className="text-center border-l pl-4 sm:pl-6">
-                <div className="text-xs sm:text-sm text-gray-500 mb-1">Yearly Revenue</div>
-                <div className="font-bold text-gray-900">
-                  <CountUp end={stats.yearlyRevenue} prefix="₹" />
-                </div>
-              </div>
+              <span className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider">Monthly Revenue</span>
+            </div>
+            <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 truncate">
+              <CountUp end={stats.monthlyRevenue} prefix="₹" />
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <span className={`px-2 py-0.5 rounded text-xs font-semibold ${stats.monthlyDiff >= 0 ? 'bg-teal-100 text-teal-600' : 'bg-red-100 text-red-600'}`}>
+                {stats.monthlyDiff >= 0 ? '+' : ''}{stats.monthlyDiff.toFixed(1)}%
+              </span>
+              <span className="text-gray-400 text-xs sm:text-sm">vs prev. month</span>
             </div>
           </div>
 
-          <div className="h-62.5 sm:h-75 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={stats.chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 11 }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 11 }} tickFormatter={(val) => `₹${val / 1000}k`} dx={-5} />
-                <Tooltip content={customTooltip} />
-                <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px', fontSize: '12px' }} />
-                <Line
-                  type="monotone"
-                  dataKey="Monthly Revenue"
-                  stroke="#14b8a6"
-                  strokeWidth={3}
-                  dot={false}
-                  activeDot={{ r: 6, fill: '#14b8a6', stroke: '#fff', strokeWidth: 2 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="Yearly Revenue"
-                  stroke="#f97316"
-                  strokeWidth={3}
-                  dot={false}
-                  activeDot={{ r: 6, fill: '#f97316', stroke: '#fff', strokeWidth: 2 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Bottom Section */}
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Deals Table */}
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex-1 hover:shadow-md transition-shadow overflow-hidden">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">Latest Job Cards</h3>
-                <p className="text-xs text-gray-400 mt-0.5 font-medium">Top 5 recently added job cards</p>
+          {/* Stat Card 2 */}
+          <div className="bg-white py-5 px-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-center hover:shadow-md transition-transform hover:-translate-y-1 duration-300">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-10 h-10 rounded-full bg-teal-50 flex items-center justify-center text-teal-600 shrink-0">
+                <TrendingUp size={20} />
               </div>
+              <span className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider">Yearly Revenue</span>
             </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm whitespace-nowrap">
-                <thead>
-                  <tr className="text-gray-400 border-b border-gray-100">
-                    <th className="pb-3 font-medium px-2">Client Name</th>
-                    <th className="pb-3 font-medium px-2">Job Name</th>
-                    <th className="pb-3 font-medium px-2">Job Number</th>
-                    <th className="pb-3 font-medium px-2">Job Qty</th>
-                    <th className="pb-3 font-medium px-2">Job Date</th>
-                  </tr>
-                </thead>
-                <tbody className="text-gray-700">
-                  {loadingJobCards ? (
-                    <tr>
-                      <td colSpan="5" className="py-8 text-center text-gray-400 animate-pulse font-medium">
-                        Loading Latest Job Cards...
-                      </td>
-                    </tr>
-                  ) : latestJobCards.length === 0 ? (
-                    <tr>
-                      <td colSpan="5" className="py-8 text-center text-gray-400 italic">
-                        No Job Cards found.
-                      </td>
-                    </tr>
-                  ) : (
-                    latestJobCards.map((card, idx) => (
-                      <tr key={card._id || idx} className="border-b last:border-0 border-gray-50 hover:bg-gray-50 transition-colors">
-                        <td className="py-4 px-2 font-bold text-gray-900">{card.partyName}</td>
-                        <td className="py-4 px-2 text-gray-700 font-semibold">{card.jobName || 'N/A'}</td>
-                        <td className="py-4 px-2">
-                          <span className="font-mono text-xs text-blue-600 bg-blue-50/50 px-2 py-0.5 rounded font-bold">
-                            {card.jobNumber || 'N/A'}
-                          </span>
-                        </td>
-                        <td className="py-4 px-2 font-semibold text-gray-900">
-                          {Number(card.jobQty || 0).toLocaleString()}
-                        </td>
-                        <td className="py-4 px-2 text-gray-500 font-medium">
-                          {new Date(card.jobDate || card.createdAt).toLocaleDateString('en-IN', {
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric'
-                          })}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+            <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 truncate">
+              <CountUp end={stats.yearlyRevenue} prefix="₹" />
             </div>
-          </div>
-
-          {/* Forecast Chart */}
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:w-1/3 hover:shadow-md transition-shadow">
-            <h3 className="text-lg font-bold text-gray-900 mb-6">Sales Forecast</h3>
-            <div className="h-62.5 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={forecastData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                  <XAxis dataKey="name" hide />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 12 }} tickFormatter={(val) => `${val}k`} />
-                  <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }} />
-                  <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                    {forecastData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="flex justify-center gap-4 mt-4 pt-4 border-t border-gray-100">
-              {forecastData.map((entry, idx) => (
-                <div key={idx} className="flex items-center gap-1.5 text-xs font-medium text-gray-500">
-                  <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: entry.fill }}></div>
-                  {entry.name.split(' ')[0]}
-                </div>
-              ))}
+            <div className="flex items-center gap-2 text-sm">
+              <span className={`px-2 py-0.5 rounded text-xs font-semibold ${stats.yearlyDiff >= 0 ? 'bg-teal-100 text-teal-600' : 'bg-red-100 text-red-600'}`}>
+                {stats.yearlyDiff >= 0 ? '+' : ''}{stats.yearlyDiff.toFixed(1)}%
+              </span>
+              <span className="text-gray-400 text-xs sm:text-sm">vs prev. year</span>
             </div>
           </div>
         </div>
-      </main>
     </div>
+
+        {/* Main Chart */ }
+  <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-gray-100 mb-8 hover:shadow-md transition-shadow">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+      <h3 className="text-lg font-bold text-gray-900">Balance Overview</h3>
+      <div className="flex flex-wrap gap-4 sm:gap-6">
+        <div className="text-center">
+          <div className="text-xs sm:text-sm text-gray-500 mb-1">Monthly Revenue</div>
+          <div className="font-bold text-gray-900">
+            <CountUp end={stats.monthlyRevenue} prefix="₹" />
+          </div>
+        </div>
+        <div className="text-center border-l pl-4 sm:pl-6">
+          <div className="text-xs sm:text-sm text-gray-500 mb-1">Yearly Revenue</div>
+          <div className="font-bold text-gray-900">
+            <CountUp end={stats.yearlyRevenue} prefix="₹" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div className="h-62.5 sm:h-75 w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={stats.chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+          <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 11 }} dy={10} />
+          <YAxis axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 11 }} tickFormatter={(val) => `₹${val / 1000}k`} dx={-5} />
+          <Tooltip content={customTooltip} />
+          <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px', fontSize: '12px' }} />
+          <Line
+            type="monotone"
+            dataKey="Monthly Revenue"
+            stroke="#14b8a6"
+            strokeWidth={3}
+            dot={false}
+            activeDot={{ r: 6, fill: '#14b8a6', stroke: '#fff', strokeWidth: 2 }}
+          />
+          <Line
+            type="monotone"
+            dataKey="Yearly Revenue"
+            stroke="#f97316"
+            strokeWidth={3}
+            dot={false}
+            activeDot={{ r: 6, fill: '#f97316', stroke: '#fff', strokeWidth: 2 }}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  </div>
+
+  {/* Bottom Section */ }
+  <div className="flex flex-col lg:flex-row gap-6">
+    {/* Deals Table */}
+    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex-1 hover:shadow-md transition-shadow overflow-hidden">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h3 className="text-lg font-bold text-gray-900">Latest Job Cards</h3>
+          <p className="text-xs text-gray-400 mt-0.5 font-medium">Top 5 recently added job cards</p>
+        </div>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full text-left text-sm whitespace-nowrap">
+          <thead>
+            <tr className="text-gray-400 border-b border-gray-100">
+              <th className="pb-3 font-medium px-2">Client Name</th>
+              <th className="pb-3 font-medium px-2">Job Name</th>
+              <th className="pb-3 font-medium px-2">Job Number</th>
+              <th className="pb-3 font-medium px-2">Job Qty</th>
+              <th className="pb-3 font-medium px-2">Job Date</th>
+            </tr>
+          </thead>
+          <tbody className="text-gray-700">
+            {loadingJobCards ? (
+              <tr>
+                <td colSpan="5" className="py-8 text-center text-gray-400 animate-pulse font-medium">
+                  Loading Latest Job Cards...
+                </td>
+              </tr>
+            ) : latestJobCards.length === 0 ? (
+              <tr>
+                <td colSpan="5" className="py-8 text-center text-gray-400 italic">
+                  No Job Cards found.
+                </td>
+              </tr>
+            ) : (
+              latestJobCards.map((card, idx) => (
+                <tr key={card._id || idx} className="border-b last:border-0 border-gray-50 hover:bg-gray-50 transition-colors">
+                  <td className="py-4 px-2 font-bold text-gray-900">{card.partyName}</td>
+                  <td className="py-4 px-2 text-gray-700 font-semibold">{card.jobName || 'N/A'}</td>
+                  <td className="py-4 px-2">
+                    <span className="font-mono text-xs text-blue-600 bg-blue-50/50 px-2 py-0.5 rounded font-bold">
+                      {card.jobNumber || 'N/A'}
+                    </span>
+                  </td>
+                  <td className="py-4 px-2 font-semibold text-gray-900">
+                    {Number(card.jobQty || 0).toLocaleString()}
+                  </td>
+                  <td className="py-4 px-2 text-gray-500 font-medium">
+                    {new Date(card.jobDate || card.createdAt).toLocaleDateString('en-IN', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric'
+                    })}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    {/* Forecast Chart */}
+    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:w-1/3 hover:shadow-md transition-shadow">
+      <h3 className="text-lg font-bold text-gray-900 mb-6">Sales Forecast</h3>
+      <div className="h-62.5 w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={forecastData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+            <XAxis dataKey="name" hide />
+            <YAxis axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 12 }} tickFormatter={(val) => `${val}k`} />
+            <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }} />
+            <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+              {forecastData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.fill} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+      <div className="flex justify-center gap-4 mt-4 pt-4 border-t border-gray-100">
+        {forecastData.map((entry, idx) => (
+          <div key={idx} className="flex items-center gap-1.5 text-xs font-medium text-gray-500">
+            <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: entry.fill }}></div>
+            {entry.name.split(' ')[0]}
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+      </main >
+    </div >
   );
 }
