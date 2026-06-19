@@ -30,7 +30,7 @@ const ChallanList = () => {
 
   const challanItems = previewChallans.flatMap(getChallanLineItems);
   const { subTotal: totalAmount, gstAmount: totalGstAmount, halfGst: halfGstAmount, grandTotal, roundOff } =
-    computeLineItemsTotals(challanItems, primaryChallan?.gstPercent ?? 18);
+    computeLineItemsTotals(challanItems, primaryChallan?.gstPercent ?? 18, previewChallans);
   const mergedMeta = buildMergedChallanMeta(previewChallans);
 
   const linkedJobCard = primaryChallan

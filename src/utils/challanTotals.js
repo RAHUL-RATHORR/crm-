@@ -24,8 +24,24 @@ export const getChallanLineItems = (challan) => {
   }];
 };
 
-export const computeLineItemsTotals = (items = [], fallbackGstPercent = 18) => {
-  const subTotal = items.reduce(
+export const computeLineItemsTotals = (items = [], fallbackGstPercent = 18, challans = []) => {
+  const subTotal = items.reduce((sum, item) => sum + Number(item.total || 0), 0);
+
+  if (challans?.length) {
+    const savedGrand = challans.reduce((sum, ch) => sum + Number(ch.grandTotal ?? ch.total ?? 0), 0);
+    const savedGst = challans.reduce((sum, ch) => sum + Number(ch.gstAmount ?? 0), 0);
+    if (savedGrand > 0) {
+      return {
+        subTotal: challans.reduce((sum, ch) => sum + Number(ch.total ?? 0), 0) || subTotal,
+        gstAmount: savedGst,
+        halfGst: savedGst / 2,
+        grandTotal: savedGrand,
+        roundOff: savedGrand - (subTotal + savedGst),
+      };
+    }
+  }
+
+  const legacySubTotal = items.reduce(
     (sum, item) => sum + (Number(item.total) || Number(item.qty || 0) * Number(item.rate || 0)),
     0
   );
@@ -36,12 +52,12 @@ export const computeLineItemsTotals = (items = [], fallbackGstPercent = 18) => {
     return sum + (line * pct) / 100;
   }, 0);
 
-  const rawGrandTotal = subTotal + gstAmount;
+  const rawGrandTotal = legacySubTotal + gstAmount;
   const grandTotal = Math.round(rawGrandTotal);
   const roundOff = grandTotal - rawGrandTotal;
 
   return {
-    subTotal,
+    subTotal: legacySubTotal,
     gstAmount,
     halfGst: gstAmount / 2,
     grandTotal,

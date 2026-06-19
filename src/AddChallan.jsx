@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -7,62 +7,35 @@ const API_BASE_URL = window.location.hostname === 'localhost' || window.location
   ? 'https://crm-qpw8.onrender.com'
   : 'https://crm-qpw8.onrender.com';
 
-const defaultItem = () => ({ description: '', qty: 0, rate: 0, gstPercent: 18, total: 0, gstAmount: 0 });
+const defaultItem = () => ({ description: '', total: '' });
 
 const normalizeItems = (editData) => {
   if (editData?.items?.length) {
     return editData.items.map((item) => ({
       description: item.description || '',
-      qty: item.qty || 0,
-      rate: item.rate || 0,
-      gstPercent: item.gstPercent ?? editData.gstPercent ?? 18,
-      total: item.total || 0,
-      gstAmount: item.gstAmount || 0,
+      total: item.total ?? '',
+      jobNumber: item.jobNumber || '',
     }));
   }
   if (editData?.description) {
     return [{
       description: editData.description,
-      qty: editData.qty || 0,
-      rate: editData.rate || 0,
-      gstPercent: editData.gstPercent ?? 18,
-      total: editData.total || 0,
-      gstAmount: 0,
+      total: editData.total ?? '',
     }];
   }
   return [defaultItem()];
 };
 
-const parseJobQty = (value) => {
-  const match = String(value || '').match(/[\d.]+/);
-  return match ? parseFloat(match[0]) : 0;
-};
-
 const itemFromJobCard = (card) => ({
   description: `${card.jobName || 'Job'} (${card.jobNumber || ''})`.trim(),
-  qty: parseJobQty(card.jobQty),
-  rate: 0,
-  gstPercent: 18,
-  total: 0,
-  gstAmount: 0,
+  total: '',
   jobCardId: card._id || card.id,
   jobNumber: card.jobNumber || '',
 });
 
-const calcItemTotals = (item) => {
-  const qty = parseFloat(item.qty || 0);
-  const rate = parseFloat(item.rate || 0);
-  const gstPercent = parseFloat(item.gstPercent ?? 18);
-  const lineTotal = qty * rate;
-  const gstAmount = (lineTotal * gstPercent) / 100;
-  return {
-    ...item,
-    qty,
-    rate,
-    gstPercent,
-    total: lineTotal,
-    gstAmount,
-  };
+const parseNum = (value) => {
+  const n = parseFloat(value);
+  return Number.isFinite(n) ? n : 0;
 };
 
 const AddChallan = () => {
@@ -78,22 +51,9 @@ const AddChallan = () => {
     jobCardId: editData ? editData.jobCardId : '',
     partyName: editData ? editData.partyName : '',
     items: normalizeItems(editData),
-    total: editData ? editData.total : 0,
-    gstAmount: editData ? (editData.gstAmount || 0) : 0,
-    grandTotal: editData ? (editData.grandTotal || editData.total || 0) : 0,
+    grandTotal: editData ? (editData.grandTotal ?? editData.total ?? '') : '',
     note: editData ? editData.note : ''
   });
-
-  const totals = useMemo(() => {
-    const items = formData.items.map(calcItemTotals);
-    const subTotal = items.reduce((sum, item) => sum + item.total, 0);
-    const gstAmount = items.reduce((sum, item) => sum + item.gstAmount, 0);
-    const halfGst = gstAmount / 2;
-    const rawGrandTotal = subTotal + gstAmount;
-    const grandTotal = Math.round(rawGrandTotal);
-    const roundOff = grandTotal - rawGrandTotal;
-    return { items, subTotal, gstAmount, halfGst, grandTotal, roundOff };
-  }, [formData.items]);
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/api/jobcard`)
@@ -152,7 +112,7 @@ const AddChallan = () => {
     const toAdd = newItems.filter(i => !existingDescs.has(i.description));
 
     setFormData(prev => {
-      const hasContent = prev.items.some(i => i.description || i.qty || i.rate);
+      const hasContent = prev.items.some(i => i.description || i.total);
       const merged = hasContent ? [...prev.items, ...toAdd] : toAdd.length ? toAdd : [defaultItem()];
       return {
         ...prev,
@@ -189,7 +149,16 @@ const AddChallan = () => {
         .map(i => i.jobNumber || (i.description?.match(/\((JOB[^)]+)\)/)?.[1]))
         .filter(Boolean)
     )];
-    const computedItems = formData.items.map(calcItemTotals);
+    const savedItems = formData.items.map((item) => ({
+      description: item.description || '',
+      qty: 0,
+      rate: 0,
+      gstPercent: 0,
+      total: parseNum(item.total),
+      gstAmount: 0,
+    }));
+    const subTotal = savedItems.reduce((sum, item) => sum + item.total, 0);
+    const grandTotal = formData.grandTotal !== '' ? parseNum(formData.grandTotal) : subTotal;
 
     const challan = {
       challanNo: formData.challanNo,
@@ -198,14 +167,14 @@ const AddChallan = () => {
       jobNumber: jobNumbersFromItems.length ? jobNumbersFromItems.join(', ') : (selectedCard?.jobNumber || ''),
       jobName: selectedCard?.jobName || '',
       partyName: formData.partyName,
-      items: computedItems,
-      total: totals.subTotal,
-      gstAmount: totals.gstAmount,
-      grandTotal: totals.grandTotal,
+      items: savedItems,
+      total: subTotal,
+      gstAmount: 0,
+      grandTotal,
       note: formData.note,
-      description: computedItems.length > 0 ? computedItems[0].description : '',
-      qty: computedItems.length > 0 ? computedItems[0].qty : 0,
-      rate: computedItems.length > 0 ? computedItems[0].rate : 0,
+      description: savedItems.length > 0 ? savedItems[0].description : '',
+      qty: savedItems.length > 0 ? savedItems[0].qty : 0,
+      rate: savedItems.length > 0 ? savedItems[0].rate : 0,
       paymentStatus: editData ? (editData.paymentStatus || 'Pending') : 'Pending'
     };
 
@@ -356,9 +325,9 @@ const AddChallan = () => {
               </button>
             </div>
 
-            {totals.items.map((item, index) => (
+            {formData.items.map((item, index) => (
               <div key={index} className="grid grid-cols-1 sm:grid-cols-12 gap-4 sm:gap-3 mb-4 items-end bg-gray-50 p-4 rounded-xl border border-gray-100 relative group">
-                <div className="sm:col-span-4 space-y-1">
+                <div className="sm:col-span-8 space-y-1">
                   <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Description *</label>
                   <input
                     type="text"
@@ -369,46 +338,18 @@ const AddChallan = () => {
                     className="w-full bg-white border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
                   />
                 </div>
-                <div className="sm:col-span-2 space-y-1">
-                  <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Qty *</label>
+                <div className="sm:col-span-3 space-y-1">
+                  <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Amount *</label>
                   <input
                     type="number"
-                    value={item.qty}
-                    onChange={(e) => handleItemChange(index, 'qty', e.target.value)}
+                    value={item.total}
+                    onChange={(e) => handleItemChange(index, 'total', e.target.value)}
                     required
                     min="0"
                     step="any"
-                    className="w-full bg-white border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+                    placeholder="0"
+                    className="w-full bg-white border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm font-bold"
                   />
-                </div>
-                <div className="sm:col-span-2 space-y-1">
-                  <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Rate *</label>
-                  <input
-                    type="number"
-                    value={item.rate}
-                    onChange={(e) => handleItemChange(index, 'rate', e.target.value)}
-                    required
-                    min="0"
-                    step="any"
-                    className="w-full bg-white border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
-                  />
-                </div>
-                <div className="sm:col-span-1 space-y-1">
-                  <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">GST %</label>
-                  <input
-                    type="number"
-                    value={item.gstPercent}
-                    onChange={(e) => handleItemChange(index, 'gstPercent', e.target.value)}
-                    min="0"
-                    step="any"
-                    className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
-                  />
-                </div>
-                <div className="sm:col-span-2 space-y-1">
-                  <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Amount</label>
-                  <div className="w-full bg-transparent border border-transparent rounded-lg px-2 py-2.5 text-sm font-bold text-gray-700">
-                    ₹ {item.total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                  </div>
                 </div>
                 {formData.items.length > 1 && (
                   <div className="sm:col-span-1 flex justify-end sm:justify-center mb-2">
@@ -436,10 +377,18 @@ const AddChallan = () => {
               ></textarea>
             </div>
             <div className="space-y-1">
-              <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Total</label>
-              <div className="w-full bg-gray-100 border border-gray-200 rounded-lg px-4 py-2.5 text-base sm:text-lg font-bold text-gray-700 flex items-center">
-                ₹ {totals.grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-              </div>
+              <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Total *</label>
+              <input
+                type="number"
+                name="grandTotal"
+                value={formData.grandTotal}
+                onChange={handleInputChange}
+                required
+                min="0"
+                step="any"
+                placeholder="0"
+                className="w-full bg-gray-100 border border-gray-200 rounded-lg px-4 py-2.5 text-base sm:text-lg font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
             </div>
           </div>
         </div>
