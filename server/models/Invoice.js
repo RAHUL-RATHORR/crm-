@@ -5,7 +5,9 @@ const itemSchema = new mongoose.Schema({
   hsn: { type: String, default: '' },
   qty: { type: Number, default: 0 },
   rate: { type: Number, default: 0 },
-  total: { type: Number, default: 0 }
+  total: { type: Number, default: 0 },
+  gstPercent: { type: Number, default: 18 },
+  gstAmount: { type: Number, default: 0 }
 });
 
 const invoiceSchema = new mongoose.Schema({

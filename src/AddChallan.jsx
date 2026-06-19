@@ -93,19 +93,26 @@ const AddChallan = () => {
     total: editData ? editData.total : 0,
     gstAmount: editData ? (editData.gstAmount || 0) : 0,
     grandTotal: editData ? (editData.grandTotal || editData.total || 0) : 0,
+    freight: editData ? (editData.freight || 0) : 0,
+    gstType: editData ? (editData.gstType || 'CGST/SGST') : 'CGST/SGST',
+    reverseCharge: editData ? (editData.reverseCharge || 'No') : 'No',
     note: editData ? editData.note : ''
   });
 
   const totals = useMemo(() => {
     const items = formData.items.map(calcItemTotals);
     const subTotal = items.reduce((sum, item) => sum + item.total, 0);
-    const gstAmount = items.reduce((sum, item) => sum + item.gstAmount, 0);
+    const itemsGst = items.reduce((sum, item) => sum + item.gstAmount, 0);
+    const freight = Number(formData.freight) || 0;
+    const freightGstPercent = items[0]?.gstPercent ?? 18;
+    const freightGst = (freight * freightGstPercent) / 100;
+    const gstAmount = itemsGst + freightGst;
     const halfGst = gstAmount / 2;
-    const rawGrandTotal = subTotal + gstAmount;
+    const rawGrandTotal = subTotal + freight + gstAmount;
     const grandTotal = Math.round(rawGrandTotal);
     const roundOff = grandTotal - rawGrandTotal;
-    return { items, subTotal, gstAmount, halfGst, grandTotal, roundOff };
-  }, [formData.items]);
+    return { items, subTotal, freight, gstAmount, halfGst, grandTotal, roundOff };
+  }, [formData.items, formData.freight]);
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/api/jobcard`)
@@ -202,6 +209,9 @@ const AddChallan = () => {
         .filter(Boolean)
     )];
     const computedItems = formData.items.map(calcItemTotals);
+    const invoiceGstPercent = computedItems.length
+      ? Math.round(computedItems.reduce((sum, item) => sum + item.gstPercent, 0) / computedItems.length)
+      : 18;
 
     const challan = {
       challanNo: formData.challanNo,
@@ -212,6 +222,10 @@ const AddChallan = () => {
       partyName: formData.partyName,
       items: computedItems,
       total: totals.subTotal,
+      freight: totals.freight,
+      gstPercent: invoiceGstPercent,
+      gstType: formData.gstType,
+      reverseCharge: formData.reverseCharge,
       gstAmount: totals.gstAmount,
       grandTotal: totals.grandTotal,
       note: formData.note,
@@ -435,8 +449,68 @@ const AddChallan = () => {
             ))}
           </div>
 
-          <div className="p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-4 gap-4 sm:gap-6 border-t border-gray-50 mt-4 pt-6">
-            <div className="sm:col-span-3 space-y-1">
+          <div className="p-4 sm:p-6 border-t border-gray-50">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 sm:gap-6">
+              <div className="space-y-1">
+                <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Sub Total *</label>
+                <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-base font-semibold text-gray-800">
+                  ₹ {totals.subTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Freight</label>
+                <input
+                  type="number"
+                  name="freight"
+                  min="0"
+                  step="0.01"
+                  value={formData.freight}
+                  onChange={handleInputChange}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-base font-semibold text-gray-800"
+                  placeholder="0.00"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">GST Amount</label>
+                <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-base font-semibold text-gray-800">
+                  ₹ {totals.gstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">GST Type *</label>
+                <select
+                  name="gstType"
+                  value={formData.gstType}
+                  onChange={handleInputChange}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-base font-semibold text-gray-800 outline-none cursor-pointer"
+                >
+                  <option value="CGST/SGST">CGST + SGST</option>
+                  <option value="IGST">IGST</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Reverse Charge</label>
+                <select
+                  name="reverseCharge"
+                  value={formData.reverseCharge}
+                  onChange={handleInputChange}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-base font-semibold text-gray-800 outline-none cursor-pointer"
+                >
+                  <option value="No">No</option>
+                  <option value="Yes">Yes</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Grand Total</label>
+                <div className="bg-gray-100 border border-gray-200 rounded-lg px-4 py-2.5 text-base sm:text-lg font-bold text-blue-600">
+                  ₹ {totals.grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-4 sm:p-6 border-t border-gray-50">
+            <div className="space-y-1">
               <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Note</label>
               <textarea
                 name="note"
@@ -446,12 +520,6 @@ const AddChallan = () => {
                 className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
                 placeholder="Enter additional notes..."
               ></textarea>
-            </div>
-            <div className="space-y-1">
-              <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Total</label>
-              <div className="w-full bg-gray-100 border border-gray-200 rounded-lg px-4 py-2.5 text-base sm:text-lg font-bold text-gray-700 flex items-center">
-                ₹ {totals.grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-              </div>
             </div>
           </div>
         </div>

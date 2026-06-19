@@ -29,7 +29,7 @@ const ChallanList = () => {
   const primaryChallan = previewChallans[0] || null;
 
   const challanItems = previewChallans.flatMap(getChallanLineItems);
-  const { subTotal: totalAmount, gstAmount: totalGstAmount, halfGst: halfGstAmount, grandTotal, roundOff } =
+  const { subTotal: totalAmount, freight: totalFreight, gstAmount: totalGstAmount, halfGst: halfGstAmount, grandTotal, roundOff } =
     computeLineItemsTotals(challanItems, primaryChallan?.gstPercent ?? 18, previewChallans);
   const mergedMeta = buildMergedChallanMeta(previewChallans);
 
@@ -531,6 +531,12 @@ const ChallanList = () => {
                           <span className="text-[11px] font-bold text-gray-700 uppercase">Total Amount</span>
                           <span className="text-[12px] font-bold text-gray-800">₹ {totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                         </div>
+                        {totalFreight > 0 && (
+                          <div className="flex justify-between px-4 py-1.5 border-b border-gray-200">
+                            <span className="text-[11px] font-bold text-gray-700 uppercase">Freight</span>
+                            <span className="text-[12px] font-bold text-gray-800">₹ {totalFreight.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                          </div>
+                        )}
                         <div className="flex justify-between px-4 py-1.5 border-b border-gray-200">
                           <span className="text-[11px] font-bold text-gray-700 uppercase">CGST</span>
                           <span className="text-[12px] font-bold text-gray-800">₹ {isIGST ? '0.00' : halfGstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>

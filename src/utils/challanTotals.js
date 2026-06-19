@@ -30,13 +30,16 @@ export const computeLineItemsTotals = (items = [], fallbackGstPercent = 18, chal
   if (challans?.length) {
     const savedGrand = challans.reduce((sum, ch) => sum + Number(ch.grandTotal ?? ch.total ?? 0), 0);
     const savedGst = challans.reduce((sum, ch) => sum + Number(ch.gstAmount ?? 0), 0);
+    const savedFreight = challans.reduce((sum, ch) => sum + Number(ch.freight ?? 0), 0);
+    const itemSubTotal = challans.reduce((sum, ch) => sum + Number(ch.total ?? 0), 0) || subTotal;
     if (savedGrand > 0) {
       return {
-        subTotal: challans.reduce((sum, ch) => sum + Number(ch.total ?? 0), 0) || subTotal,
+        subTotal: itemSubTotal,
+        freight: savedFreight,
         gstAmount: savedGst,
         halfGst: savedGst / 2,
         grandTotal: savedGrand,
-        roundOff: savedGrand - (subTotal + savedGst),
+        roundOff: savedGrand - (itemSubTotal + savedFreight + savedGst),
       };
     }
   }
@@ -58,6 +61,7 @@ export const computeLineItemsTotals = (items = [], fallbackGstPercent = 18, chal
 
   return {
     subTotal: legacySubTotal,
+    freight: 0,
     gstAmount,
     halfGst: gstAmount / 2,
     grandTotal,

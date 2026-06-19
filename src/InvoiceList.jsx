@@ -60,16 +60,22 @@ const InvoiceList = () => {
   const [openDropdownId, setOpenDropdownId] = useState(null);
   const [jobCards, setJobCards] = useState([]);
 
-  const gstPercent = selectedInvoice ? (selectedInvoice.gstPercent !== undefined ? selectedInvoice.gstPercent : 18) : 18;
   const freight = selectedInvoice ? (Number(selectedInvoice.freight) || 0) : 0;
-  const taxableValue = selectedInvoice ? (selectedInvoice.totalAmount / (1 + (gstPercent / 100))) : 0;
-  const totalGstAmount = selectedInvoice ? (selectedInvoice.totalAmount - taxableValue) : 0;
-  const halfGstAmount = totalGstAmount / 2;
   const isIGST = tempGstType === 'IGST';
-  const itemsSubTotal = selectedInvoice ? (Number(selectedInvoice.subTotal) || Math.max(0, taxableValue - freight)) : 0;
+  const itemsSubTotal = selectedInvoice
+    ? (Number(selectedInvoice.subTotal) || (selectedInvoice.items || []).reduce((sum, item) => sum + (Number(item.total) || 0), 0))
+    : 0;
+  const totalGstAmount = selectedInvoice
+    ? (Number(selectedInvoice.gstAmount) || (selectedInvoice.items || []).reduce((sum, item) => {
+        const line = Number(item.total) || 0;
+        const pct = Number(item.gstPercent ?? selectedInvoice.gstPercent ?? 18);
+        return sum + (line * pct) / 100;
+      }, 0) + ((freight * Number((selectedInvoice.items?.[0]?.gstPercent ?? selectedInvoice.gstPercent ?? 18))) / 100))
+    : 0;
+  const halfGstAmount = totalGstAmount / 2;
   const totalAmount = itemsSubTotal;
   const roundOff = selectedInvoice
-    ? (selectedInvoice.totalAmount - (itemsSubTotal + freight + (selectedInvoice.gstAmount ?? totalGstAmount)))
+    ? (selectedInvoice.totalAmount - (itemsSubTotal + freight + totalGstAmount))
     : 0;
 
   const linkedJobCard = selectedInvoice
@@ -84,21 +90,24 @@ const InvoiceList = () => {
   const shipToState = getStateFromGst(shipTo.gstNo);
 
   const hsnSummaryRows = selectedInvoice
-    ? Object.entries(
+    ? Object.values(
         (selectedInvoice.items || []).reduce((acc, item) => {
           const hsn = item.hsn || '';
-          acc[hsn] = (acc[hsn] || 0) + (Number(item.total) || 0);
+          const pct = Number(item.gstPercent ?? selectedInvoice.gstPercent ?? 18);
+          const key = `${hsn}__${pct}`;
+          if (!acc[key]) acc[key] = { hsn, pct, taxable: 0 };
+          acc[key].taxable += Number(item.total) || 0;
           return acc;
         }, {})
-      ).map(([hsn, taxable]) => ({
-        hsn,
-        taxable,
-        cgstRate: isIGST ? 0 : gstPercent / 2,
-        sgstRate: isIGST ? 0 : gstPercent / 2,
-        cgstAmt: isIGST ? 0 : (taxable * (gstPercent / 2)) / 100,
-        sgstAmt: isIGST ? 0 : (taxable * (gstPercent / 2)) / 100,
-        igstRate: isIGST ? gstPercent : 0,
-        igstAmt: isIGST ? (taxable * gstPercent) / 100 : 0,
+      ).map((row) => ({
+        hsn: row.hsn,
+        taxable: row.taxable,
+        cgstRate: isIGST ? 0 : row.pct / 2,
+        sgstRate: isIGST ? 0 : row.pct / 2,
+        cgstAmt: isIGST ? 0 : (row.taxable * (row.pct / 2)) / 100,
+        sgstAmt: isIGST ? 0 : (row.taxable * (row.pct / 2)) / 100,
+        igstRate: isIGST ? row.pct : 0,
+        igstAmt: isIGST ? (row.taxable * row.pct) / 100 : 0,
       }))
     : [];
 
@@ -490,7 +499,8 @@ const InvoiceList = () => {
                     {/* Item rows */}
                     {selectedInvoice.items?.map((item, idx) => {
                       const rate = Number(item.rate) || 0;
-                      const rateIncl = rate * (1 + gstPercent / 100);
+                      const itemGstPercent = Number(item.gstPercent ?? selectedInvoice.gstPercent ?? 18);
+                      const rateIncl = rate * (1 + itemGstPercent / 100);
                       return (
                         <tr key={idx}>
                           <td className="gst-cell text-center align-top">{idx + 1}</td>

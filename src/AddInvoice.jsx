@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -7,6 +7,38 @@ import { Plus, Trash2, Search, ChevronDown } from 'lucide-react';
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'https://crm-qpw8.onrender.com'
   : 'https://crm-qpw8.onrender.com';
+
+const defaultInvoiceItem = () => ({
+  id: Date.now() + Math.random(),
+  description: '',
+  hsn: '',
+  qty: 0,
+  rate: 0,
+  gstPercent: 18,
+  total: 0,
+  gstAmount: 0,
+});
+
+const calcInvoiceItem = (item, fallbackGst = 18) => {
+  const qty = parseFloat(item.qty || 0);
+  const rate = parseFloat(item.rate || 0);
+  const gstPercent = parseFloat(item.gstPercent ?? fallbackGst);
+  const total = qty * rate;
+  const gstAmount = (total * gstPercent) / 100;
+  return { ...item, qty, rate, gstPercent, total, gstAmount };
+};
+
+const normalizeInvoiceItems = (editData) => {
+  if (editData?.items?.length) {
+    return editData.items.map((item) => calcInvoiceItem({
+      ...item,
+      id: item.id || item._id || Date.now() + Math.random(),
+      hsn: item.hsn || '',
+      gstPercent: item.gstPercent ?? editData.gstPercent ?? 18,
+    }, editData.gstPercent ?? 18));
+  }
+  return [defaultInvoiceItem()];
+};
 
 const AddInvoice = () => {
   const navigate = useNavigate();
@@ -23,19 +55,12 @@ const AddInvoice = () => {
     jobCard: editData ? editData.jobCard : '',
     orderNo: editData ? (editData.orderNo || editData.jobCard || '') : '',
     party: editData ? editData.partyName : '',
-    gstPercent: editData ? editData.gstPercent : 18,
     gstType: editData ? (editData.gstType || 'CGST/SGST') : 'CGST/SGST',
     freight: editData ? (editData.freight || 0) : 0,
     reverseCharge: editData ? (editData.reverseCharge || 'No') : 'No',
   });
 
-  const [items, setItems] = useState(editData ? editData.items.map(item => ({
-    ...item,
-    id: item.id || item._id || Date.now() + Math.random(),
-    hsn: item.hsn || ''
-  })) : [
-    { id: Date.now(), description: 'Paper Sheet', hsn: '', qty: 0, rate: 0, total: 0 }
-  ]);
+  const [items, setItems] = useState(() => normalizeInvoiceItems(editData));
 
   const [jobCardSearchTerm, setJobCardSearchTerm] = useState('');
   const [isJobCardDropdownOpen, setIsJobCardDropdownOpen] = useState(false);
@@ -99,22 +124,16 @@ const AddInvoice = () => {
   };
 
   const handleItemChange = (id, field, value) => {
-    setItems(prevItems =>
-      prevItems.map(item => {
-        if (item.id === id) {
-          const updatedItem = { ...item, [field]: value };
-          if (field === 'qty' || field === 'rate') {
-            updatedItem.total = parseFloat(updatedItem.qty || 0) * parseFloat(updatedItem.rate || 0);
-          }
-          return updatedItem;
-        }
-        return item;
+    setItems((prevItems) =>
+      prevItems.map((item) => {
+        if (item.id !== id) return item;
+        return calcInvoiceItem({ ...item, [field]: value });
       })
     );
   };
 
   const addRow = () => {
-    setItems([...items, { id: Date.now(), description: '', hsn: '', qty: 0, rate: 0, total: 0 }]);
+    setItems((prev) => [...prev, defaultInvoiceItem()]);
   };
 
   const removeRow = (id) => {
@@ -123,11 +142,18 @@ const AddInvoice = () => {
     }
   };
 
-  const subTotal = items.reduce((sum, item) => sum + (item.total || 0), 0);
+  const computedItems = useMemo(() => items.map((item) => calcInvoiceItem(item)), [items]);
+
+  const subTotal = computedItems.reduce((sum, item) => sum + (item.total || 0), 0);
+  const itemsGstAmount = computedItems.reduce((sum, item) => sum + (item.gstAmount || 0), 0);
   const freight = Number(formData.freight) || 0;
-  const taxableAmount = subTotal + freight;
-  const gstAmount = (taxableAmount * (formData.gstPercent || 0)) / 100;
-  const grandTotal = taxableAmount + gstAmount;
+  const freightGstPercent = computedItems[0]?.gstPercent ?? 18;
+  const freightGstAmount = (freight * freightGstPercent) / 100;
+  const gstAmount = itemsGstAmount + freightGstAmount;
+  const grandTotal = subTotal + freight + gstAmount;
+  const invoiceGstPercent = computedItems.length
+    ? Math.round(computedItems.reduce((sum, item) => sum + item.gstPercent, 0) / computedItems.length)
+    : 18;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -138,13 +164,13 @@ const AddInvoice = () => {
       orderNo: formData.orderNo,
       orderDate: orderDate.toISOString(),
       partyName: formData.party,
-      items: items,
-      subTotal: subTotal,
+      items: computedItems,
+      subTotal,
       freight,
       reverseCharge: formData.reverseCharge || 'No',
-      gstPercent: formData.gstPercent,
+      gstPercent: invoiceGstPercent,
       gstType: formData.gstType,
-      gstAmount: gstAmount,
+      gstAmount,
       totalAmount: grandTotal
     };
 
@@ -307,19 +333,20 @@ const AddInvoice = () => {
         {/* Items Section */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-237.5">
+            <table className="w-full text-left border-collapse min-w-[900px]">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider w-64">Description *</th>
-                  <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider w-64">HSN/SAC</th>
-                  <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider text-center w-28">Qty *</th>
-                  <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider text-center w-32">Rate *</th>
-                  <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider text-center w-36">Total</th>
+                  <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider w-56">Description *</th>
+                  <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider w-40">HSN/SAC</th>
+                  <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider text-center w-24">Qty *</th>
+                  <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider text-center w-28">Rate *</th>
+                  <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider text-center w-24">GST %</th>
+                  <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider text-center w-32">Amount</th>
                   <th className="px-6 py-3 w-14"></th>
                 </tr>
               </thead>
               <tbody>
-                {items.map((item, index) => (
+                {computedItems.map((item) => (
                   <tr key={item.id} className="border-t border-gray-100 group">
                     <td className="px-6 py-4">
                       <input
@@ -365,8 +392,20 @@ const AddInvoice = () => {
                     <td className="px-2 py-4 text-center">
                       <div className="flex justify-center">
                         <input
+                          type="number"
+                          value={item.gstPercent}
+                          onChange={(e) => handleItemChange(item.id, 'gstPercent', e.target.value)}
+                          min="0"
+                          step="any"
+                          className="w-20 bg-white border border-gray-200 rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm text-center"
+                        />
+                      </div>
+                    </td>
+                    <td className="px-2 py-4 text-center">
+                      <div className="flex justify-center">
+                        <input
                           type="text"
-                          value={item.total.toFixed(2)}
+                          value={Number(item.total || 0).toFixed(2)}
                           readOnly
                           className="w-28 bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 focus:outline-none text-sm text-center font-semibold text-blue-700"
                         />
@@ -400,7 +439,7 @@ const AddInvoice = () => {
         </div>
 
         {/* Calculations */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6">
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 space-y-2">
             <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Sub Total *</label>
             <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-base sm:text-lg font-semibold text-gray-800">
@@ -421,17 +460,10 @@ const AddInvoice = () => {
             />
           </div>
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 space-y-2">
-            <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">GST (%) *</label>
-            <select
-              name="gstPercent"
-              value={formData.gstPercent}
-              onChange={handleInputChange}
-              className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-base sm:text-lg font-semibold text-gray-800 outline-none cursor-pointer"
-            >
-              <option value="0">0%</option>
-              <option value="5">5%</option>
-              <option value="18">18%</option>
-            </select>
+            <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">GST Amount</label>
+            <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-base sm:text-lg font-semibold text-gray-800">
+              ₹ {gstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+            </div>
           </div>
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 space-y-2">
             <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">GST Type *</label>
@@ -457,7 +489,7 @@ const AddInvoice = () => {
               <option value="Yes">Yes</option>
             </select>
           </div>
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 space-y-2">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 space-y-2 sm:col-span-2 lg:col-span-1">
             <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Grand Total</label>
             <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-base sm:text-lg font-bold text-blue-600">
               ₹ {grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
