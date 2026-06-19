@@ -140,6 +140,15 @@ export function printElement(elementId) {
             print-color-adjust: exact !important;
           }
           .invoice-fill-row { display: none !important; }
+          .gst-invoice-print-page,
+          .gst-invoice-print-page .gst-invoice,
+          .gst-invoice-print-page .gst-cell,
+          .gst-invoice-print-page td,
+          .gst-invoice-print-page th {
+            color: #000 !important;
+            background: #fff !important;
+            border-color: #000 !important;
+          }
           .invoice-print-page td,
           .invoice-print-page th { padding-top: 3px !important; padding-bottom: 3px !important; }
           .invoice-print-page .invoice-footer { page-break-inside: avoid !important; }

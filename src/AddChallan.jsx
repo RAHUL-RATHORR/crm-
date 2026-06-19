@@ -1,7 +1,69 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'https://crm-qpw8.onrender.com'
+  : 'https://crm-qpw8.onrender.com';
+
+const defaultItem = () => ({ description: '', qty: 0, rate: 0, gstPercent: 18, total: 0, gstAmount: 0 });
+
+const normalizeItems = (editData) => {
+  if (editData?.items?.length) {
+    return editData.items.map((item) => ({
+      description: item.description || '',
+      qty: item.qty || 0,
+      rate: item.rate || 0,
+      gstPercent: item.gstPercent ?? editData.gstPercent ?? 18,
+      total: item.total || 0,
+      gstAmount: item.gstAmount || 0,
+    }));
+  }
+  if (editData?.description) {
+    return [{
+      description: editData.description,
+      qty: editData.qty || 0,
+      rate: editData.rate || 0,
+      gstPercent: editData.gstPercent ?? 18,
+      total: editData.total || 0,
+      gstAmount: 0,
+    }];
+  }
+  return [defaultItem()];
+};
+
+const parseJobQty = (value) => {
+  const match = String(value || '').match(/[\d.]+/);
+  return match ? parseFloat(match[0]) : 0;
+};
+
+const itemFromJobCard = (card) => ({
+  description: `${card.jobName || 'Job'} (${card.jobNumber || ''})`.trim(),
+  qty: parseJobQty(card.jobQty),
+  rate: 0,
+  gstPercent: 18,
+  total: 0,
+  gstAmount: 0,
+  jobCardId: card._id || card.id,
+  jobNumber: card.jobNumber || '',
+});
+
+const calcItemTotals = (item) => {
+  const qty = parseFloat(item.qty || 0);
+  const rate = parseFloat(item.rate || 0);
+  const gstPercent = parseFloat(item.gstPercent ?? 18);
+  const lineTotal = qty * rate;
+  const gstAmount = (lineTotal * gstPercent) / 100;
+  return {
+    ...item,
+    qty,
+    rate,
+    gstPercent,
+    total: lineTotal,
+    gstAmount,
+  };
+};
 
 const AddChallan = () => {
   const navigate = useNavigate();
@@ -9,29 +71,39 @@ const AddChallan = () => {
   const editData = location.state?.editData;
 
   const [jobCards, setJobCards] = useState([]);
+  const [pickedJobIds, setPickedJobIds] = useState([]);
   const [challanDate, setChallanDate] = useState(editData ? new Date(editData.date) : new Date());
   const [formData, setFormData] = useState({
     challanNo: editData ? editData.challanNo : 'CHLN' + String(Date.now()).slice(-4),
     jobCardId: editData ? editData.jobCardId : '',
     partyName: editData ? editData.partyName : '',
-    items: editData && editData.items && editData.items.length > 0 
-      ? editData.items 
-      : (editData && editData.description ? [{ description: editData.description, qty: editData.qty || 0, rate: editData.rate || 0, total: editData.total || 0 }] : [{ description: '', qty: 0, rate: 0, total: 0 }]),
+    items: normalizeItems(editData),
     total: editData ? editData.total : 0,
+    gstAmount: editData ? (editData.gstAmount || 0) : 0,
+    grandTotal: editData ? (editData.grandTotal || editData.total || 0) : 0,
     note: editData ? editData.note : ''
   });
 
+  const totals = useMemo(() => {
+    const items = formData.items.map(calcItemTotals);
+    const subTotal = items.reduce((sum, item) => sum + item.total, 0);
+    const gstAmount = items.reduce((sum, item) => sum + item.gstAmount, 0);
+    const halfGst = gstAmount / 2;
+    const rawGrandTotal = subTotal + gstAmount;
+    const grandTotal = Math.round(rawGrandTotal);
+    const roundOff = grandTotal - rawGrandTotal;
+    return { items, subTotal, gstAmount, halfGst, grandTotal, roundOff };
+  }, [formData.items]);
+
   useEffect(() => {
-    fetch('https://crm-qpw8.onrender.com/api/jobcard')
+    fetch(`${API_BASE_URL}/api/jobcard`)
       .then(res => res.json())
       .then(data => setJobCards(data))
       .catch(err => console.error("Error fetching Job Cards:", err));
   }, []);
 
-  // Unique parties for the datalist
   const uniqueParties = [...new Set(jobCards.map(card => card.partyName).filter(Boolean))];
 
-  // Auto-fill Party logic when Job Card is selected
   useEffect(() => {
     if (formData.jobCardId) {
       const selectedCard = jobCards.find(card => (card._id === formData.jobCardId || card.id === parseInt(formData.jobCardId)));
@@ -41,34 +113,54 @@ const AddChallan = () => {
     }
   }, [formData.jobCardId, jobCards]);
 
-  // Filtered job cards based on entered Party Name
   const filteredJobCards = formData.partyName
     ? jobCards.filter(card => card.partyName && card.partyName.toLowerCase().includes(formData.partyName.toLowerCase()))
     : jobCards;
 
-  // Auto-calculate Total logic
-  useEffect(() => {
-    const newItems = formData.items.map(item => {
-      const qty = parseFloat(item.qty || 0);
-      const rate = parseFloat(item.rate || 0);
-      return { ...item, total: qty * rate };
-    });
-    
-    // Only update if there's a difference to prevent infinite loops
-    const hasChanged = newItems.some((item, idx) => item.total !== formData.items[idx].total);
-    if (hasChanged) {
-      setFormData(prev => ({ ...prev, items: newItems }));
-    } else {
-      const grandTotal = newItems.reduce((acc, curr) => acc + curr.total, 0);
-      if (grandTotal !== formData.total) {
-        setFormData(prev => ({ ...prev, total: grandTotal }));
-      }
-    }
-  }, [formData.items]);
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    if (name === 'jobCardId') {
+      const selectedCard = jobCards.find(card => (card._id === value || card.id === parseInt(value)));
+      setFormData(prev => ({
+        ...prev,
+        jobCardId: value,
+        partyName: selectedCard?.partyName || prev.partyName,
+        items: selectedCard ? [itemFromJobCard(selectedCard)] : prev.items,
+      }));
+      return;
+    }
+    if (name === 'partyName') {
+      setPickedJobIds([]);
+      setFormData(prev => ({ ...prev, partyName: value, jobCardId: '' }));
+      return;
+    }
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const toggleJobPick = (id) => {
+    setPickedJobIds(prev => (
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    ));
+  };
+
+  const addSelectedJobsToItems = () => {
+    const picked = filteredJobCards.filter(card => pickedJobIds.includes(card._id || card.id));
+    if (!picked.length) return;
+
+    const newItems = picked.map(itemFromJobCard);
+    const existingDescs = new Set(formData.items.map(i => i.description).filter(Boolean));
+    const toAdd = newItems.filter(i => !existingDescs.has(i.description));
+
+    setFormData(prev => {
+      const hasContent = prev.items.some(i => i.description || i.qty || i.rate);
+      const merged = hasContent ? [...prev.items, ...toAdd] : toAdd.length ? toAdd : [defaultItem()];
+      return {
+        ...prev,
+        items: merged,
+        jobCardId: prev.jobCardId || (picked[0]._id || picked[0].id),
+      };
+    });
+    setPickedJobIds([]);
   };
 
   const handleItemChange = (index, field, value) => {
@@ -80,7 +172,7 @@ const AddChallan = () => {
   const addItem = () => {
     setFormData(prev => ({
       ...prev,
-      items: [...prev.items, { description: '', qty: 0, rate: 0, total: 0 }]
+      items: [...prev.items, defaultItem()]
     }));
   };
 
@@ -92,27 +184,33 @@ const AddChallan = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const selectedCard = jobCards.find(card => (card._id === formData.jobCardId || card.id === parseInt(formData.jobCardId)));
+    const jobNumbersFromItems = [...new Set(
+      formData.items
+        .map(i => i.jobNumber || (i.description?.match(/\((JOB[^)]+)\)/)?.[1]))
+        .filter(Boolean)
+    )];
+    const computedItems = formData.items.map(calcItemTotals);
 
     const challan = {
       challanNo: formData.challanNo,
       date: challanDate.toISOString(),
       jobCardId: formData.jobCardId,
-      jobNumber: selectedCard?.jobNumber || '',
+      jobNumber: jobNumbersFromItems.length ? jobNumbersFromItems.join(', ') : (selectedCard?.jobNumber || ''),
       jobName: selectedCard?.jobName || '',
       partyName: formData.partyName,
-      partyName: formData.partyName,
-      items: formData.items,
-      total: formData.total,
+      items: computedItems,
+      total: totals.subTotal,
+      gstAmount: totals.gstAmount,
+      grandTotal: totals.grandTotal,
       note: formData.note,
-      // Backwards compatibility
-      description: formData.items.length > 0 ? formData.items[0].description : '',
-      qty: formData.items.length > 0 ? formData.items[0].qty : 0,
-      rate: formData.items.length > 0 ? formData.items[0].rate : 0,
+      description: computedItems.length > 0 ? computedItems[0].description : '',
+      qty: computedItems.length > 0 ? computedItems[0].qty : 0,
+      rate: computedItems.length > 0 ? computedItems[0].rate : 0,
       paymentStatus: editData ? (editData.paymentStatus || 'Pending') : 'Pending'
     };
 
     try {
-      const response = await fetch('https://crm-qpw8.onrender.com/api/challan', {
+      const response = await fetch(`${API_BASE_URL}/api/challan`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(challan)
@@ -145,7 +243,6 @@ const AddChallan = () => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Basic Details */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="bg-blue-900 text-white px-6 py-2 w-fit relative font-semibold text-xs sm:text-sm rounded-br-2xl">
             Basic Details
@@ -207,6 +304,50 @@ const AddChallan = () => {
             </div>
           </div>
 
+          {formData.partyName && filteredJobCards.length > 0 && (
+            <div className="px-4 sm:px-6 pb-4 border-t border-gray-50">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3 mt-4">
+                <p className="text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  Multiple Jobs — select karke items mein add karo ({filteredJobCards.length} found)
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setPickedJobIds(filteredJobCards.map(c => c._id || c.id))}
+                  className="text-xs text-blue-600 hover:text-blue-800 font-semibold self-start"
+                >
+                  Select All
+                </button>
+              </div>
+              <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-lg divide-y divide-gray-100 mb-3 bg-gray-50">
+                {filteredJobCards.map(card => {
+                  const id = card._id || card.id;
+                  return (
+                    <label key={id} className="flex items-start gap-3 p-3 hover:bg-white cursor-pointer transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={pickedJobIds.includes(id)}
+                        onChange={() => toggleJobPick(id)}
+                        className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="text-sm text-gray-800 leading-snug">
+                        <span className="font-semibold text-blue-700">({card.jobNumber})</span> {card.jobName}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+              <button
+                type="button"
+                onClick={addSelectedJobsToItems}
+                disabled={pickedJobIds.length === 0}
+                className="w-full sm:w-auto text-sm bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-lg font-bold shadow-sm transition-colors flex items-center justify-center gap-2"
+              >
+                <span className="text-lg leading-none">+</span>
+                Add Selected to Items ({pickedJobIds.length})
+              </button>
+            </div>
+          )}
+
           <div className="p-4 sm:p-6 border-t border-gray-50 mt-4 pt-6">
             <div className="flex justify-between items-center mb-4">
               <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Items</label>
@@ -214,10 +355,10 @@ const AddChallan = () => {
                 <span className="text-lg leading-none">+</span> Add Row
               </button>
             </div>
-            
-            {formData.items.map((item, index) => (
-              <div key={index} className="grid grid-cols-1 sm:grid-cols-12 gap-4 sm:gap-6 mb-4 items-end bg-gray-50 p-4 rounded-xl border border-gray-100 relative group">
-                <div className="sm:col-span-5 space-y-1">
+
+            {totals.items.map((item, index) => (
+              <div key={index} className="grid grid-cols-1 sm:grid-cols-12 gap-4 sm:gap-3 mb-4 items-end bg-gray-50 p-4 rounded-xl border border-gray-100 relative group">
+                <div className="sm:col-span-4 space-y-1">
                   <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Description *</label>
                   <input
                     type="text"
@@ -235,6 +376,8 @@ const AddChallan = () => {
                     value={item.qty}
                     onChange={(e) => handleItemChange(index, 'qty', e.target.value)}
                     required
+                    min="0"
+                    step="any"
                     className="w-full bg-white border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
                   />
                 </div>
@@ -245,12 +388,25 @@ const AddChallan = () => {
                     value={item.rate}
                     onChange={(e) => handleItemChange(index, 'rate', e.target.value)}
                     required
+                    min="0"
+                    step="any"
                     className="w-full bg-white border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+                  />
+                </div>
+                <div className="sm:col-span-1 space-y-1">
+                  <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">GST %</label>
+                  <input
+                    type="number"
+                    value={item.gstPercent}
+                    onChange={(e) => handleItemChange(index, 'gstPercent', e.target.value)}
+                    min="0"
+                    step="any"
+                    className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
                   />
                 </div>
                 <div className="sm:col-span-2 space-y-1">
                   <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Amount</label>
-                  <div className="w-full bg-transparent border border-transparent rounded-lg px-2 py-2.5 text-sm font-bold text-gray-700 flex items-center">
+                  <div className="w-full bg-transparent border border-transparent rounded-lg px-2 py-2.5 text-sm font-bold text-gray-700">
                     ₹ {item.total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </div>
                 </div>
@@ -282,7 +438,7 @@ const AddChallan = () => {
             <div className="space-y-1">
               <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Total</label>
               <div className="w-full bg-gray-100 border border-gray-200 rounded-lg px-4 py-2.5 text-base sm:text-lg font-bold text-gray-700 flex items-center">
-                ₹ {formData.total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                ₹ {totals.grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
               </div>
             </div>
           </div>

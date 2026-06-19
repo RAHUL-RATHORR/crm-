@@ -1,0 +1,65 @@
+export const getChallanLineItems = (challan) => {
+  if (!challan) return [];
+
+  if (challan.items?.length) {
+    return challan.items.map((item) => ({
+      description: item.description || challan.jobName || '',
+      qty: item.qty,
+      rate: item.rate,
+      total: Number(item.total) || Number(item.qty || 0) * Number(item.rate || 0),
+      gstPercent: item.gstPercent ?? challan.gstPercent ?? 18,
+      jobNumber: challan.jobNumber || '',
+      challanNo: challan.challanNo || '',
+    }));
+  }
+
+  return [{
+    description: challan.description || challan.jobName || '',
+    qty: challan.qty,
+    rate: challan.rate,
+    total: Number(challan.total) || Number(challan.qty || 0) * Number(challan.rate || 0),
+    gstPercent: challan.gstPercent ?? 18,
+    jobNumber: challan.jobNumber || '',
+    challanNo: challan.challanNo || '',
+  }];
+};
+
+export const computeLineItemsTotals = (items = [], fallbackGstPercent = 18) => {
+  const subTotal = items.reduce(
+    (sum, item) => sum + (Number(item.total) || Number(item.qty || 0) * Number(item.rate || 0)),
+    0
+  );
+
+  const gstAmount = items.reduce((sum, item) => {
+    const line = Number(item.total) || Number(item.qty || 0) * Number(item.rate || 0);
+    const pct = Number(item.gstPercent ?? fallbackGstPercent);
+    return sum + (line * pct) / 100;
+  }, 0);
+
+  const rawGrandTotal = subTotal + gstAmount;
+  const grandTotal = Math.round(rawGrandTotal);
+  const roundOff = grandTotal - rawGrandTotal;
+
+  return {
+    subTotal,
+    gstAmount,
+    halfGst: gstAmount / 2,
+    grandTotal,
+    roundOff,
+  };
+};
+
+export const buildMergedChallanMeta = (challans = []) => {
+  if (!challans.length) {
+    return { challanLabel: '', jobRefLabel: '', date: null };
+  }
+
+  const challanLabel = challans.map((ch) => `#${ch.challanNo}`).join(', ');
+  const jobRefLabel = [...new Set(challans.map((ch) => ch.jobNumber).filter(Boolean))].join(', ');
+  const latestDate = challans.reduce((latest, ch) => {
+    const d = new Date(ch.createdAt || ch.date);
+    return !latest || d > latest ? d : latest;
+  }, null);
+
+  return { challanLabel, jobRefLabel, date: latestDate };
+};

@@ -11,6 +11,43 @@ const API_BASE_URL = window.location.hostname === 'localhost' || window.location
   ? 'https://crm-qpw8.onrender.com'
   : 'https://crm-qpw8.onrender.com';
 
+const SELLER = {
+  name: 'HARIHAR PRINTERS',
+  factory: 'G-139, Hirawala Ind. Area, Kanota, Jaipur',
+  office: 'J-97, Ashok Chowk, Adarsh Nagar, Jaipur',
+  gstin: '08AALPC9959M1ZV',
+  state: 'Rajasthan',
+  stateCode: '08',
+  tel: '94140-43763',
+  bank: {
+    holder: 'Harihar Printers',
+    name: 'IndusInd Bank',
+    account: '650014092175',
+    branch: 'Raja Park, Jaipur',
+    ifsc: 'INDB0000278',
+  },
+};
+
+const fmtInvoiceDate = (value) => {
+  if (!value) return '';
+  const d = new Date(value);
+  const day = d.getDate();
+  const mon = d.toLocaleDateString('en-GB', { month: 'short' });
+  const yr = String(d.getFullYear()).slice(-2);
+  return `${day}-${mon}-${yr}`;
+};
+
+const fmtAmt = (value) =>
+  Number(value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+const getStateFromGst = (gstNo) => {
+  const gst = (gstNo || '').trim();
+  if (gst.length >= 2 && gst !== 'URP') {
+    return { state: 'Rajasthan', code: gst.slice(0, 2) };
+  }
+  return { state: 'Rajasthan', code: '08' };
+};
+
 const InvoiceList = () => {
   const navigate = useNavigate();
   const [invoices, setInvoices] = useState([]);
@@ -43,6 +80,34 @@ const InvoiceList = () => {
   const displayOrderDate = selectedInvoice?.orderDate || linkedJobCard?.jobDate || selectedInvoice?.date;
   const billTo = getBillToDetails(linkedJobCard, selectedInvoice || {});
   const shipTo = getShipToDetails(linkedJobCard, selectedInvoice || {});
+  const billToState = getStateFromGst(billTo.gstNo);
+  const shipToState = getStateFromGst(shipTo.gstNo);
+
+  const hsnSummaryRows = selectedInvoice
+    ? Object.entries(
+        (selectedInvoice.items || []).reduce((acc, item) => {
+          const hsn = item.hsn || '';
+          acc[hsn] = (acc[hsn] || 0) + (Number(item.total) || 0);
+          return acc;
+        }, {})
+      ).map(([hsn, taxable]) => ({
+        hsn,
+        taxable,
+        cgstRate: isIGST ? 0 : gstPercent / 2,
+        sgstRate: isIGST ? 0 : gstPercent / 2,
+        cgstAmt: isIGST ? 0 : (taxable * (gstPercent / 2)) / 100,
+        sgstAmt: isIGST ? 0 : (taxable * (gstPercent / 2)) / 100,
+        igstRate: isIGST ? gstPercent : 0,
+        igstAmt: isIGST ? (taxable * gstPercent) / 100 : 0,
+      }))
+    : [];
+
+  const summaryTaxableTotal = hsnSummaryRows.reduce((sum, row) => sum + row.taxable, 0);
+  const summaryCgstTotal = hsnSummaryRows.reduce((sum, row) => sum + row.cgstAmt, 0);
+  const summarySgstTotal = hsnSummaryRows.reduce((sum, row) => sum + row.sgstAmt, 0);
+  const summaryIgstTotal = hsnSummaryRows.reduce((sum, row) => sum + row.igstAmt, 0);
+  const summaryTaxTotal = summaryCgstTotal + summarySgstTotal + summaryIgstTotal;
+  const emptyItemRows = Math.max(0, 3 - (selectedInvoice?.items?.length || 0));
 
   useEffect(() => {
     fetchInvoice();
@@ -334,243 +399,281 @@ const InvoiceList = () => {
             <div className="p-8 overflow-y-auto grow a4-page-container print:overflow-visible print:max-h-none print:h-auto print:p-0 print:grow-0" id="printable-content">
               <div
                 id="printable-invoice"
-                className="bg-white mx-auto shadow-none a4-page invoice-print-page font-sans"
-                style={{ color: '#334155' }}
+                className="bg-white mx-auto shadow-none a4-page invoice-print-page gst-invoice-print-page"
               >
-                {/* Traditional Green/Teal Design - Matching Estimates */}
-                <div className="mb-3 print:mb-1">
-                  <h1 className="text-3xl print:text-2xl font-bold text-center mb-2 print:mb-1" style={{ color: '#1e3a8a' }}>
-                    Tax Invoice
-                  </h1>
+                <table className="gst-invoice w-full border-collapse text-black" style={{ fontSize: '9px', fontFamily: 'Arial, sans-serif' }}>
+                  <tbody>
+                    {/* Title */}
+                    <tr>
+                      <td colSpan={8} className="gst-cell text-center font-bold py-1" style={{ fontSize: '13px' }}>
+                        Invoice-cum-Bill of Supply
+                      </td>
+                    </tr>
 
-                  <div className="flex justify-between items-start gap-6">
-                    <div className="flex-1 min-w-0">
-                      <h2 className="text-xl font-black text-gray-900 tracking-tight">Harihar Printers</h2>
-                      <p className="text-[10px] text-gray-700 font-medium italic">Your Vision, Our Print.</p>
+                    {/* Seller + Invoice meta */}
+                    <tr>
+                      <td colSpan={4} rowSpan={3} className="gst-cell align-top p-1" valign="top">
+                        <p className="font-bold text-[11px]">{SELLER.name}</p>
+                        <p>Factory: {SELLER.factory}</p>
+                        <p>Office: {SELLER.office}</p>
+                        <p>GSTIN/UIN: {SELLER.gstin}</p>
+                        <p>State Name: {SELLER.state}, Code: {SELLER.stateCode}</p>
+                        <p>Tel: {SELLER.tel}</p>
+                      </td>
+                      <td className="gst-cell font-semibold">Invoice No.</td>
+                      <td className="gst-cell">{selectedInvoice.invoiceNumber}</td>
+                      <td className="gst-cell font-semibold">Dated</td>
+                      <td className="gst-cell">{fmtInvoiceDate(selectedInvoice.date)}</td>
+                    </tr>
+                    <tr>
+                      <td className="gst-cell font-semibold">Delivery Note</td>
+                      <td className="gst-cell">&nbsp;</td>
+                      <td className="gst-cell font-semibold">Mode/Terms of Payment</td>
+                      <td className="gst-cell">&nbsp;</td>
+                    </tr>
+                    <tr>
+                      <td className="gst-cell font-semibold">Reference No. &amp; Date.</td>
+                      <td className="gst-cell">&nbsp;</td>
+                      <td className="gst-cell font-semibold">Other References</td>
+                      <td className="gst-cell">&nbsp;</td>
+                    </tr>
+                    <tr>
+                      <td colSpan={4} className="gst-cell align-top p-1" valign="top">
+                        <p className="font-semibold">Consignee (Ship to)</p>
+                        <p className="font-bold">{shipTo.partyName}</p>
+                        <p>{shipTo.address}</p>
+                        <p>State Name: {shipToState.state}, Code: {shipToState.code}</p>
+                      </td>
+                      <td className="gst-cell font-semibold">Buyer&apos;s Order No.</td>
+                      <td className="gst-cell">{displayOrderNo}</td>
+                      <td className="gst-cell font-semibold">Dated</td>
+                      <td className="gst-cell">{displayOrderDate ? fmtInvoiceDate(displayOrderDate) : ''}</td>
+                    </tr>
+                    <tr>
+                      <td colSpan={4} className="gst-cell align-top p-1" valign="top">
+                        <p className="font-semibold">Buyer (Bill to)</p>
+                        <p className="font-bold">{billTo.partyName}</p>
+                        <p>{billTo.address}</p>
+                        <p>GSTIN: {billTo.gstNo || 'URP'}</p>
+                        <p>State Name: {billToState.state}, Code: {billToState.code}</p>
+                      </td>
+                      <td className="gst-cell font-semibold">Dispatch Doc No.</td>
+                      <td className="gst-cell">&nbsp;</td>
+                      <td className="gst-cell font-semibold">Delivery Note Date</td>
+                      <td className="gst-cell">&nbsp;</td>
+                    </tr>
+                    <tr>
+                      <td colSpan={4} className="gst-cell">&nbsp;</td>
+                      <td className="gst-cell font-semibold">Dispatched through</td>
+                      <td className="gst-cell">&nbsp;</td>
+                      <td className="gst-cell font-semibold">Destination</td>
+                      <td className="gst-cell">Jaipur</td>
+                    </tr>
+                    <tr>
+                      <td colSpan={4} className="gst-cell">&nbsp;</td>
+                      <td colSpan={2} className="gst-cell font-semibold">Terms of Delivery</td>
+                      <td colSpan={2} className="gst-cell">&nbsp;</td>
+                    </tr>
 
-                      <div className="mt-2">
-                        <h4 className="text-[11px] font-black text-gray-900 border-b-2 mb-2 pb-0.5 inline-block uppercase tracking-wider">Address :</h4>
-                        <div className="text-[12px] space-y-1 font-medium text-gray-600">
-                          <p className="font-bold text-gray-800">Harihar Printers</p>
-                          <p>Office: J-97, Ashok Chowk, Adarsh Nagar, Jaipur</p>
-                          <p>Factory: G-139, Hirawala Ind. Area, Kanota, Jaipur</p>
-                          <p>Tel: +91 94140-43763</p>
-                        </div>
-                      </div>
-                    </div>
-                  
-                    <div className="shrink-0 flex flex-col items-end">
-                      {/* Metadata Table */}
-                      <div className="w-72 min-w-72 border border-gray-200 rounded-lg overflow-hidden">
-                    <table className="w-full text-[11px]" style={{ tableLayout: 'fixed' }}>
-                      <colgroup>
-                        <col className="w-[38%]" />
-                        <col className="w-[62%]" />
-                      </colgroup>
-                      <tbody className="divide-y divide-gray-200">
-                        <tr className="bg-gray-50/50">
-                          <td className="px-2 py-1.5 font-bold text-gray-700 uppercase whitespace-nowrap">DATE :</td>
-                          <td className="px-2 py-1.5 font-bold text-right text-gray-800 whitespace-nowrap">
-                            {new Date(selectedInvoice.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
-                          </td>
+                    {/* Items header */}
+                    <tr className="text-center font-semibold">
+                      <td className="gst-cell w-[4%]">SI<br />No.</td>
+                      <td className="gst-cell">Description of Goods</td>
+                      <td className="gst-cell w-[9%]">HSN/SAC</td>
+                      <td className="gst-cell w-[11%]">Quantity</td>
+                      <td className="gst-cell w-[10%]">Rate<br />(incl. of Tax)</td>
+                      <td className="gst-cell w-[9%]">Rate</td>
+                      <td className="gst-cell w-[5%]">per</td>
+                      <td className="gst-cell w-[12%]">Amount</td>
+                    </tr>
+
+                    {/* Item rows */}
+                    {selectedInvoice.items?.map((item, idx) => {
+                      const rate = Number(item.rate) || 0;
+                      const rateIncl = rate * (1 + gstPercent / 100);
+                      return (
+                        <tr key={idx}>
+                          <td className="gst-cell text-center align-top">{idx + 1}</td>
+                          <td className="gst-cell align-top uppercase">{item.description}</td>
+                          <td className="gst-cell text-center align-top">{item.hsn || ''}</td>
+                          <td className="gst-cell text-right align-top">{Number(item.qty || 0).toFixed(2)} Nos.</td>
+                          <td className="gst-cell text-right align-top">{fmtAmt(rateIncl)}</td>
+                          <td className="gst-cell text-right align-top">{fmtAmt(rate)}</td>
+                          <td className="gst-cell text-center align-top">Nos.</td>
+                          <td className="gst-cell text-right align-top">{fmtAmt(item.total)}</td>
                         </tr>
-                        <tr>
-                          <td className="px-2 py-1.5 font-bold text-gray-700 uppercase whitespace-nowrap">Invoice No :</td>
-                          <td className="px-2 py-1.5 font-bold text-right text-gray-800 whitespace-nowrap">#{selectedInvoice.invoiceNumber}</td>
-                        </tr>
-                        <tr className="bg-gray-50/50">
-                          <td className="px-2 py-1.5 font-bold text-gray-700 uppercase whitespace-nowrap">Order No. :</td>
-                          <td className="px-2 py-1.5 font-bold text-right text-blue-700 whitespace-nowrap">{displayOrderNo}</td>
-                        </tr>
-                        <tr>
-                          <td className="px-2 py-1.5 font-bold text-gray-700 uppercase whitespace-nowrap">Order Date :</td>
-                          <td className="px-2 py-1.5 font-bold text-right text-gray-800 whitespace-nowrap">
-                            {displayOrderDate
-                              ? new Date(displayOrderDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
-                              : '-'}
-                          </td>
-                        </tr>
-                        <tr className="bg-gray-50/50">
-                          <td className="px-2 py-1.5 font-bold text-gray-700 uppercase whitespace-nowrap">GSTIN :</td>
-                          <td className="px-2 py-1.5 font-bold text-right text-blue-700 uppercase text-[10px] whitespace-nowrap">08AALPC9959M1ZV</td>
-                        </tr>
+                      );
+                    })}
 
-                      </tbody>
-                    </table>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-between items-start gap-10 mt-3 print:mt-1">
-                    <div className="flex-1">
-                      <h4 className="text-[11px] font-black text-gray-900 border-b-2 mb-2 pb-0.5 inline-block uppercase tracking-wider">Bill To :</h4>
-                      <div className="text-[12px] space-y-1 font-medium text-gray-600">
-                        <p className="font-bold uppercase text-xs" style={{ color: '#1e3a8a' }}>{billTo.partyName}</p>
-                        <p className="uppercase">{billTo.address || billTo.partyName}</p>
-                        <p>GSTIN: <span className="font-bold">{billTo.gstNo || 'URP'}</span></p>
-                        {billTo.contactNo && <p>Tel: {billTo.contactNo}</p>}
-                        <p>Jaipur, Rajasthan</p>
-                      </div>
-                    </div>
-
-                    <div className="flex-1 flex justify-end pr-22">
-                      <div className="w-48">
-                      <h4 className="text-[11px] font-black text-gray-900 border-b-2 mb-2 pb-0.5 inline-block uppercase tracking-wider">Ship To :</h4>
-                      <div className="text-[12px] space-y-1 font-medium text-gray-600">
-                        <p className="font-bold uppercase text-xs" style={{ color: '#1e3a8a' }}>{shipTo.partyName}</p>
-                        <p className="uppercase">{shipTo.address || shipTo.partyName}</p>
-                        {shipTo.contactNo && <p>Tel: {shipTo.contactNo}</p>}
-                        {shipTo.gstNo && shipTo.gstNo !== billTo.gstNo && (
-                          <p>GSTIN: <span className="font-bold">{shipTo.gstNo}</span></p>
-                        )}
-                        <p>Jaipur, Rajasthan</p>
-                      </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* --- ITEMS TABLE --- */}
-                <div className="mb-4 print:mb-2 border border-gray-200 rounded-sm overflow-hidden flex flex-col">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="text-white text-[12px] font-black uppercase tracking-widest invoice-table-header" style={{ backgroundColor: '#1e3a8a' }}>
-                        <th className="px-3 py-2 print:py-1 border-r border-teal-500/30 w-12 text-center">S.No</th>
-                        <th className="px-3 py-2 print:py-1 border-r border-teal-500/30">Description of Goods/Services</th>
-                        <th className="px-3 py-2 print:py-1 border-r border-teal-500/30 text-center w-36">HSN/SAC</th>
-                        <th className="px-3 py-2 print:py-1 border-r border-teal-500/30 text-center w-20">Qty</th>
-                        <th className="px-3 py-2 print:py-1 border-r border-teal-500/30 text-right w-24">Rate</th>
-                        <th className="px-3 py-2 print:py-1 text-right w-32">Amount</th>
+                    {freight > 0 && (
+                      <tr>
+                        <td className="gst-cell text-center align-top">{(selectedInvoice.items?.length || 0) + 1}</td>
+                        <td className="gst-cell align-top">Freight</td>
+                        <td className="gst-cell">&nbsp;</td>
+                        <td className="gst-cell">&nbsp;</td>
+                        <td className="gst-cell">&nbsp;</td>
+                        <td className="gst-cell">&nbsp;</td>
+                        <td className="gst-cell">&nbsp;</td>
+                        <td className="gst-cell text-right align-top">{fmtAmt(freight)}</td>
                       </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100 grow">
-                      {selectedInvoice.items?.map((item, idx) => (
-                        <tr key={idx} className="text-[13px] group">
-                          <td className="px-3 py-2 print:py-1 border-r border-gray-50 text-center font-bold text-gray-600 align-top">
-                            {idx + 1}
-                          </td>
-                          <td className="px-3 py-2 print:py-1 border-r border-gray-50 align-top">
-                            <div className="space-y-1">
-                              <p className="font-black text-gray-900 uppercase" style={{ color: '#1e3a8a' }}>{item.description}</p>
-                            </div>
-                          </td>
-                          <td className="px-3 py-2 print:py-1 border-r border-gray-50 text-center font-medium align-top text-gray-700 uppercase">
-                            {item.hsn || ''}
-                          </td>
-                          <td className="px-3 py-2 print:py-1 border-r border-gray-50 text-center font-bold align-top text-gray-700">
-                            {item.qty}
-                          </td>
-                          <td className="px-3 py-2 print:py-1 border-r border-gray-50 font-bold align-top text-right text-gray-700">
-                            ₹ {item.rate?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                          </td>
-                          <td className="px-3 py-2 print:py-1 font-black align-top text-right text-gray-900 bg-gray-50/30">
-                            ₹ {item.total?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                          </td>
+                    )}
+
+                    {[...Array(emptyItemRows)].map((_, i) => (
+                      <tr key={`empty-${i}`} className="invoice-fill-row print:hidden">
+                        <td className="gst-cell">&nbsp;</td>
+                        <td className="gst-cell">&nbsp;</td>
+                        <td className="gst-cell">&nbsp;</td>
+                        <td className="gst-cell">&nbsp;</td>
+                        <td className="gst-cell">&nbsp;</td>
+                        <td className="gst-cell">&nbsp;</td>
+                        <td className="gst-cell">&nbsp;</td>
+                        <td className="gst-cell">&nbsp;</td>
+                      </tr>
+                    ))}
+
+                    {/* Tax rows */}
+                    {!isIGST && (
+                      <>
+                        <tr>
+                          <td className="gst-cell">&nbsp;</td>
+                          <td className="gst-cell text-right font-semibold">CGST</td>
+                          <td className="gst-cell">&nbsp;</td>
+                          <td className="gst-cell">&nbsp;</td>
+                          <td className="gst-cell">&nbsp;</td>
+                          <td className="gst-cell">&nbsp;</td>
+                          <td className="gst-cell">&nbsp;</td>
+                          <td className="gst-cell text-right">{fmtAmt(halfGstAmount)}</td>
                         </tr>
-                      ))}
-                      {/* Blank rows — preview only, hidden when printing */}
-                      {[...Array(Math.max(0, 2 - (selectedInvoice.items?.length || 0)))].map((_, i) => (
-                        <tr key={`empty-${i}`} className="invoice-fill-row print:hidden border-0">
-                          <td className="px-3 py-3 border-r border-gray-50">&nbsp;</td>
-                          <td className="px-3 py-3 border-r border-gray-50">&nbsp;</td>
-                          <td className="px-3 py-3 border-r border-gray-50">&nbsp;</td>
-                          <td className="px-3 py-3 border-r border-gray-50">&nbsp;</td>
-                          <td className="px-3 py-3 border-r border-gray-50">&nbsp;</td>
-                          <td className="px-3 py-3">&nbsp;</td>
+                        <tr>
+                          <td className="gst-cell">&nbsp;</td>
+                          <td className="gst-cell text-right font-semibold">SGST</td>
+                          <td className="gst-cell">&nbsp;</td>
+                          <td className="gst-cell">&nbsp;</td>
+                          <td className="gst-cell">&nbsp;</td>
+                          <td className="gst-cell">&nbsp;</td>
+                          <td className="gst-cell">&nbsp;</td>
+                          <td className="gst-cell text-right">{fmtAmt(halfGstAmount)}</td>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                                 {/* Total Section */}
-                  <div className="border-t border-gray-200 mt-auto bg-gray-50/50">
-                    <div className="flex">
-                      <div className="grow p-3 print:p-2">
-                        <p className="text-[10px] font-black text-gray-600 uppercase mb-1 tracking-widest">Amount in Words</p>
-                        <p className="text-[12px] font-bold text-gray-700 italic">{numberToWords(selectedInvoice.totalAmount)} Only</p>
-                      </div>
-                      <div className="flex flex-col w-56 border-l border-gray-200">
-                        <div className="flex justify-between px-3 py-1 print:py-0.5 border-b border-gray-200">
-                          <span className="text-[11px] font-bold text-gray-700 uppercase">Freight</span>
-                          <span className="text-[12px] font-bold text-gray-800">₹ {freight.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                        </div>
-                        <div className="flex justify-between px-3 py-1 print:py-0.5 border-b border-gray-200">
-                          <span className="text-[11px] font-bold text-gray-700 uppercase">Total Amount</span>
-                          <span className="text-[12px] font-bold text-gray-800">₹ {totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                        </div>
-                        <div className="flex justify-between px-3 py-1 print:py-0.5 border-b border-gray-200">
-                          <span className="text-[11px] font-bold text-gray-700 uppercase">CGST {isIGST ? '(0%)' : `(${gstPercent / 2}%)`}</span>
-                          <span className="text-[12px] font-bold text-gray-800">₹ {isIGST ? '0.00' : halfGstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                        </div>
-                        <div className="flex justify-between px-3 py-1 print:py-0.5 border-b border-gray-200">
-                          <span className="text-[11px] font-bold text-gray-700 uppercase">SGST {isIGST ? '(0%)' : `(${gstPercent / 2}%)`}</span>
-                          <span className="text-[12px] font-bold text-gray-800">₹ {isIGST ? '0.00' : halfGstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                        </div>
-                        <div className="flex justify-between px-3 py-1 print:py-0.5 border-b border-gray-200">
-                          <span className="text-[11px] font-bold text-gray-700 uppercase">IGST {isIGST ? `(${gstPercent}%)` : '(0%)'}</span>
-                          <span className="text-[12px] font-bold text-gray-800">₹ {isIGST ? totalGstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 }) : '0.00'}</span>
-                        </div>
-                        <div className="flex justify-between px-3 py-1 print:py-0.5 border-b border-gray-200">
-                          <span className="text-[11px] font-bold text-gray-700 uppercase">Round Off</span>
-                          <span className="text-[12px] font-bold text-gray-800">₹ {roundOff.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                        </div>
-                        <div className="flex justify-between px-3 py-2 print:py-1.5 invoice-grand-total" style={{ backgroundColor: '#1e3a8a' }}>
-                          <span className="text-[12px] font-black text-white uppercase tracking-wider">Grand Total</span>
-                          <span className="text-sm font-black text-white">₹ {selectedInvoice.totalAmount?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                        </div>
-                        <div className="flex justify-between px-3 py-1 print:py-0.5 border-t border-gray-200 bg-gray-50/80">
-                          <span className="text-[11px] font-bold text-gray-700 uppercase">Reverse Charge</span>
-                          <span className="text-[12px] font-bold text-gray-800">{selectedInvoice.reverseCharge || 'No'}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                      </>
+                    )}
+                    {isIGST && (
+                      <tr>
+                        <td className="gst-cell">&nbsp;</td>
+                        <td className="gst-cell text-right font-semibold">IGST</td>
+                        <td className="gst-cell">&nbsp;</td>
+                        <td className="gst-cell">&nbsp;</td>
+                        <td className="gst-cell">&nbsp;</td>
+                        <td className="gst-cell">&nbsp;</td>
+                        <td className="gst-cell">&nbsp;</td>
+                        <td className="gst-cell text-right">{fmtAmt(totalGstAmount)}</td>
+                      </tr>
+                    )}
+                    <tr>
+                      <td className="gst-cell">&nbsp;</td>
+                      <td className="gst-cell text-right font-semibold">Round Off</td>
+                      <td className="gst-cell">&nbsp;</td>
+                      <td className="gst-cell">&nbsp;</td>
+                      <td className="gst-cell">&nbsp;</td>
+                      <td className="gst-cell">&nbsp;</td>
+                      <td className="gst-cell">&nbsp;</td>
+                      <td className="gst-cell text-right">{fmtAmt(roundOff)}</td>
+                    </tr>
+                    <tr>
+                      <td className="gst-cell">&nbsp;</td>
+                      <td className="gst-cell text-right font-bold">Total</td>
+                      <td className="gst-cell">&nbsp;</td>
+                      <td className="gst-cell">&nbsp;</td>
+                      <td className="gst-cell">&nbsp;</td>
+                      <td className="gst-cell">&nbsp;</td>
+                      <td className="gst-cell">&nbsp;</td>
+                      <td className="gst-cell text-right font-bold">₹ {fmtAmt(selectedInvoice.totalAmount)}</td>
+                    </tr>
 
-                {/* --- BANK DETAILS BAR --- */}
-                <div className="mb-3 print:mb-1">
-                  <h4 className="text-[11px] font-black text-gray-900 border-b-2 mb-2 print:mb-1 pb-0.5 inline-block uppercase tracking-wider">Account Details :</h4>
-                  <div className="p-2 print:p-1.5 border border-gray-200 rounded-lg bg-gray-50/30 flex justify-between items-center">
-                  <div className="flex gap-8">
-                    <div>
-                      <p className="text-[10px] font-black text-gray-600 uppercase mb-1">Bank Name</p>
-                      <p className="text-[12px] font-bold text-gray-800">Indusind Bank</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-black text-gray-600 uppercase mb-1">Account Number</p>
-                      <p className="text-[12px] font-bold text-gray-800">650014092175</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-black text-gray-600 uppercase mb-1">IFSC Code</p>
-                      <p className="text-[12px] font-bold text-gray-800 uppercase">INDB0000278</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[10px] font-black text-gray-600 uppercase mb-1">Branch</p>
-                    <p className="text-[12px] font-bold text-gray-800">Raja Park, Jaipur</p>
-                  </div>
-                  </div>
-                </div>
+                    {/* Amount in words */}
+                    <tr>
+                      <td colSpan={8} className="gst-cell">
+                        <span className="font-semibold">Amount Chargeable (in words):</span>{' '}
+                        INR {numberToWords(selectedInvoice.totalAmount)} Only
+                      </td>
+                    </tr>
 
-                {/* --- FOOTER SECTION --- */}
-                <div className="invoice-footer mt-4 print:mt-2 text-[11px] text-gray-700 space-y-2 print:space-y-1">
-                  <div className="grid grid-cols-2 gap-8 print:gap-4">
-                    <div className="space-y-1">
-                      <p className="font-bold text-gray-800 underline uppercase tracking-tighter">Terms & Conditions :</p>
-                      <p>1. Goods once sold will not be taken back.</p>
-                      <p>2. Interest @18% p.a. will be charged if payment is not made within 15 days.</p>
-                      <p>3. Subject to Jaipur Jurisdiction Only.</p>
-                    </div>
-                    <div className="text-right">
-                       <p className="font-bold uppercase tracking-widest text-[#1e3a8a]">For Harihar Printers</p>
-                       <p className="mt-6 print:mt-3 font-black text-gray-800">Authorised Signatory</p>
-                    </div>
-                  </div>
+                    {/* HSN summary header */}
+                    <tr className="text-center font-semibold">
+                      <td colSpan={2} className="gst-cell">HSN/SAC</td>
+                      <td colSpan={2} className="gst-cell">Taxable Value</td>
+                      <td colSpan={2} className="gst-cell">CGST</td>
+                      <td colSpan={2} className="gst-cell">SGST/UTGST</td>
+                    </tr>
+                    <tr className="text-center font-semibold">
+                      <td colSpan={2} className="gst-cell">&nbsp;</td>
+                      <td colSpan={2} className="gst-cell">&nbsp;</td>
+                      <td className="gst-cell">Rate</td>
+                      <td className="gst-cell">Amount</td>
+                      <td className="gst-cell">Rate</td>
+                      <td className="gst-cell">Amount</td>
+                    </tr>
 
-                  <div className="pt-2 print:pt-1 text-center">
+                    {hsnSummaryRows.map((row) => (
+                      <tr key={row.hsn || 'na'}>
+                        <td colSpan={2} className="gst-cell text-center">{row.hsn}</td>
+                        <td colSpan={2} className="gst-cell text-right">{fmtAmt(row.taxable)}</td>
+                        <td className="gst-cell text-center">{isIGST ? '' : `${row.cgstRate}%`}</td>
+                        <td className="gst-cell text-right">{isIGST ? '' : fmtAmt(row.cgstAmt)}</td>
+                        <td className="gst-cell text-center">{isIGST ? '' : `${row.sgstRate}%`}</td>
+                        <td className="gst-cell text-right">{isIGST ? '' : fmtAmt(row.sgstAmt)}</td>
+                      </tr>
+                    ))}
 
-                    <p className="text-[10px] font-bold text-gray-600 mt-1 uppercase tracking-widest">E. & O. E.</p>
-                  </div>
-                </div>
+                    <tr className="font-semibold">
+                      <td colSpan={2} className="gst-cell text-right">Total</td>
+                      <td colSpan={2} className="gst-cell text-right">{fmtAmt(summaryTaxableTotal)}</td>
+                      <td className="gst-cell">&nbsp;</td>
+                      <td className="gst-cell text-right">{fmtAmt(summaryCgstTotal)}</td>
+                      <td className="gst-cell">&nbsp;</td>
+                      <td className="gst-cell text-right">{fmtAmt(summarySgstTotal)}</td>
+                    </tr>
+
+                    <tr>
+                      <td colSpan={8} className="gst-cell">
+                        <span className="font-semibold">Tax Amount (in words):</span>{' '}
+                        INR {numberToWords(summaryTaxTotal)} Only
+                      </td>
+                    </tr>
+
+                    {/* Footer */}
+                    <tr>
+                      <td colSpan={4} className="gst-cell align-top p-1" valign="top">
+                        <p className="font-semibold">Company&apos;s PAN :</p>
+                        <p className="font-semibold mt-2">Declaration</p>
+                        <p className="mt-1 leading-snug">
+                          We declare that this invoice shows the actual price of the goods described and that all
+                          particulars are true and correct. Goods once sold will not be taken back. Interest @18% p.a.
+                          will be charged if payment is not made within 15 days.
+                        </p>
+                      </td>
+                      <td colSpan={4} className="gst-cell align-top p-1" valign="top">
+                        <p className="font-semibold">Company&apos;s Bank Details</p>
+                        <p>A/c Holder&apos;s Name: {SELLER.bank.holder}</p>
+                        <p>Bank Name: {SELLER.bank.name}</p>
+                        <p>A/c No.: {SELLER.bank.account}</p>
+                        <p>Branch &amp; IFS Code: {SELLER.bank.branch} &amp; {SELLER.bank.ifsc}</p>
+                        <p className="text-right mt-6 font-semibold">for {SELLER.name}</p>
+                        <p className="text-right mt-8">Authorised Signatory</p>
+                      </td>
+                    </tr>
+
+                    <tr>
+                      <td colSpan={8} className="gst-cell text-center font-semibold py-1">
+                        SUBJECT TO JAIPUR JURISDICTION
+                      </td>
+                    </tr>
+                    <tr>
+                      <td colSpan={8} className="gst-cell text-center py-1">
+                        This is a Computer Generated Invoice
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>

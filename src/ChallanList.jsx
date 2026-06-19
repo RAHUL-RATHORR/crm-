@@ -6,6 +6,7 @@ import { printElement } from './utils/printDocument';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
 import { getBillToDetails, getShipToDetails } from './utils/shipAddress';
 import { numberToWords } from './utils/numberToWords';
+import { getChallanLineItems, computeLineItemsTotals, buildMergedChallanMeta } from './utils/challanTotals';
 
 const ChallanList = () => {
   const navigate = useNavigate();
@@ -14,29 +15,45 @@ const ChallanList = () => {
   const [challanToDelete, setChallanToDelete] = useState(null);
   const [openDropdownId, setOpenDropdownId] = useState(null);
 
-  // New states for Printing
-  const [selectedChallan, setSelectedChallan] = useState(null);
+  // Printing states
+  const [previewChallans, setPreviewChallans] = useState([]);
+  const [selectedChallanIds, setSelectedChallanIds] = useState([]);
+  const [partyFilter, setPartyFilter] = useState('');
   const [tempGstType, setTempGstType] = useState('CGST/SGST');
+  const isIGST = tempGstType === 'IGST';
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [jobCards, setJobCards] = useState([]);
 
-  const gstPercent = selectedChallan ? (selectedChallan.gstPercent ?? 18) : 18;
-  const totalAmount = selectedChallan ? (selectedChallan.total ?? 0) : 0;
-  const totalGstAmount = (totalAmount * gstPercent) / 100;
-  const halfGstAmount = totalGstAmount / 2;
-  const isIGST = tempGstType === 'IGST';
-  const rawGrandTotal = totalAmount + totalGstAmount;
-  const grandTotal = Math.round(rawGrandTotal);
-  const roundOff = grandTotal - rawGrandTotal;
+  const isMergedPrint = previewChallans.length > 1;
+  const primaryChallan = previewChallans[0] || null;
 
-  const linkedJobCard = selectedChallan
-    ? jobCards.find((card) => card.jobNumber === selectedChallan.jobNumber)
+  const challanItems = previewChallans.flatMap(getChallanLineItems);
+  const { subTotal: totalAmount, gstAmount: totalGstAmount, halfGst: halfGstAmount, grandTotal, roundOff } =
+    computeLineItemsTotals(challanItems, primaryChallan?.gstPercent ?? 18);
+  const mergedMeta = buildMergedChallanMeta(previewChallans);
+
+  const linkedJobCard = primaryChallan
+    ? jobCards.find((card) => card.jobNumber === primaryChallan.jobNumber)
     : null;
 
-  const challanPartyFallback = selectedChallan ? { partyName: selectedChallan.partyName } : {};
+  const challanPartyFallback = primaryChallan ? { partyName: primaryChallan.partyName } : {};
   const billTo = getBillToDetails(linkedJobCard, challanPartyFallback);
   const shipTo = getShipToDetails(linkedJobCard, challanPartyFallback);
+
+  const partyCounts = challans.reduce((acc, ch) => {
+    const name = (ch.partyName || '').trim();
+    if (name) acc[name] = (acc[name] || 0) + 1;
+    return acc;
+  }, {});
+
+  const filteredChallans = partyFilter
+    ? challans.filter((ch) => (ch.partyName || '').toLowerCase() === partyFilter.toLowerCase())
+    : challans;
+
+  const selectedPartyName = selectedChallanIds.length
+    ? challans.find((ch) => ch._id === selectedChallanIds[0])?.partyName
+    : '';
 
   useEffect(() => {
     fetchChallans();
@@ -100,16 +117,50 @@ const ChallanList = () => {
     }
   };
 
-  // Printing functions
+  const toggleChallanSelect = (ch) => {
+    setSelectedChallanIds((prev) => {
+      if (prev.includes(ch._id)) {
+        return prev.filter((id) => id !== ch._id);
+      }
+      if (prev.length > 0) {
+        const first = challans.find((item) => item._id === prev[0]);
+        if (first && first.partyName !== ch.partyName) {
+          alert('Sirf ek hi party ke challan select kar sakte ho.');
+          return prev;
+        }
+      }
+      return [...prev, ch._id];
+    });
+  };
+
+  const selectAllForParty = () => {
+    if (!partyFilter) return;
+    const ids = filteredChallans.map((ch) => ch._id);
+    setSelectedChallanIds(ids);
+  };
+
+  const clearSelection = () => setSelectedChallanIds([]);
+
   const openPreview = (ch) => {
-    setSelectedChallan(ch);
+    setPreviewChallans([ch]);
     setTempGstType(ch.gstType || 'CGST/SGST');
+    setIsModalOpen(true);
+  };
+
+  const openMergedPreview = () => {
+    const selected = challans.filter((ch) => selectedChallanIds.includes(ch._id));
+    if (selected.length < 2) {
+      alert('Combined print ke liye kam se kam 2 challan select karo.');
+      return;
+    }
+    setPreviewChallans(selected);
+    setTempGstType(selected[0]?.gstType || 'CGST/SGST');
     setIsModalOpen(true);
   };
 
   const closePreview = () => {
     setIsModalOpen(false);
-    setSelectedChallan(null);
+    setPreviewChallans([]);
   };
 
   const handlePrint = () => {
@@ -117,11 +168,10 @@ const ChallanList = () => {
   };
 
   const handleDownloadPDF = async () => {
-    await downloadAsPDF(
-      'printable-challan',
-      `Challan_${selectedChallan.challanNo}`,
-      setIsGenerating
-    );
+    const label = isMergedPrint
+      ? `Challan_Combined_${primaryChallan?.partyName || 'party'}`
+      : `Challan_${primaryChallan?.challanNo}`;
+    await downloadAsPDF('printable-challan', label, setIsGenerating);
   };
 
   return (
@@ -140,20 +190,76 @@ const ChallanList = () => {
         </div>
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-          <div className="p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 border-b border-gray-50">
-            <h2 className="text-lg font-bold text-gray-800">Challan Listings</h2>
-            <button
-              onClick={() => navigate('/challan/add')}
-              className="flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-sm active:scale-95"
-            >
-              <Plus size={18} /> Add New
-            </button>
+          <div className="p-4 sm:p-6 flex flex-col gap-4 border-b border-gray-50">
+            <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4">
+              <h2 className="text-lg font-bold text-gray-800">Challan Listings</h2>
+              <button
+                onClick={() => navigate('/challan/add')}
+                className="flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-sm active:scale-95"
+              >
+                <Plus size={18} /> Add New
+              </button>
+            </div>
+            <div className="flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
+              <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+                <select
+                  value={partyFilter}
+                  onChange={(e) => {
+                    setPartyFilter(e.target.value);
+                    setSelectedChallanIds([]);
+                  }}
+                  className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm font-medium min-w-48"
+                >
+                  <option value="">All Parties</option>
+                  {Object.entries(partyCounts)
+                    .sort(([a], [b]) => a.localeCompare(b))
+                    .map(([name, count]) => (
+                      <option key={name} value={name}>{name} ({count} challan{count > 1 ? 's' : ''})</option>
+                    ))}
+                </select>
+                {partyFilter && (
+                  <button
+                    type="button"
+                    onClick={selectAllForParty}
+                    className="text-sm font-semibold text-blue-700 hover:text-blue-800"
+                  >
+                    Select all for {partyFilter}
+                  </button>
+                )}
+              </div>
+              {selectedChallanIds.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm text-gray-600 font-medium">
+                    {selectedChallanIds.length} selected{selectedPartyName ? ` — ${selectedPartyName}` : ''}
+                  </span>
+                  {selectedChallanIds.length >= 2 && (
+                    <button
+                      type="button"
+                      onClick={openMergedPreview}
+                      className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm"
+                    >
+                      <Printer size={16} /> Print Combined
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={clearSelection}
+                    className="text-sm font-semibold text-gray-500 hover:text-gray-700 px-3 py-2"
+                  >
+                    Clear
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="overflow-x-auto min-h-100 pb-40">
             <table className="w-full text-left whitespace-nowrap min-w-200">
               <thead>
                 <tr className="bg-gray-50 text-gray-600 uppercase text-[10px] sm:text-xs font-bold tracking-wider">
+                  <th className="px-3 py-4 w-10">
+                    <span className="sr-only">Select</span>
+                  </th>
                   <th className="px-4 sm:px-6 py-4">S.No.</th>
                   <th className="px-4 sm:px-6 py-4">Challan Number</th>
                   <th className="px-4 sm:px-6 py-4">Job Card</th>
@@ -164,15 +270,24 @@ const ChallanList = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {challans.length === 0 ? (
+                {filteredChallans.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className="px-4 sm:px-6 py-10 text-center text-gray-500">
-                      No challans found.
+                    <td colSpan="8" className="px-4 sm:px-6 py-10 text-center text-gray-500">
+                      {partyFilter ? `No challans found for ${partyFilter}.` : 'No challans found.'}
                     </td>
                   </tr>
                 ) : (
-                  challans.map((ch, index) => (
-                    <tr key={ch._id} className="hover:bg-gray-50/80 transition-colors group">
+                  filteredChallans.map((ch, index) => (
+                    <tr key={ch._id} className={`hover:bg-gray-50/80 transition-colors group ${selectedChallanIds.includes(ch._id) ? 'bg-blue-50/40' : ''}`}>
+                      <td className="px-3 py-4 text-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedChallanIds.includes(ch._id)}
+                          onChange={() => toggleChallanSelect(ch)}
+                          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          title="Combined print ke liye select karo"
+                        />
+                      </td>
                       <td className="px-4 sm:px-6 py-4 text-sm text-gray-500">{index + 1}</td>
                       <td className="px-4 sm:px-6 py-4 text-sm font-semibold text-blue-600 underline underline-offset-4 decoration-blue-100">{ch.challanNo}</td>
                       <td className="px-4 sm:px-6 py-4 text-sm font-medium text-gray-800">
@@ -182,7 +297,7 @@ const ChallanList = () => {
                         {ch.jobName}
                       </td>
                       <td className="px-4 sm:px-6 py-4 text-sm font-medium text-gray-800">{ch.partyName}</td>
-                      <td className="px-4 sm:px-6 py-4 text-sm font-bold text-gray-900">₹ {ch.total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                      <td className="px-4 sm:px-6 py-4 text-sm font-bold text-gray-900">₹ {(ch.grandTotal ?? ch.total).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                       <td className="px-4 sm:px-6 py-4 text-xs sm:text-sm text-gray-500">
                         {new Date(ch.createdAt).toLocaleDateString()}
                       </td>
@@ -229,12 +344,13 @@ const ChallanList = () => {
       </div>
 
       {/* Challan Preview & Print Modal */}
-      {isModalOpen && selectedChallan && (
+      {isModalOpen && primaryChallan && (
         <div className="print-modal-overlay fixed inset-0 bg-black/60 z-100 flex items-center justify-center p-4 overflow-y-auto print:static print:overflow-visible print:bg-white print:p-0">
           <div className="print-modal-shell bg-white border border-gray-300 w-full max-w-4xl relative max-h-[95vh] flex flex-col shadow-none print:max-h-none print:overflow-visible print:border-0 print:shadow-none">
-            {/* Modal Header */}
             <div className="p-4 border-b flex justify-between items-center bg-white modal-header no-print">
-              <h2 className="text-xl font-bold text-gray-800">Challan Preview</h2>
+              <h2 className="text-xl font-bold text-gray-800">
+                {isMergedPrint ? `Combined Challan (${previewChallans.length})` : 'Challan Preview'}
+              </h2>
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-1.5 bg-gray-100 px-3 py-2 rounded-xl text-sm font-bold border border-gray-200">
                   <span className="text-gray-500 font-medium">GST Mode:</span>
@@ -307,16 +423,22 @@ const ChallanList = () => {
                         <tr className="bg-gray-50/50">
                           <td className="px-2 py-1.5 font-bold text-gray-700 uppercase tracking-tighter">DATE :</td>
                           <td className="px-2 py-1.5 font-bold text-right text-gray-800">
-                            {new Date(selectedChallan.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                            {mergedMeta.date
+                              ? new Date(mergedMeta.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                              : ''}
                           </td>
                         </tr>
                         <tr>
                           <td className="px-2 py-1.5 font-bold text-gray-700 uppercase tracking-tighter">Challan No :</td>
-                          <td className="px-2 py-1.5 font-bold text-right text-gray-800">#{selectedChallan.challanNo}</td>
+                          <td className="px-2 py-1.5 font-bold text-right text-gray-800 text-[10px] leading-tight">
+                            {isMergedPrint ? mergedMeta.challanLabel : `#${primaryChallan.challanNo}`}
+                          </td>
                         </tr>
                         <tr className="bg-gray-50/50">
                           <td className="px-2 py-1.5 font-bold text-gray-700 uppercase tracking-tighter">Job Ref :</td>
-                          <td className="px-2 py-1.5 font-bold text-right text-blue-700">{selectedChallan.jobNumber}</td>
+                          <td className="px-2 py-1.5 font-bold text-right text-blue-700 text-[10px] leading-tight">
+                            {isMergedPrint ? mergedMeta.jobRefLabel : primaryChallan.jobNumber}
+                          </td>
                         </tr>
                       </tbody>
                     </table>
@@ -361,17 +483,18 @@ const ChallanList = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 grow">
-                      {(selectedChallan.items && selectedChallan.items.length > 0 ? selectedChallan.items : [{ description: selectedChallan.description || selectedChallan.jobName, qty: selectedChallan.qty, rate: selectedChallan.rate, total: selectedChallan.total }]).map((item, idx) => (
-                        <tr key={idx} className="text-[13px] group">
+                      {challanItems.map((item, idx) => (
+                        <tr key={`${item.challanNo}-${idx}`} className="text-[13px] group">
                           <td className="px-4 py-4 border-r border-gray-50 font-bold align-top text-center text-gray-700">
                             {item.qty} NOS
                           </td>
                           <td className="px-4 py-4 border-r border-gray-50 align-top">
                             <div className="space-y-1">
-                              <p className="font-black text-gray-900 uppercase text-xs" style={{ color: '#1e3a8a' }}>{item.description || selectedChallan.jobName}</p>
-                              {idx === 0 && selectedChallan.jobNumber && (
+                              <p className="font-black text-gray-900 uppercase text-xs" style={{ color: '#1e3a8a' }}>{item.description}</p>
+                              {(isMergedPrint || item.jobNumber) && (
                                 <p className="text-[11px] text-gray-700 font-medium leading-relaxed italic uppercase">
-                                  Job Ref: {selectedChallan.jobNumber}
+                                  {item.jobNumber && `Job Ref: ${item.jobNumber}`}
+                                  {item.challanNo && isMergedPrint && ` • ${item.challanNo}`}
                                 </p>
                               )}
                             </div>
@@ -385,7 +508,7 @@ const ChallanList = () => {
                         </tr>
                       ))}
                       {/* Blank rows to fill space — hidden only when printing */}
-                      {[1, 2, 3, 4, 5, 6].map((i) => (
+                      {[1, 2, 3, 4, 5, 6].slice(0, isMergedPrint ? 0 : 6).map((i) => (
                         <tr key={i} className="invoice-fill-row border-0">
                           <td className="px-4 py-4 border-r border-gray-50">&nbsp;</td>
                           <td className="px-4 py-4 border-r border-gray-50">&nbsp;</td>
@@ -409,15 +532,15 @@ const ChallanList = () => {
                           <span className="text-[12px] font-bold text-gray-800">₹ {totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                         </div>
                         <div className="flex justify-between px-4 py-1.5 border-b border-gray-200">
-                          <span className="text-[11px] font-bold text-gray-700 uppercase">CGST {isIGST ? '(0%)' : `(${gstPercent / 2}%)`}</span>
+                          <span className="text-[11px] font-bold text-gray-700 uppercase">CGST</span>
                           <span className="text-[12px] font-bold text-gray-800">₹ {isIGST ? '0.00' : halfGstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                         </div>
                         <div className="flex justify-between px-4 py-1.5 border-b border-gray-200">
-                          <span className="text-[11px] font-bold text-gray-700 uppercase">SGST {isIGST ? '(0%)' : `(${gstPercent / 2}%)`}</span>
+                          <span className="text-[11px] font-bold text-gray-700 uppercase">SGST</span>
                           <span className="text-[12px] font-bold text-gray-800">₹ {isIGST ? '0.00' : halfGstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                         </div>
                         <div className="flex justify-between px-4 py-1.5 border-b border-gray-200">
-                          <span className="text-[11px] font-bold text-gray-700 uppercase">IGST {isIGST ? `(${gstPercent}%)` : '(0%)'}</span>
+                          <span className="text-[11px] font-bold text-gray-700 uppercase">IGST</span>
                           <span className="text-[12px] font-bold text-gray-800">₹ {isIGST ? totalGstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 }) : '0.00'}</span>
                         </div>
                         <div className="flex justify-between px-4 py-1.5 border-b border-gray-200">

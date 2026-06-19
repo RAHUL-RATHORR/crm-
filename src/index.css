@@ -61,12 +61,31 @@
 }
 
 /* Invoice preview — keep content off page edges */
-.invoice-print-page.a4-page {
+.invoice-print-page.a4-page,
+.gst-invoice-print-page.a4-page {
   width: 100%;
   max-width: 186mm;
   min-height: auto;
   padding: 8mm 10mm;
   box-sizing: border-box;
+}
+
+/* GST traditional invoice layout */
+.gst-invoice {
+  border: 1px solid #000;
+  color: #000;
+}
+
+.gst-invoice .gst-cell {
+  border: 1px solid #000;
+  padding: 2px 4px;
+  vertical-align: top;
+  line-height: 1.35;
+}
+
+.gst-invoice-print-page {
+  background: #fff;
+  color: #000;
 }
 
 #print-root-temp {
@@ -225,6 +244,18 @@
 
   .invoice-print-page .invoice-fill-row {
     display: none !important;
+  }
+
+  .gst-invoice-print-page .invoice-fill-row {
+    display: none !important;
+  }
+
+  .gst-invoice-print-page,
+  .gst-invoice-print-page .gst-invoice,
+  .gst-invoice-print-page .gst-cell {
+    color: #000 !important;
+    background: #fff !important;
+    border-color: #000 !important;
   }
 
   .invoice-print-page .invoice-footer {

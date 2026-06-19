@@ -14,9 +14,14 @@ const challanSchema = new mongoose.Schema({
     description: { type: String, required: true },
     qty: { type: Number, default: 0 },
     rate: { type: Number, default: 0 },
-    total: { type: Number, default: 0 }
+    total: { type: Number, default: 0 },
+    gstPercent: { type: Number, default: 18 },
+    gstAmount: { type: Number, default: 0 }
   }],
   total: { type: Number, default: 0 },
+  gstAmount: { type: Number, default: 0 },
+  grandTotal: { type: Number, default: 0 },
+  gstPercent: { type: Number, default: 18 },
   note: { type: String },
   paymentStatus: { type: String, default: 'Pending' },
   createdAt: { type: Date, default: Date.now },
