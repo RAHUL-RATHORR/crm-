@@ -88,6 +88,12 @@
   color: #000;
 }
 
+.job-card-printing-qty {
+  font-size: 10px;
+  line-height: 1.3;
+  font-weight: 700;
+}
+
 #print-root-temp {
   display: none;
 }
@@ -309,6 +315,12 @@
   #printable-inner {
     visibility: visible !important;
     display: block !important;
+  }
+
+  .job-card-printing-qty {
+    font-size: 8px !important;
+    line-height: 1.2 !important;
+    font-weight: 700 !important;
   }
 
   /* Prevent sections from breaking awkwardly */

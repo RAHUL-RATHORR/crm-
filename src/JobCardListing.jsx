@@ -661,9 +661,11 @@ export default function JobCardListing() {
                         </div>
                       ))}
                       </div>
-                      <div className="mt-4 p-3 bg-indigo-50/50 rounded-lg border border-indigo-100 text-center">
-                        <span className="text-[11px] font-black text-gray-600 uppercase block mb-1">Printing Quantity</span>
-                        <span className="text-2xl font-black text-indigo-700">{selectedCard.printingQty || 0}</span>
+                      <div className="mt-4 p-3 bg-indigo-50/50 rounded-lg border border-indigo-100 text-center print:p-1.5">
+                        <span className="text-[11px] font-black text-gray-600 uppercase block mb-1 print:text-[8px] print:mb-0.5">Printing Quantity</span>
+                        <span className="job-card-printing-qty text-[10px] font-bold text-indigo-700 whitespace-pre-wrap break-words uppercase leading-snug">
+                          {selectedCard.printingQty || 0}
+                        </span>
                       </div>
                     </section>
 

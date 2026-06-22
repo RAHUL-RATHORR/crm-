@@ -942,14 +942,14 @@ export default function JobCardForm() {
                 placeholder="e.g. 4, 8 plates"
               />
             </div>
-            <div className="flex flex-col">
-              <label className="text-sm font-medium text-gray-700 mb-1">Printing</label>
-              <input
-                type="text"
+            <div className="flex flex-col sm:col-span-2 lg:col-span-3">
+              <label className="text-sm font-medium text-gray-700 mb-1">Printing Quantity</label>
+              <textarea
                 name="printingQty"
+                rows={4}
                 defaultValue={editData?.printingQty}
-                className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                placeholder="e.g. 1000, 2 colors"
+                className="border border-gray-200 rounded-lg px-3 py-2 text-xs leading-snug focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-y min-h-20"
+                placeholder="e.g. 135 sheets white, pink copy, yellow copy..."
               />
             </div>
             <div className="flex flex-col">
