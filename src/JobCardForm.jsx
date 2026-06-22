@@ -948,7 +948,7 @@ export default function JobCardForm() {
                 name="printingQty"
                 rows={4}
                 defaultValue={editData?.printingQty}
-                className="border border-gray-200 rounded-lg px-3 py-2 text-xs leading-snug focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-y min-h-20"
+                className="border border-gray-200 rounded-lg px-3 py-2 text-base leading-relaxed focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-y min-h-20"
                 placeholder="e.g. 135 sheets white, pink copy, yellow copy..."
               />
             </div>
