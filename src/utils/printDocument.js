@@ -35,6 +35,16 @@ export function printElement(elementId) {
     return;
   }
 
+  const isJobCard = elementId === 'printable-inner' || element.classList.contains('job-card-print-page');
+  const isTaxInvoice = elementId === 'printable-invoice' || element.classList.contains('tax-invoice-print-page');
+  const isChallan = elementId === 'printable-challan' || element.classList.contains('challan-print-page');
+  const isFullWidth = isJobCard || isTaxInvoice || isChallan;
+  const pageMargin = isJobCard ? '0' : (isFullWidth ? '5mm' : '12mm');
+  const contentPadding = isJobCard ? '10mm' : (isFullWidth ? '2mm 3mm' : '6mm 8mm');
+  const wrapperStyle = isFullWidth
+    ? 'width:100%;max-width:100%;margin:0;padding:0;background:#ffffff;box-sizing:border-box;min-height:100vh;'
+    : 'width:210mm;max-width:210mm;margin:0 auto;padding:0;background:white;box-sizing:border-box;';
+
   document.getElementById('print-root-temp')?.remove();
   document.body.classList.remove('is-printing');
 
@@ -63,7 +73,7 @@ export function printElement(elementId) {
         <meta charset="UTF-8" />
         <title>Print</title>
         <style>
-          @page { size: A4; margin: 12mm; }
+          @page { size: A4; margin: ${pageMargin}; }
           * {
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
@@ -72,13 +82,39 @@ export function printElement(elementId) {
           html, body {
             margin: 0 !important;
             padding: 0 !important;
-            background: white !important;
+            background: #ffffff !important;
             overflow: visible !important;
             height: auto !important;
             width: 100% !important;
           }
+          body > div {
+            background: #ffffff !important;
+            width: 100% !important;
+            max-width: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
           .no-print, button, .lucide, [role="button"] { display: none !important; }
-          .a4-page, .invoice-print-page {
+          .job-card-print-page,
+          #printable-inner.job-card-print-page,
+          .a4-page.job-card-print-page {
+            width: 100% !important;
+            max-width: none !important;
+            min-height: 0 !important;
+            height: auto !important;
+            max-height: none !important;
+            padding: ${contentPadding} !important;
+            margin: 0 !important;
+            background: #ffffff !important;
+            display: block !important;
+            overflow: visible !important;
+            position: static !important;
+            border: none !important;
+            box-shadow: none !important;
+          }
+          .job-card-print-page .min-h-25 { min-height: 0 !important; }
+          .job-card-print-page.mx-auto { margin-left: 0 !important; margin-right: 0 !important; }
+          .a4-page:not(.job-card-print-page):not(.tax-invoice-print-page):not(.challan-print-page), .invoice-print-page:not(.tax-invoice-print-page) {
             width: 186mm !important;
             max-width: 186mm !important;
             min-height: 0 !important;
@@ -92,23 +128,26 @@ export function printElement(elementId) {
             position: static !important;
           }
           .challan-print-page {
-            width: 208mm !important;
-            max-width: 208mm !important;
+            width: 100% !important;
+            max-width: none !important;
             min-height: 0 !important;
             height: auto !important;
             max-height: none !important;
-            padding: 12mm !important;
-            margin: 0 auto !important;
+            padding: ${contentPadding} !important;
+            margin: 0 !important;
             background: white !important;
             display: block !important;
             overflow: visible !important;
             position: static !important;
+            border: none !important;
+            box-shadow: none !important;
           }
+          .challan-print-page.mx-auto { margin-left: 0 !important; margin-right: 0 !important; }
           .challan-print-page .challan-items-table { min-height: 0 !important; }
           .challan-print-page .invoice-footer { margin-top: 1rem !important; page-break-inside: avoid !important; }
           .challan-print-page .invoice-footer > div:first-child { padding-top: 1.5rem !important; }
           .challan-print-page .invoice-footer > div:last-child { padding-top: 0.5rem !important; }
-          .a4-page *, .invoice-print-page *, .challan-print-page * {
+          .a4-page *, .invoice-print-page *, .challan-print-page *, .job-card-print-page * {
             overflow: visible !important;
             max-height: none !important;
           }
@@ -149,13 +188,114 @@ export function printElement(elementId) {
             background: #fff !important;
             border-color: #000 !important;
           }
+          .tax-invoice-print-page {
+            width: 100% !important;
+            max-width: none !important;
+            min-height: 0 !important;
+            height: auto !important;
+            max-height: none !important;
+            padding: ${contentPadding} !important;
+            margin: 0 !important;
+            background: #ffffff !important;
+            display: block !important;
+            overflow: visible !important;
+            position: static !important;
+            border: none !important;
+            box-shadow: none !important;
+          }
+          .tax-invoice-print-page .tax-blue,
+          .tax-invoice-print-page .tax-copy-box {
+            background-color: #d9e9f7 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          .tax-invoice-print-page .tax-invoice {
+            width: 100% !important;
+          }
+          .tax-invoice-print-page .tax-cell,
+          .tax-invoice-print-page td,
+          .tax-invoice-print-page th {
+            color: #000 !important;
+            border-color: #000 !important;
+          }
           .invoice-print-page td,
           .invoice-print-page th { padding-top: 3px !important; padding-bottom: 3px !important; }
           .invoice-print-page .invoice-footer { page-break-inside: avoid !important; }
+          ${isJobCard ? `
+          @page { size: A4; margin: 0 !important; }
+          html, body, body > div, .job-card-print-page, .a4-page.job-card-print-page {
+            background: #ffffff !important;
+            width: 100% !important;
+            max-width: none !important;
+            margin: 0 !important;
+          }
+          .job-card-print-page, .a4-page.job-card-print-page {
+            padding: 10mm !important;
+            border: none !important;
+            box-shadow: none !important;
+          }
+          .job-card-print-page .font-medium { font-weight: 700 !important; }
+          .job-card-print-page .font-bold { font-weight: 800 !important; }
+          .job-card-print-page .font-black { font-weight: 900 !important; }
+          .job-card-print-page .italic { font-style: normal !important; font-weight: 700 !important; }
+          .job-card-print-page .opacity-60 { opacity: 1 !important; }
+          .job-card-print-page [class*="text-gray-4"],
+          .job-card-print-page [class*="text-gray-5"],
+          .job-card-print-page [class*="text-gray-6"] { color: #1f2937 !important; font-weight: 700 !important; }
+          .job-card-print-page [class*="text-gray-7"] { color: #111827 !important; font-weight: 800 !important; }
+          .job-card-print-page [class*="text-blue"] { color: #1e40af !important; font-weight: 800 !important; }
+          .job-card-print-page [class*="text-indigo"],
+          .job-card-print-page .job-card-printing-qty { color: #312e81 !important; font-weight: 800 !important; }
+          .job-card-print-page [class*="text-cyan"] { color: #0e7490 !important; font-weight: 800 !important; }
+          .job-card-print-page [class*="text-amber"] { color: #b45309 !important; font-weight: 800 !important; }
+          .job-card-print-page [class*="text-rose"] { color: #be123c !important; font-weight: 800 !important; }
+          ` : ''}
+          ${isChallan ? `
+          @page { size: A4; margin: 5mm !important; }
+          html, body, body > div, .challan-print-page {
+            background: #ffffff !important;
+            width: 100% !important;
+            max-width: none !important;
+            margin: 0 !important;
+          }
+          ` : ''}
+          ${isTaxInvoice ? `
+          @page { size: A4; margin: 5mm !important; }
+          html, body, body > div, .tax-invoice-print-page {
+            background: #ffffff !important;
+            width: 100% !important;
+            max-width: none !important;
+            margin: 0 !important;
+          }
+          .tax-invoice-print-page .tax-invoice,
+          .tax-invoice-print-page .tax-cell,
+          .tax-invoice-print-page td,
+          .tax-invoice-print-page th,
+          .tax-invoice-print-page p {
+            color: #000 !important;
+            font-weight: 600 !important;
+          }
+          .tax-invoice-print-page .tax-field-label,
+          .tax-invoice-print-page .tax-field-colon,
+          .tax-invoice-print-page .tax-blue,
+          .tax-invoice-print-page .tax-title-text,
+          .tax-invoice-print-page .tax-section-title,
+          .tax-invoice-print-page .tax-summary-label,
+          .tax-invoice-print-page .tax-summary-value,
+          .tax-invoice-print-page .font-bold {
+            font-weight: 800 !important;
+            color: #000 !important;
+          }
+          .tax-invoice-print-page .tax-company-name { font-weight: 900 !important; }
+          .tax-invoice-print-page .tax-item-total,
+          .tax-invoice-print-page .tax-amount-words { font-weight: 800 !important; }
+          .tax-invoice-print-page .tax-field-value,
+          .tax-invoice-print-page .tax-item-value { font-weight: 700 !important; color: #111 !important; }
+          ` : ''}
         </style>
       </head>
       <body class="bg-white">
-        <div style="width:210mm;max-width:210mm;margin:0 auto;padding:0;background:white;box-sizing:border-box;">
+        <div style="${wrapperStyle}">
           ${element.innerHTML}
         </div>
       </body>

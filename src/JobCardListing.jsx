@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PlusSquare, Trash2, Printer, X, Download, Pencil, RefreshCw, Filter, Search, Check, Share2, Loader2, Building2, Hash, Calendar, Layers, FileText, Globe, Phone, Mail, MapPin, FileDigit, Calculator, List, FileCheck, AlertCircle } from 'lucide-react';
 import { downloadAsPDF } from './utils/pdfExport';
+import { printElement } from './utils/printDocument';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
 import { syncPlateUsageFromCards } from './utils/plateUsage';
 
@@ -193,7 +194,7 @@ export default function JobCardListing() {
     window.scrollTo(0, 0);
     const container = document.querySelector('.a4-page-container');
     if (container) container.scrollTop = 0;
-    window.print();
+    printElement('printable-inner');
   };
 
   const handleSharePDF = async () => {
@@ -452,8 +453,8 @@ export default function JobCardListing() {
 
       {/* Print Preview Modal */}
       {isModalOpen && selectedCard && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 overflow-y-auto">
-          <div className="bg-white border border-gray-300 w-full max-w-4xl relative max-h-[95vh] flex flex-col shadow-none">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 overflow-y-auto print:p-0 print:bg-white print:static print:block">
+          <div className="job-card-modal-shell bg-white border border-gray-300 w-full max-w-4xl relative max-h-[95vh] flex flex-col shadow-none print:border-0 print:max-w-none print:w-full print:max-h-none print:shadow-none">
             {/* Modal Header */}
             <div className="p-4 border-b flex justify-between items-center bg-white modal-header no-print">
               <h2 className="text-xl font-bold text-gray-800">Job Card Preview</h2>
@@ -466,10 +467,10 @@ export default function JobCardListing() {
             </div>
 
             {/* Modal Body - Printable Content */}
-            <div className="p-8 overflow-y-auto grow a4-page-container" id="printable-content">
+            <div className="p-8 overflow-y-auto grow a4-page-container print:p-0 print:overflow-visible" id="printable-content">
               <div
                 id="printable-inner"
-                className="bg-white mx-auto shadow-none a4-page"
+                className="bg-white shadow-none a4-page job-card-print-page"
               >
                 {/* Header Branding */}
                 <div className="flex justify-between items-start mb-6 border-b-2 pb-4 px-2" style={{ borderColor: '#1e293b' }}>
@@ -675,7 +676,7 @@ export default function JobCardListing() {
                         <AlertCircle size={12} /> Work Instructions
                       </h4>
                       <div className="border border-rose-100 p-4 rounded-xl bg-rose-50/20 min-h-25">
-                        <p className="text-[11px] italic leading-relaxed text-gray-700 font-medium">
+                        <p className="text-[11px] leading-relaxed text-gray-700 font-medium print:font-bold print:text-gray-900 print:not-italic">
                           {selectedCard.notes || 'Handle with care. Ensure high quality print and accurate alignment.'}
                         </p>
                       </div>
@@ -696,7 +697,7 @@ export default function JobCardListing() {
                 </div>
 
                 {/* Branded Footer */}
-                <div className="mt-auto pt-8 border-t flex justify-between items-center opacity-60 px-2" style={{ borderColor: '#e2e8f0' }}>
+                <div className="mt-auto pt-8 border-t flex justify-between items-center opacity-60 print:opacity-100 px-2" style={{ borderColor: '#e2e8f0' }}>
                   <div className="flex gap-6">
                     <div className="flex items-center gap-1.5">
                       <Phone size={10} className="text-blue-500" />

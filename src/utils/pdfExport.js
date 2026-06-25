@@ -76,6 +76,19 @@ export const downloadAsPDF = async (elementId, filename, onProgressChange = () =
     const element = document.getElementById(elementId);
     if (!element) throw new Error(`Element with ID "${elementId}" not found`);
 
+    const isJobCard = elementId === 'printable-inner' || element.classList.contains('job-card-print-page');
+    const isTaxInvoice = elementId === 'printable-invoice' || element.classList.contains('tax-invoice-print-page');
+    const isChallan = elementId === 'printable-challan' || element.classList.contains('challan-print-page');
+    const isFullWidth = isJobCard || isTaxInvoice || isChallan;
+    const pageMargin = isJobCard ? '0' : (isFullWidth ? '5mm' : '12mm');
+    const contentWidth = isFullWidth ? '100%' : '186mm';
+    const contentMaxWidth = isFullWidth ? '100%' : '186mm';
+    const contentPadding = isJobCard ? '10mm' : (isFullWidth ? '2mm 3mm' : '6mm 8mm');
+    const bodyAlign = isFullWidth ? 'stretch' : 'center';
+    const wrapperStyle = isFullWidth
+      ? 'width:100%;max-width:100%;margin:0;padding:0;background:#ffffff;box-sizing:border-box;min-height:100vh;'
+      : 'width:186mm;max-width:186mm;margin:0 auto;padding:0 4mm;background:white;box-sizing:border-box;';
+
     // 1. Prepare Styles
     const sanitizedStyles = getSanitizedSystemStyles();
 
@@ -99,7 +112,7 @@ export const downloadAsPDF = async (elementId, filename, onProgressChange = () =
       <html>
         <head>
           <style>
-            @page { margin: 12mm; size: A4; }
+            @page { margin: ${pageMargin}; size: A4; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; box-sizing: border-box !important; }
             body { 
               margin: 0; 
@@ -107,17 +120,75 @@ export const downloadAsPDF = async (elementId, filename, onProgressChange = () =
               background: white !important; 
               display: flex !important; 
               flex-direction: column !important;
-              align-items: center !important; /* CENTER THE CONTENT */
+              align-items: ${bodyAlign} !important;
               justify-content: flex-start !important;
             }
             ${sanitizedStyles}
             .no-print, button, .lucide, [role="button"] { display: none !important; }
             
+            .job-card-print-page,
+            #printable-inner.job-card-print-page {
+              width: ${contentWidth} !important;
+              max-width: ${contentMaxWidth} !important;
+              padding: ${contentPadding} !important;
+              margin: 0 !important;
+              background: white !important;
+              display: block !important;
+              border: none !important;
+            }
+            .job-card-print-page .font-medium { font-weight: 700 !important; }
+            .job-card-print-page .font-bold { font-weight: 800 !important; }
+            .job-card-print-page .font-black { font-weight: 900 !important; }
+            .job-card-print-page .italic { font-style: normal !important; font-weight: 700 !important; }
+            .job-card-print-page .opacity-60 { opacity: 1 !important; }
+            .job-card-print-page .text-gray-400,
+            .job-card-print-page .text-gray-500,
+            .job-card-print-page .text-gray-600 { color: #1f2937 !important; }
+            .job-card-print-page .text-gray-700 { color: #111827 !important; }
+            .job-card-print-page .text-blue-600,
+            .job-card-print-page .text-blue-700 { color: #1e40af !important; font-weight: 800 !important; }
+            .job-card-print-page .job-card-printing-qty { font-weight: 800 !important; color: #312e81 !important; }
+
+            .tax-invoice-print-page {
+              width: ${contentWidth} !important;
+              max-width: ${contentMaxWidth} !important;
+              padding: ${contentPadding} !important;
+              margin: 0 !important;
+              background: white !important;
+              display: block !important;
+              border: none !important;
+            }
+            .tax-invoice-print-page .tax-blue,
+            .tax-invoice-print-page .tax-copy-box {
+              background-color: #d9e9f7 !important;
+            }
+            .tax-invoice-print-page .tax-invoice {
+              width: 100% !important;
+            }
+            .tax-invoice-print-page .tax-field-label,
+            .tax-invoice-print-page .tax-section-title,
+            .tax-invoice-print-page .tax-blue { font-weight: 800 !important; color: #000 !important; }
+            .tax-invoice-print-page .tax-company-name { font-weight: 900 !important; }
+            .tax-invoice-print-page .tax-field-value,
+            .tax-invoice-print-page .tax-item-value { font-weight: 700 !important; }
+            .tax-invoice-print-page .tax-item-total,
+            .tax-invoice-print-page .tax-amount-words { font-weight: 800 !important; }
+
+            .challan-print-page {
+              width: ${contentWidth} !important;
+              max-width: ${contentMaxWidth} !important;
+              padding: ${contentPadding} !important;
+              margin: 0 !important;
+              background: white !important;
+              display: block !important;
+              border: none !important;
+            }
+
             /* GLOBAL CENTERING FOR ANY COMPONENT */
-            .a4-page, .invoice-container, .challan-container, [style*="width: 210mm"] {
-              width: 186mm !important;
-              max-width: 186mm !important;
-              padding: 6mm 8mm !important;
+            .a4-page:not(.job-card-print-page):not(.tax-invoice-print-page):not(.challan-print-page), .invoice-container, .challan-container, [style*="width: 210mm"] {
+              width: ${contentWidth} !important;
+              max-width: ${contentMaxWidth} !important;
+              padding: ${contentPadding} !important;
               margin: 0 auto !important;
               background: white !important;
               display: block !important;
@@ -125,7 +196,7 @@ export const downloadAsPDF = async (elementId, filename, onProgressChange = () =
           </style>
         </head>
         <body class="bg-white">
-          <div style="width: 186mm; max-width: 186mm; margin: 0 auto; padding: 0 4mm; background: white; box-sizing: border-box;">
+          <div style="${wrapperStyle}">
             ${element.innerHTML}
           </div>
         </body>

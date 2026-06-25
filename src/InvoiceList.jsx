@@ -13,12 +13,12 @@ const API_BASE_URL = window.location.hostname === 'localhost' || window.location
 
 const SELLER = {
   name: 'HARIHAR PRINTERS',
-  factory: 'G-139, Hirawala Ind. Area, Kanota, Jaipur',
-  office: 'J-97, Ashok Chowk, Adarsh Nagar, Jaipur',
+  address: 'J-97, Ashok Chowk, Adarsh Nagar, Jaipur, Rajasthan, 302004',
   gstin: '08AALPC9959M1ZV',
   state: 'Rajasthan',
   stateCode: '08',
   tel: '94140-43763',
+  email: 'hariharprinters1@gmail.com',
   bank: {
     holder: 'Harihar Printers',
     name: 'IndusInd Bank',
@@ -28,17 +28,31 @@ const SELLER = {
   },
 };
 
-const fmtInvoiceDate = (value) => {
+const fmtTaxDate = (value) => {
   if (!value) return '';
   const d = new Date(value);
-  const day = d.getDate();
-  const mon = d.toLocaleDateString('en-GB', { month: 'short' });
-  const yr = String(d.getFullYear()).slice(-2);
+  const day = String(d.getDate()).padStart(2, '0');
+  const mon = String(d.getMonth() + 1).padStart(2, '0');
+  const yr = d.getFullYear();
   return `${day}-${mon}-${yr}`;
 };
 
 const fmtAmt = (value) =>
   Number(value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+const TaxFieldsTable = ({ rows }) => (
+  <table className="tax-fields-inner w-full">
+    <tbody>
+      {rows.map(([label, value], i) => (
+        <tr key={i}>
+          <td className="align-top tax-field-label">{label}</td>
+          <td className="align-top tax-field-colon">:</td>
+          <td className="align-top tax-field-value">{value ?? ''}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+);
 
 const getStateFromGst = (gstNo) => {
   const gst = (gstNo || '').trim();
@@ -72,51 +86,54 @@ const InvoiceList = () => {
         return sum + (line * pct) / 100;
       }, 0) + ((freight * Number((selectedInvoice.items?.[0]?.gstPercent ?? selectedInvoice.gstPercent ?? 18))) / 100))
     : 0;
-  const halfGstAmount = totalGstAmount / 2;
-  const totalAmount = itemsSubTotal;
-  const roundOff = selectedInvoice
-    ? (selectedInvoice.totalAmount - (itemsSubTotal + freight + totalGstAmount))
-    : 0;
-
   const linkedJobCard = selectedInvoice
     ? jobCards.find((card) => card.jobNumber === selectedInvoice.jobCard)
     : null;
 
-  const displayOrderNo = selectedInvoice?.orderNo || linkedJobCard?.jobNumber || selectedInvoice?.jobCard || '-';
-  const displayOrderDate = selectedInvoice?.orderDate || linkedJobCard?.jobDate || selectedInvoice?.date;
   const billTo = getBillToDetails(linkedJobCard, selectedInvoice || {});
   const shipTo = getShipToDetails(linkedJobCard, selectedInvoice || {});
   const billToState = getStateFromGst(billTo.gstNo);
   const shipToState = getStateFromGst(shipTo.gstNo);
 
-  const hsnSummaryRows = selectedInvoice
-    ? Object.values(
-        (selectedInvoice.items || []).reduce((acc, item) => {
-          const hsn = item.hsn || '';
-          const pct = Number(item.gstPercent ?? selectedInvoice.gstPercent ?? 18);
-          const key = `${hsn}__${pct}`;
-          if (!acc[key]) acc[key] = { hsn, pct, taxable: 0 };
-          acc[key].taxable += Number(item.total) || 0;
-          return acc;
-        }, {})
-      ).map((row) => ({
-        hsn: row.hsn,
-        taxable: row.taxable,
-        cgstRate: isIGST ? 0 : row.pct / 2,
-        sgstRate: isIGST ? 0 : row.pct / 2,
-        cgstAmt: isIGST ? 0 : (row.taxable * (row.pct / 2)) / 100,
-        sgstAmt: isIGST ? 0 : (row.taxable * (row.pct / 2)) / 100,
-        igstRate: isIGST ? row.pct : 0,
-        igstAmt: isIGST ? (row.taxable * row.pct) / 100 : 0,
-      }))
+  const freightGstPercent = selectedInvoice
+    ? Number(selectedInvoice.items?.[0]?.gstPercent ?? selectedInvoice.gstPercent ?? 18)
+    : 18;
+  const freightCgstAmt = isIGST ? 0 : (freight * (freightGstPercent / 2)) / 100;
+  const freightSgstAmt = isIGST ? 0 : (freight * (freightGstPercent / 2)) / 100;
+  const freightIgstAmt = isIGST ? (freight * freightGstPercent) / 100 : 0;
+
+  const itemLines = selectedInvoice
+    ? (selectedInvoice.items || []).map((item, idx) => {
+        const taxable = Number(item.total) || 0;
+        const pct = Number(item.gstPercent ?? selectedInvoice.gstPercent ?? 18);
+        const cgstRate = isIGST ? 0 : pct / 2;
+        const sgstRate = isIGST ? 0 : pct / 2;
+        const igstRate = isIGST ? pct : 0;
+        const cgstAmt = isIGST ? 0 : (taxable * cgstRate) / 100;
+        const sgstAmt = isIGST ? 0 : (taxable * sgstRate) / 100;
+        const igstAmt = isIGST ? (taxable * igstRate) / 100 : 0;
+        return {
+          idx: idx + 1,
+          item,
+          taxable,
+          cgstRate,
+          sgstRate,
+          igstRate,
+          cgstAmt,
+          sgstAmt,
+          igstAmt,
+          lineTotal: taxable + cgstAmt + sgstAmt + igstAmt,
+        };
+      })
     : [];
 
-  const summaryTaxableTotal = hsnSummaryRows.reduce((sum, row) => sum + row.taxable, 0);
-  const summaryCgstTotal = hsnSummaryRows.reduce((sum, row) => sum + row.cgstAmt, 0);
-  const summarySgstTotal = hsnSummaryRows.reduce((sum, row) => sum + row.sgstAmt, 0);
-  const summaryIgstTotal = hsnSummaryRows.reduce((sum, row) => sum + row.igstAmt, 0);
-  const summaryTaxTotal = summaryCgstTotal + summarySgstTotal + summaryIgstTotal;
-  const emptyItemRows = Math.max(0, 3 - (selectedInvoice?.items?.length || 0));
+  const totalQty = itemLines.reduce((sum, row) => sum + (Number(row.item.qty) || 0), 0);
+  const totalTaxable = itemsSubTotal + freight;
+  const totalCgst = itemLines.reduce((sum, row) => sum + row.cgstAmt, 0) + freightCgstAmt;
+  const totalSgst = itemLines.reduce((sum, row) => sum + row.sgstAmt, 0) + freightSgstAmt;
+  const totalIgst = itemLines.reduce((sum, row) => sum + row.igstAmt, 0) + freightIgstAmt;
+  const amountBeforeTax = totalTaxable;
+  const amountWithTax = selectedInvoice?.totalAmount || 0;
 
   useEffect(() => {
     fetchInvoice();
@@ -351,7 +368,7 @@ const InvoiceList = () => {
       {/* Invoice Preview & Print Modal */}
       {isModalOpen && selectedInvoice && (
         <div className="print-modal-overlay fixed inset-0 bg-black/60 z-100 flex items-center justify-center p-4 overflow-y-auto print:static print:overflow-visible print:bg-white print:p-0">
-          <div className="print-modal-shell bg-white border border-gray-300 w-full max-w-4xl relative max-h-[95vh] flex flex-col shadow-none print:max-h-none print:overflow-visible print:border-0 print:shadow-none">
+          <div className="print-modal-shell bg-white border border-gray-300 w-full max-w-full relative max-h-[95vh] flex flex-col shadow-none print:max-h-none print:overflow-visible print:border-0 print:shadow-none">
             {/* Modal Header */}
             <div className="p-4 border-b flex justify-between items-center bg-white modal-header no-print">
               <h2 className="text-xl font-bold text-gray-800">Invoice Preview</h2>
@@ -405,281 +422,295 @@ const InvoiceList = () => {
               </div>
             </div>
 
-            <div className="p-8 overflow-y-auto grow a4-page-container print:overflow-visible print:max-h-none print:h-auto print:p-0 print:grow-0" id="printable-content">
+            <div className="p-2 overflow-y-auto grow a4-page-container print:overflow-visible print:max-h-none print:h-auto print:p-0 print:grow-0" id="printable-content">
               <div
                 id="printable-invoice"
-                className="bg-white mx-auto shadow-none a4-page invoice-print-page gst-invoice-print-page"
+                className="bg-white w-full shadow-none tax-invoice-print-page"
               >
-                <table className="gst-invoice w-full border-collapse text-black" style={{ fontSize: '9px', fontFamily: 'Arial, sans-serif' }}>
+                <table className="tax-invoice w-full border-collapse text-black" style={{ fontSize: '11px', fontFamily: 'Arial, Helvetica, sans-serif' }}>
+                  <colgroup>
+                    <col style={{ width: '4%' }} />
+                    <col style={{ width: '28%' }} />
+                    <col style={{ width: '8%' }} />
+                    <col style={{ width: '6%' }} />
+                    <col style={{ width: '5%' }} />
+                    <col style={{ width: '8%' }} />
+                    <col style={{ width: '10%' }} />
+                    <col style={{ width: '5%' }} />
+                    <col style={{ width: '9%' }} />
+                    <col style={{ width: '5%' }} />
+                    <col style={{ width: '9%' }} />
+                    <col style={{ width: '10%' }} />
+                  </colgroup>
                   <tbody>
-                    {/* Title */}
+                    {/* Company header — full width */}
                     <tr>
-                      <td colSpan={8} className="gst-cell text-center font-bold py-1" style={{ fontSize: '13px' }}>
-                        Invoice-cum-Bill of Supply
+                      <td colSpan={12} className="tax-cell text-center align-middle py-2">
+                        <p className="tax-company-name uppercase">{SELLER.name}</p>
+                        <p className="tax-header-line">{SELLER.address}</p>
+                        <p className="tax-header-line">{SELLER.tel}, {SELLER.email}</p>
+                        <p className="tax-header-line"><span className="tax-field-label">GSTIN :</span> {SELLER.gstin}</p>
                       </td>
                     </tr>
 
-                    {/* Seller + Invoice meta */}
+                    {/* TAX INVOICE bar + copy type (right) */}
                     <tr>
-                      <td colSpan={4} rowSpan={3} className="gst-cell align-top p-1" valign="top">
-                        <p className="font-bold text-[11px]">{SELLER.name}</p>
-                        <p>Factory: {SELLER.factory}</p>
-                        <p>Office: {SELLER.office}</p>
-                        <p>GSTIN/UIN: {SELLER.gstin}</p>
-                        <p>State Name: {SELLER.state}, Code: {SELLER.stateCode}</p>
-                        <p>Tel: {SELLER.tel}</p>
+                      <td colSpan={12} className="tax-cell tax-blue p-0">
+                        <div className="tax-title-bar">
+                          <div className="tax-title-text">TAX INVOICE</div>
+                          <div className="tax-copy-box">
+                            <p>Original for Recipient</p>
+                            <p>Duplicate for Transporter</p>
+                            <p>Triplicate for Supplier</p>
+                          </div>
+                        </div>
                       </td>
-                      <td className="gst-cell font-semibold">Invoice No.</td>
-                      <td className="gst-cell">{selectedInvoice.invoiceNumber}</td>
-                      <td className="gst-cell font-semibold">Dated</td>
-                      <td className="gst-cell">{fmtInvoiceDate(selectedInvoice.date)}</td>
-                    </tr>
-                    <tr>
-                      <td className="gst-cell font-semibold">Delivery Note</td>
-                      <td className="gst-cell">&nbsp;</td>
-                      <td className="gst-cell font-semibold">Mode/Terms of Payment</td>
-                      <td className="gst-cell">&nbsp;</td>
-                    </tr>
-                    <tr>
-                      <td className="gst-cell font-semibold">Reference No. &amp; Date.</td>
-                      <td className="gst-cell">&nbsp;</td>
-                      <td className="gst-cell font-semibold">Other References</td>
-                      <td className="gst-cell">&nbsp;</td>
-                    </tr>
-                    <tr>
-                      <td colSpan={4} className="gst-cell align-top p-1" valign="top">
-                        <p className="font-semibold">Consignee (Ship to)</p>
-                        <p className="font-bold">{shipTo.partyName}</p>
-                        <p>{shipTo.address}</p>
-                        <p>State Name: {shipToState.state}, Code: {shipToState.code}</p>
-                      </td>
-                      <td className="gst-cell font-semibold">Buyer&apos;s Order No.</td>
-                      <td className="gst-cell">{displayOrderNo}</td>
-                      <td className="gst-cell font-semibold">Dated</td>
-                      <td className="gst-cell">{displayOrderDate ? fmtInvoiceDate(displayOrderDate) : ''}</td>
-                    </tr>
-                    <tr>
-                      <td colSpan={4} className="gst-cell align-top p-1" valign="top">
-                        <p className="font-semibold">Buyer (Bill to)</p>
-                        <p className="font-bold">{billTo.partyName}</p>
-                        <p>{billTo.address}</p>
-                        <p>GSTIN: {billTo.gstNo || 'URP'}</p>
-                        <p>State Name: {billToState.state}, Code: {billToState.code}</p>
-                      </td>
-                      <td className="gst-cell font-semibold">Dispatch Doc No.</td>
-                      <td className="gst-cell">&nbsp;</td>
-                      <td className="gst-cell font-semibold">Delivery Note Date</td>
-                      <td className="gst-cell">&nbsp;</td>
-                    </tr>
-                    <tr>
-                      <td colSpan={4} className="gst-cell">&nbsp;</td>
-                      <td className="gst-cell font-semibold">Dispatched through</td>
-                      <td className="gst-cell">&nbsp;</td>
-                      <td className="gst-cell font-semibold">Destination</td>
-                      <td className="gst-cell">Jaipur</td>
-                    </tr>
-                    <tr>
-                      <td colSpan={4} className="gst-cell">&nbsp;</td>
-                      <td colSpan={2} className="gst-cell font-semibold">Terms of Delivery</td>
-                      <td colSpan={2} className="gst-cell">&nbsp;</td>
                     </tr>
 
-                    {/* Items header */}
-                    <tr className="text-center font-semibold">
-                      <td className="gst-cell w-[4%]">SI<br />No.</td>
-                      <td className="gst-cell">Description of Goods</td>
-                      <td className="gst-cell w-[9%]">HSN/SAC</td>
-                      <td className="gst-cell w-[11%]">Quantity</td>
-                      <td className="gst-cell w-[10%]">Rate<br />(incl. of Tax)</td>
-                      <td className="gst-cell w-[9%]">Rate</td>
-                      <td className="gst-cell w-[5%]">per</td>
-                      <td className="gst-cell w-[12%]">Amount</td>
+                    {/* Invoice meta */}
+                    <tr>
+                      <td colSpan={6} className="tax-cell align-top p-1">
+                        <TaxFieldsTable rows={[
+                          ['Reverse Charge', selectedInvoice.reverseCharge || 'No'],
+                          ['Invoice No.', selectedInvoice.invoiceNumber],
+                          ['Invoice Date', fmtTaxDate(selectedInvoice.date)],
+                          ['State', SELLER.state],
+                          ['State Code', SELLER.stateCode],
+                        ]} />
+                      </td>
+                      <td colSpan={6} className="tax-cell align-top p-1">
+                        <TaxFieldsTable rows={[
+                          ['Transportation Mode', 'Road'],
+                          ['Vehicle No.', ''],
+                          ['Date of Supply', fmtTaxDate(selectedInvoice.date)],
+                          ['Place of Supply', 'Jaipur'],
+                        ]} />
+                      </td>
+                    </tr>
+
+                    {/* Bill to / Ship to */}
+                    <tr>
+                      <td colSpan={6} className="tax-cell align-top p-0">
+                        <div className="tax-blue tax-section-title text-center py-0.5 px-1">Details of Receiver | Billed to:</div>
+                        <div className="p-1">
+                          <TaxFieldsTable rows={[
+                            ['Name', billTo.partyName],
+                            ['Address', billTo.address || '-'],
+                            ['E-MAIL', billTo.emailId || '-'],
+                            ['GSTIN', billTo.gstNo || 'URP'],
+                            ['MOBILE', billTo.contactNo || '-'],
+                            ['State', billToState.state],
+                            ['State Code', billToState.code],
+                          ]} />
+                        </div>
+                      </td>
+                      <td colSpan={6} className="tax-cell align-top p-0">
+                        <div className="tax-blue tax-section-title text-center py-0.5 px-1">Details of Consignee | Shipped to:</div>
+                        <div className="p-1">
+                          <TaxFieldsTable rows={[
+                            ['Name', shipTo.partyName],
+                            ['Address', shipTo.address || '-'],
+                            ['E-MAIL', shipTo.emailId || '-'],
+                            ['GSTIN', shipTo.gstNo || 'URP'],
+                            ['MOBILE', shipTo.contactNo || '-'],
+                            ['State', shipToState.state],
+                            ['State Code', shipToState.code],
+                          ]} />
+                        </div>
+                      </td>
+                    </tr>
+
+                    {/* Items table header row 1 */}
+                    <tr className="tax-blue text-center font-bold">
+                      <td className="tax-cell" rowSpan={2}>Sr.<br />No.</td>
+                      <td className="tax-cell" rowSpan={2}>Name of product</td>
+                      <td className="tax-cell" rowSpan={2}>HSN/SAC</td>
+                      <td className="tax-cell" rowSpan={2}>QTY</td>
+                      <td className="tax-cell" rowSpan={2}>Unit</td>
+                      <td className="tax-cell" rowSpan={2}>Rate</td>
+                      <td className="tax-cell" rowSpan={2}>Taxable<br />Value</td>
+                      {isIGST ? (
+                        <>
+                          <td className="tax-cell" colSpan={2}>IGST</td>
+                          <td className="tax-cell" colSpan={2}>&nbsp;</td>
+                        </>
+                      ) : (
+                        <>
+                          <td className="tax-cell" colSpan={2}>CGST</td>
+                          <td className="tax-cell" colSpan={2}>SGST</td>
+                        </>
+                      )}
+                      <td className="tax-cell" rowSpan={2}>Total</td>
+                    </tr>
+                    <tr className="tax-blue text-center font-bold">
+                      {isIGST ? (
+                        <>
+                          <td className="tax-cell">Rate</td>
+                          <td className="tax-cell">Amount</td>
+                          <td className="tax-cell">&nbsp;</td>
+                          <td className="tax-cell">&nbsp;</td>
+                        </>
+                      ) : (
+                        <>
+                          <td className="tax-cell">Rate</td>
+                          <td className="tax-cell">Amount</td>
+                          <td className="tax-cell">Rate</td>
+                          <td className="tax-cell">Amount</td>
+                        </>
+                      )}
                     </tr>
 
                     {/* Item rows */}
-                    {selectedInvoice.items?.map((item, idx) => {
-                      const rate = Number(item.rate) || 0;
-                      const itemGstPercent = Number(item.gstPercent ?? selectedInvoice.gstPercent ?? 18);
-                      const rateIncl = rate * (1 + itemGstPercent / 100);
-                      return (
-                        <tr key={idx}>
-                          <td className="gst-cell text-center align-top">{idx + 1}</td>
-                          <td className="gst-cell align-top uppercase">{item.description}</td>
-                          <td className="gst-cell text-center align-top">{item.hsn || ''}</td>
-                          <td className="gst-cell text-right align-top">{Number(item.qty || 0).toFixed(2)} Nos.</td>
-                          <td className="gst-cell text-right align-top">{fmtAmt(rateIncl)}</td>
-                          <td className="gst-cell text-right align-top">{fmtAmt(rate)}</td>
-                          <td className="gst-cell text-center align-top">Nos.</td>
-                          <td className="gst-cell text-right align-top">{fmtAmt(item.total)}</td>
-                        </tr>
-                      );
-                    })}
+                    {itemLines.map((row) => (
+                      <tr key={row.idx}>
+                        <td className="tax-cell text-center align-top tax-item-value">{row.idx}</td>
+                        <td className="tax-cell align-top tax-item-value">{row.item.description}</td>
+                        <td className="tax-cell text-center align-top tax-item-value">{row.item.hsn || ''}</td>
+                        <td className="tax-cell text-center align-top tax-item-value">{Number(row.item.qty || 0)}</td>
+                        <td className="tax-cell text-center align-top tax-item-value">PCS</td>
+                        <td className="tax-cell text-right align-top tax-item-value">{fmtAmt(row.item.rate)}</td>
+                        <td className="tax-cell text-right align-top tax-item-value">{fmtAmt(row.taxable)}</td>
+                        {isIGST ? (
+                          <>
+                            <td className="tax-cell text-center align-top">{row.igstRate}%</td>
+                            <td className="tax-cell text-right align-top">{fmtAmt(row.igstAmt)}</td>
+                            <td className="tax-cell">&nbsp;</td>
+                            <td className="tax-cell">&nbsp;</td>
+                          </>
+                        ) : (
+                          <>
+                            <td className="tax-cell text-center align-top">{row.cgstRate}%</td>
+                            <td className="tax-cell text-right align-top">{fmtAmt(row.cgstAmt)}</td>
+                            <td className="tax-cell text-center align-top">{row.sgstRate}%</td>
+                            <td className="tax-cell text-right align-top">{fmtAmt(row.sgstAmt)}</td>
+                          </>
+                        )}
+                        <td className="tax-cell text-right align-top tax-item-total">{fmtAmt(row.lineTotal)}</td>
+                      </tr>
+                    ))}
 
                     {freight > 0 && (
                       <tr>
-                        <td className="gst-cell text-center align-top">{(selectedInvoice.items?.length || 0) + 1}</td>
-                        <td className="gst-cell align-top">Freight</td>
-                        <td className="gst-cell">&nbsp;</td>
-                        <td className="gst-cell">&nbsp;</td>
-                        <td className="gst-cell">&nbsp;</td>
-                        <td className="gst-cell">&nbsp;</td>
-                        <td className="gst-cell">&nbsp;</td>
-                        <td className="gst-cell text-right align-top">{fmtAmt(freight)}</td>
+                        <td className="tax-cell text-center align-top">{itemLines.length + 1}</td>
+                        <td className="tax-cell align-top">Freight</td>
+                        <td className="tax-cell">&nbsp;</td>
+                        <td className="tax-cell">&nbsp;</td>
+                        <td className="tax-cell">&nbsp;</td>
+                        <td className="tax-cell">&nbsp;</td>
+                        <td className="tax-cell text-right align-top">{fmtAmt(freight)}</td>
+                        {isIGST ? (
+                          <>
+                            <td className="tax-cell text-center align-top">{freightGstPercent}%</td>
+                            <td className="tax-cell text-right align-top">{fmtAmt(freightIgstAmt)}</td>
+                            <td className="tax-cell">&nbsp;</td>
+                            <td className="tax-cell">&nbsp;</td>
+                          </>
+                        ) : (
+                          <>
+                            <td className="tax-cell text-center align-top">{freightGstPercent / 2}%</td>
+                            <td className="tax-cell text-right align-top">{fmtAmt(freightCgstAmt)}</td>
+                            <td className="tax-cell text-center align-top">{freightGstPercent / 2}%</td>
+                            <td className="tax-cell text-right align-top">{fmtAmt(freightSgstAmt)}</td>
+                          </>
+                        )}
+                        <td className="tax-cell text-right align-top font-bold">
+                          {fmtAmt(freight + freightCgstAmt + freightSgstAmt + freightIgstAmt)}
+                        </td>
                       </tr>
                     )}
 
-                    {[...Array(emptyItemRows)].map((_, i) => (
-                      <tr key={`empty-${i}`} className="invoice-fill-row print:hidden">
-                        <td className="gst-cell">&nbsp;</td>
-                        <td className="gst-cell">&nbsp;</td>
-                        <td className="gst-cell">&nbsp;</td>
-                        <td className="gst-cell">&nbsp;</td>
-                        <td className="gst-cell">&nbsp;</td>
-                        <td className="gst-cell">&nbsp;</td>
-                        <td className="gst-cell">&nbsp;</td>
-                        <td className="gst-cell">&nbsp;</td>
-                      </tr>
-                    ))}
-
-                    {/* Tax rows */}
-                    {!isIGST && (
-                      <>
-                        <tr>
-                          <td className="gst-cell">&nbsp;</td>
-                          <td className="gst-cell text-right font-semibold">CGST</td>
-                          <td className="gst-cell">&nbsp;</td>
-                          <td className="gst-cell">&nbsp;</td>
-                          <td className="gst-cell">&nbsp;</td>
-                          <td className="gst-cell">&nbsp;</td>
-                          <td className="gst-cell">&nbsp;</td>
-                          <td className="gst-cell text-right">{fmtAmt(halfGstAmount)}</td>
-                        </tr>
-                        <tr>
-                          <td className="gst-cell">&nbsp;</td>
-                          <td className="gst-cell text-right font-semibold">SGST</td>
-                          <td className="gst-cell">&nbsp;</td>
-                          <td className="gst-cell">&nbsp;</td>
-                          <td className="gst-cell">&nbsp;</td>
-                          <td className="gst-cell">&nbsp;</td>
-                          <td className="gst-cell">&nbsp;</td>
-                          <td className="gst-cell text-right">{fmtAmt(halfGstAmount)}</td>
-                        </tr>
-                      </>
-                    )}
-                    {isIGST && (
-                      <tr>
-                        <td className="gst-cell">&nbsp;</td>
-                        <td className="gst-cell text-right font-semibold">IGST</td>
-                        <td className="gst-cell">&nbsp;</td>
-                        <td className="gst-cell">&nbsp;</td>
-                        <td className="gst-cell">&nbsp;</td>
-                        <td className="gst-cell">&nbsp;</td>
-                        <td className="gst-cell">&nbsp;</td>
-                        <td className="gst-cell text-right">{fmtAmt(totalGstAmount)}</td>
-                      </tr>
-                    )}
-                    <tr>
-                      <td className="gst-cell">&nbsp;</td>
-                      <td className="gst-cell text-right font-semibold">Round Off</td>
-                      <td className="gst-cell">&nbsp;</td>
-                      <td className="gst-cell">&nbsp;</td>
-                      <td className="gst-cell">&nbsp;</td>
-                      <td className="gst-cell">&nbsp;</td>
-                      <td className="gst-cell">&nbsp;</td>
-                      <td className="gst-cell text-right">{fmtAmt(roundOff)}</td>
-                    </tr>
-                    <tr>
-                      <td className="gst-cell">&nbsp;</td>
-                      <td className="gst-cell text-right font-bold">Total</td>
-                      <td className="gst-cell">&nbsp;</td>
-                      <td className="gst-cell">&nbsp;</td>
-                      <td className="gst-cell">&nbsp;</td>
-                      <td className="gst-cell">&nbsp;</td>
-                      <td className="gst-cell">&nbsp;</td>
-                      <td className="gst-cell text-right font-bold">₹ {fmtAmt(selectedInvoice.totalAmount)}</td>
+                    {/* Items footer totals */}
+                    <tr className="tax-blue font-bold">
+                      <td className="tax-cell" colSpan={3}>Total Quantity</td>
+                      <td className="tax-cell text-center">{totalQty}</td>
+                      <td className="tax-cell" colSpan={2}>&nbsp;</td>
+                      <td className="tax-cell text-right">{fmtAmt(totalTaxable)}</td>
+                      {isIGST ? (
+                        <>
+                          <td className="tax-cell">&nbsp;</td>
+                          <td className="tax-cell text-right">{fmtAmt(totalIgst)}</td>
+                          <td className="tax-cell">&nbsp;</td>
+                          <td className="tax-cell">&nbsp;</td>
+                        </>
+                      ) : (
+                        <>
+                          <td className="tax-cell">&nbsp;</td>
+                          <td className="tax-cell text-right">{fmtAmt(totalCgst)}</td>
+                          <td className="tax-cell">&nbsp;</td>
+                          <td className="tax-cell text-right">{fmtAmt(totalSgst)}</td>
+                        </>
+                      )}
+                      <td className="tax-cell text-right">{fmtAmt(amountWithTax)}</td>
                     </tr>
 
-                    {/* Amount in words */}
+                    {/* Amount in words + summary */}
                     <tr>
-                      <td colSpan={8} className="gst-cell">
-                        <span className="font-semibold">Amount Chargeable (in words):</span>{' '}
-                        INR {numberToWords(selectedInvoice.totalAmount)} Only
+                      <td colSpan={6} className="tax-cell align-top p-0">
+                        <div className="tax-blue tax-section-title text-center py-0.5 px-1">Total Invoice Amount in words</div>
+                        <p className="text-center py-2 px-1 tax-amount-words">{numberToWords(amountWithTax)} Rupees Only</p>
+                      </td>
+                      <td colSpan={6} className="tax-cell align-top p-0">
+                        <table className="w-full border-collapse tax-summary-table">
+                          <tbody>
+                            <tr>
+                              <td className="tax-cell font-bold tax-summary-label">Total Amount Before Tax</td>
+                              <td className="tax-cell text-right font-bold tax-summary-value">{fmtAmt(amountBeforeTax)}</td>
+                            </tr>
+                            {isIGST ? (
+                              <tr>
+                                <td className="tax-cell font-bold tax-summary-label">Add : IGST</td>
+                                <td className="tax-cell text-right font-bold tax-summary-value">{fmtAmt(totalIgst)}</td>
+                              </tr>
+                            ) : (
+                              <>
+                                <tr>
+                                  <td className="tax-cell font-bold tax-summary-label">Add : CGST</td>
+                                  <td className="tax-cell text-right font-bold tax-summary-value">{fmtAmt(totalCgst)}</td>
+                                </tr>
+                                <tr>
+                                  <td className="tax-cell font-bold tax-summary-label">Add : SGST</td>
+                                  <td className="tax-cell text-right font-bold tax-summary-value">{fmtAmt(totalSgst)}</td>
+                                </tr>
+                              </>
+                            )}
+                            <tr className="tax-blue">
+                              <td className="tax-cell font-bold tax-summary-label">Tax Amount : GST</td>
+                              <td className="tax-cell text-right font-bold tax-summary-value">{fmtAmt(totalGstAmount)}</td>
+                            </tr>
+                            <tr className="tax-blue">
+                              <td className="tax-cell font-bold tax-summary-label">Amount With Tax</td>
+                              <td className="tax-cell text-right font-bold tax-summary-value">{fmtAmt(amountWithTax)}</td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </td>
                     </tr>
 
-                    {/* HSN summary header */}
-                    <tr className="text-center font-semibold">
-                      <td colSpan={2} className="gst-cell">HSN/SAC</td>
-                      <td colSpan={2} className="gst-cell">Taxable Value</td>
-                      <td colSpan={2} className="gst-cell">CGST</td>
-                      <td colSpan={2} className="gst-cell">SGST/UTGST</td>
-                    </tr>
-                    <tr className="text-center font-semibold">
-                      <td colSpan={2} className="gst-cell">&nbsp;</td>
-                      <td colSpan={2} className="gst-cell">&nbsp;</td>
-                      <td className="gst-cell">Rate</td>
-                      <td className="gst-cell">Amount</td>
-                      <td className="gst-cell">Rate</td>
-                      <td className="gst-cell">Amount</td>
-                    </tr>
-
-                    {hsnSummaryRows.map((row) => (
-                      <tr key={row.hsn || 'na'}>
-                        <td colSpan={2} className="gst-cell text-center">{row.hsn}</td>
-                        <td colSpan={2} className="gst-cell text-right">{fmtAmt(row.taxable)}</td>
-                        <td className="gst-cell text-center">{isIGST ? '' : `${row.cgstRate}%`}</td>
-                        <td className="gst-cell text-right">{isIGST ? '' : fmtAmt(row.cgstAmt)}</td>
-                        <td className="gst-cell text-center">{isIGST ? '' : `${row.sgstRate}%`}</td>
-                        <td className="gst-cell text-right">{isIGST ? '' : fmtAmt(row.sgstAmt)}</td>
-                      </tr>
-                    ))}
-
-                    <tr className="font-semibold">
-                      <td colSpan={2} className="gst-cell text-right">Total</td>
-                      <td colSpan={2} className="gst-cell text-right">{fmtAmt(summaryTaxableTotal)}</td>
-                      <td className="gst-cell">&nbsp;</td>
-                      <td className="gst-cell text-right">{fmtAmt(summaryCgstTotal)}</td>
-                      <td className="gst-cell">&nbsp;</td>
-                      <td className="gst-cell text-right">{fmtAmt(summarySgstTotal)}</td>
-                    </tr>
-
+                    {/* Bank + Signature */}
                     <tr>
-                      <td colSpan={8} className="gst-cell">
-                        <span className="font-semibold">Tax Amount (in words):</span>{' '}
-                        INR {numberToWords(summaryTaxTotal)} Only
+                      <td colSpan={6} className="tax-cell align-top p-1">
+                        <p className="tax-section-title mb-1">Bank Details</p>
+                        <TaxFieldsTable rows={[
+                          ['Account Holder Name', SELLER.bank.holder],
+                          ['Bank Account Number', SELLER.bank.account],
+                          ['Bank IFSC Code', SELLER.bank.ifsc],
+                          ['Bank Name', SELLER.bank.name],
+                          ['Bank Branch Name', SELLER.bank.branch],
+                        ]} />
+                        <p className="tax-section-title mt-2 mb-1">Terms And Conditions</p>
+                        <ol className="tax-terms-list">
+                          <li>Goods once sold will not be taken back.</li>
+                          <li>Any Dispute Shall Subject to Jaipur Jurisdiction.</li>
+                          <li>E.&amp;O.E.</li>
+                          <li>The company is not responsible for any transit damage or loss.</li>
+                          <li>All Goods Return / Replace only if damage by company transport.</li>
+                        </ol>
                       </td>
-                    </tr>
-
-                    {/* Footer */}
-                    <tr>
-                      <td colSpan={4} className="gst-cell align-top p-1" valign="top">
-                        <p className="font-semibold">Company&apos;s PAN :</p>
-                        <p className="font-semibold mt-2">Declaration</p>
-                        <p className="mt-1 leading-snug">
-                          We declare that this invoice shows the actual price of the goods described and that all
-                          particulars are true and correct. Goods once sold will not be taken back. Interest @18% p.a.
-                          will be charged if payment is not made within 15 days.
-                        </p>
-                      </td>
-                      <td colSpan={4} className="gst-cell align-top p-1" valign="top">
-                        <p className="font-semibold">Company&apos;s Bank Details</p>
-                        <p>A/c Holder&apos;s Name: {SELLER.bank.holder}</p>
-                        <p>Bank Name: {SELLER.bank.name}</p>
-                        <p>A/c No.: {SELLER.bank.account}</p>
-                        <p>Branch &amp; IFS Code: {SELLER.bank.branch} &amp; {SELLER.bank.ifsc}</p>
-                        <p className="text-right mt-6 font-semibold">for {SELLER.name}</p>
-                        <p className="text-right mt-8">Authorised Signatory</p>
-                      </td>
-                    </tr>
-
-                    <tr>
-                      <td colSpan={8} className="gst-cell text-center font-semibold py-1">
-                        SUBJECT TO JAIPUR JURISDICTION
-                      </td>
-                    </tr>
-                    <tr>
-                      <td colSpan={8} className="gst-cell text-center py-1">
-                        This is a Computer Generated Invoice
+                      <td colSpan={6} className="tax-cell align-top p-1">
+                        <p className="text-center mb-2 tax-header-line">Certified that the particular given above are true and correct</p>
+                        <p className="tax-section-title text-right">For, {SELLER.name}</p>
+                        <div className="tax-sign-space">&nbsp;</div>
+                        <p className="text-right tax-section-title">Authorised Signatory</p>
                       </td>
                     </tr>
                   </tbody>

@@ -60,7 +60,7 @@
   border-color: #000;
 }
 
-/* Invoice preview — keep content off page edges */
+/* Invoice preview — tax invoice full page width */
 .invoice-print-page.a4-page,
 .gst-invoice-print-page.a4-page {
   width: 100%;
@@ -68,6 +68,17 @@
   min-height: auto;
   padding: 8mm 10mm;
   box-sizing: border-box;
+}
+
+.tax-invoice-print-page {
+  width: 100%;
+  max-width: 100%;
+  min-height: auto;
+  padding: 3mm 4mm;
+  margin: 0;
+  box-sizing: border-box;
+  background: #fff;
+  color: #000;
 }
 
 /* GST traditional invoice layout */
@@ -86,6 +97,164 @@
 .gst-invoice-print-page {
   background: #fff;
   color: #000;
+}
+
+/* Tax invoice layout (reference style) */
+.tax-invoice {
+  border: 1px solid #000;
+  color: #000;
+  width: 100%;
+  table-layout: fixed;
+  font-weight: 600;
+  -webkit-font-smoothing: antialiased;
+}
+
+.tax-invoice .tax-cell {
+  border: 1px solid #000;
+  padding: 3px 5px;
+  vertical-align: top;
+  line-height: 1.4;
+  color: #000;
+  font-weight: 600;
+}
+
+.tax-invoice .tax-blue {
+  background-color: #d9e9f7;
+  font-weight: 700;
+  color: #000;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.tax-invoice .tax-company-name {
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: 0.5px;
+  color: #000;
+}
+
+.tax-invoice .tax-header-line {
+  font-weight: 600;
+  color: #111;
+}
+
+.tax-invoice .tax-amount-words {
+  font-weight: 700;
+  color: #000;
+  font-size: 11px;
+}
+
+.tax-invoice .tax-title-bar {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+}
+
+.tax-invoice .tax-title-text {
+  flex: 1;
+  text-align: center;
+  font-weight: 800;
+  font-size: 14px;
+  padding: 5px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000;
+}
+
+.tax-invoice .tax-copy-box {
+  width: 95px;
+  border-left: 1px solid #000;
+  padding: 2px 4px;
+  font-size: 8px;
+  line-height: 1.4;
+  background: #d9e9f7;
+  font-weight: 700;
+  color: #000;
+}
+
+.tax-invoice .tax-copy-box p {
+  margin: 0;
+}
+
+.tax-fields-inner {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.tax-fields-inner td {
+  border: none;
+  padding: 1px 2px;
+  vertical-align: top;
+}
+
+.tax-field-label {
+  width: 38%;
+  white-space: nowrap;
+  font-weight: 700;
+  color: #000;
+}
+
+.tax-field-colon {
+  width: 2%;
+  font-weight: 700;
+}
+
+.tax-field-value {
+  width: 60%;
+  word-break: break-word;
+  font-weight: 600;
+  color: #111;
+}
+
+.tax-item-value {
+  font-weight: 600;
+  color: #111;
+}
+
+.tax-item-total {
+  font-weight: 800;
+  color: #000;
+}
+
+.tax-section-title {
+  font-weight: 800;
+  color: #000;
+}
+
+.tax-summary-table .tax-summary-label {
+  width: 65%;
+  font-weight: 700;
+}
+
+.tax-summary-table .tax-summary-value {
+  width: 35%;
+  font-weight: 700;
+}
+
+.tax-terms-list {
+  list-style: decimal;
+  padding-left: 1.2rem;
+  margin: 0;
+  font-size: 9px;
+  line-height: 1.45;
+  font-weight: 600;
+  color: #111;
+}
+
+.tax-sign-space {
+  height: 55px;
+}
+
+/* Challan print — full page width */
+.challan-print-page {
+  width: 100%;
+  max-width: 100%;
+  min-height: auto;
+  padding: 3mm 4mm;
+  margin: 0;
+  box-sizing: border-box;
+  background: #fff;
 }
 
 .job-card-printing-qty {
@@ -223,8 +392,60 @@
     overflow: visible !important;
   }
 
+  /* Job card — full page print, no side gap or outer border */
+  body.printing-job-card .fixed.inset-0 {
+    position: static !important;
+    width: 100% !important;
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: white !important;
+    display: block !important;
+    overflow: visible !important;
+  }
+
+  body.printing-job-card .job-card-modal-shell {
+    border: none !important;
+    box-shadow: none !important;
+    max-width: none !important;
+    width: 100% !important;
+    max-height: none !important;
+    height: auto !important;
+  }
+
+  body.printing-job-card .a4-page-container,
+  body.printing-job-card #printable-content {
+    width: 100% !important;
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+
+  body.printing-job-card .job-card-print-page,
+  body.printing-job-card #printable-inner {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 4mm 5mm !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: white !important;
+  }
+
+  body.printing-job-card .job-card-print-page .font-medium { font-weight: 700 !important; }
+  body.printing-job-card .job-card-print-page .font-bold { font-weight: 800 !important; }
+  body.printing-job-card .job-card-print-page .font-black { font-weight: 900 !important; }
+  body.printing-job-card .job-card-print-page .italic { font-style: normal !important; font-weight: 700 !important; }
+  body.printing-job-card .job-card-print-page .opacity-60 { opacity: 1 !important; }
+  body.printing-job-card .job-card-print-page .text-gray-400,
+  body.printing-job-card .job-card-print-page .text-gray-500,
+  body.printing-job-card .job-card-print-page .text-gray-600 { color: #1f2937 !important; }
+  body.printing-job-card .job-card-print-page .text-gray-700 { color: #111827 !important; }
+
   /* The actual A4 Sheet */
-  .a4-page {
+  .a4-page:not(.job-card-print-page):not(.tax-invoice-print-page):not(.challan-print-page) {
     width: 186mm !important;
     max-width: 186mm !important;
     min-height: auto !important;
@@ -240,12 +461,27 @@
   }
 
   /* Invoice print */
-  .invoice-print-page {
+  .invoice-print-page:not(.tax-invoice-print-page) {
     width: 186mm !important;
     max-width: 186mm !important;
     min-height: auto !important;
     padding: 6mm 8mm !important;
     margin: 0 auto !important;
+  }
+
+  .tax-invoice-print-page {
+    width: 100% !important;
+    max-width: none !important;
+    min-height: auto !important;
+    padding: 2mm 3mm !important;
+    margin: 0 !important;
+  }
+
+  body.is-printing #print-root-temp .tax-invoice-print-page {
+    width: 100% !important;
+    max-width: none !important;
+    padding: 2mm 3mm !important;
+    margin: 0 !important;
   }
 
   .invoice-print-page .invoice-fill-row {
@@ -254,6 +490,58 @@
 
   .gst-invoice-print-page .invoice-fill-row {
     display: none !important;
+  }
+
+  .tax-invoice-print-page,
+  .tax-invoice-print-page .tax-invoice,
+  .tax-invoice-print-page .tax-cell,
+  .tax-invoice-print-page td,
+  .tax-invoice-print-page th {
+    color: #000 !important;
+    border-color: #000 !important;
+  }
+
+  .tax-invoice-print-page .tax-blue,
+  .tax-invoice-print-page .tax-copy-box {
+    background-color: #d9e9f7 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .tax-invoice-print-page .tax-invoice,
+  .tax-invoice-print-page .tax-cell,
+  .tax-invoice-print-page td,
+  .tax-invoice-print-page th,
+  .tax-invoice-print-page p {
+    color: #000 !important;
+    font-weight: 600 !important;
+  }
+
+  .tax-invoice-print-page .tax-field-label,
+  .tax-invoice-print-page .tax-field-colon,
+  .tax-invoice-print-page .tax-blue,
+  .tax-invoice-print-page .tax-title-text,
+  .tax-invoice-print-page .tax-section-title,
+  .tax-invoice-print-page .tax-summary-label,
+  .tax-invoice-print-page .tax-summary-value,
+  .tax-invoice-print-page .font-bold {
+    font-weight: 800 !important;
+    color: #000 !important;
+  }
+
+  .tax-invoice-print-page .tax-company-name {
+    font-weight: 900 !important;
+  }
+
+  .tax-invoice-print-page .tax-item-total,
+  .tax-invoice-print-page .tax-amount-words {
+    font-weight: 800 !important;
+  }
+
+  .tax-invoice-print-page .tax-field-value,
+  .tax-invoice-print-page .tax-item-value {
+    font-weight: 700 !important;
+    color: #111 !important;
   }
 
   .gst-invoice-print-page,
@@ -268,13 +556,20 @@
     page-break-inside: avoid !important;
   }
 
-  /* Challan print — purana layout, sirf 1 page fit */
+  /* Challan print — full page width */
   .challan-print-page {
-    width: 208mm !important;
-    max-width: 208mm !important;
+    width: 100% !important;
+    max-width: none !important;
     min-height: auto !important;
-    padding: 12mm !important;
-    margin: 0 auto !important;
+    padding: 2mm 3mm !important;
+    margin: 0 !important;
+  }
+
+  body.is-printing #print-root-temp .challan-print-page {
+    width: 100% !important;
+    max-width: none !important;
+    padding: 2mm 3mm !important;
+    margin: 0 !important;
   }
 
   .challan-print-page .invoice-fill-row {
@@ -320,7 +615,7 @@
   .job-card-printing-qty {
     font-size: 11px !important;
     line-height: 1.4 !important;
-    font-weight: 700 !important;
+    font-weight: 800 !important;
   }
 
   /* Prevent sections from breaking awkwardly */

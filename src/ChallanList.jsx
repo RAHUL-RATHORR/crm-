@@ -346,7 +346,7 @@ const ChallanList = () => {
       {/* Challan Preview & Print Modal */}
       {isModalOpen && primaryChallan && (
         <div className="print-modal-overlay fixed inset-0 bg-black/60 z-100 flex items-center justify-center p-4 overflow-y-auto print:static print:overflow-visible print:bg-white print:p-0">
-          <div className="print-modal-shell bg-white border border-gray-300 w-full max-w-4xl relative max-h-[95vh] flex flex-col shadow-none print:max-h-none print:overflow-visible print:border-0 print:shadow-none">
+          <div className="print-modal-shell bg-white border border-gray-300 w-full max-w-full relative max-h-[95vh] flex flex-col shadow-none print:max-h-none print:overflow-visible print:border-0 print:shadow-none">
             <div className="p-4 border-b flex justify-between items-center bg-white modal-header no-print">
               <h2 className="text-xl font-bold text-gray-800">
                 {isMergedPrint ? `Combined Challan (${previewChallans.length})` : 'Challan Preview'}
@@ -387,10 +387,10 @@ const ChallanList = () => {
             </div>
 
             {/* Modal Body - Printable Content */}
-            <div className="p-8 overflow-y-auto grow a4-page-container print:overflow-visible print:max-h-none print:h-auto print:p-0 print:grow-0" id="printable-content">
+            <div className="p-2 overflow-y-auto grow a4-page-container print:overflow-visible print:max-h-none print:h-auto print:p-0 print:grow-0" id="printable-content">
               <div
                 id="printable-challan"
-                className="bg-white mx-auto shadow-none a4-page challan-print-page font-sans"
+                className="bg-white w-full shadow-none challan-print-page font-sans"
                 style={{ color: '#334155' }}
               >
                 {/* Traditional Green/Teal Design - Matching Estimates */}
