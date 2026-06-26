@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PlusSquare, Trash2, Printer, X, Download, Pencil, RefreshCw, Filter, Search, Check, Share2, Loader2, Building2, Hash, Calendar, Layers, FileText, Globe, Phone, Mail, MapPin, FileDigit, Calculator, List, FileCheck, AlertCircle } from 'lucide-react';
+import { PlusSquare, Trash2, Printer, X, Download, Pencil, RefreshCw, Filter, Search, Check, Share2, Loader2, Building2, Hash, Calendar, Layers, FileText, Globe, Phone, Mail, MapPin, FileDigit, Calculator, List, FileCheck } from 'lucide-react';
 import { downloadAsPDF } from './utils/pdfExport';
 import { printElement } from './utils/printDocument';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
@@ -671,19 +671,21 @@ export default function JobCardListing() {
                     </section>
 
                     {/* Work Instructions Box */}
-                    <section>
-                      <h4 className="text-[10px] font-black uppercase text-rose-600 border-b pb-1 mb-3 tracking-widest flex items-center gap-2">
-                        <AlertCircle size={12} /> Work Instructions
-                      </h4>
-                      <div className="border border-rose-100 p-4 rounded-xl bg-rose-50/20 min-h-25">
-                        <p className="text-[11px] leading-relaxed text-gray-700 font-medium print:font-bold print:text-gray-900 print:not-italic">
-                          {selectedCard.notes || 'Handle with care. Ensure high quality print and accurate alignment.'}
+                    <section className="job-card-work-instructions avoid-break">
+                      <div className="job-card-work-instructions-box p-3 rounded-lg">
+                        <span className="job-card-section-heading-text text-[10px] font-black uppercase block mb-1 tracking-widest">
+                          Work Instructions
+                        </span>
+                        <p className="job-card-work-instructions-text text-[11px] leading-relaxed">
+                          {selectedCard.notes?.trim()
+                            ? selectedCard.notes
+                            : 'Handle with care. Ensure high quality print and accurate alignment.'}
                         </p>
                       </div>
                     </section>
 
                     {/* Signatory Area */}
-                    <div className="pt-8 grid grid-cols-2 gap-4">
+                    <div className="pt-4 print:pt-2 grid grid-cols-2 gap-4">
                       <div className="text-center">
                         <div className="border-b-2 border-gray-100 h-10 mb-2"></div>
                         <span className="text-[11px] font-black text-gray-600 uppercase tracking-widest">Office Signature</span>

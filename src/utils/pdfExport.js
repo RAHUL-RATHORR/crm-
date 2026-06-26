@@ -124,7 +124,7 @@ export const downloadAsPDF = async (elementId, filename, onProgressChange = () =
               justify-content: flex-start !important;
             }
             ${sanitizedStyles}
-            .no-print, button, .lucide, [role="button"] { display: none !important; }
+            .no-print, button, .job-card-print-page h4 svg, .job-card-print-page svg.lucide, [role="button"] { display: none !important; }
             
             .job-card-print-page,
             #printable-inner.job-card-print-page {
@@ -148,6 +148,18 @@ export const downloadAsPDF = async (elementId, filename, onProgressChange = () =
             .job-card-print-page .text-blue-600,
             .job-card-print-page .text-blue-700 { color: #1e40af !important; font-weight: 800 !important; }
             .job-card-print-page .job-card-printing-qty { font-weight: 800 !important; color: #312e81 !important; }
+            .job-card-work-instructions,
+            .job-card-work-instructions-box {
+              display: block !important;
+              visibility: visible !important;
+              background: #ffffff !important;
+              border: 1px solid #374151 !important;
+            }
+            .job-card-work-instructions-text,
+            .job-card-section-heading-text {
+              color: #000 !important;
+              font-weight: 700 !important;
+            }
 
             .tax-invoice-print-page {
               width: ${contentWidth} !important;

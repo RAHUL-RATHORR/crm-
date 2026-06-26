@@ -38,6 +38,27 @@
   --color-red-600: #dc2626;
 
   --color-amber-500: #f59e0b;
+
+  --color-rose-50: #fff1f2;
+  --color-rose-100: #ffe4e6;
+  --color-rose-600: #e11d48;
+
+  --color-indigo-50: #eef2ff;
+  --color-indigo-100: #e0e7ff;
+  --color-indigo-600: #4f46e5;
+  --color-indigo-700: #4338ca;
+
+  --color-cyan-50: #ecfeff;
+  --color-cyan-100: #cffafe;
+  --color-cyan-600: #0891b2;
+  --color-cyan-700: #0e7490;
+
+  --color-orange-50: #fff7ed;
+  --color-orange-100: #ffedd5;
+  --color-orange-700: #c2410c;
+
+  --color-purple-50: #faf5ff;
+  --color-purple-700: #7e22ce;
 }
 
 @layer base {
@@ -263,6 +284,28 @@
   font-weight: 700;
 }
 
+.job-card-work-instructions {
+  display: block;
+}
+
+.job-card-work-instructions-box {
+  border: 1px solid #9ca3af;
+  background: #ffffff;
+  min-height: 3.5rem;
+}
+
+.job-card-work-instructions-text {
+  color: #111827;
+  font-weight: 700;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.job-card-section-heading-text {
+  color: #be123c;
+  font-weight: 800;
+}
+
 #print-root-temp {
   display: none;
 }
@@ -444,6 +487,19 @@
   body.printing-job-card .job-card-print-page .text-gray-600 { color: #1f2937 !important; }
   body.printing-job-card .job-card-print-page .text-gray-700 { color: #111827 !important; }
 
+  body.printing-job-card .job-card-work-instructions,
+  body.printing-job-card .job-card-work-instructions-box {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    page-break-inside: avoid !important;
+  }
+
+  body.printing-job-card .job-card-work-instructions-text {
+    color: #000 !important;
+    font-weight: 700 !important;
+  }
+
   /* The actual A4 Sheet */
   .a4-page:not(.job-card-print-page):not(.tax-invoice-print-page):not(.challan-print-page) {
     width: 186mm !important;
@@ -616,6 +672,22 @@
     font-size: 11px !important;
     line-height: 1.4 !important;
     font-weight: 800 !important;
+  }
+
+  .job-card-work-instructions,
+  .job-card-work-instructions-box {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    page-break-inside: avoid !important;
+    background: #ffffff !important;
+    border-color: #374151 !important;
+  }
+
+  .job-card-work-instructions-text,
+  .job-card-section-heading-text {
+    color: #000 !important;
+    font-weight: 700 !important;
   }
 
   /* Prevent sections from breaking awkwardly */

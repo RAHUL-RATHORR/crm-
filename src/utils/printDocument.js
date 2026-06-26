@@ -94,7 +94,7 @@ export function printElement(elementId) {
             margin: 0 !important;
             padding: 0 !important;
           }
-          .no-print, button, .lucide, [role="button"] { display: none !important; }
+          .no-print, button, .job-card-print-page h4 svg, .job-card-print-page svg.lucide, [role="button"] { display: none !important; }
           .job-card-print-page,
           #printable-inner.job-card-print-page,
           .a4-page.job-card-print-page {
@@ -113,6 +113,20 @@ export function printElement(elementId) {
             box-shadow: none !important;
           }
           .job-card-print-page .min-h-25 { min-height: 0 !important; }
+          .job-card-work-instructions,
+          .job-card-work-instructions-box {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            page-break-inside: avoid !important;
+            background: #ffffff !important;
+            border: 1px solid #374151 !important;
+          }
+          .job-card-work-instructions-text,
+          .job-card-section-heading-text {
+            color: #000 !important;
+            font-weight: 700 !important;
+          }
           .job-card-print-page.mx-auto { margin-left: 0 !important; margin-right: 0 !important; }
           .a4-page:not(.job-card-print-page):not(.tax-invoice-print-page):not(.challan-print-page), .invoice-print-page:not(.tax-invoice-print-page) {
             width: 186mm !important;
