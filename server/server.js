@@ -108,6 +108,13 @@ app.get("/api/health", (req, res) => {
     });
 });
 
+app.get('/ping', (req, res) => {
+    res.status(200).json({
+        success: true,
+        message: 'Server is alive'
+    });
+});
+
 app.all("/api/*", (req, res) => {
   res.status(404).json({ error: "API route not found" });
 });
@@ -163,6 +170,3 @@ if (process.env.IS_ELECTRON === 'true') {
     processQueue(mongoose);
   }, 10000);
 }
-app.get('/ping', (req, res) => {
-    res.status(200).send("I am awake!");
-});
