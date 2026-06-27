@@ -6,67 +6,18 @@ import { printElement } from './utils/printDocument';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
 import { getBillToDetails, getShipToDetails } from './utils/shipAddress';
 import { numberToWords } from './utils/numberToWords';
+import { SELLER, fmtTaxDate, fmtAmt, getStateFromGst, TaxFieldsTable, buildTaxItemLine, TaxItemEmptyRow, EMPTY_PRODUCT_ROWS, CompanyBrandName, TaxCopyBox, TaxCopyTypeControls, DEFAULT_TAX_COPY_SELECTION } from './utils/taxDocumentPrint';
 
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'https://crm-qpw8.onrender.com'
   : 'https://crm-qpw8.onrender.com';
-
-const SELLER = {
-  name: 'HARIHAR PRINTERS',
-  address: 'J-97, Ashok Chowk, Adarsh Nagar, Jaipur, Rajasthan, 302004',
-  gstin: '08AALPC9959M1ZV',
-  state: 'Rajasthan',
-  stateCode: '08',
-  tel: '94140-43763',
-  email: 'hariharprinters1@gmail.com',
-  bank: {
-    holder: 'Harihar Printers',
-    name: 'IndusInd Bank',
-    account: '650014092175',
-    branch: 'Raja Park, Jaipur',
-    ifsc: 'INDB0000278',
-  },
-};
-
-const fmtTaxDate = (value) => {
-  if (!value) return '';
-  const d = new Date(value);
-  const day = String(d.getDate()).padStart(2, '0');
-  const mon = String(d.getMonth() + 1).padStart(2, '0');
-  const yr = d.getFullYear();
-  return `${day}-${mon}-${yr}`;
-};
-
-const fmtAmt = (value) =>
-  Number(value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-const TaxFieldsTable = ({ rows }) => (
-  <table className="tax-fields-inner w-full">
-    <tbody>
-      {rows.map(([label, value], i) => (
-        <tr key={i}>
-          <td className="align-top tax-field-label">{label}</td>
-          <td className="align-top tax-field-colon">:</td>
-          <td className="align-top tax-field-value">{value ?? ''}</td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
-);
-
-const getStateFromGst = (gstNo) => {
-  const gst = (gstNo || '').trim();
-  if (gst.length >= 2 && gst !== 'URP') {
-    return { state: 'Rajasthan', code: gst.slice(0, 2) };
-  }
-  return { state: 'Rajasthan', code: '08' };
-};
 
 const InvoiceList = () => {
   const navigate = useNavigate();
   const [invoices, setInvoices] = useState([]);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [tempGstType, setTempGstType] = useState('CGST/SGST');
+  const [copySelection, setCopySelection] = useState(DEFAULT_TAX_COPY_SELECTION);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -103,28 +54,9 @@ const InvoiceList = () => {
   const freightIgstAmt = isIGST ? (freight * freightGstPercent) / 100 : 0;
 
   const itemLines = selectedInvoice
-    ? (selectedInvoice.items || []).map((item, idx) => {
-        const taxable = Number(item.total) || 0;
-        const pct = Number(item.gstPercent ?? selectedInvoice.gstPercent ?? 18);
-        const cgstRate = isIGST ? 0 : pct / 2;
-        const sgstRate = isIGST ? 0 : pct / 2;
-        const igstRate = isIGST ? pct : 0;
-        const cgstAmt = isIGST ? 0 : (taxable * cgstRate) / 100;
-        const sgstAmt = isIGST ? 0 : (taxable * sgstRate) / 100;
-        const igstAmt = isIGST ? (taxable * igstRate) / 100 : 0;
-        return {
-          idx: idx + 1,
-          item,
-          taxable,
-          cgstRate,
-          sgstRate,
-          igstRate,
-          cgstAmt,
-          sgstAmt,
-          igstAmt,
-          lineTotal: taxable + cgstAmt + sgstAmt + igstAmt,
-        };
-      })
+    ? (selectedInvoice.items || []).map((item, idx) =>
+        buildTaxItemLine(item, idx, selectedInvoice.gstPercent ?? 18, isIGST)
+      )
     : [];
 
   const totalQty = itemLines.reduce((sum, row) => sum + (Number(row.item.qty) || 0), 0);
@@ -134,6 +66,7 @@ const InvoiceList = () => {
   const totalIgst = itemLines.reduce((sum, row) => sum + row.igstAmt, 0) + freightIgstAmt;
   const amountBeforeTax = totalTaxable;
   const amountWithTax = selectedInvoice?.totalAmount || 0;
+  const emptyProductRows = selectedInvoice ? EMPTY_PRODUCT_ROWS : 0;
 
   useEffect(() => {
     fetchInvoice();
@@ -199,7 +132,12 @@ const InvoiceList = () => {
   const openPreview = (inv) => {
     setSelectedInvoice(inv);
     setTempGstType(inv.gstType || 'CGST/SGST');
+    setCopySelection({ ...DEFAULT_TAX_COPY_SELECTION });
     setIsModalOpen(true);
+  };
+
+  const handleCopySelectionChange = (id, checked) => {
+    setCopySelection((prev) => ({ ...prev, [id]: checked }));
   };
 
   const closePreview = () => {
@@ -372,7 +310,8 @@ const InvoiceList = () => {
             {/* Modal Header */}
             <div className="p-4 border-b flex justify-between items-center bg-white modal-header no-print">
               <h2 className="text-xl font-bold text-gray-800">Invoice Preview</h2>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center justify-end gap-3">
+                <TaxCopyTypeControls selection={copySelection} onChange={handleCopySelectionChange} />
                 <div className="flex items-center gap-1.5 bg-gray-100 px-3 py-2 rounded-xl text-sm font-bold border border-gray-200">
                   <span className="text-gray-500 font-medium">GST Mode:</span>
                   <select
@@ -446,7 +385,7 @@ const InvoiceList = () => {
                     {/* Company header — full width */}
                     <tr>
                       <td colSpan={12} className="tax-cell text-center align-middle py-2">
-                        <p className="tax-company-name uppercase">{SELLER.name}</p>
+                        <CompanyBrandName />
                         <p className="tax-header-line">{SELLER.address}</p>
                         <p className="tax-header-line">{SELLER.tel}, {SELLER.email}</p>
                         <p className="tax-header-line"><span className="tax-field-label">GSTIN :</span> {SELLER.gstin}</p>
@@ -458,11 +397,7 @@ const InvoiceList = () => {
                       <td colSpan={12} className="tax-cell tax-blue p-0">
                         <div className="tax-title-bar">
                           <div className="tax-title-text">TAX INVOICE</div>
-                          <div className="tax-copy-box">
-                            <p>Original for Recipient</p>
-                            <p>Duplicate for Transporter</p>
-                            <p>Triplicate for Supplier</p>
-                          </div>
+                          <TaxCopyBox selection={copySelection} />
                         </div>
                       </td>
                     </tr>
@@ -521,7 +456,7 @@ const InvoiceList = () => {
                     </tr>
 
                     {/* Items table header row 1 */}
-                    <tr className="tax-blue text-center font-bold">
+                    <tr className="tax-blue text-center font-bold tax-item-header-row">
                       <td className="tax-cell" rowSpan={2}>Sr.<br />No.</td>
                       <td className="tax-cell" rowSpan={2}>Name of product</td>
                       <td className="tax-cell" rowSpan={2}>HSN/SAC</td>
@@ -542,7 +477,7 @@ const InvoiceList = () => {
                       )}
                       <td className="tax-cell" rowSpan={2}>Total</td>
                     </tr>
-                    <tr className="tax-blue text-center font-bold">
+                    <tr className="tax-blue text-center font-bold tax-item-header-row">
                       {isIGST ? (
                         <>
                           <td className="tax-cell">Rate</td>
@@ -572,22 +507,24 @@ const InvoiceList = () => {
                         <td className="tax-cell text-right align-top tax-item-value">{fmtAmt(row.taxable)}</td>
                         {isIGST ? (
                           <>
-                            <td className="tax-cell text-center align-top">{row.igstRate}%</td>
-                            <td className="tax-cell text-right align-top">{fmtAmt(row.igstAmt)}</td>
+                            <td className="tax-cell text-center align-top tax-item-gst">{row.igstRate}%</td>
+                            <td className="tax-cell text-right align-top tax-item-gst">{fmtAmt(row.igstAmt)}</td>
                             <td className="tax-cell">&nbsp;</td>
                             <td className="tax-cell">&nbsp;</td>
                           </>
                         ) : (
                           <>
-                            <td className="tax-cell text-center align-top">{row.cgstRate}%</td>
-                            <td className="tax-cell text-right align-top">{fmtAmt(row.cgstAmt)}</td>
-                            <td className="tax-cell text-center align-top">{row.sgstRate}%</td>
-                            <td className="tax-cell text-right align-top">{fmtAmt(row.sgstAmt)}</td>
+                            <td className="tax-cell text-center align-top tax-item-gst">{row.cgstRate}%</td>
+                            <td className="tax-cell text-right align-top tax-item-gst">{fmtAmt(row.cgstAmt)}</td>
+                            <td className="tax-cell text-center align-top tax-item-gst">{row.sgstRate}%</td>
+                            <td className="tax-cell text-right align-top tax-item-gst">{fmtAmt(row.sgstAmt)}</td>
                           </>
                         )}
                         <td className="tax-cell text-right align-top tax-item-total">{fmtAmt(row.lineTotal)}</td>
                       </tr>
                     ))}
+
+                    <TaxItemEmptyRow rowCount={emptyProductRows} />
 
                     {freight > 0 && (
                       <tr>
@@ -600,17 +537,17 @@ const InvoiceList = () => {
                         <td className="tax-cell text-right align-top">{fmtAmt(freight)}</td>
                         {isIGST ? (
                           <>
-                            <td className="tax-cell text-center align-top">{freightGstPercent}%</td>
-                            <td className="tax-cell text-right align-top">{fmtAmt(freightIgstAmt)}</td>
+                            <td className="tax-cell text-center align-top tax-item-gst">{freightGstPercent}%</td>
+                            <td className="tax-cell text-right align-top tax-item-gst">{fmtAmt(freightIgstAmt)}</td>
                             <td className="tax-cell">&nbsp;</td>
                             <td className="tax-cell">&nbsp;</td>
                           </>
                         ) : (
                           <>
-                            <td className="tax-cell text-center align-top">{freightGstPercent / 2}%</td>
-                            <td className="tax-cell text-right align-top">{fmtAmt(freightCgstAmt)}</td>
-                            <td className="tax-cell text-center align-top">{freightGstPercent / 2}%</td>
-                            <td className="tax-cell text-right align-top">{fmtAmt(freightSgstAmt)}</td>
+                            <td className="tax-cell text-center align-top tax-item-gst">{freightGstPercent / 2}%</td>
+                            <td className="tax-cell text-right align-top tax-item-gst">{fmtAmt(freightCgstAmt)}</td>
+                            <td className="tax-cell text-center align-top tax-item-gst">{freightGstPercent / 2}%</td>
+                            <td className="tax-cell text-right align-top tax-item-gst">{fmtAmt(freightSgstAmt)}</td>
                           </>
                         )}
                         <td className="tax-cell text-right align-top font-bold">
@@ -628,16 +565,16 @@ const InvoiceList = () => {
                       {isIGST ? (
                         <>
                           <td className="tax-cell">&nbsp;</td>
-                          <td className="tax-cell text-right">{fmtAmt(totalIgst)}</td>
+                          <td className="tax-cell text-right tax-item-gst">{fmtAmt(totalIgst)}</td>
                           <td className="tax-cell">&nbsp;</td>
                           <td className="tax-cell">&nbsp;</td>
                         </>
                       ) : (
                         <>
                           <td className="tax-cell">&nbsp;</td>
-                          <td className="tax-cell text-right">{fmtAmt(totalCgst)}</td>
+                          <td className="tax-cell text-right tax-item-gst">{fmtAmt(totalCgst)}</td>
                           <td className="tax-cell">&nbsp;</td>
-                          <td className="tax-cell text-right">{fmtAmt(totalSgst)}</td>
+                          <td className="tax-cell text-right tax-item-gst">{fmtAmt(totalSgst)}</td>
                         </>
                       )}
                       <td className="tax-cell text-right">{fmtAmt(amountWithTax)}</td>
@@ -647,7 +584,7 @@ const InvoiceList = () => {
                     <tr>
                       <td colSpan={6} className="tax-cell align-top p-0">
                         <div className="tax-blue tax-section-title text-center py-0.5 px-1">Total Invoice Amount in words</div>
-                        <p className="text-center py-2 px-1 tax-amount-words">{numberToWords(amountWithTax)} Rupees Only</p>
+                        <p className="text-center py-2 px-1 tax-amount-words">{numberToWords(amountWithTax)} Only</p>
                       </td>
                       <td colSpan={6} className="tax-cell align-top p-0">
                         <table className="w-full border-collapse tax-summary-table">

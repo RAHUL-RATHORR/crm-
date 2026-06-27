@@ -126,7 +126,7 @@
   color: #000;
   width: 100%;
   table-layout: fixed;
-  font-weight: 600;
+  font-weight: 700;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -136,7 +136,7 @@
   vertical-align: top;
   line-height: 1.4;
   color: #000;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .tax-invoice .tax-blue {
@@ -154,9 +154,26 @@
   color: #000;
 }
 
+.tax-invoice .company-brand-name {
+  font-weight: 900;
+  color: #111827;
+}
+
+.tax-invoice .company-brand-name-lg {
+  font-size: 28px;
+  letter-spacing: -0.02em;
+}
+
+.tax-invoice .company-brand-accent {
+  color: #2563eb;
+  font-weight: 900;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
 .tax-invoice .tax-header-line {
-  font-weight: 600;
-  color: #111;
+  font-weight: 700;
+  color: #000;
 }
 
 .tax-invoice .tax-amount-words {
@@ -184,14 +201,41 @@
 }
 
 .tax-invoice .tax-copy-box {
-  width: 95px;
+  width: 118px;
   border-left: 1px solid #000;
-  padding: 2px 4px;
+  padding: 3px 4px;
   font-size: 8px;
-  line-height: 1.4;
+  line-height: 1.35;
   background: #d9e9f7;
   font-weight: 700;
   color: #000;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.tax-invoice .tax-copy-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 3px;
+  margin-bottom: 1px;
+}
+
+.tax-invoice .tax-copy-row:last-child {
+  margin-bottom: 0;
+}
+
+.tax-invoice .tax-copy-mark {
+  flex-shrink: 0;
+  font-size: 9px;
+  line-height: 1.35;
+  font-weight: 700;
+  width: 10px;
+}
+
+.tax-invoice .tax-copy-label {
+  margin: 0;
+  flex: 1;
+  line-height: 1.35;
 }
 
 .tax-invoice .tax-copy-box p {
@@ -224,18 +268,30 @@
 .tax-field-value {
   width: 60%;
   word-break: break-word;
-  font-weight: 600;
-  color: #111;
+  font-weight: 700;
+  color: #000;
 }
 
 .tax-item-value {
-  font-weight: 600;
-  color: #111;
+  font-weight: 700;
+  color: #000;
+}
+
+.tax-item-gst {
+  font-weight: 700;
+  color: #000;
 }
 
 .tax-item-total {
+  font-weight: 900;
+  color: #000;
+}
+
+.tax-item-header-row .tax-cell {
   font-weight: 800;
   color: #000;
+  font-size: 10px;
+  line-height: 1.35;
 }
 
 .tax-section-title {
@@ -267,6 +323,24 @@
   height: 55px;
 }
 
+.tax-invoice .tax-item-empty-row .tax-item-empty-cell {
+  border-left: 1px solid #000;
+  border-right: 1px solid #000;
+  border-top: none !important;
+  border-bottom: none !important;
+  padding: 0;
+  height: calc(28px * var(--empty-rows, 1));
+  min-height: 28px;
+  vertical-align: top;
+  line-height: 1;
+}
+
+.tax-invoice .tax-item-empty-row .tax-item-empty-cell.tax-blue {
+  background-color: #d9e9f7;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
 /* Challan print — full page width */
 .challan-print-page {
   width: 100%;
@@ -276,6 +350,107 @@
   margin: 0;
   box-sizing: border-box;
   background: #fff;
+}
+
+.tax-invoice .job-card-top-header .job-card-doc-badge {
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* Job card print table — section headers & fields */
+.job-card-print-table .job-card-section-title {
+  font-weight: 900;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #000;
+  line-height: 1.35;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.job-card-print-table .job-card-section-body {
+  background: #fff;
+}
+
+.job-card-print-table .job-card-meta-cell .tax-field-label,
+.job-card-print-table .job-card-section-body .tax-field-label {
+  font-weight: 800;
+  font-size: 10px;
+  color: #000;
+}
+
+.job-card-print-table .job-card-meta-cell .tax-field-value,
+.job-card-print-table .job-card-section-body .tax-field-value {
+  font-weight: 800;
+  font-size: 11px;
+  color: #000;
+}
+
+.job-card-print-table .job-card-meta-cell .tax-field-colon,
+.job-card-print-table .job-card-section-body .tax-field-colon {
+  font-weight: 800;
+  color: #000;
+}
+
+.job-card-print-table .job-card-work-instructions {
+  min-height: 4.5rem;
+}
+
+.job-card-print-table .job-card-work-instructions-text {
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.55;
+  color: #000;
+}
+
+.job-card-print-table .job-card-brand {
+  font-size: 28px;
+  font-weight: 900;
+  color: #111827;
+  letter-spacing: -0.02em;
+}
+
+.job-card-print-table .job-card-brand .company-brand-accent {
+  color: #2563eb;
+  font-weight: 900;
+}
+
+.tax-invoice .job-card-company-header,
+.tax-invoice .job-card-company-header .tax-company-name,
+.tax-invoice .job-card-company-header .tax-header-line {
+  text-align: left !important;
+}
+
+.tax-invoice .job-card-work-instructions {
+  min-height: 3.5rem;
+}
+
+.tax-invoice .job-card-work-instructions-text {
+  color: #000;
+  font-weight: 700;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Job card letterhead */
+.job-card-letterhead {
+  color: #000;
+}
+
+.job-card-letterhead .job-card-brand {
+  font-weight: 900;
+  color: #111827;
+}
+
+.job-card-letterhead .job-card-letterhead-line {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.job-card-letterhead .job-card-doc-badge {
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 
 .job-card-printing-qty {
@@ -314,6 +489,7 @@
   @page {
     size: A4;
     margin: 10mm;
+    background: white;
   }
 
   /* Reset browser defaults for printing */
@@ -465,30 +641,46 @@
     overflow: visible !important;
   }
 
-  body.printing-job-card .job-card-print-page,
+  body.printing-job-card .job-card-top-header .job-card-doc-badge {
+    background-color: #1d4ed8 !important;
+    color: #fff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    font-weight: 900 !important;
+  }
+
+  body.printing-job-card .job-card-company-header,
+  body.printing-job-card .job-card-company-header .tax-header-line {
+    text-align: left !important;
+  }
+
+  body.printing-job-card .job-card-brand {
+    color: #111827 !important;
+    font-weight: 900 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body.printing-job-card .job-card-brand .company-brand-accent {
+    color: #2563eb !important;
+    font-weight: 900 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body.printing-job-card .tax-invoice-print-page,
   body.printing-job-card #printable-inner {
     width: 100% !important;
     max-width: none !important;
     min-width: 0 !important;
     margin: 0 !important;
-    padding: 4mm 5mm !important;
+    padding: 2mm 3mm !important;
     border: none !important;
     box-shadow: none !important;
     background: white !important;
   }
 
-  body.printing-job-card .job-card-print-page .font-medium { font-weight: 700 !important; }
-  body.printing-job-card .job-card-print-page .font-bold { font-weight: 800 !important; }
-  body.printing-job-card .job-card-print-page .font-black { font-weight: 900 !important; }
-  body.printing-job-card .job-card-print-page .italic { font-style: normal !important; font-weight: 700 !important; }
-  body.printing-job-card .job-card-print-page .opacity-60 { opacity: 1 !important; }
-  body.printing-job-card .job-card-print-page .text-gray-400,
-  body.printing-job-card .job-card-print-page .text-gray-500,
-  body.printing-job-card .job-card-print-page .text-gray-600 { color: #1f2937 !important; }
-  body.printing-job-card .job-card-print-page .text-gray-700 { color: #111827 !important; }
-
-  body.printing-job-card .job-card-work-instructions,
-  body.printing-job-card .job-card-work-instructions-box {
+  body.printing-job-card .job-card-work-instructions {
     display: block !important;
     visibility: visible !important;
     opacity: 1 !important;
@@ -497,7 +689,37 @@
 
   body.printing-job-card .job-card-work-instructions-text {
     color: #000 !important;
-    font-weight: 700 !important;
+    font-weight: 900 !important;
+    font-size: 11px !important;
+    line-height: 1.55 !important;
+  }
+
+  body.printing-job-card .job-card-print-table .job-card-section-title {
+    font-weight: 900 !important;
+    font-size: 11px !important;
+    letter-spacing: 0.06em !important;
+    color: #000 !important;
+    background-color: #d9e9f7 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body.printing-job-card .job-card-print-table .tax-field-label,
+  body.printing-job-card .job-card-print-table .tax-field-colon {
+    font-weight: 900 !important;
+    color: #000 !important;
+    font-size: 10px !important;
+  }
+
+  body.printing-job-card .job-card-print-table .tax-field-value {
+    font-weight: 800 !important;
+    color: #000 !important;
+    font-size: 11px !important;
+  }
+
+  body.printing-job-card .job-card-print-table .tax-cell {
+    border-color: #000 !important;
+    color: #000 !important;
   }
 
   /* The actual A4 Sheet */
@@ -531,6 +753,23 @@
     min-height: auto !important;
     padding: 2mm 3mm !important;
     margin: 0 !important;
+    background: #ffffff !important;
+  }
+
+  #printable-invoice,
+  #printable-challan,
+  #printable-inner,
+  #printable-content {
+    background: #ffffff !important;
+  }
+
+  .tax-invoice-print-page .tax-invoice,
+  .tax-invoice-print-page .tax-cell,
+  .tax-invoice-print-page .job-card-section-body,
+  .tax-invoice-print-page .job-card-meta-cell,
+  .tax-invoice-print-page .job-card-work-instructions,
+  .tax-invoice-print-page .job-card-top-header {
+    background-color: #ffffff !important;
   }
 
   body.is-printing #print-root-temp .tax-invoice-print-page {
@@ -564,13 +803,21 @@
     print-color-adjust: exact !important;
   }
 
+  .tax-invoice-print-page .tax-copy-mark,
+  .tax-invoice-print-page .tax-copy-label {
+    color: #000 !important;
+    font-weight: 800 !important;
+  }
+
   .tax-invoice-print-page .tax-invoice,
   .tax-invoice-print-page .tax-cell,
   .tax-invoice-print-page td,
   .tax-invoice-print-page th,
   .tax-invoice-print-page p {
     color: #000 !important;
-    font-weight: 600 !important;
+    font-weight: 700 !important;
+    -webkit-font-smoothing: antialiased !important;
+    text-rendering: optimizeLegibility !important;
   }
 
   .tax-invoice-print-page .tax-field-label,
@@ -580,8 +827,9 @@
   .tax-invoice-print-page .tax-section-title,
   .tax-invoice-print-page .tax-summary-label,
   .tax-invoice-print-page .tax-summary-value,
+  .tax-invoice-print-page .tax-item-header-row .tax-cell,
   .tax-invoice-print-page .font-bold {
-    font-weight: 800 !important;
+    font-weight: 900 !important;
     color: #000 !important;
   }
 
@@ -589,15 +837,50 @@
     font-weight: 900 !important;
   }
 
+  .tax-invoice-print-page .company-brand-name {
+    color: #111827 !important;
+    font-weight: 900 !important;
+  }
+
+  .tax-invoice-print-page .company-brand-accent {
+    color: #2563eb !important;
+    font-weight: 900 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
   .tax-invoice-print-page .tax-item-total,
   .tax-invoice-print-page .tax-amount-words {
-    font-weight: 800 !important;
+    font-weight: 900 !important;
+    color: #000 !important;
   }
 
   .tax-invoice-print-page .tax-field-value,
-  .tax-invoice-print-page .tax-item-value {
-    font-weight: 700 !important;
-    color: #111 !important;
+  .tax-invoice-print-page .tax-item-value,
+  .tax-invoice-print-page .tax-item-gst {
+    font-weight: 800 !important;
+    color: #000 !important;
+  }
+
+  .tax-invoice-print-page .tax-item-empty-row .tax-item-empty-cell {
+    border-top: none !important;
+    border-bottom: none !important;
+    border-left: 1px solid #000 !important;
+    border-right: 1px solid #000 !important;
+    height: calc(28px * var(--empty-rows, 1)) !important;
+    padding: 0 !important;
+  }
+
+  .tax-invoice-print-page .tax-item-empty-row .tax-item-empty-cell.tax-blue {
+    background-color: #d9e9f7 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .tax-invoice-print-page .job-card-work-instructions-text {
+    font-weight: 800 !important;
+    color: #000 !important;
+    white-space: pre-wrap !important;
   }
 
   .gst-invoice-print-page,

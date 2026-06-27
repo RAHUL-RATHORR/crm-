@@ -1,10 +1,27 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PlusSquare, Trash2, Printer, X, Download, Pencil, RefreshCw, Filter, Search, Check, Share2, Loader2, Building2, Hash, Calendar, Layers, FileText, Globe, Phone, Mail, MapPin, FileDigit, Calculator, List, FileCheck } from 'lucide-react';
+import { PlusSquare, Trash2, Printer, X, Download, Pencil, RefreshCw, Filter, Search, Check, Share2, Loader2, Building2, Hash, Calendar, Layers, FileText, Globe, MapPin, FileDigit } from 'lucide-react';
 import { downloadAsPDF } from './utils/pdfExport';
 import { printElement } from './utils/printDocument';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
 import { syncPlateUsageFromCards } from './utils/plateUsage';
+import { SELLER, TaxFieldsTable, fmtTaxDate, CompanyBrandName } from './utils/taxDocumentPrint';
+
+const BINDING_OPTIONS = [
+  { key: 'bindingCenterPin', label: 'Center Pin' },
+  { key: 'bindingSilai', label: 'Silai' },
+  { key: 'bindingSidePin', label: 'Side Pin' },
+  { key: 'bindingFolding', label: 'Folding' },
+  { key: 'bindingPerforation', label: 'Perforation' },
+  { key: 'bindingNumbring', label: 'Numbring' },
+  { key: 'bindingRegister', label: 'Register' },
+  { key: 'bindingGlue', label: 'Glue Binding' },
+  { key: 'bindingKachhi', label: 'Kechhi Binding' },
+  { key: 'bindingPukki', label: 'Pukki Binding' },
+];
+
+const getBindingLabel = (card) =>
+  BINDING_OPTIONS.filter((item) => card[item.key]).map((item) => item.label).join(', ') || '-';
 
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'https://crm-qpw8.onrender.com'
@@ -467,255 +484,159 @@ export default function JobCardListing() {
             </div>
 
             {/* Modal Body - Printable Content */}
-            <div className="p-8 overflow-y-auto grow a4-page-container print:p-0 print:overflow-visible" id="printable-content">
+            <div className="p-2 overflow-y-auto grow a4-page-container print:overflow-visible print:max-h-none print:h-auto print:p-0 print:grow-0" id="printable-content">
               <div
                 id="printable-inner"
-                className="bg-white shadow-none a4-page job-card-print-page"
+                className="bg-white w-full shadow-none tax-invoice-print-page"
               >
-                {/* Header Branding */}
-                <div className="flex justify-between items-start mb-6 border-b-2 pb-4 px-2" style={{ borderColor: '#1e293b' }}>
-                  <div className="grow">
-                    <div className="flex items-center gap-4 mb-2">
-                      <h1 className="text-4xl font-black tracking-tight text-gray-900 leading-none">
-                        Harihar <span className="text-blue-600">Printers</span>
-                      </h1>
-                    </div>
-                    <div className="space-y-0.5">
-                      <p className="text-[10px] font-bold text-gray-700">
-                        <span className="text-blue-600 uppercase">Office:</span> J-97, Ashok Chowk, Adarsh Nagar, Jaipur-302 004
-                      </p>
-                      <p className="text-[10px] font-bold text-gray-700">
-                        <span className="text-blue-600 uppercase">Factory:</span> G-139, Hirawala Industrial Area, Kanota, Agra Road, Jaipur
-                      </p>
-                      <div className="flex gap-4 mt-1">
-                        <p className="text-[10px] font-bold text-gray-700 flex items-center gap-1">
-                          <Phone size={10} className="text-blue-500" /> 0141-2600850, 9414043763
-                        </p>
-                        <p className="text-[10px] font-bold text-gray-700 flex items-center gap-1">
-                          <Mail size={10} className="text-blue-500" /> hariharprinters1@gmail.com
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-right flex flex-col items-end gap-1">
-                    <div className="bg-blue-600 text-white px-6 py-1.5 rounded text-[11px] font-black uppercase tracking-widest shadow-sm">
-                      Job Card
-                    </div>
-                    <div className="text-[9px] font-black text-gray-500 uppercase flex flex-col gap-1 mt-2 tracking-wide">
-                      <span>GSTIN: <span className="text-gray-900 border-b-2 border-gray-100 pb-0.5 ml-1">08AALPC9959M1ZV</span></span>
-                      <span>PAN: <span className="text-gray-900 border-b-2 border-gray-100 pb-0.5 ml-1">AALPC9959M</span></span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Top Info Grid - Premium Style */}
-                <div className="grid grid-cols-2 gap-x-8 gap-y-3 mb-6 bg-gray-50/50 p-4 rounded-xl border border-gray-100">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest leading-none mb-1">Party Name</span>
-                    <span className="text-base font-black text-gray-900 leading-tight uppercase">{selectedCard.partyName}</span>
-                  </div>
-                  <div className="flex flex-col gap-1 text-right">
-                    <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest leading-none mb-1">Job Date</span>
-                    <span className="text-base font-black text-gray-900">{new Date(selectedCard.jobDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-                  </div>
-                  <div className="col-span-1 flex flex-col gap-2">
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest leading-none mb-1">Address</span>
-                      <span className="text-[12px] font-bold text-gray-600 uppercase">{selectedCard.address || 'Address Not Provided'}</span>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest leading-none mb-1">Gmail ID</span>
-                      <span className="text-[12px] font-bold text-gray-900 break-all">{selectedCard.emailId || '-'}</span>
-                    </div>
-                  </div>
-                  <div className="col-span-1 flex justify-end gap-6 text-right">
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest leading-none mb-1">Contact</span>
-                      <span className="text-[12px] font-bold text-gray-900">{selectedCard.contactNo || '-'}</span>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest leading-none mb-1">GST No.</span>
-                      <span className="text-[12px] font-bold text-gray-900">{selectedCard.gstNo || '-'}</span>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest leading-none mb-1">Job Qty</span>
-                      <span className="text-[12px] font-black text-blue-600">{selectedCard.jobQty || '-'}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Main Content Sections */}
-                <div className="grid grid-cols-2 gap-x-10">
-                  {/* Left Section - Production Details */}
-                  <div className="space-y-6">
-                    {/* Work Type */}
-                    <section>
-                      <h4 className="text-[10px] font-black uppercase text-blue-600 border-b pb-1 mb-3 tracking-widest flex items-center gap-2">
-                        <Calculator size={12} /> Production Specs
-                      </h4>
-                      <div className="space-y-2">                             {[
-                        { label: 'Job Number', value: selectedCard.jobNumber, bold: true, color: 'text-blue-700' },
-                        { label: 'Item Name', value: selectedCard.jobName, uppercase: true },
-                        { label: 'Item Size', value: selectedCard.pageSize || '-' },
-                        { label: 'Color Detail', value: selectedCard.printingType || '-' }
-                      ].map((row, i) => (
-                        <div key={i} className="flex justify-between items-end gap-2 text-[13px] border-b border-gray-100 pb-2">
-                          <span className="font-bold uppercase text-gray-600 min-w-fit">{row.label}</span>
-                          <span className={`text-right ${row.bold ? 'font-black' : 'font-bold'} ${row.color || 'text-gray-900'} ${row.uppercase ? 'uppercase' : ''}`}>
-                            {row.value}
-                          </span>
-                        </div>
-                      ))}
-                      </div>
-                    </section>
-
-                    {/* Paper Details */}
-                    <section>
-                      <h4 className="text-[10px] font-black uppercase text-cyan-600 border-b pb-1 mb-3 tracking-widest flex items-center gap-2">
-                        <List size={12} /> Paper & Stock
-                      </h4>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <span className="text-[11px] font-black text-gray-600 uppercase block">Source</span>
-                          <div className={`px-2 py-1 rounded border text-[12px] font-black text-center uppercase ${selectedCard.paperSource === 'Company paper' ? 'bg-cyan-50 border-cyan-100 text-cyan-700' : 'bg-orange-50 border-orange-100 text-orange-700'}`}>
-                            {selectedCard.paperSource || 'Company paper'}
+                <table className="tax-invoice job-card-print-table w-full border-collapse text-black" style={{ fontSize: '11px', fontFamily: 'Arial, Helvetica, sans-serif' }}>
+                  <colgroup>
+                    <col style={{ width: '8.33%' }} />
+                    <col style={{ width: '8.33%' }} />
+                    <col style={{ width: '8.33%' }} />
+                    <col style={{ width: '8.33%' }} />
+                    <col style={{ width: '8.33%' }} />
+                    <col style={{ width: '8.33%' }} />
+                    <col style={{ width: '8.33%' }} />
+                    <col style={{ width: '8.33%' }} />
+                    <col style={{ width: '8.33%' }} />
+                    <col style={{ width: '8.33%' }} />
+                    <col style={{ width: '8.33%' }} />
+                    <col style={{ width: '8.33%' }} />
+                  </colgroup>
+                  <tbody>
+                    <tr>
+                      <td colSpan={12} className="tax-cell align-top p-0 job-card-top-header">
+                        <div className="flex justify-between items-start gap-4 p-2">
+                          <div className="job-card-company-header flex-1 min-w-0">
+                            <CompanyBrandName className="text-left job-card-brand leading-none mb-1" large />
+                            <p className="tax-header-line text-left">Office: {SELLER.office}</p>
+                            <p className="tax-header-line text-left">Factory: {SELLER.factory}</p>
+                            <p className="tax-header-line text-left">{SELLER.tel}, {SELLER.email}</p>
+                            <p className="tax-header-line text-left">
+                              <span className="tax-field-label">GSTIN :</span> {SELLER.gstin}
+                              <span className="ml-4 tax-field-label">PAN :</span> {SELLER.pan}
+                            </p>
+                          </div>
+                          <div className="job-card-doc-badge bg-blue-600 text-white px-5 py-1.5 rounded-md text-[11px] font-black uppercase tracking-widest shrink-0">
+                            JOB CARD
                           </div>
                         </div>
-                        <div className="space-y-2">
-                          <span className="text-[11px] font-black text-gray-600 uppercase block">Page & GSM</span>
-                          <div className="text-[13px] font-bold text-gray-900 border-b border-gray-100 pb-2">
-                            C: {selectedCard.coverPaperCount || 0} ({selectedCard.paperGSM || '-'}) / I: {selectedCard.innerPaperCount || 0} ({selectedCard.innerPaperGSM || '-'})
+                      </td>
+                    </tr>
+
+                    <tr>
+                      <td colSpan={6} className="tax-cell align-top job-card-meta-cell p-1.5">
+                        <TaxFieldsTable rows={[
+                          ['Job Number', selectedCard.jobNumber],
+                          ['Job Date', fmtTaxDate(selectedCard.jobDate)],
+                          ['Job Qty', selectedCard.jobQty || '-'],
+                          ['Item Name', selectedCard.jobName || '-'],
+                        ]} />
+                      </td>
+                      <td colSpan={6} className="tax-cell align-top job-card-meta-cell p-1.5">
+                        <TaxFieldsTable rows={[
+                          ['Party Name', selectedCard.partyName],
+                          ['Contact', selectedCard.contactNo || '-'],
+                          ['GST No.', selectedCard.gstNo || '-'],
+                          ['Item Size', selectedCard.pageSize || '-'],
+                        ]} />
+                      </td>
+                    </tr>
+
+                    <tr>
+                      <td colSpan={12} className="tax-cell align-top p-0">
+                        <div className="tax-blue job-card-section-title text-center py-1 px-2">Party Details</div>
+                        <div className="job-card-section-body p-1.5">
+                          <TaxFieldsTable rows={[
+                            ['Address', selectedCard.address || '-'],
+                            ['E-MAIL', selectedCard.emailId || '-'],
+                            ['Color Detail', selectedCard.printingType || '-'],
+                          ]} />
+                        </div>
+                      </td>
+                    </tr>
+
+                    <tr>
+                      <td colSpan={6} className="tax-cell align-top p-0">
+                        <div className="tax-blue job-card-section-title text-center py-1 px-2">Production Specs</div>
+                        <div className="job-card-section-body p-1.5">
+                          <TaxFieldsTable rows={[
+                            ['Compose', selectedCard.compose || 'No'],
+                            ['Design', selectedCard.design || 'No'],
+                            ['Paper Source', selectedCard.paperSource || 'Company paper'],
+                            ['Paper Type', selectedCard.paper || '-'],
+                          ]} />
+                        </div>
+                      </td>
+                      <td colSpan={6} className="tax-cell align-top p-0">
+                        <div className="tax-blue job-card-section-title text-center py-1 px-2">Press Details</div>
+                        <div className="job-card-section-body p-1.5">
+                          <TaxFieldsTable rows={[
+                            ['Plate Type', selectedCard.plateType || 'New'],
+                            ['Plate Size', selectedCard.plateSize || '-'],
+                            ['Plate Number', selectedCard.plateUseCount || '-'],
+                            ['Plate Qty', selectedCard.plateQty ?? 0],
+                            ['Lamination', selectedCard.lamination || '-'],
+                            ['Printing Qty', selectedCard.printingQty || 0],
+                          ]} />
+                        </div>
+                      </td>
+                    </tr>
+
+                    <tr>
+                      <td colSpan={6} className="tax-cell align-top p-0">
+                        <div className="tax-blue job-card-section-title text-center py-1 px-2">Paper &amp; Stock</div>
+                        <div className="job-card-section-body p-1.5">
+                          <TaxFieldsTable rows={[
+                            ['Cover Count / GSM', `${selectedCard.coverPaperCount || 0} (${selectedCard.paperGSM || '-'})`],
+                            ['Inner Count / GSM', `${selectedCard.innerPaperCount || 0} (${selectedCard.innerPaperGSM || '-'})`],
+                            ['Cover Details', selectedCard.coverPaperDetails || '-'],
+                            ['Inner Details', selectedCard.innerPaperDetails || '-'],
+                          ]} />
+                        </div>
+                      </td>
+                      <td colSpan={6} className="tax-cell align-top p-0">
+                        <div className="tax-blue job-card-section-title text-center py-1 px-2">Post-Press / Binding</div>
+                        <div className="job-card-section-body p-1.5">
+                          <TaxFieldsTable rows={[
+                            ['Binding Options', getBindingLabel(selectedCard)],
+                          ]} />
+                        </div>
+                      </td>
+                    </tr>
+
+                    <tr className="avoid-break">
+                      <td colSpan={12} className="tax-cell align-top p-0">
+                        <div className="tax-blue job-card-section-title text-center py-1 px-2">Work Instructions</div>
+                        <div className="job-card-section-body job-card-work-instructions p-2">
+                          <p className="job-card-work-instructions-text text-[11px] leading-relaxed m-0">
+                            {selectedCard.notes?.trim()
+                              ? selectedCard.notes
+                              : 'Handle with care. Ensure high quality print and accurate alignment.'}
+                          </p>
+                        </div>
+                      </td>
+                    </tr>
+
+                    <tr>
+                      <td colSpan={6} className="tax-cell align-bottom text-center" style={{ height: '72px' }}>
+                        <div className="pt-10">
+                          <div className="border-t border-black mx-8 pt-1">
+                            <span className="text-[10px] font-bold uppercase">Office Signature</span>
                           </div>
                         </div>
-                      </div>
-                      <div className="mt-3 grid grid-cols-2 gap-4 border-t border-gray-50 pt-2">
-                        <div className="flex flex-col gap-1">
-                          <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest leading-none">Cover Details</span>
-                          <span className="text-[12px] font-bold text-gray-900">{selectedCard.coverPaperDetails || '-'}</span>
-                        </div>
-                        <div className="flex flex-col gap-1">
-                          <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest leading-none">Inner Details</span>
-                          <span className="text-[12px] font-bold text-gray-900">{selectedCard.innerPaperDetails || '-'}</span>
-                        </div>
-                      </div>
-                      <div className="mt-2 border-t border-gray-50 pt-2">
-                        <div className="flex justify-between items-center text-[12px]">
-                          <span className="font-bold text-gray-600 uppercase">Paper Type</span>
-                          <span className="font-bold text-gray-900 uppercase">{selectedCard.paper || '-'}</span>
-                        </div>
-                      </div>
-                    </section>
-
-                    {/* Binding Options */}
-                    {(() => {
-                      const selectedBinding = [
-                        { key: 'bindingCenterPin', label: 'Center Pin' },
-                        { key: 'bindingSilai', label: 'Silai' },
-                        { key: 'bindingSidePin', label: 'Side Pin' },
-                        { key: 'bindingFolding', label: 'Folding' },
-                        { key: 'bindingPerforation', label: 'Perforation' },
-                        { key: 'bindingNumbring', label: 'Numbring' },
-                        { key: 'bindingRegister', label: 'Register' },
-                        { key: 'bindingGlue', label: 'Glue Binding' },
-                        { key: 'bindingKachhi', label: 'Kechhi Binding' },
-                        { key: 'bindingPukki', label: 'Pukki Binding' }
-                      ].filter(item => selectedCard[item.key]);
-
-                      if (selectedBinding.length === 0) return null;
-
-                      return (
-                        <section>
-                          <h4 className="text-[10px] font-black uppercase text-amber-600 border-b pb-1 mb-3 tracking-widest flex items-center gap-2">
-                            <FileCheck size={12} /> Post-Press / Binding
-                          </h4>
-                          <div className="flex flex-wrap gap-2 pt-1">
-                            {selectedBinding.map((item, idx) => (
-                              <span key={idx} className="bg-amber-50 px-2 py-1 rounded text-[9px] font-black border border-amber-100 uppercase text-amber-700 shadow-sm">
-                                {item.label}
-                              </span>
-                            ))}
+                      </td>
+                      <td colSpan={6} className="tax-cell align-bottom text-center" style={{ height: '72px' }}>
+                        <div className="pt-10">
+                          <div className="border-t border-black mx-8 pt-1">
+                            <span className="text-[10px] font-bold uppercase">Press Signature</span>
                           </div>
-                        </section>
-                      );
-                    })()}
-                  </div>
-
-                  {/* Right Section - Print Details & Instructions */}
-                  <div className="space-y-6">
-                    {/* Printing Tech */}
-                    <section>
-                      <h4 className="text-[10px] font-black uppercase text-indigo-600 border-b pb-1 mb-3 tracking-widest flex items-center gap-2">
-                        <Printer size={12} /> Press Details
-                      </h4>
-                      <div className="grid grid-cols-2 gap-y-3 gap-x-6">                             {[
-                        { label: 'Compose', value: selectedCard.compose || 'No' },
-                        { label: 'Design', value: selectedCard.design || 'No' },
-                        { label: 'Plate Type', value: selectedCard.plateType || 'New' },
-                        { label: 'Plate Size', value: selectedCard.plateSize || '-' },
-                        { label: 'Plate Number', value: selectedCard.plateUseCount || '-' },
-                        { label: 'Plate Qty', value: selectedCard.plateQty || 0 },
-                        { label: 'Lamination', value: selectedCard.lamination || '-' }
-                      ].map((row, i) => (
-                        <div key={i} className="flex flex-col gap-1 border-b border-gray-100 pb-2.5">
-                          <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest leading-none">{row.label}</span>
-                          <span className="text-[13px] font-bold text-gray-900 leading-tight">{row.value}</span>
                         </div>
-                      ))}
-                      </div>
-                      <div className="mt-4 p-3 bg-indigo-50/50 rounded-lg border border-indigo-100 text-center print:p-1.5">
-                        <span className="text-[11px] font-black text-gray-600 uppercase block mb-1 print:text-[10px] print:mb-0.5">Printing Quantity</span>
-                        <span className="job-card-printing-qty text-sm font-bold text-indigo-700 whitespace-pre-wrap break-words uppercase leading-relaxed">
-                          {selectedCard.printingQty || 0}
-                        </span>
-                      </div>
-                    </section>
-
-                    {/* Work Instructions Box */}
-                    <section className="job-card-work-instructions avoid-break">
-                      <div className="job-card-work-instructions-box p-3 rounded-lg">
-                        <span className="job-card-section-heading-text text-[10px] font-black uppercase block mb-1 tracking-widest">
-                          Work Instructions
-                        </span>
-                        <p className="job-card-work-instructions-text text-[11px] leading-relaxed">
-                          {selectedCard.notes?.trim()
-                            ? selectedCard.notes
-                            : 'Handle with care. Ensure high quality print and accurate alignment.'}
-                        </p>
-                      </div>
-                    </section>
-
-                    {/* Signatory Area */}
-                    <div className="pt-4 print:pt-2 grid grid-cols-2 gap-4">
-                      <div className="text-center">
-                        <div className="border-b-2 border-gray-100 h-10 mb-2"></div>
-                        <span className="text-[11px] font-black text-gray-600 uppercase tracking-widest">Office Signature</span>
-                      </div>
-                      <div className="text-center">
-                        <div className="border-b-2 border-gray-100 h-10 mb-2"></div>
-                        <span className="text-[11px] font-black text-gray-600 uppercase tracking-widest">Press Signature</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Branded Footer */}
-                <div className="mt-auto pt-8 border-t flex justify-between items-center opacity-60 print:opacity-100 px-2" style={{ borderColor: '#e2e8f0' }}>
-                  <div className="flex gap-6">
-                    <div className="flex items-center gap-1.5">
-                      <Phone size={10} className="text-blue-500" />
-                      <span className="text-[9px] font-bold text-gray-600">0141-2600850, 9414043763</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Mail size={10} className="text-blue-500" />
-                      <span className="text-[9px] font-bold text-gray-600">hariharprinters1@gmail.com</span>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-[8px] italic font-bold text-gray-400 block uppercase tracking-widest">
-                      Harihar PRINTERS • Production System
-                    </span>
-                  </div>
-                </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
 

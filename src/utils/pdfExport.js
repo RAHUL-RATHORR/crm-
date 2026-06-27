@@ -76,14 +76,14 @@ export const downloadAsPDF = async (elementId, filename, onProgressChange = () =
     const element = document.getElementById(elementId);
     if (!element) throw new Error(`Element with ID "${elementId}" not found`);
 
-    const isJobCard = elementId === 'printable-inner' || element.classList.contains('job-card-print-page');
-    const isTaxInvoice = elementId === 'printable-invoice' || element.classList.contains('tax-invoice-print-page');
+    const isJobCard = elementId === 'printable-inner';
+    const isTaxInvoice = elementId === 'printable-invoice' || elementId === 'printable-challan' || elementId === 'printable-inner' || element.classList.contains('tax-invoice-print-page');
     const isChallan = elementId === 'printable-challan' || element.classList.contains('challan-print-page');
     const isFullWidth = isJobCard || isTaxInvoice || isChallan;
-    const pageMargin = isJobCard ? '0' : (isFullWidth ? '5mm' : '12mm');
+    const pageMargin = isFullWidth ? '5mm' : '12mm';
     const contentWidth = isFullWidth ? '100%' : '186mm';
     const contentMaxWidth = isFullWidth ? '100%' : '186mm';
-    const contentPadding = isJobCard ? '10mm' : (isFullWidth ? '2mm 3mm' : '6mm 8mm');
+    const contentPadding = isFullWidth ? '2mm 3mm' : '6mm 8mm';
     const bodyAlign = isFullWidth ? 'stretch' : 'center';
     const wrapperStyle = isFullWidth
       ? 'width:100%;max-width:100%;margin:0;padding:0;background:#ffffff;box-sizing:border-box;min-height:100vh;'
@@ -166,25 +166,83 @@ export const downloadAsPDF = async (elementId, filename, onProgressChange = () =
               max-width: ${contentMaxWidth} !important;
               padding: ${contentPadding} !important;
               margin: 0 !important;
-              background: white !important;
+              background: #ffffff !important;
               display: block !important;
               border: none !important;
             }
+            .tax-invoice-print-page .tax-invoice,
+            .tax-invoice-print-page .tax-cell,
+            .tax-invoice-print-page .job-card-section-body,
+            .tax-invoice-print-page .job-card-meta-cell,
+            .tax-invoice-print-page .job-card-work-instructions {
+              background-color: #ffffff !important;
+            }
             .tax-invoice-print-page .tax-blue,
-            .tax-invoice-print-page .tax-copy-box {
+            .tax-invoice-print-page .tax-copy-box,
+            .job-card-print-table .job-card-section-title {
               background-color: #d9e9f7 !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
             }
             .tax-invoice-print-page .tax-invoice {
               width: 100% !important;
             }
             .tax-invoice-print-page .tax-field-label,
             .tax-invoice-print-page .tax-section-title,
-            .tax-invoice-print-page .tax-blue { font-weight: 800 !important; color: #000 !important; }
+            .tax-invoice-print-page .tax-blue,
+            .tax-invoice-print-page .tax-item-header-row .tax-cell { font-weight: 900 !important; color: #000 !important; }
             .tax-invoice-print-page .tax-company-name { font-weight: 900 !important; }
+            .tax-invoice-print-page .company-brand-name { color: #111827 !important; font-weight: 900 !important; }
+            .tax-invoice-print-page .company-brand-accent {
+              color: #2563eb !important;
+              font-weight: 900 !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
             .tax-invoice-print-page .tax-field-value,
-            .tax-invoice-print-page .tax-item-value { font-weight: 700 !important; }
+            .tax-invoice-print-page .tax-item-value,
+            .tax-invoice-print-page .tax-item-gst { font-weight: 800 !important; color: #000 !important; }
             .tax-invoice-print-page .tax-item-total,
-            .tax-invoice-print-page .tax-amount-words { font-weight: 800 !important; }
+            .tax-invoice-print-page .tax-amount-words { font-weight: 900 !important; color: #000 !important; }
+            .tax-invoice-print-page .tax-cell,
+            .tax-invoice-print-page td,
+            .tax-invoice-print-page th,
+            .tax-invoice-print-page p { font-weight: 700 !important; color: #000 !important; }
+            .tax-invoice-print-page .job-card-work-instructions-text {
+              font-weight: 900 !important;
+              color: #000 !important;
+              white-space: pre-wrap !important;
+              font-size: 11px !important;
+              line-height: 1.55 !important;
+            }
+            .job-card-print-table .job-card-brand {
+              color: #111827 !important;
+              font-weight: 900 !important;
+            }
+            .job-card-print-table .job-card-brand .company-brand-accent {
+              color: #2563eb !important;
+              font-weight: 900 !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            .job-card-print-table .job-card-section-title {
+              font-weight: 900 !important;
+              font-size: 11px !important;
+              letter-spacing: 0.06em !important;
+              color: #000 !important;
+              background-color: #d9e9f7 !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            .job-card-print-table .tax-field-label,
+            .job-card-print-table .tax-field-colon {
+              font-weight: 900 !important;
+              color: #000 !important;
+            }
+            .job-card-print-table .tax-field-value {
+              font-weight: 800 !important;
+              color: #000 !important;
+            }
 
             .challan-print-page {
               width: ${contentWidth} !important;

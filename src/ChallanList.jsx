@@ -7,6 +7,7 @@ import DeleteConfirmationModal from './components/DeleteConfirmationModal';
 import { getBillToDetails, getShipToDetails } from './utils/shipAddress';
 import { numberToWords } from './utils/numberToWords';
 import { getChallanLineItems, computeLineItemsTotals, buildMergedChallanMeta } from './utils/challanTotals';
+import { SELLER, fmtTaxDate, fmtAmt, getStateFromGst, TaxFieldsTable, buildTaxItemLine, TaxItemEmptyRow, EMPTY_PRODUCT_ROWS, CompanyBrandName, TaxCopyBox, TaxCopyTypeControls, DEFAULT_TAX_COPY_SELECTION } from './utils/taxDocumentPrint';
 
 const ChallanList = () => {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ const ChallanList = () => {
   const [selectedChallanIds, setSelectedChallanIds] = useState([]);
   const [partyFilter, setPartyFilter] = useState('');
   const [tempGstType, setTempGstType] = useState('CGST/SGST');
+  const [copySelection, setCopySelection] = useState(DEFAULT_TAX_COPY_SELECTION);
   const isIGST = tempGstType === 'IGST';
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -29,7 +31,7 @@ const ChallanList = () => {
   const primaryChallan = previewChallans[0] || null;
 
   const challanItems = previewChallans.flatMap(getChallanLineItems);
-  const { subTotal: totalAmount, freight: totalFreight, gstAmount: totalGstAmount, halfGst: halfGstAmount, grandTotal, roundOff } =
+  const { subTotal: totalAmount, freight: totalFreight, gstAmount: totalGstAmount, grandTotal } =
     computeLineItemsTotals(challanItems, primaryChallan?.gstPercent ?? 18, previewChallans);
   const mergedMeta = buildMergedChallanMeta(previewChallans);
 
@@ -40,6 +42,27 @@ const ChallanList = () => {
   const challanPartyFallback = primaryChallan ? { partyName: primaryChallan.partyName } : {};
   const billTo = getBillToDetails(linkedJobCard, challanPartyFallback);
   const shipTo = getShipToDetails(linkedJobCard, challanPartyFallback);
+  const billToState = getStateFromGst(billTo.gstNo);
+  const shipToState = getStateFromGst(shipTo.gstNo);
+
+  const challanFallbackGst = primaryChallan?.gstPercent ?? 18;
+  const freightGstPercent = challanItems[0]?.gstPercent ?? challanFallbackGst;
+  const freightCgstAmt = isIGST ? 0 : (totalFreight * (freightGstPercent / 2)) / 100;
+  const freightSgstAmt = isIGST ? 0 : (totalFreight * (freightGstPercent / 2)) / 100;
+  const freightIgstAmt = isIGST ? (totalFreight * freightGstPercent) / 100 : 0;
+
+  const itemLines = challanItems.map((item, idx) => buildTaxItemLine(item, idx, challanFallbackGst, isIGST));
+  const totalQty = itemLines.reduce((sum, row) => sum + (Number(row.item.qty) || 0), 0);
+  const totalTaxable = totalAmount + totalFreight;
+  const totalCgst = itemLines.reduce((sum, row) => sum + row.cgstAmt, 0) + freightCgstAmt;
+  const totalSgst = itemLines.reduce((sum, row) => sum + row.sgstAmt, 0) + freightSgstAmt;
+  const totalIgst = itemLines.reduce((sum, row) => sum + row.igstAmt, 0) + freightIgstAmt;
+  const amountBeforeTax = totalTaxable;
+  const amountWithTax = grandTotal;
+  const challanDate = mergedMeta.date || primaryChallan?.date || primaryChallan?.createdAt;
+  const challanNoLabel = isMergedPrint ? mergedMeta.challanLabel : primaryChallan?.challanNo;
+  const jobRefLabel = isMergedPrint ? mergedMeta.jobRefLabel : primaryChallan?.jobNumber;
+  const emptyProductRows = EMPTY_PRODUCT_ROWS;
 
   const partyCounts = challans.reduce((acc, ch) => {
     const name = (ch.partyName || '').trim();
@@ -144,6 +167,7 @@ const ChallanList = () => {
   const openPreview = (ch) => {
     setPreviewChallans([ch]);
     setTempGstType(ch.gstType || 'CGST/SGST');
+    setCopySelection({ ...DEFAULT_TAX_COPY_SELECTION });
     setIsModalOpen(true);
   };
 
@@ -155,7 +179,12 @@ const ChallanList = () => {
     }
     setPreviewChallans(selected);
     setTempGstType(selected[0]?.gstType || 'CGST/SGST');
+    setCopySelection({ ...DEFAULT_TAX_COPY_SELECTION });
     setIsModalOpen(true);
+  };
+
+  const handleCopySelectionChange = (id, checked) => {
+    setCopySelection((prev) => ({ ...prev, [id]: checked }));
   };
 
   const closePreview = () => {
@@ -351,7 +380,8 @@ const ChallanList = () => {
               <h2 className="text-xl font-bold text-gray-800">
                 {isMergedPrint ? `Combined Challan (${previewChallans.length})` : 'Challan Preview'}
               </h2>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center justify-end gap-3">
+                <TaxCopyTypeControls selection={copySelection} onChange={handleCopySelectionChange} />
                 <div className="flex items-center gap-1.5 bg-gray-100 px-3 py-2 rounded-xl text-sm font-bold border border-gray-200">
                   <span className="text-gray-500 font-medium">GST Mode:</span>
                   <select
@@ -390,220 +420,294 @@ const ChallanList = () => {
             <div className="p-2 overflow-y-auto grow a4-page-container print:overflow-visible print:max-h-none print:h-auto print:p-0 print:grow-0" id="printable-content">
               <div
                 id="printable-challan"
-                className="bg-white w-full shadow-none challan-print-page font-sans"
-                style={{ color: '#334155' }}
+                className="bg-white w-full shadow-none tax-invoice-print-page"
               >
-                {/* Traditional Green/Teal Design - Matching Estimates */}
-                <div className="mb-6">
-                  <h1 className="text-4xl font-bold text-center mb-3" style={{ color: '#1e3a8a' }}>
-                    Delivery Challan
-                  </h1>
+                <table className="tax-invoice w-full border-collapse text-black" style={{ fontSize: '11px', fontFamily: 'Arial, Helvetica, sans-serif' }}>
+                  <colgroup>
+                    <col style={{ width: '4%' }} />
+                    <col style={{ width: '28%' }} />
+                    <col style={{ width: '8%' }} />
+                    <col style={{ width: '6%' }} />
+                    <col style={{ width: '5%' }} />
+                    <col style={{ width: '8%' }} />
+                    <col style={{ width: '10%' }} />
+                    <col style={{ width: '5%' }} />
+                    <col style={{ width: '9%' }} />
+                    <col style={{ width: '5%' }} />
+                    <col style={{ width: '9%' }} />
+                    <col style={{ width: '10%' }} />
+                  </colgroup>
+                  <tbody>
+                    <tr>
+                      <td colSpan={12} className="tax-cell text-center align-middle py-2">
+                        <CompanyBrandName />
+                        <p className="tax-header-line">{SELLER.address}</p>
+                        <p className="tax-header-line">{SELLER.tel}, {SELLER.email}</p>
+                        <p className="tax-header-line"><span className="tax-field-label">GSTIN :</span> {SELLER.gstin}</p>
+                      </td>
+                    </tr>
 
-                  <div className="flex justify-between items-start gap-10">
-                    <div className="flex-1">
-                      <h2 className="text-xl font-black text-gray-900 tracking-tight">Harihar Printers</h2>
-                      <p className="text-[10px] text-gray-700 font-medium italic">Your Vision, Our Print.</p>
-
-                      <div className="mt-2">
-                        <h4 className="text-[11px] font-black text-gray-900 border-b-2 mb-2 pb-0.5 inline-block uppercase tracking-wider">Address :</h4>
-                        <div className="text-[12px] space-y-1 font-medium text-gray-600">
-                          <p className="font-bold text-gray-800">Harihar Printers</p>
-                          <p>Office: J-97, Ashok Chowk, Adarsh Nagar, Jaipur</p>
-                          <p>Factory: G-139, Hirawala Ind. Area, Kanota, Jaipur</p>
-                          <p>Tel: +91 94140-43763</p>
+                    <tr>
+                      <td colSpan={12} className="tax-cell tax-blue p-0">
+                        <div className="tax-title-bar">
+                          <div className="tax-title-text">DELIVERY CHALLAN</div>
+                          <TaxCopyBox selection={copySelection} />
                         </div>
-                      </div>
-                    </div>
+                      </td>
+                    </tr>
 
-                    <div className="flex-1 flex flex-col items-end">
-                      {/* Metadata Table */}
-                      <div className="w-48 border border-gray-200 rounded-lg overflow-hidden">
-                    <table className="w-full text-[12px]">
-                      <tbody className="divide-y divide-gray-200">
-                        <tr className="bg-gray-50/50">
-                          <td className="px-2 py-1.5 font-bold text-gray-700 uppercase tracking-tighter">DATE :</td>
-                          <td className="px-2 py-1.5 font-bold text-right text-gray-800">
-                            {mergedMeta.date
-                              ? new Date(mergedMeta.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
-                              : ''}
-                          </td>
-                        </tr>
-                        <tr>
-                          <td className="px-2 py-1.5 font-bold text-gray-700 uppercase tracking-tighter">Challan No :</td>
-                          <td className="px-2 py-1.5 font-bold text-right text-gray-800 text-[10px] leading-tight">
-                            {isMergedPrint ? mergedMeta.challanLabel : `#${primaryChallan.challanNo}`}
-                          </td>
-                        </tr>
-                        <tr className="bg-gray-50/50">
-                          <td className="px-2 py-1.5 font-bold text-gray-700 uppercase tracking-tighter">Job Ref :</td>
-                          <td className="px-2 py-1.5 font-bold text-right text-blue-700 text-[10px] leading-tight">
-                            {isMergedPrint ? mergedMeta.jobRefLabel : primaryChallan.jobNumber}
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                    </div>
-                  </div>
+                    <tr>
+                      <td colSpan={6} className="tax-cell align-top p-1">
+                        <TaxFieldsTable rows={[
+                          ['Reverse Charge', primaryChallan.reverseCharge || 'No'],
+                          ['Challan No.', challanNoLabel],
+                          ['Challan Date', fmtTaxDate(challanDate)],
+                          ['State', SELLER.state],
+                          ['State Code', SELLER.stateCode],
+                        ]} />
+                      </td>
+                      <td colSpan={6} className="tax-cell align-top p-1">
+                        <TaxFieldsTable rows={[
+                          ['Transportation Mode', 'Road'],
+                          ['Vehicle No.', ''],
+                          ['Date of Supply', fmtTaxDate(challanDate)],
+                          ['Place of Supply', 'Jaipur'],
+                          ['Job Ref', jobRefLabel || ''],
+                        ]} />
+                      </td>
+                    </tr>
 
-                  <div className="flex justify-between items-start gap-10 mt-4">
-                    <div className="flex-1">
-                      <h4 className="text-[11px] font-black text-gray-900 border-b-2 mb-2 pb-0.5 inline-block uppercase tracking-wider">Bill To :</h4>
-                      <div className="text-[12px] space-y-1 font-medium text-gray-600">
-                        <p className="font-bold uppercase text-xs" style={{ color: '#1e3a8a' }}>{billTo.partyName}</p>
-                        <p className="uppercase">{billTo.address || billTo.partyName}</p>
-                        <p>Jaipur, Rajasthan</p>
-                        <p>Tel: {billTo.contactNo || 'Contact Provided'}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex-1 flex justify-end">
-                      <div className="w-48">
-                      <h4 className="text-[11px] font-black text-gray-900 border-b-2 mb-2 pb-0.5 inline-block uppercase tracking-wider">Ship To :</h4>
-                      <div className="text-[12px] space-y-1 font-medium text-gray-600">
-                        <p className="font-bold uppercase text-xs" style={{ color: '#1e3a8a' }}>{shipTo.partyName}</p>
-                        <p className="uppercase">{shipTo.address || shipTo.partyName}</p>
-                        <p>Jaipur, Rajasthan</p>
-                        <p>Tel: {shipTo.contactNo || 'Contact Provided'}</p>
-                      </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* --- ITEMS TABLE --- */}
-                <div className="challan-items-table mb-8 border border-gray-200 rounded-sm overflow-hidden min-h-87.5 flex flex-col">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="text-white text-[12px] font-black uppercase tracking-widest" style={{ backgroundColor: '#1e3a8a' }}>
-                        <th className="px-4 py-2.5 border-r border-teal-500/30 w-24">Quantity</th>
-                        <th className="px-4 py-2.5 border-r border-teal-500/30">Description of Goods</th>
-                        <th className="px-4 py-2.5 border-r border-teal-500/30 text-right w-28">Rate</th>
-                        <th className="px-4 py-2.5 text-right w-32">Amount</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100 grow">
-                      {challanItems.map((item, idx) => (
-                        <tr key={`${item.challanNo}-${idx}`} className="text-[13px] group">
-                          <td className="px-4 py-4 border-r border-gray-50 font-bold align-top text-center text-gray-700">
-                            {item.qty} NOS
-                          </td>
-                          <td className="px-4 py-4 border-r border-gray-50 align-top">
-                            <div className="space-y-1">
-                              <p className="font-black text-gray-900 uppercase text-xs" style={{ color: '#1e3a8a' }}>{item.description}</p>
-                              {(isMergedPrint || item.jobNumber) && (
-                                <p className="text-[11px] text-gray-700 font-medium leading-relaxed italic uppercase">
-                                  {item.jobNumber && `Job Ref: ${item.jobNumber}`}
-                                  {item.challanNo && isMergedPrint && ` • ${item.challanNo}`}
-                                </p>
-                              )}
-                            </div>
-                          </td>
-                          <td className="px-4 py-4 border-r border-gray-50 font-bold align-top text-right text-gray-700">
-                            ₹ {Number(item.rate || (item.total / (item.qty || 1)) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                          </td>
-                          <td className="px-4 py-4 font-black align-top text-right text-gray-900 bg-gray-50/30">
-                            ₹ {Number(item.total || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                          </td>
-                        </tr>
-                      ))}
-                      {/* Blank rows to fill space — hidden only when printing */}
-                      {[1, 2, 3, 4, 5, 6].slice(0, isMergedPrint ? 0 : 6).map((i) => (
-                        <tr key={i} className="invoice-fill-row border-0">
-                          <td className="px-4 py-4 border-r border-gray-50">&nbsp;</td>
-                          <td className="px-4 py-4 border-r border-gray-50">&nbsp;</td>
-                          <td className="px-4 py-4 border-r border-gray-50">&nbsp;</td>
-                          <td className="px-4 py-4">&nbsp;</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-
-                  {/* Total Section */}
-                  <div className="border-t border-gray-200 mt-auto bg-gray-50/50">
-                    <div className="flex">
-                      <div className="grow p-4">
-                        <p className="text-[10px] font-black text-gray-600 uppercase mb-1 tracking-widest">Amount in Words</p>
-                        <p className="text-[12px] font-bold text-gray-700 italic">{numberToWords(grandTotal)} Only</p>
-                      </div>
-                      <div className="flex flex-col w-56 border-l border-gray-200">
-                        <div className="flex justify-between px-4 py-1.5 border-b border-gray-200">
-                          <span className="text-[11px] font-bold text-gray-700 uppercase">Total Amount</span>
-                          <span className="text-[12px] font-bold text-gray-800">₹ {totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                    <tr>
+                      <td colSpan={6} className="tax-cell align-top p-0">
+                        <div className="tax-blue tax-section-title text-center py-0.5 px-1">Details of Receiver | Billed to:</div>
+                        <div className="p-1">
+                          <TaxFieldsTable rows={[
+                            ['Name', billTo.partyName],
+                            ['Address', billTo.address || '-'],
+                            ['E-MAIL', billTo.emailId || '-'],
+                            ['GSTIN', billTo.gstNo || 'URP'],
+                            ['MOBILE', billTo.contactNo || '-'],
+                            ['State', billToState.state],
+                            ['State Code', billToState.code],
+                          ]} />
                         </div>
-                        {totalFreight > 0 && (
-                          <div className="flex justify-between px-4 py-1.5 border-b border-gray-200">
-                            <span className="text-[11px] font-bold text-gray-700 uppercase">Freight</span>
-                            <span className="text-[12px] font-bold text-gray-800">₹ {totalFreight.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                          </div>
+                      </td>
+                      <td colSpan={6} className="tax-cell align-top p-0">
+                        <div className="tax-blue tax-section-title text-center py-0.5 px-1">Details of Consignee | Shipped to:</div>
+                        <div className="p-1">
+                          <TaxFieldsTable rows={[
+                            ['Name', shipTo.partyName],
+                            ['Address', shipTo.address || '-'],
+                            ['E-MAIL', shipTo.emailId || '-'],
+                            ['GSTIN', shipTo.gstNo || 'URP'],
+                            ['MOBILE', shipTo.contactNo || '-'],
+                            ['State', shipToState.state],
+                            ['State Code', shipToState.code],
+                          ]} />
+                        </div>
+                      </td>
+                    </tr>
+
+                    <tr className="tax-blue text-center font-bold tax-item-header-row">
+                      <td className="tax-cell" rowSpan={2}>Sr.<br />No.</td>
+                      <td className="tax-cell" rowSpan={2}>Name of product</td>
+                      <td className="tax-cell" rowSpan={2}>HSN/SAC</td>
+                      <td className="tax-cell" rowSpan={2}>QTY</td>
+                      <td className="tax-cell" rowSpan={2}>Unit</td>
+                      <td className="tax-cell" rowSpan={2}>Rate</td>
+                      <td className="tax-cell" rowSpan={2}>Taxable<br />Value</td>
+                      {isIGST ? (
+                        <>
+                          <td className="tax-cell" colSpan={2}>IGST</td>
+                          <td className="tax-cell" colSpan={2}>&nbsp;</td>
+                        </>
+                      ) : (
+                        <>
+                          <td className="tax-cell" colSpan={2}>CGST</td>
+                          <td className="tax-cell" colSpan={2}>SGST</td>
+                        </>
+                      )}
+                      <td className="tax-cell" rowSpan={2}>Total</td>
+                    </tr>
+                    <tr className="tax-blue text-center font-bold tax-item-header-row">
+                      {isIGST ? (
+                        <>
+                          <td className="tax-cell">Rate</td>
+                          <td className="tax-cell">Amount</td>
+                          <td className="tax-cell">&nbsp;</td>
+                          <td className="tax-cell">&nbsp;</td>
+                        </>
+                      ) : (
+                        <>
+                          <td className="tax-cell">Rate</td>
+                          <td className="tax-cell">Amount</td>
+                          <td className="tax-cell">Rate</td>
+                          <td className="tax-cell">Amount</td>
+                        </>
+                      )}
+                    </tr>
+
+                    {itemLines.map((row) => (
+                      <tr key={`${row.item.challanNo || ''}-${row.idx}`}>
+                        <td className="tax-cell text-center align-top tax-item-value">{row.idx}</td>
+                        <td className="tax-cell align-top tax-item-value">
+                          <div>{row.item.description}</div>
+                          {row.item.jobNumber && (
+                            <div className="text-[9px] font-bold mt-0.5">Job Ref: {row.item.jobNumber}</div>
+                          )}
+                          {isMergedPrint && row.item.challanNo && (
+                            <div className="text-[9px] font-bold">Challan: {row.item.challanNo}</div>
+                          )}
+                        </td>
+                        <td className="tax-cell text-center align-top tax-item-value">&nbsp;</td>
+                        <td className="tax-cell text-center align-top tax-item-value">{Number(row.item.qty || 0)}</td>
+                        <td className="tax-cell text-center align-top tax-item-value">PCS</td>
+                        <td className="tax-cell text-right align-top tax-item-value">{fmtAmt(row.item.rate)}</td>
+                        <td className="tax-cell text-right align-top tax-item-value">{fmtAmt(row.taxable)}</td>
+                        {isIGST ? (
+                          <>
+                            <td className="tax-cell text-center align-top tax-item-gst">{row.igstRate}%</td>
+                            <td className="tax-cell text-right align-top tax-item-gst">{fmtAmt(row.igstAmt)}</td>
+                            <td className="tax-cell">&nbsp;</td>
+                            <td className="tax-cell">&nbsp;</td>
+                          </>
+                        ) : (
+                          <>
+                            <td className="tax-cell text-center align-top tax-item-gst">{row.cgstRate}%</td>
+                            <td className="tax-cell text-right align-top tax-item-gst">{fmtAmt(row.cgstAmt)}</td>
+                            <td className="tax-cell text-center align-top tax-item-gst">{row.sgstRate}%</td>
+                            <td className="tax-cell text-right align-top tax-item-gst">{fmtAmt(row.sgstAmt)}</td>
+                          </>
                         )}
-                        <div className="flex justify-between px-4 py-1.5 border-b border-gray-200">
-                          <span className="text-[11px] font-bold text-gray-700 uppercase">CGST</span>
-                          <span className="text-[12px] font-bold text-gray-800">₹ {isIGST ? '0.00' : halfGstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                        </div>
-                        <div className="flex justify-between px-4 py-1.5 border-b border-gray-200">
-                          <span className="text-[11px] font-bold text-gray-700 uppercase">SGST</span>
-                          <span className="text-[12px] font-bold text-gray-800">₹ {isIGST ? '0.00' : halfGstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                        </div>
-                        <div className="flex justify-between px-4 py-1.5 border-b border-gray-200">
-                          <span className="text-[11px] font-bold text-gray-700 uppercase">IGST</span>
-                          <span className="text-[12px] font-bold text-gray-800">₹ {isIGST ? totalGstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 }) : '0.00'}</span>
-                        </div>
-                        <div className="flex justify-between px-4 py-1.5 border-b border-gray-200">
-                          <span className="text-[11px] font-bold text-gray-700 uppercase">Round Off</span>
-                          <span className="text-[12px] font-bold text-gray-800">₹ {roundOff.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                        </div>
-                        <div className="flex justify-between px-4 py-3 invoice-grand-total" style={{ backgroundColor: '#1e3a8a' }}>
-                          <span className="text-[12px] font-black text-white uppercase tracking-wider">Grand Total</span>
-                          <span className="text-sm font-black text-white">₹ {grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                        <td className="tax-cell text-right align-top tax-item-total">{fmtAmt(row.lineTotal)}</td>
+                      </tr>
+                    ))}
 
-                {/* --- BANK DETAILS BAR --- */}
-                <div className="mb-6">
-                  <h4 className="text-[11px] font-black text-gray-900 border-b-2 mb-3 pb-0.5 inline-block uppercase tracking-wider">Account Details :</h4>
-                  <div className="p-3 border border-gray-200 rounded-lg bg-gray-50/30 flex justify-between items-center">
-                  <div className="flex gap-8">
-                    <div>
-                      <p className="text-[10px] font-black text-gray-600 uppercase mb-1">Bank Name</p>
-                      <p className="text-[12px] font-bold text-gray-800">Indusind Bank</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-black text-gray-600 uppercase mb-1">Account Number</p>
-                      <p className="text-[12px] font-bold text-gray-800">650014092175</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-black text-gray-600 uppercase mb-1">IFSC Code</p>
-                      <p className="text-[12px] font-bold text-gray-800 uppercase">INDB0000278</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[10px] font-black text-gray-600 uppercase mb-1">Branch</p>
-                    <p className="text-[12px] font-bold text-gray-800">Raja Park, Jaipur</p>
-                  </div>
-                  </div>
-                </div>
+                    <TaxItemEmptyRow rowCount={emptyProductRows} />
 
-                {/* --- FOOTER SECTION --- */}
-                <div className="invoice-footer mt-8 text-[11px] text-gray-700 space-y-4">
-                  <div className="pt-8 grid grid-cols-2 gap-20">
-                    <div className="border-t border-gray-300 pt-1">
-                      <p className="font-bold uppercase tracking-widest text-[#1e3a8a]">Receiver's Signature :</p>
-                    </div>
-                    <div className="border-t border-gray-300 pt-1 text-right">
-                      <p className="font-bold uppercase tracking-widest text-[#1e3a8a]">For Harihar Printers</p>
-                      <p className="mt-8 font-black text-gray-800">Authorised Signatory</p>
-                    </div>
-                  </div>
+                    {totalFreight > 0 && (
+                      <tr>
+                        <td className="tax-cell text-center align-top">{itemLines.length + 1}</td>
+                        <td className="tax-cell align-top">Freight</td>
+                        <td className="tax-cell">&nbsp;</td>
+                        <td className="tax-cell">&nbsp;</td>
+                        <td className="tax-cell">&nbsp;</td>
+                        <td className="tax-cell">&nbsp;</td>
+                        <td className="tax-cell text-right align-top">{fmtAmt(totalFreight)}</td>
+                        {isIGST ? (
+                          <>
+                            <td className="tax-cell text-center align-top tax-item-gst">{freightGstPercent}%</td>
+                            <td className="tax-cell text-right align-top tax-item-gst">{fmtAmt(freightIgstAmt)}</td>
+                            <td className="tax-cell">&nbsp;</td>
+                            <td className="tax-cell">&nbsp;</td>
+                          </>
+                        ) : (
+                          <>
+                            <td className="tax-cell text-center align-top tax-item-gst">{freightGstPercent / 2}%</td>
+                            <td className="tax-cell text-right align-top tax-item-gst">{fmtAmt(freightCgstAmt)}</td>
+                            <td className="tax-cell text-center align-top tax-item-gst">{freightGstPercent / 2}%</td>
+                            <td className="tax-cell text-right align-top tax-item-gst">{fmtAmt(freightSgstAmt)}</td>
+                          </>
+                        )}
+                        <td className="tax-cell text-right align-top font-bold">
+                          {fmtAmt(totalFreight + freightCgstAmt + freightSgstAmt + freightIgstAmt)}
+                        </td>
+                      </tr>
+                    )}
 
-                  <div className="pt-12 text-center">
+                    <tr className="tax-blue font-bold">
+                      <td className="tax-cell" colSpan={3}>Total Quantity</td>
+                      <td className="tax-cell text-center">{totalQty}</td>
+                      <td className="tax-cell" colSpan={2}>&nbsp;</td>
+                      <td className="tax-cell text-right">{fmtAmt(totalTaxable)}</td>
+                      {isIGST ? (
+                        <>
+                          <td className="tax-cell">&nbsp;</td>
+                          <td className="tax-cell text-right tax-item-gst">{fmtAmt(totalIgst)}</td>
+                          <td className="tax-cell">&nbsp;</td>
+                          <td className="tax-cell">&nbsp;</td>
+                        </>
+                      ) : (
+                        <>
+                          <td className="tax-cell">&nbsp;</td>
+                          <td className="tax-cell text-right tax-item-gst">{fmtAmt(totalCgst)}</td>
+                          <td className="tax-cell">&nbsp;</td>
+                          <td className="tax-cell text-right tax-item-gst">{fmtAmt(totalSgst)}</td>
+                        </>
+                      )}
+                      <td className="tax-cell text-right">{fmtAmt(amountWithTax)}</td>
+                    </tr>
 
-                    <p className="text-[10px] font-bold text-gray-600 mt-2 uppercase tracking-widest">Subject to Jaipur Jurisdiction Only</p>
-                  </div>
-                </div>
+                    <tr>
+                      <td colSpan={6} className="tax-cell align-top p-0">
+                        <div className="tax-blue tax-section-title text-center py-0.5 px-1">Total Challan Amount in words</div>
+                        <p className="text-center py-2 px-1 tax-amount-words">{numberToWords(amountWithTax)} Only</p>
+                      </td>
+                      <td colSpan={6} className="tax-cell align-top p-0">
+                        <table className="w-full border-collapse tax-summary-table">
+                          <tbody>
+                            <tr>
+                              <td className="tax-cell font-bold tax-summary-label">Total Amount Before Tax</td>
+                              <td className="tax-cell text-right font-bold tax-summary-value">{fmtAmt(amountBeforeTax)}</td>
+                            </tr>
+                            {isIGST ? (
+                              <tr>
+                                <td className="tax-cell font-bold tax-summary-label">Add : IGST</td>
+                                <td className="tax-cell text-right font-bold tax-summary-value">{fmtAmt(totalIgst)}</td>
+                              </tr>
+                            ) : (
+                              <>
+                                <tr>
+                                  <td className="tax-cell font-bold tax-summary-label">Add : CGST</td>
+                                  <td className="tax-cell text-right font-bold tax-summary-value">{fmtAmt(totalCgst)}</td>
+                                </tr>
+                                <tr>
+                                  <td className="tax-cell font-bold tax-summary-label">Add : SGST</td>
+                                  <td className="tax-cell text-right font-bold tax-summary-value">{fmtAmt(totalSgst)}</td>
+                                </tr>
+                              </>
+                            )}
+                            <tr className="tax-blue">
+                              <td className="tax-cell font-bold tax-summary-label">Tax Amount : GST</td>
+                              <td className="tax-cell text-right font-bold tax-summary-value">{fmtAmt(totalGstAmount)}</td>
+                            </tr>
+                            <tr className="tax-blue">
+                              <td className="tax-cell font-bold tax-summary-label">Amount With Tax</td>
+                              <td className="tax-cell text-right font-bold tax-summary-value">{fmtAmt(amountWithTax)}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </td>
+                    </tr>
+
+                    <tr>
+                      <td colSpan={6} className="tax-cell align-top p-1">
+                        <p className="tax-section-title mb-1">Bank Details</p>
+                        <TaxFieldsTable rows={[
+                          ['Account Holder Name', SELLER.bank.holder],
+                          ['Bank Account Number', SELLER.bank.account],
+                          ['Bank IFSC Code', SELLER.bank.ifsc],
+                          ['Bank Name', SELLER.bank.name],
+                          ['Bank Branch Name', SELLER.bank.branch],
+                        ]} />
+                        <p className="tax-section-title mt-2 mb-1">Terms And Conditions</p>
+                        <ol className="tax-terms-list">
+                          <li>Goods once sold will not be taken back.</li>
+                          <li>Any Dispute Shall Subject to Jaipur Jurisdiction.</li>
+                          <li>E.&amp;O.E.</li>
+                          <li>The company is not responsible for any transit damage or loss.</li>
+                          <li>All Goods Return / Replace only if damage by company transport.</li>
+                        </ol>
+                      </td>
+                      <td colSpan={6} className="tax-cell align-top p-1">
+                        <p className="text-center mb-2 tax-header-line">Certified that the particular given above are true and correct</p>
+                        <p className="tax-section-title text-right">For, {SELLER.name}</p>
+                        <div className="tax-sign-space">&nbsp;</div>
+                        <p className="text-right tax-section-title">Authorised Signatory</p>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
