@@ -124,7 +124,7 @@ export default function Estimates() {
   );
 
   return (
-    <div className="w-full px-4 mt-8 pb-12 animate-in fade-in duration-500">
+    <div className="w-full min-w-0 max-w-full mt-8 pb-12 animate-in fade-in duration-500 overflow-x-hidden">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
         <div>
           <h1 className="text-2xl sm:text-3xl font-black text-gray-900 flex items-center gap-3 tracking-tight">
@@ -160,17 +160,17 @@ export default function Estimates() {
         </button>
       </div>
 
-      <div className="bg-white rounded-b-3xl shadow-xl shadow-gray-200/50 border border-gray-50 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm whitespace-nowrap">
+      <div className="bg-white rounded-b-3xl shadow-xl shadow-gray-200/50 border border-gray-50 overflow-hidden max-w-full">
+        <div className="overflow-x-auto max-w-full">
+          <table className="w-full min-w-0 text-left text-sm table-fixed">
             <thead>
-              <tr className="bg-gray-50/50 text-[11px] font-black uppercase text-gray-900 tracking-[0.2em] border-b border-gray-200">
-                <th className="py-5 px-8">S.No.</th>
-                <th className="py-5 px-8">Job Details</th>
-                <th className="py-5 px-8">Party Name</th>
-                <th className="py-5 px-8">Dimensions / Qty</th>
-                <th className="py-5 px-8 text-center bg-orange-50/50 text-orange-700">Estimate Price (₹)</th>
-                <th className="py-5 px-8 text-center">Action</th>
+              <tr className="bg-gray-50/50 text-[11px] font-black uppercase text-gray-900 tracking-[0.15em] border-b border-gray-200">
+                <th className="py-4 px-3 sm:px-4 w-12">S.No.</th>
+                <th className="py-4 px-3 sm:px-4 w-[18%]">Job Details</th>
+                <th className="py-4 px-3 sm:px-4 w-[22%]">Party Name</th>
+                <th className="py-4 px-3 sm:px-4 w-[16%]">Dimensions / Qty</th>
+                <th className="py-4 px-3 sm:px-4 text-center bg-orange-50/50 text-orange-700 w-[18%]">Estimate Price (₹)</th>
+                <th className="py-4 px-3 sm:px-4 text-center w-[14%]">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -192,80 +192,84 @@ export default function Estimates() {
               ) : (
                 filteredCards.map((card, index) => (
                   <tr key={card._id} className="hover:bg-gray-50/60 transition-colors group">
-                    <td className="py-6 px-8 text-gray-400 font-bold">{index + 1}</td>
-                    <td className="py-6 px-8">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition-all">
-                          <FileCheck size={20} />
+                    <td className="py-4 px-3 sm:px-4 text-gray-400 font-bold align-top">{index + 1}</td>
+                    <td className="py-4 px-3 sm:px-4 align-top">
+                      <div className="flex items-start gap-2 min-w-0">
+                        <div className="w-9 h-9 shrink-0 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition-all">
+                          <FileCheck size={18} />
                         </div>
-                        <div>
-                          <span className="bg-orange-50 text-orange-700 px-2 py-0.5 rounded-md text-[10px] font-black uppercase ring-1 ring-orange-100">
+                        <div className="min-w-0">
+                          <span className="inline-block max-w-full truncate bg-orange-50 text-orange-700 px-2 py-0.5 rounded-md text-[10px] font-black uppercase ring-1 ring-orange-100">
                             {card.jobNumber}
                           </span>
-                          <p className="text-gray-900 font-black mt-1">{new Date(card.jobDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+                          <p className="text-gray-900 font-black mt-1 text-xs sm:text-sm">{new Date(card.jobDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="py-6 px-8">
-                      <p className="font-bold text-gray-900">{card.partyName}</p>
-                      <p className="text-[10px] text-gray-400 font-medium uppercase mt-0.5 tracking-tight">{card.address || 'No Address'}</p>
+                    <td className="py-4 px-3 sm:px-4 align-top">
+                      <p className="font-bold text-gray-900 text-xs sm:text-sm break-words">{card.partyName}</p>
+                      <p className="text-[10px] text-gray-400 font-medium uppercase mt-0.5 tracking-tight line-clamp-1">{card.address || 'No Address'}</p>
                     </td>
-                    <td className="py-6 px-8">
+                    <td className="py-4 px-3 sm:px-4 align-top">
                       <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-1">
                           <span className="text-[10px] font-black text-gray-400 uppercase">Size:</span>
-                          <span className="text-xs font-bold text-gray-700">{card.pageSize || '-'}</span>
+                          <span className="text-xs font-bold text-gray-700 break-all">{card.pageSize || '-'}</span>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-1">
                           <span className="text-[10px] font-black text-gray-400 uppercase">Qty:</span>
                           <span className="text-xs font-black text-blue-600">{card.jobQty || 0}</span>
                         </div>
                       </div>
                     </td>
-                    <td className="py-6 px-8 bg-orange-50/30">
-                      <div className="relative max-w-[150px] mx-auto">
-                        <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 text-orange-400" size={14} />
+                    <td className="py-4 px-3 sm:px-4 bg-orange-50/30 align-top">
+                      <div className="relative max-w-[130px] mx-auto">
+                        <IndianRupee className="absolute left-2.5 top-1/2 -translate-y-1/2 text-orange-400" size={14} />
                         <input
                           type="number"
                           value={prices[card._id] || ''}
                           onChange={(e) => handlePriceChange(card._id, e.target.value)}
-                          className="w-full pl-8 pr-4 py-2 bg-white border border-orange-200 rounded-xl font-black text-orange-700 outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 transition-all text-center"
+                          className="w-full pl-7 pr-2 py-2 bg-white border border-orange-200 rounded-xl font-black text-orange-700 outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 transition-all text-center text-sm"
                           placeholder="0.00"
                         />
                       </div>
                     </td>
-                    <td className="py-6 px-8 text-center flex items-center justify-center gap-3">
-                      <button
-                        onClick={() => handlePrint(card)}
-                        className="p-2.5 bg-sky-50 text-sky-600 hover:bg-sky-600 hover:text-white rounded-xl transition-all shadow-sm active:scale-95"
-                        title="Print Quotation"
-                      >
-                        <Printer size={18} />
-                      </button>
-                      <button
-                        onClick={() => updatePrice(card._id)}
-                        disabled={saveStatus[card._id] === 'saving'}
-                        className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:shadow-none ${saveStatus[card._id] === 'saved'
-                          ? 'bg-green-600 text-white shadow-green-100'
-                          : saveStatus[card._id] === 'error'
-                            ? 'bg-red-600 text-white shadow-red-100'
-                            : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-100'
-                          }`}
-                      >
-                        {saveStatus[card._id] === 'saving' ? (
-                          <RefreshCw size={14} className="animate-spin" />
-                        ) : saveStatus[card._id] === 'saved' ? (
-                          <Check size={14} />
-                        ) : (
-                          <Save size={14} />
-                        )}
-                        {saveStatus[card._id] === 'saving'
-                          ? 'Saving...'
-                          : saveStatus[card._id] === 'saved'
-                            ? 'Saved!'
-                            : 'Update Price'
-                        }
-                      </button>
+                    <td className="py-4 px-3 sm:px-4 text-center align-top">
+                      <div className="flex items-center justify-center gap-2">
+                        <button
+                          onClick={() => handlePrint(card)}
+                          className="p-2 bg-sky-50 text-sky-600 hover:bg-sky-600 hover:text-white rounded-xl transition-all shadow-sm active:scale-95 shrink-0"
+                          title="Print Quotation"
+                        >
+                          <Printer size={18} />
+                        </button>
+                        <button
+                          onClick={() => updatePrice(card._id)}
+                          disabled={saveStatus[card._id] === 'saving'}
+                          className={`inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl font-bold text-xs transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:shadow-none shrink-0 ${saveStatus[card._id] === 'saved'
+                            ? 'bg-green-600 text-white shadow-green-100'
+                            : saveStatus[card._id] === 'error'
+                              ? 'bg-red-600 text-white shadow-red-100'
+                              : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-100'
+                            }`}
+                          title={saveStatus[card._id] === 'saved' ? 'Saved' : 'Update Price'}
+                        >
+                          {saveStatus[card._id] === 'saving' ? (
+                            <RefreshCw size={14} className="animate-spin" />
+                          ) : saveStatus[card._id] === 'saved' ? (
+                            <Check size={14} />
+                          ) : (
+                            <Save size={14} />
+                          )}
+                          <span className="hidden xl:inline">
+                            {saveStatus[card._id] === 'saving'
+                              ? 'Saving...'
+                              : saveStatus[card._id] === 'saved'
+                                ? 'Saved!'
+                                : 'Update'}
+                          </span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
