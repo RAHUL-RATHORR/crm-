@@ -15,8 +15,9 @@ import {
 } from 'lucide-react';
 import { downloadAsPDF } from './utils/pdfExport';
 
-const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-const API_BASE_URL = isLocalHost ? 'http://localhost:5011' : 'https://crm-qpw8.onrender.com';
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'https://crm-qpw8.onrender.com'
+  : 'https://crm-qpw8.onrender.com';
 
 const EMPTY_FORM = {
   quoteDate: new Date().toISOString().split('T')[0],
