@@ -29,6 +29,7 @@ import settingRoutes from "./routes/settingRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import paperStockRoutes from "./routes/paperStockRoutes.js";
 import statementRoutes from "./routes/statementRoutes.js";
+import estimateRoutes from "./routes/estimateRoutes.js";
 
 const app = express();
 app.use(cors());
@@ -98,6 +99,7 @@ app.use("/api/settings", settingRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/paper-stock", paperStockRoutes);
 app.use("/api/statements", statementRoutes);
+app.use("/api/estimate", estimateRoutes);
 
 // API Test Route (Internal)
 app.get("/api/health", (req, res) => {
