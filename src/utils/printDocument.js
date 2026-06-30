@@ -2,6 +2,39 @@
  * Print helper — same isolation approach as pdfExport (full-size iframe + inlined styles).
  */
 
+export function applyTaxCopyHighlight(root, highlightCopy) {
+  if (!root) return;
+  root.querySelectorAll('[data-copy-id]').forEach((row) => {
+    const copyId = row.getAttribute('data-copy-id');
+    const mark = row.querySelector('.tax-copy-mark');
+    if (mark) mark.textContent = copyId === highlightCopy ? '☑' : '☐';
+  });
+}
+
+function buildTaxPrintContent(element, copyIds) {
+  const pageClass = element.className || 'tax-invoice-print-page';
+
+  if (!copyIds?.length) {
+    return element.innerHTML;
+  }
+
+  if (copyIds.length === 1) {
+    const clone = element.cloneNode(true);
+    applyTaxCopyHighlight(clone, copyIds[0]);
+    return clone.innerHTML;
+  }
+
+  return copyIds
+    .map((copyId, idx) => {
+      const clone = element.cloneNode(true);
+      clone.removeAttribute('id');
+      applyTaxCopyHighlight(clone, copyId);
+      const pageBreak = idx < copyIds.length - 1 ? 'page-break-after: always; break-after: page;' : '';
+      return `<div class="tax-print-copy-page ${pageClass}" style="${pageBreak}">${clone.innerHTML}</div>`;
+    })
+    .join('');
+}
+
 const getSanitizedSystemStyles = () => {
   let combinedStyles = '';
   try {
@@ -28,7 +61,8 @@ const getSanitizedSystemStyles = () => {
   }
 };
 
-export function printElement(elementId) {
+export function printElement(elementId, options = {}) {
+  const { copyIds } = options;
   const element = document.getElementById(elementId);
   if (!element) {
     window.print();
@@ -378,12 +412,14 @@ export function printElement(elementId) {
           .tax-invoice-print-page .tax-field-value,
           .tax-invoice-print-page .tax-item-value,
           .tax-invoice-print-page .tax-item-gst { font-weight: 800 !important; color: #000 !important; }
+          .tax-print-copy-page { page-break-inside: avoid; }
+          .tax-print-copy-page:not(:last-child) { page-break-after: always !important; break-after: page !important; }
           ` : ''}
         </style>
       </head>
       <body class="bg-white">
         <div style="${wrapperStyle}">
-          ${element.innerHTML}
+          ${buildTaxPrintContent(element, copyIds)}
         </div>
       </body>
     </html>

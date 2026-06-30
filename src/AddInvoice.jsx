@@ -2,7 +2,17 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { Plus, Trash2, Search, ChevronDown } from 'lucide-react';
+import { Plus, Trash2, Search, ChevronDown, X, Printer, UserPlus } from 'lucide-react';
+import { buildPartySuggestions, partyNameExists } from './utils/partySuggestions';
+
+const EMPTY_PARTY_FORM = {
+  partyName: '',
+  address: '',
+  contactNo: '',
+  emailId: '',
+  gstNo: '',
+  jobName: 'Direct Invoice',
+};
 
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'https://crm-qpw8.onrender.com'
@@ -66,6 +76,24 @@ const AddInvoice = () => {
   const [isJobCardDropdownOpen, setIsJobCardDropdownOpen] = useState(false);
   const jobCardDropdownRef = useRef(null);
 
+  const [isPartyDropdownOpen, setIsPartyDropdownOpen] = useState(false);
+  const [isAddPartyModalOpen, setIsAddPartyModalOpen] = useState(false);
+  const [partyForm, setPartyForm] = useState(EMPTY_PARTY_FORM);
+  const [isSavingParty, setIsSavingParty] = useState(false);
+  const [isSavingInvoice, setIsSavingInvoice] = useState(false);
+  const partyDropdownRef = useRef(null);
+
+  const partySuggestions = useMemo(() => buildPartySuggestions(jobCards), [jobCards]);
+
+  const filteredPartySuggestions = partySuggestions.filter((party) => {
+    const query = formData.party.trim().toLowerCase();
+    if (!query) return true;
+    return party.partyName.toLowerCase().includes(query);
+  }).slice(0, 8);
+
+  const showAddPartyButton = formData.party.trim().length > 0
+    && !partyNameExists(partySuggestions, formData.party);
+
   const filteredJobCards = jobCards.filter((card) => {
     const query = jobCardSearchTerm.toLowerCase();
     return (
@@ -81,6 +109,9 @@ const AddInvoice = () => {
     const handleClickOutside = (event) => {
       if (jobCardDropdownRef.current && !jobCardDropdownRef.current.contains(event.target)) {
         setIsJobCardDropdownOpen(false);
+      }
+      if (partyDropdownRef.current && !partyDropdownRef.current.contains(event.target)) {
+        setIsPartyDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -106,7 +137,86 @@ const AddInvoice = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (name === 'party') {
+      setIsPartyDropdownOpen(true);
+    }
+  };
+
+  const applyPartySuggestion = (party) => {
+    const latestJobCard = jobCards.find(
+      (card) => (card.partyName || card.companyName || '').trim().toLowerCase() === party.partyName.toLowerCase()
+    );
+
+    setFormData((prev) => ({
+      ...prev,
+      party: party.partyName,
+      jobCard: latestJobCard?.jobNumber || party.jobNumber || prev.jobCard,
+      orderNo: latestJobCard?.jobNumber || party.jobNumber || prev.orderNo,
+    }));
+    setIsPartyDropdownOpen(false);
+  };
+
+  const openAddPartyModal = () => {
+    setPartyForm({
+      ...EMPTY_PARTY_FORM,
+      partyName: formData.party.trim(),
+    });
+    setIsAddPartyModalOpen(true);
+    setIsPartyDropdownOpen(false);
+  };
+
+  const handlePartyFormChange = (e) => {
+    const { name, value } = e.target;
+    setPartyForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleAddPartySave = async (e) => {
+    e.preventDefault();
+    if (!partyForm.partyName.trim()) {
+      alert('Party name is required');
+      return;
+    }
+
+    setIsSavingParty(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/jobcard`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          partyName: partyForm.partyName.trim(),
+          companyName: partyForm.partyName.trim(),
+          address: partyForm.address.trim(),
+          contactNo: partyForm.contactNo.trim(),
+          emailId: partyForm.emailId.trim(),
+          gstNo: partyForm.gstNo.trim(),
+          jobName: partyForm.jobName.trim() || 'Direct Invoice',
+          jobDate: new Date().toISOString(),
+          jobQty: '1',
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to save party');
+      }
+
+      const savedJobCard = await response.json();
+      setJobCards((prev) => [savedJobCard, ...prev]);
+      setFormData((prev) => ({
+        ...prev,
+        party: savedJobCard.partyName || partyForm.partyName.trim(),
+        jobCard: savedJobCard.jobNumber || prev.jobCard,
+        orderNo: savedJobCard.jobNumber || prev.orderNo,
+      }));
+      setIsAddPartyModalOpen(false);
+      setPartyForm(EMPTY_PARTY_FORM);
+    } catch (err) {
+      console.error('Error saving party:', err);
+      alert(err.message || 'Failed to add party');
+    } finally {
+      setIsSavingParty(false);
+    }
   };
 
   const handleJobCardSelect = (card) => {
@@ -155,41 +265,72 @@ const AddInvoice = () => {
     ? Math.round(computedItems.reduce((sum, item) => sum + item.gstPercent, 0) / computedItems.length)
     : 18;
 
+  const buildInvoicePayload = () => ({
+    invoiceNumber: formData.invoiceNo,
+    date: invoiceDate.toISOString(),
+    jobCard: formData.jobCard,
+    orderNo: formData.orderNo,
+    orderDate: orderDate.toISOString(),
+    partyName: formData.party,
+    items: computedItems,
+    subTotal,
+    freight,
+    reverseCharge: formData.reverseCharge || 'No',
+    gstPercent: invoiceGstPercent,
+    gstType: formData.gstType,
+    gstAmount,
+    totalAmount: grandTotal,
+  });
+
+  const saveInvoice = async () => {
+    const response = await fetch(`${API_BASE_URL}/api/invoice`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(buildInvoicePayload()),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to save invoice');
+    }
+
+    return response.json();
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const invoice = {
-      invoiceNumber: formData.invoiceNo,
-      date: invoiceDate.toISOString(),
-      jobCard: formData.jobCard,
-      orderNo: formData.orderNo,
-      orderDate: orderDate.toISOString(),
-      partyName: formData.party,
-      items: computedItems,
-      subTotal,
-      freight,
-      reverseCharge: formData.reverseCharge || 'No',
-      gstPercent: invoiceGstPercent,
-      gstType: formData.gstType,
-      gstAmount,
-      totalAmount: grandTotal
-    };
+    if (!formData.party.trim()) {
+      alert('Party name is required');
+      return;
+    }
 
+    setIsSavingInvoice(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/invoice`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(invoice)
-      });
-
-      if (response.ok) {
-        navigate('/invoice/list');
-      } else {
-        const errorData = await response.json();
-        alert(`Error: ${errorData.error}`);
-      }
+      await saveInvoice();
+      navigate('/invoice/list');
     } catch (err) {
-      console.error("Error saving invoice:", err);
-      alert("Failed to save invoice. Is server running?");
+      console.error('Error saving invoice:', err);
+      alert(err.message || 'Failed to save invoice. Is server running?');
+    } finally {
+      setIsSavingInvoice(false);
+    }
+  };
+
+  const handleSaveAndPrint = async () => {
+    if (!formData.party.trim()) {
+      alert('Party name is required');
+      return;
+    }
+
+    setIsSavingInvoice(true);
+    try {
+      const saved = await saveInvoice();
+      navigate('/invoice/list', { state: { printInvoiceId: saved._id } });
+    } catch (err) {
+      console.error('Error saving invoice:', err);
+      alert(err.message || 'Failed to save invoice. Is server running?');
+    } finally {
+      setIsSavingInvoice(false);
     }
   };
 
@@ -316,16 +457,66 @@ const AddInvoice = () => {
                 </div>
               )}
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1 relative z-20" ref={partyDropdownRef}>
               <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Party *</label>
-              <input
-                type="text"
-                name="party"
-                value={formData.party}
-                onChange={handleInputChange}
-                required
-                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
-              />
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    name="party"
+                    value={formData.party}
+                    onChange={handleInputChange}
+                    onFocus={() => setIsPartyDropdownOpen(true)}
+                    onBlur={() => {
+                      const match = partySuggestions.find(
+                        (party) => party.partyName.toLowerCase() === formData.party.trim().toLowerCase()
+                      );
+                      if (match) applyPartySuggestion(match);
+                    }}
+                    required
+                    placeholder="Type party name..."
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+                  />
+                  {isPartyDropdownOpen && filteredPartySuggestions.length > 0 && (
+                    <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden">
+                      <div className="px-3 py-2 bg-gray-50 border-b border-gray-100 text-[10px] font-bold text-gray-500 uppercase tracking-wide">
+                        Existing parties
+                      </div>
+                      <div className="max-h-48 overflow-y-auto">
+                        {filteredPartySuggestions.map((party) => (
+                          <button
+                            key={party.partyName}
+                            type="button"
+                            onClick={() => applyPartySuggestion(party)}
+                            className="w-full text-left px-4 py-2.5 text-sm hover:bg-blue-50 transition-colors border-b border-gray-50 last:border-0 text-gray-700"
+                          >
+                            <span className="font-semibold text-gray-900">{party.partyName}</span>
+                            {party.address && (
+                              <span className="block text-xs text-gray-400 mt-0.5 truncate">{party.address}</span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                {showAddPartyButton && (
+                  <button
+                    type="button"
+                    onClick={openAddPartyModal}
+                    className="shrink-0 inline-flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2.5 rounded-lg text-sm font-bold transition-all shadow-sm active:scale-95"
+                    title="Add new party"
+                  >
+                    <UserPlus size={16} />
+                    Add
+                  </button>
+                )}
+              </div>
+              {showAddPartyButton && (
+                <p className="text-[11px] text-emerald-700 font-semibold px-1">
+                  New party — click Add to enter details
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -497,15 +688,129 @@ const AddInvoice = () => {
           </div>
         </div>
 
-        <div className="flex justify-end pt-4">
+        <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4">
+          <button
+            type="button"
+            onClick={handleSaveAndPrint}
+            disabled={isSavingInvoice}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white px-8 py-3 rounded-lg font-bold shadow-md hover:shadow-lg transition-all active:scale-95"
+          >
+            <Printer size={18} />
+            {isSavingInvoice ? 'Saving...' : 'Save & Print'}
+          </button>
           <button
             type="submit"
-            className="w-full sm:w-auto bg-blue-800 hover:bg-blue-900 text-white px-10 py-3 rounded-lg font-bold shadow-md hover:shadow-lg transition-all active:scale-95"
+            disabled={isSavingInvoice}
+            className="w-full sm:w-auto bg-blue-800 hover:bg-blue-900 disabled:opacity-60 text-white px-10 py-3 rounded-lg font-bold shadow-md hover:shadow-lg transition-all active:scale-95"
           >
-            {editData ? 'Update Invoice' : 'Save Invoice'}
+            {isSavingInvoice ? 'Saving...' : (editData ? 'Update Invoice' : 'Save Invoice')}
           </button>
         </div>
       </form>
+
+      {isAddPartyModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4">
+          <div className="bg-white w-full max-w-lg rounded-2xl border border-gray-100 shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-gray-50">
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">Add New Party</h2>
+                <p className="text-sm text-gray-500">Basic details for invoice printing</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAddPartyModalOpen(false)}
+                className="p-2 rounded-full hover:bg-gray-200 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddPartySave} className="p-5 space-y-4">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-gray-700 uppercase tracking-wider">Party Name *</label>
+                <input
+                  type="text"
+                  name="partyName"
+                  value={partyForm.partyName}
+                  onChange={handlePartyFormChange}
+                  required
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-gray-700 uppercase tracking-wider">Address</label>
+                <input
+                  type="text"
+                  name="address"
+                  value={partyForm.address}
+                  onChange={handlePartyFormChange}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-gray-700 uppercase tracking-wider">Contact No</label>
+                  <input
+                    type="text"
+                    name="contactNo"
+                    value={partyForm.contactNo}
+                    onChange={handlePartyFormChange}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-gray-700 uppercase tracking-wider">GST No</label>
+                  <input
+                    type="text"
+                    name="gstNo"
+                    value={partyForm.gstNo}
+                    onChange={handlePartyFormChange}
+                    placeholder="URP if unregistered"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-gray-700 uppercase tracking-wider">Email</label>
+                <input
+                  type="email"
+                  name="emailId"
+                  value={partyForm.emailId}
+                  onChange={handlePartyFormChange}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-gray-700 uppercase tracking-wider">Job / Item Name</label>
+                <input
+                  type="text"
+                  name="jobName"
+                  value={partyForm.jobName}
+                  onChange={handlePartyFormChange}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAddPartyModalOpen(false)}
+                  className="px-5 py-2.5 rounded-lg border border-gray-200 text-gray-700 font-semibold text-sm hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingParty}
+                  className="px-6 py-2.5 rounded-lg bg-blue-700 hover:bg-blue-800 disabled:opacity-60 text-white font-bold text-sm"
+                >
+                  {isSavingParty ? 'Saving...' : 'Save Party'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Plus, Trash2, MoreHorizontal, Truck, Pencil, ChevronDown, Check, AlertCircle, Printer, X, Download, Phone, Mail, Globe, Building2, MapPin, Calendar, FileDigit } from 'lucide-react';
 import { downloadAsPDF } from './utils/pdfExport';
 import { printElement } from './utils/printDocument';
@@ -7,10 +7,11 @@ import DeleteConfirmationModal from './components/DeleteConfirmationModal';
 import { getBillToDetails, getShipToDetails } from './utils/shipAddress';
 import { numberToWords } from './utils/numberToWords';
 import { getChallanLineItems, computeLineItemsTotals, buildMergedChallanMeta } from './utils/challanTotals';
-import { SELLER, fmtTaxDate, fmtAmt, getStateFromGst, TaxFieldsTable, buildTaxItemLine, TaxItemEmptyRow, EMPTY_PRODUCT_ROWS, CompanyBrandName, TaxCopyBox, TaxCopyTypeControls, DEFAULT_TAX_COPY_SELECTION } from './utils/taxDocumentPrint';
+import { SELLER, fmtTaxDate, fmtAmt, getStateFromGst, TaxFieldsTable, buildTaxItemLine, TaxItemEmptyRow, getEmptyProductRowCount, CompanyBrandName, TaxCopyBox, TaxCopyTypeControls, DEFAULT_TAX_COPY_SELECTION, getSelectedCopyIds, getPreviewHighlightCopy, TaxInvoiceColGroup, getTaxTableColCount } from './utils/taxDocumentPrint';
 
 const ChallanList = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [challans, setChallans] = useState([]);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [challanToDelete, setChallanToDelete] = useState(null);
@@ -23,6 +24,8 @@ const ChallanList = () => {
   const [tempGstType, setTempGstType] = useState('CGST/SGST');
   const [copySelection, setCopySelection] = useState(DEFAULT_TAX_COPY_SELECTION);
   const isIGST = tempGstType === 'IGST';
+  const taxColCount = getTaxTableColCount(isIGST);
+  const taxHalfColSpan = taxColCount / 2;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [jobCards, setJobCards] = useState([]);
@@ -62,7 +65,8 @@ const ChallanList = () => {
   const challanDate = mergedMeta.date || primaryChallan?.date || primaryChallan?.createdAt;
   const challanNoLabel = isMergedPrint ? mergedMeta.challanLabel : primaryChallan?.challanNo;
   const jobRefLabel = isMergedPrint ? mergedMeta.jobRefLabel : primaryChallan?.jobNumber;
-  const emptyProductRows = EMPTY_PRODUCT_ROWS;
+  const productRowCount = itemLines.length + (totalFreight > 0 ? 1 : 0);
+  const emptyProductRows = getEmptyProductRowCount(productRowCount);
 
   const partyCounts = challans.reduce((acc, ch) => {
     const name = (ch.partyName || '').trim();
@@ -85,6 +89,26 @@ const ChallanList = () => {
       .then((data) => setJobCards(Array.isArray(data) ? data : []))
       .catch((err) => console.error('Error fetching job cards:', err));
   }, []);
+
+  useEffect(() => {
+    const printId = location.state?.printChallanId;
+    if (!printId || !challans.length) return;
+
+    const ch = challans.find((item) => item._id === printId);
+    if (!ch) return;
+
+    setPreviewChallans([ch]);
+    setTempGstType(ch.gstType || 'CGST/SGST');
+    setCopySelection({ ...DEFAULT_TAX_COPY_SELECTION });
+    setIsModalOpen(true);
+
+    const timer = setTimeout(() => {
+      printElement('printable-challan');
+    }, 1000);
+
+    navigate('/challan/list', { replace: true, state: {} });
+    return () => clearTimeout(timer);
+  }, [challans, location.state?.printChallanId, navigate]);
 
   const fetchChallans = () => {
     fetch('https://crm-qpw8.onrender.com/api/challan')
@@ -193,7 +217,12 @@ const ChallanList = () => {
   };
 
   const handlePrint = () => {
-    printElement('printable-challan');
+    const selected = getSelectedCopyIds(copySelection);
+    if (!selected.length) {
+      alert('Please select at least one copy type');
+      return;
+    }
+    printElement('printable-challan', { copyIds: selected });
   };
 
   const handleDownloadPDF = async () => {
@@ -382,6 +411,11 @@ const ChallanList = () => {
               </h2>
               <div className="flex flex-wrap items-center justify-end gap-3">
                 <TaxCopyTypeControls selection={copySelection} onChange={handleCopySelectionChange} />
+                {getSelectedCopyIds(copySelection).length > 1 && (
+                  <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100">
+                    {getSelectedCopyIds(copySelection).length} copies will print
+                  </span>
+                )}
                 <div className="flex items-center gap-1.5 bg-gray-100 px-3 py-2 rounded-xl text-sm font-bold border border-gray-200">
                   <span className="text-gray-500 font-medium">GST Mode:</span>
                   <select
@@ -423,23 +457,10 @@ const ChallanList = () => {
                 className="bg-white w-full shadow-none tax-invoice-print-page"
               >
                 <table className="tax-invoice w-full border-collapse text-black" style={{ fontSize: '11px', fontFamily: 'Arial, Helvetica, sans-serif' }}>
-                  <colgroup>
-                    <col style={{ width: '4%' }} />
-                    <col style={{ width: '28%' }} />
-                    <col style={{ width: '8%' }} />
-                    <col style={{ width: '6%' }} />
-                    <col style={{ width: '5%' }} />
-                    <col style={{ width: '8%' }} />
-                    <col style={{ width: '10%' }} />
-                    <col style={{ width: '5%' }} />
-                    <col style={{ width: '9%' }} />
-                    <col style={{ width: '5%' }} />
-                    <col style={{ width: '9%' }} />
-                    <col style={{ width: '10%' }} />
-                  </colgroup>
+                  <TaxInvoiceColGroup isIGST={isIGST} />
                   <tbody>
                     <tr>
-                      <td colSpan={12} className="tax-cell text-center align-middle py-2">
+                      <td colSpan={taxColCount} className="tax-cell text-center align-middle py-2">
                         <CompanyBrandName />
                         <p className="tax-header-line">{SELLER.address}</p>
                         <p className="tax-header-line">{SELLER.tel}, {SELLER.email}</p>
@@ -448,16 +469,16 @@ const ChallanList = () => {
                     </tr>
 
                     <tr>
-                      <td colSpan={12} className="tax-cell tax-blue p-0">
+                      <td colSpan={taxColCount} className="tax-cell tax-blue p-0">
                         <div className="tax-title-bar">
                           <div className="tax-title-text">DELIVERY CHALLAN</div>
-                          <TaxCopyBox selection={copySelection} />
+                          <TaxCopyBox highlightCopy={getPreviewHighlightCopy(copySelection)} />
                         </div>
                       </td>
                     </tr>
 
                     <tr>
-                      <td colSpan={6} className="tax-cell align-top p-1">
+                      <td colSpan={taxHalfColSpan} className="tax-cell align-top p-1">
                         <TaxFieldsTable rows={[
                           ['Reverse Charge', primaryChallan.reverseCharge || 'No'],
                           ['Challan No.', challanNoLabel],
@@ -466,7 +487,7 @@ const ChallanList = () => {
                           ['State Code', SELLER.stateCode],
                         ]} />
                       </td>
-                      <td colSpan={6} className="tax-cell align-top p-1">
+                      <td colSpan={taxHalfColSpan} className="tax-cell align-top p-1">
                         <TaxFieldsTable rows={[
                           ['Transportation Mode', 'Road'],
                           ['Vehicle No.', ''],
@@ -478,7 +499,7 @@ const ChallanList = () => {
                     </tr>
 
                     <tr>
-                      <td colSpan={6} className="tax-cell align-top p-0">
+                      <td colSpan={taxHalfColSpan} className="tax-cell align-top p-0">
                         <div className="tax-blue tax-section-title text-center py-0.5 px-1">Details of Receiver | Billed to:</div>
                         <div className="p-1">
                           <TaxFieldsTable rows={[
@@ -492,7 +513,7 @@ const ChallanList = () => {
                           ]} />
                         </div>
                       </td>
-                      <td colSpan={6} className="tax-cell align-top p-0">
+                      <td colSpan={taxHalfColSpan} className="tax-cell align-top p-0">
                         <div className="tax-blue tax-section-title text-center py-0.5 px-1">Details of Consignee | Shipped to:</div>
                         <div className="p-1">
                           <TaxFieldsTable rows={[
@@ -517,10 +538,7 @@ const ChallanList = () => {
                       <td className="tax-cell" rowSpan={2}>Rate</td>
                       <td className="tax-cell" rowSpan={2}>Taxable<br />Value</td>
                       {isIGST ? (
-                        <>
-                          <td className="tax-cell" colSpan={2}>IGST</td>
-                          <td className="tax-cell" colSpan={2}>&nbsp;</td>
-                        </>
+                        <td className="tax-cell" colSpan={2}>IGST</td>
                       ) : (
                         <>
                           <td className="tax-cell" colSpan={2}>CGST</td>
@@ -534,8 +552,6 @@ const ChallanList = () => {
                         <>
                           <td className="tax-cell">Rate</td>
                           <td className="tax-cell">Amount</td>
-                          <td className="tax-cell">&nbsp;</td>
-                          <td className="tax-cell">&nbsp;</td>
                         </>
                       ) : (
                         <>
@@ -568,8 +584,6 @@ const ChallanList = () => {
                           <>
                             <td className="tax-cell text-center align-top tax-item-gst">{row.igstRate}%</td>
                             <td className="tax-cell text-right align-top tax-item-gst">{fmtAmt(row.igstAmt)}</td>
-                            <td className="tax-cell">&nbsp;</td>
-                            <td className="tax-cell">&nbsp;</td>
                           </>
                         ) : (
                           <>
@@ -583,7 +597,7 @@ const ChallanList = () => {
                       </tr>
                     ))}
 
-                    <TaxItemEmptyRow rowCount={emptyProductRows} />
+                    <TaxItemEmptyRow rowCount={emptyProductRows} isIGST={isIGST} />
 
                     {totalFreight > 0 && (
                       <tr>
@@ -598,8 +612,6 @@ const ChallanList = () => {
                           <>
                             <td className="tax-cell text-center align-top tax-item-gst">{freightGstPercent}%</td>
                             <td className="tax-cell text-right align-top tax-item-gst">{fmtAmt(freightIgstAmt)}</td>
-                            <td className="tax-cell">&nbsp;</td>
-                            <td className="tax-cell">&nbsp;</td>
                           </>
                         ) : (
                           <>
@@ -624,8 +636,6 @@ const ChallanList = () => {
                         <>
                           <td className="tax-cell">&nbsp;</td>
                           <td className="tax-cell text-right tax-item-gst">{fmtAmt(totalIgst)}</td>
-                          <td className="tax-cell">&nbsp;</td>
-                          <td className="tax-cell">&nbsp;</td>
                         </>
                       ) : (
                         <>
@@ -638,12 +648,13 @@ const ChallanList = () => {
                       <td className="tax-cell text-right">{fmtAmt(amountWithTax)}</td>
                     </tr>
 
+                    {/* Amount in words + summary */}
                     <tr>
-                      <td colSpan={6} className="tax-cell align-top p-0">
+                      <td colSpan={taxHalfColSpan} className="tax-cell align-top p-0">
                         <div className="tax-blue tax-section-title text-center py-0.5 px-1">Total Challan Amount in words</div>
                         <p className="text-center py-2 px-1 tax-amount-words">{numberToWords(amountWithTax)} Only</p>
                       </td>
-                      <td colSpan={6} className="tax-cell align-top p-0">
+                      <td colSpan={taxHalfColSpan} className="tax-cell align-top p-0">
                         <table className="w-full border-collapse tax-summary-table">
                           <tbody>
                             <tr>
@@ -681,7 +692,7 @@ const ChallanList = () => {
                     </tr>
 
                     <tr>
-                      <td colSpan={6} className="tax-cell align-top p-1">
+                      <td colSpan={taxHalfColSpan} className="tax-cell align-top p-1">
                         <p className="tax-section-title mb-1">Bank Details</p>
                         <TaxFieldsTable rows={[
                           ['Account Holder Name', SELLER.bank.holder],
@@ -699,7 +710,7 @@ const ChallanList = () => {
                           <li>All Goods Return / Replace only if damage by company transport.</li>
                         </ol>
                       </td>
-                      <td colSpan={6} className="tax-cell align-top p-1">
+                      <td colSpan={taxHalfColSpan} className="tax-cell align-top p-1">
                         <p className="text-center mb-2 tax-header-line">Certified that the particular given above are true and correct</p>
                         <p className="tax-section-title text-right">For, {SELLER.name}</p>
                         <div className="tax-sign-space">&nbsp;</div>

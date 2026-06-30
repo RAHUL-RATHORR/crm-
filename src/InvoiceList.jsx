@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Plus, Trash2, MoreHorizontal, Pencil, Printer, Eye, X, Download, Phone, Mail, Globe, Building2, MapPin, Calendar, FileDigit, AlertCircle, ChevronDown, Check } from 'lucide-react';
 import { downloadAsPDF } from './utils/pdfExport';
 import { printElement } from './utils/printDocument';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
 import { getBillToDetails, getShipToDetails } from './utils/shipAddress';
 import { numberToWords } from './utils/numberToWords';
-import { SELLER, fmtTaxDate, fmtAmt, getStateFromGst, TaxFieldsTable, buildTaxItemLine, TaxItemEmptyRow, EMPTY_PRODUCT_ROWS, CompanyBrandName, TaxCopyBox, TaxCopyTypeControls, DEFAULT_TAX_COPY_SELECTION } from './utils/taxDocumentPrint';
+import { SELLER, fmtTaxDate, fmtAmt, getStateFromGst, TaxFieldsTable, buildTaxItemLine, TaxItemEmptyRow, getEmptyProductRowCount, CompanyBrandName, TaxCopyBox, TaxCopyTypeControls, DEFAULT_TAX_COPY_SELECTION, getSelectedCopyIds, getPreviewHighlightCopy, TaxInvoiceColGroup, getTaxTableColCount } from './utils/taxDocumentPrint';
 
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'https://crm-qpw8.onrender.com'
@@ -14,6 +14,7 @@ const API_BASE_URL = window.location.hostname === 'localhost' || window.location
 
 const InvoiceList = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [invoices, setInvoices] = useState([]);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [tempGstType, setTempGstType] = useState('CGST/SGST');
@@ -27,6 +28,8 @@ const InvoiceList = () => {
 
   const freight = selectedInvoice ? (Number(selectedInvoice.freight) || 0) : 0;
   const isIGST = tempGstType === 'IGST';
+  const taxColCount = getTaxTableColCount(isIGST);
+  const taxHalfColSpan = taxColCount / 2;
   const itemsSubTotal = selectedInvoice
     ? (Number(selectedInvoice.subTotal) || (selectedInvoice.items || []).reduce((sum, item) => sum + (Number(item.total) || 0), 0))
     : 0;
@@ -66,7 +69,8 @@ const InvoiceList = () => {
   const totalIgst = itemLines.reduce((sum, row) => sum + row.igstAmt, 0) + freightIgstAmt;
   const amountBeforeTax = totalTaxable;
   const amountWithTax = selectedInvoice?.totalAmount || 0;
-  const emptyProductRows = selectedInvoice ? EMPTY_PRODUCT_ROWS : 0;
+  const productRowCount = itemLines.length + (freight > 0 ? 1 : 0);
+  const emptyProductRows = selectedInvoice ? getEmptyProductRowCount(productRowCount) : 0;
 
   useEffect(() => {
     fetchInvoice();
@@ -75,6 +79,26 @@ const InvoiceList = () => {
       .then((data) => setJobCards(Array.isArray(data) ? data : []))
       .catch((err) => console.error('Error fetching job cards:', err));
   }, []);
+
+  useEffect(() => {
+    const printId = location.state?.printInvoiceId;
+    if (!printId || !invoices.length) return;
+
+    const inv = invoices.find((item) => item._id === printId);
+    if (!inv) return;
+
+    setSelectedInvoice(inv);
+    setTempGstType(inv.gstType || 'CGST/SGST');
+    setCopySelection({ ...DEFAULT_TAX_COPY_SELECTION });
+    setIsModalOpen(true);
+
+    const timer = setTimeout(() => {
+      printElement('printable-invoice', { copyIds: getSelectedCopyIds(DEFAULT_TAX_COPY_SELECTION) });
+    }, 1000);
+
+    navigate('/invoice/list', { replace: true, state: {} });
+    return () => clearTimeout(timer);
+  }, [invoices, location.state?.printInvoiceId, navigate]);
 
   const fetchInvoice = () => {
     fetch(`${API_BASE_URL}/api/invoice`)
@@ -146,7 +170,12 @@ const InvoiceList = () => {
   };
 
   const handlePrint = () => {
-    printElement('printable-invoice');
+    const selected = getSelectedCopyIds(copySelection);
+    if (!selected.length) {
+      alert('Please select at least one copy type');
+      return;
+    }
+    printElement('printable-invoice', { copyIds: selected });
   };
 
   const handleDownloadPDF = async () => {
@@ -312,6 +341,11 @@ const InvoiceList = () => {
               <h2 className="text-xl font-bold text-gray-800">Invoice Preview</h2>
               <div className="flex flex-wrap items-center justify-end gap-3">
                 <TaxCopyTypeControls selection={copySelection} onChange={handleCopySelectionChange} />
+                {getSelectedCopyIds(copySelection).length > 1 && (
+                  <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100">
+                    {getSelectedCopyIds(copySelection).length} copies will print
+                  </span>
+                )}
                 <div className="flex items-center gap-1.5 bg-gray-100 px-3 py-2 rounded-xl text-sm font-bold border border-gray-200">
                   <span className="text-gray-500 font-medium">GST Mode:</span>
                   <select
@@ -367,24 +401,11 @@ const InvoiceList = () => {
                 className="bg-white w-full shadow-none tax-invoice-print-page"
               >
                 <table className="tax-invoice w-full border-collapse text-black" style={{ fontSize: '11px', fontFamily: 'Arial, Helvetica, sans-serif' }}>
-                  <colgroup>
-                    <col style={{ width: '4%' }} />
-                    <col style={{ width: '28%' }} />
-                    <col style={{ width: '8%' }} />
-                    <col style={{ width: '6%' }} />
-                    <col style={{ width: '5%' }} />
-                    <col style={{ width: '8%' }} />
-                    <col style={{ width: '10%' }} />
-                    <col style={{ width: '5%' }} />
-                    <col style={{ width: '9%' }} />
-                    <col style={{ width: '5%' }} />
-                    <col style={{ width: '9%' }} />
-                    <col style={{ width: '10%' }} />
-                  </colgroup>
+                  <TaxInvoiceColGroup isIGST={isIGST} />
                   <tbody>
                     {/* Company header — full width */}
                     <tr>
-                      <td colSpan={12} className="tax-cell text-center align-middle py-2">
+                      <td colSpan={taxColCount} className="tax-cell text-center align-middle py-2">
                         <CompanyBrandName />
                         <p className="tax-header-line">{SELLER.address}</p>
                         <p className="tax-header-line">{SELLER.tel}, {SELLER.email}</p>
@@ -394,17 +415,17 @@ const InvoiceList = () => {
 
                     {/* TAX INVOICE bar + copy type (right) */}
                     <tr>
-                      <td colSpan={12} className="tax-cell tax-blue p-0">
+                      <td colSpan={taxColCount} className="tax-cell tax-blue p-0">
                         <div className="tax-title-bar">
                           <div className="tax-title-text">TAX INVOICE</div>
-                          <TaxCopyBox selection={copySelection} />
+                          <TaxCopyBox highlightCopy={getPreviewHighlightCopy(copySelection)} />
                         </div>
                       </td>
                     </tr>
 
                     {/* Invoice meta */}
                     <tr>
-                      <td colSpan={6} className="tax-cell align-top p-1">
+                      <td colSpan={taxHalfColSpan} className="tax-cell align-top p-1">
                         <TaxFieldsTable rows={[
                           ['Reverse Charge', selectedInvoice.reverseCharge || 'No'],
                           ['Invoice No.', selectedInvoice.invoiceNumber],
@@ -413,7 +434,7 @@ const InvoiceList = () => {
                           ['State Code', SELLER.stateCode],
                         ]} />
                       </td>
-                      <td colSpan={6} className="tax-cell align-top p-1">
+                      <td colSpan={taxHalfColSpan} className="tax-cell align-top p-1">
                         <TaxFieldsTable rows={[
                           ['Transportation Mode', 'Road'],
                           ['Vehicle No.', ''],
@@ -425,7 +446,7 @@ const InvoiceList = () => {
 
                     {/* Bill to / Ship to */}
                     <tr>
-                      <td colSpan={6} className="tax-cell align-top p-0">
+                      <td colSpan={taxHalfColSpan} className="tax-cell align-top p-0">
                         <div className="tax-blue tax-section-title text-center py-0.5 px-1">Details of Receiver | Billed to:</div>
                         <div className="p-1">
                           <TaxFieldsTable rows={[
@@ -439,7 +460,7 @@ const InvoiceList = () => {
                           ]} />
                         </div>
                       </td>
-                      <td colSpan={6} className="tax-cell align-top p-0">
+                      <td colSpan={taxHalfColSpan} className="tax-cell align-top p-0">
                         <div className="tax-blue tax-section-title text-center py-0.5 px-1">Details of Consignee | Shipped to:</div>
                         <div className="p-1">
                           <TaxFieldsTable rows={[
@@ -465,10 +486,7 @@ const InvoiceList = () => {
                       <td className="tax-cell" rowSpan={2}>Rate</td>
                       <td className="tax-cell" rowSpan={2}>Taxable<br />Value</td>
                       {isIGST ? (
-                        <>
-                          <td className="tax-cell" colSpan={2}>IGST</td>
-                          <td className="tax-cell" colSpan={2}>&nbsp;</td>
-                        </>
+                        <td className="tax-cell" colSpan={2}>IGST</td>
                       ) : (
                         <>
                           <td className="tax-cell" colSpan={2}>CGST</td>
@@ -482,8 +500,6 @@ const InvoiceList = () => {
                         <>
                           <td className="tax-cell">Rate</td>
                           <td className="tax-cell">Amount</td>
-                          <td className="tax-cell">&nbsp;</td>
-                          <td className="tax-cell">&nbsp;</td>
                         </>
                       ) : (
                         <>
@@ -509,8 +525,6 @@ const InvoiceList = () => {
                           <>
                             <td className="tax-cell text-center align-top tax-item-gst">{row.igstRate}%</td>
                             <td className="tax-cell text-right align-top tax-item-gst">{fmtAmt(row.igstAmt)}</td>
-                            <td className="tax-cell">&nbsp;</td>
-                            <td className="tax-cell">&nbsp;</td>
                           </>
                         ) : (
                           <>
@@ -524,7 +538,7 @@ const InvoiceList = () => {
                       </tr>
                     ))}
 
-                    <TaxItemEmptyRow rowCount={emptyProductRows} />
+                    <TaxItemEmptyRow rowCount={emptyProductRows} isIGST={isIGST} />
 
                     {freight > 0 && (
                       <tr>
@@ -539,8 +553,6 @@ const InvoiceList = () => {
                           <>
                             <td className="tax-cell text-center align-top tax-item-gst">{freightGstPercent}%</td>
                             <td className="tax-cell text-right align-top tax-item-gst">{fmtAmt(freightIgstAmt)}</td>
-                            <td className="tax-cell">&nbsp;</td>
-                            <td className="tax-cell">&nbsp;</td>
                           </>
                         ) : (
                           <>
@@ -566,8 +578,6 @@ const InvoiceList = () => {
                         <>
                           <td className="tax-cell">&nbsp;</td>
                           <td className="tax-cell text-right tax-item-gst">{fmtAmt(totalIgst)}</td>
-                          <td className="tax-cell">&nbsp;</td>
-                          <td className="tax-cell">&nbsp;</td>
                         </>
                       ) : (
                         <>
@@ -582,11 +592,11 @@ const InvoiceList = () => {
 
                     {/* Amount in words + summary */}
                     <tr>
-                      <td colSpan={6} className="tax-cell align-top p-0">
+                      <td colSpan={taxHalfColSpan} className="tax-cell align-top p-0">
                         <div className="tax-blue tax-section-title text-center py-0.5 px-1">Total Invoice Amount in words</div>
                         <p className="text-center py-2 px-1 tax-amount-words">{numberToWords(amountWithTax)} Only</p>
                       </td>
-                      <td colSpan={6} className="tax-cell align-top p-0">
+                      <td colSpan={taxHalfColSpan} className="tax-cell align-top p-0">
                         <table className="w-full border-collapse tax-summary-table">
                           <tbody>
                             <tr>
@@ -625,7 +635,7 @@ const InvoiceList = () => {
 
                     {/* Bank + Signature */}
                     <tr>
-                      <td colSpan={6} className="tax-cell align-top p-1">
+                      <td colSpan={taxHalfColSpan} className="tax-cell align-top p-1">
                         <p className="tax-section-title mb-1">Bank Details</p>
                         <TaxFieldsTable rows={[
                           ['Account Holder Name', SELLER.bank.holder],
@@ -643,7 +653,7 @@ const InvoiceList = () => {
                           <li>All Goods Return / Replace only if damage by company transport.</li>
                         </ol>
                       </td>
-                      <td colSpan={6} className="tax-cell align-top p-1">
+                      <td colSpan={taxHalfColSpan} className="tax-cell align-top p-1">
                         <p className="text-center mb-2 tax-header-line">Certified that the particular given above are true and correct</p>
                         <p className="tax-section-title text-right">For, {SELLER.name}</p>
                         <div className="tax-sign-space">&nbsp;</div>

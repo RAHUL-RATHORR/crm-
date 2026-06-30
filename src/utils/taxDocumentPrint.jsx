@@ -81,9 +81,44 @@ export const buildTaxItemLine = (item, idx, fallbackGst = 18, isIGST = false) =>
 };
 
 export const EMPTY_PRODUCT_ROWS = 2;
+export const MIN_PRODUCT_TABLE_ROWS = 8;
+
+export function getEmptyProductRowCount(usedRows = 0) {
+  const filler = MIN_PRODUCT_TABLE_ROWS - usedRows;
+  return filler > 0 ? filler : EMPTY_PRODUCT_ROWS;
+}
+
+export const getTaxTableColCount = (isIGST) => (isIGST ? 10 : 12);
+
+export const TaxInvoiceColGroup = ({ isIGST = false }) => (
+  <colgroup>
+    <col style={{ width: '4%' }} />
+    <col style={{ width: '28%' }} />
+    <col style={{ width: '8%' }} />
+    <col style={{ width: '6%' }} />
+    <col style={{ width: '5%' }} />
+    <col style={{ width: '8%' }} />
+    <col style={{ width: '10%' }} />
+    {isIGST ? (
+      <>
+        <col style={{ width: '6%' }} />
+        <col style={{ width: '14%' }} />
+        <col style={{ width: '15%' }} />
+      </>
+    ) : (
+      <>
+        <col style={{ width: '5%' }} />
+        <col style={{ width: '9%' }} />
+        <col style={{ width: '5%' }} />
+        <col style={{ width: '9%' }} />
+        <col style={{ width: '10%' }} />
+      </>
+    )}
+  </colgroup>
+);
 
 /** One tall row with per-column vertical borders (no horizontal lines in the empty zone). */
-export const TaxItemEmptyRow = ({ rowCount = 2 }) => (
+export const TaxItemEmptyRow = ({ rowCount = 2, isIGST = false }) => (
   <tr className="tax-item-empty-row" style={{ '--empty-rows': rowCount }}>
     <td className="tax-item-empty-cell">&nbsp;</td>
     <td className="tax-item-empty-cell">&nbsp;</td>
@@ -92,10 +127,19 @@ export const TaxItemEmptyRow = ({ rowCount = 2 }) => (
     <td className="tax-item-empty-cell">&nbsp;</td>
     <td className="tax-item-empty-cell">&nbsp;</td>
     <td className="tax-item-empty-cell tax-blue">&nbsp;</td>
-    <td className="tax-item-empty-cell">&nbsp;</td>
-    <td className="tax-item-empty-cell">&nbsp;</td>
-    <td className="tax-item-empty-cell">&nbsp;</td>
-    <td className="tax-item-empty-cell">&nbsp;</td>
+    {isIGST ? (
+      <>
+        <td className="tax-item-empty-cell">&nbsp;</td>
+        <td className="tax-item-empty-cell">&nbsp;</td>
+      </>
+    ) : (
+      <>
+        <td className="tax-item-empty-cell">&nbsp;</td>
+        <td className="tax-item-empty-cell">&nbsp;</td>
+        <td className="tax-item-empty-cell">&nbsp;</td>
+        <td className="tax-item-empty-cell">&nbsp;</td>
+      </>
+    )}
     <td className="tax-item-empty-cell">&nbsp;</td>
   </tr>
 );
@@ -121,11 +165,20 @@ export const DEFAULT_TAX_COPY_SELECTION = {
   triplicate: false,
 };
 
-export const TaxCopyBox = ({ selection = DEFAULT_TAX_COPY_SELECTION }) => (
+export function getSelectedCopyIds(selection = DEFAULT_TAX_COPY_SELECTION) {
+  return TAX_COPY_LINES.filter((line) => selection[line.id]).map((line) => line.id);
+}
+
+export function getPreviewHighlightCopy(selection = DEFAULT_TAX_COPY_SELECTION) {
+  const selected = getSelectedCopyIds(selection);
+  return selected[0] || 'original';
+}
+
+export const TaxCopyBox = ({ highlightCopy = 'original' }) => (
   <div className="tax-copy-box">
     {TAX_COPY_LINES.map((line) => (
-      <div key={line.id} className="tax-copy-row">
-        <span className="tax-copy-mark">{selection[line.id] ? '☑' : '☐'}</span>
+      <div key={line.id} className="tax-copy-row" data-copy-id={line.id}>
+        <span className="tax-copy-mark">{highlightCopy === line.id ? '☑' : '☐'}</span>
         <p className="tax-copy-label">{line.text}</p>
       </div>
     ))}
