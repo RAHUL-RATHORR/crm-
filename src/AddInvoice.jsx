@@ -492,6 +492,9 @@ const AddInvoice = () => {
 
         {/* Items Section */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-visible">
+          <div className="bg-blue-900 text-white px-6 py-2 w-fit relative font-semibold text-xs sm:text-sm rounded-br-2xl">
+            Item Details
+          </div>
           <div className="overflow-x-auto overflow-y-visible">
             <table className="w-full text-left border-collapse min-w-[980px]">
               <thead className="bg-gray-50">

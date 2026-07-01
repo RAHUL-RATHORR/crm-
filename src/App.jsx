@@ -46,6 +46,7 @@ import ContactSupport from './ContactSupport';
 import StaffTeamManagement from './StaffTeamManagement';
 import { clearSession, saveSession, getLegacyAdminUser } from './utils/authSession';
 import { hasPermission, canAccessStaffTeam, canAccessDashboard, getDefaultRoute, isAdminUser } from './utils/permissions';
+import { STAFF_TEAM_ENABLED } from './utils/featureFlags';
 
 const DropdownMenu = ({ title, icon: Icon, items, isActive }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -566,7 +567,7 @@ export default function App() {
     { label: 'Permissions', path: '/staff-team/permissions', onClick: () => navigate('/staff-team/permissions') },
   ];
 
-  const showStaffTeamMenu = canAccessStaffTeam();
+  const showStaffTeamMenu = STAFF_TEAM_ENABLED && canAccessStaffTeam();
 
   const handleLogout = () => {
     clearSession();
@@ -936,10 +937,14 @@ export default function App() {
           <Route path="/settings/password" element={<SettingsPage />} />
           <Route path="/settings/site" element={<SiteSettings />} />
           <Route path="/settings/social" element={<SocialSettings />} />
+          {STAFF_TEAM_ENABLED && (
+            <>
           <Route path="/staff-team" element={<Navigate to="/staff-team/manage" replace />} />
           <Route path="/staff-team/manage" element={<StaffTeamManagement page="manage" />} />
           <Route path="/staff-team/roles" element={<StaffTeamManagement page="roles" />} />
           <Route path="/staff-team/permissions" element={<StaffTeamManagement page="permissions" />} />
+            </>
+          )}
           <Route path="/payment-type" element={<PaymentTypeManagement />} />
           <Route path="/paper-stock" element={<PaperStockManagement />} />
           <Route path="/statements" element={<Navigate to="/statements/invoice" replace />} />
