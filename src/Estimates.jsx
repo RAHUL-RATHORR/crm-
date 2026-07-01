@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Search,
   RefreshCw,
@@ -19,27 +20,13 @@ const API_BASE_URL = window.location.hostname === 'localhost' || window.location
   ? 'https://crm-qpw8.onrender.com'
   : 'https://crm-qpw8.onrender.com';
 
-const EMPTY_FORM = {
-  quoteDate: new Date().toISOString().split('T')[0],
-  partyName: '',
-  address: '',
-  gstNo: '',
-  jobName: '',
-  pageSize: '',
-  jobQty: '',
-  printingType: '',
-  paper: '',
-  totalAmount: '',
-  salesPerson: 'Admin',
-  paymentTerms: '7 Days',
-};
-
 const formatQuoteDate = (value) => {
   if (!value) return '';
   return new Date(value).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
 };
 
 export default function Estimates() {
+  const navigate = useNavigate();
   const [estimates, setEstimates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -48,10 +35,6 @@ export default function Estimates() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEstimate, setSelectedEstimate] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingId, setEditingId] = useState(null);
-  const [formData, setFormData] = useState(EMPTY_FORM);
-  const [formSaving, setFormSaving] = useState(false);
 
   const loadData = async () => {
     setLoading(true);
@@ -116,82 +99,11 @@ export default function Estimates() {
   };
 
   const openAddForm = () => {
-    setEditingId(null);
-    setFormData(EMPTY_FORM);
-    setIsFormOpen(true);
+    navigate('/estimates/add');
   };
 
   const openEditForm = (estimate) => {
-    setEditingId(estimate._id);
-    setFormData({
-      quoteDate: estimate.quoteDate ? new Date(estimate.quoteDate).toISOString().split('T')[0] : EMPTY_FORM.quoteDate,
-      partyName: estimate.partyName || '',
-      address: estimate.address || '',
-      gstNo: estimate.gstNo || '',
-      jobName: estimate.jobName || '',
-      pageSize: estimate.pageSize || '',
-      jobQty: estimate.jobQty || '',
-      printingType: estimate.printingType || '',
-      paper: estimate.paper || '',
-      totalAmount: estimate.totalAmount ?? '',
-      salesPerson: estimate.salesPerson || 'Admin',
-      paymentTerms: estimate.paymentTerms || '7 Days',
-    });
-    setIsFormOpen(true);
-  };
-
-  const closeForm = () => {
-    setIsFormOpen(false);
-    setEditingId(null);
-    setFormData(EMPTY_FORM);
-  };
-
-  const handleFormChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleSaveForm = async (e) => {
-    e.preventDefault();
-
-    if (!formData.partyName.trim()) {
-      alert('Party Name is required');
-      return;
-    }
-
-    setFormSaving(true);
-
-    const payload = {
-      ...formData,
-      totalAmount: Number(formData.totalAmount) || 0,
-      quoteDate: formData.quoteDate ? new Date(formData.quoteDate) : new Date(),
-    };
-
-    try {
-      const url = editingId
-        ? `${API_BASE_URL}/api/estimate/${editingId}`
-        : `${API_BASE_URL}/api/estimate`;
-      const method = editingId ? 'PUT' : 'POST';
-
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        alert(err.error || 'Failed to save estimate');
-        return;
-      }
-
-      closeForm();
-      loadData();
-    } catch (error) {
-      console.error('Save Error:', error);
-      alert('Network Error: Could not save estimate.');
-    } finally {
-      setFormSaving(false);
-    }
+    navigate('/estimates/add', { state: { editData: estimate } });
   };
 
   const handlePrint = (estimate) => {
@@ -401,165 +313,6 @@ export default function Estimates() {
           </table>
         </div>
       </div>
-
-      {isFormOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 overflow-y-auto">
-          <div className="bg-white w-full max-w-3xl rounded-3xl border border-gray-100 shadow-2xl relative max-h-[95vh] flex flex-col overflow-hidden">
-            <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-white">
-              <div>
-                <h2 className="text-xl font-black text-gray-900">
-                  {editingId ? 'Edit Estimate & Quotation' : 'Add New Estimate & Quotation'}
-                </h2>
-                <p className="text-sm text-gray-500 mt-1">Fill details to create a standalone quotation.</p>
-              </div>
-              <button onClick={closeForm} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                <X size={20} />
-              </button>
-            </div>
-
-            <form onSubmit={handleSaveForm} className="p-5 sm:p-6 overflow-y-auto flex-grow space-y-5">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-black uppercase tracking-wider text-gray-500 mb-2">Quote Date</label>
-                  <input
-                    type="date"
-                    value={formData.quoteDate}
-                    onChange={(e) => handleFormChange('quoteDate', e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-medium focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500/50 outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-black uppercase tracking-wider text-gray-500 mb-2">Party Name *</label>
-                  <input
-                    type="text"
-                    value={formData.partyName}
-                    onChange={(e) => handleFormChange('partyName', e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-medium focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500/50 outline-none"
-                    placeholder="Enter party name"
-                    required
-                  />
-                </div>
-                <div className="sm:col-span-2">
-                  <label className="block text-xs font-black uppercase tracking-wider text-gray-500 mb-2">Address</label>
-                  <input
-                    type="text"
-                    value={formData.address}
-                    onChange={(e) => handleFormChange('address', e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-medium focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500/50 outline-none"
-                    placeholder="Party address"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-black uppercase tracking-wider text-gray-500 mb-2">GST No</label>
-                  <input
-                    type="text"
-                    value={formData.gstNo}
-                    onChange={(e) => handleFormChange('gstNo', e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-medium focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500/50 outline-none"
-                    placeholder="GSTIN or URP"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-black uppercase tracking-wider text-gray-500 mb-2">Job / Product Name</label>
-                  <input
-                    type="text"
-                    value={formData.jobName}
-                    onChange={(e) => handleFormChange('jobName', e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-medium focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500/50 outline-none"
-                    placeholder="Description of work"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-black uppercase tracking-wider text-gray-500 mb-2">Page Size</label>
-                  <input
-                    type="text"
-                    value={formData.pageSize}
-                    onChange={(e) => handleFormChange('pageSize', e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-medium focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500/50 outline-none"
-                    placeholder="e.g. 20*26/4"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-black uppercase tracking-wider text-gray-500 mb-2">Quantity</label>
-                  <input
-                    type="text"
-                    value={formData.jobQty}
-                    onChange={(e) => handleFormChange('jobQty', e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-medium focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500/50 outline-none"
-                    placeholder="e.g. 10000"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-black uppercase tracking-wider text-gray-500 mb-2">Printing Type</label>
-                  <input
-                    type="text"
-                    value={formData.printingType}
-                    onChange={(e) => handleFormChange('printingType', e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-medium focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500/50 outline-none"
-                    placeholder="e.g. Full Color"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-black uppercase tracking-wider text-gray-500 mb-2">Paper</label>
-                  <input
-                    type="text"
-                    value={formData.paper}
-                    onChange={(e) => handleFormChange('paper', e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-medium focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500/50 outline-none"
-                    placeholder="Paper details"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-black uppercase tracking-wider text-gray-500 mb-2">Estimate Price (₹)</label>
-                  <input
-                    type="number"
-                    value={formData.totalAmount}
-                    onChange={(e) => handleFormChange('totalAmount', e.target.value)}
-                    className="w-full px-4 py-3 bg-orange-50 border border-orange-200 rounded-2xl text-sm font-black text-orange-700 focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none"
-                    placeholder="0.00"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-black uppercase tracking-wider text-gray-500 mb-2">Sales Person</label>
-                  <input
-                    type="text"
-                    value={formData.salesPerson}
-                    onChange={(e) => handleFormChange('salesPerson', e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-medium focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500/50 outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-black uppercase tracking-wider text-gray-500 mb-2">Payment Terms</label>
-                  <input
-                    type="text"
-                    value={formData.paymentTerms}
-                    onChange={(e) => handleFormChange('paymentTerms', e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-medium focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500/50 outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row justify-end gap-3 pt-2 border-t border-gray-100">
-                <button
-                  type="button"
-                  onClick={closeForm}
-                  className="px-5 py-3 rounded-2xl border border-gray-200 text-gray-700 font-bold text-sm hover:bg-gray-50 transition-all"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={formSaving}
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-sm transition-all shadow-lg shadow-orange-100 active:scale-95 disabled:opacity-60"
-                >
-                  {formSaving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
-                  {formSaving ? 'Saving...' : editingId ? 'Update Estimate' : 'Save Estimate'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {isModalOpen && selectedEstimate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 overflow-y-auto">

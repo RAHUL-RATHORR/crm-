@@ -41,6 +41,7 @@ import PaperStockManagement from './PaperStockManagement';
 import Statements from './Statements';
 import PaperStockStatements from './PaperStockStatements';
 import Estimates from './Estimates';
+import AddEstimate from './AddEstimate';
 import ItemListManagement from './ItemListManagement';
 import ContactSupport from './ContactSupport';
 import StaffTeamManagement from './StaffTeamManagement';
@@ -951,6 +952,7 @@ export default function App() {
           <Route path="/statements/invoice" element={<Statements defaultTab="invoices" />} />
           <Route path="/statements/paper-stock" element={<PaperStockStatements />} />
           <Route path="/estimates" element={<Estimates />} />
+          <Route path="/estimates/add" element={<AddEstimate />} />
           <Route path="/item-list" element={<ItemListManagement />} />
         </Routes>
       </div>
