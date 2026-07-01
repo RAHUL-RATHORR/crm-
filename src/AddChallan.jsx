@@ -598,7 +598,7 @@ const AddChallan = () => {
             <div className="px-4 sm:px-6 pb-4 border-t border-gray-50">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3 mt-4">
                 <p className="text-xs font-bold text-gray-600 uppercase tracking-wider">
-                  Multiple Jobs — select karke items mein add karo ({filteredJobCards.length} found)
+                  Multiple Jobs — select and add to items ({filteredJobCards.length} found)
                 </p>
                 <button
                   type="button"
