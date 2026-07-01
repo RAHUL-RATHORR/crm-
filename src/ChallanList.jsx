@@ -7,7 +7,7 @@ import DeleteConfirmationModal from './components/DeleteConfirmationModal';
 import { getBillToDetails, getShipToDetails } from './utils/shipAddress';
 import { numberToWords } from './utils/numberToWords';
 import { getChallanLineItems, computeLineItemsTotals, buildMergedChallanMeta } from './utils/challanTotals';
-import { SELLER, fmtTaxDate, fmtAmt, getStateFromGst, TaxFieldsTable, buildTaxItemLine, TaxItemEmptyRow, getEmptyProductRowCount, CompanyBrandName, TaxCopyBox, TaxCopyTypeControls, DEFAULT_TAX_COPY_SELECTION, getSelectedCopyIds, getPreviewHighlightCopy, TaxInvoiceColGroup, getTaxTableColCount } from './utils/taxDocumentPrint';
+import { SELLER, fmtTaxDate, fmtAmt, getStateFromGst, TaxFieldsTable, buildTaxItemLine, getEmptyProductRowCount, CompanyBrandName, TaxCopyBox, TaxCopyTypeControls, DEFAULT_TAX_COPY_SELECTION, getSelectedCopyIds, getPreviewHighlightCopy, TaxInvoiceColGroup, getTaxTableColCount, getTaxChargeSubRowCount, TaxClassicItemsBlock, buildTaxAnalysisGroups, TaxAnalysisSection, MIN_CHALLAN_PRODUCT_TABLE_ROWS } from './utils/taxDocumentPrint';
 
 const ChallanList = () => {
   const navigate = useNavigate();
@@ -24,7 +24,7 @@ const ChallanList = () => {
   const [tempGstType, setTempGstType] = useState('CGST/SGST');
   const [copySelection, setCopySelection] = useState(DEFAULT_TAX_COPY_SELECTION);
   const isIGST = tempGstType === 'IGST';
-  const taxColCount = getTaxTableColCount(isIGST);
+  const taxColCount = getTaxTableColCount();
   const taxHalfColSpan = taxColCount / 2;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -65,8 +65,11 @@ const ChallanList = () => {
   const challanDate = mergedMeta.date || primaryChallan?.date || primaryChallan?.createdAt;
   const challanNoLabel = isMergedPrint ? mergedMeta.challanLabel : primaryChallan?.challanNo;
   const jobRefLabel = isMergedPrint ? mergedMeta.jobRefLabel : primaryChallan?.jobNumber;
-  const productRowCount = itemLines.length + (totalFreight > 0 ? 1 : 0);
-  const emptyProductRows = getEmptyProductRowCount(productRowCount);
+  const productRowCount = itemLines.length + getTaxChargeSubRowCount(totalFreight, isIGST);
+  const emptyProductRows = getEmptyProductRowCount(productRowCount, {
+    minRows: MIN_CHALLAN_PRODUCT_TABLE_ROWS,
+    noFallback: true,
+  });
 
   const partyCounts = challans.reduce((acc, ch) => {
     const name = (ch.partyName || '').trim();
@@ -457,7 +460,7 @@ const ChallanList = () => {
                 className="bg-white w-full shadow-none tax-invoice-print-page"
               >
                 <table className="tax-invoice w-full border-collapse text-black" style={{ fontSize: '11px', fontFamily: 'Arial, Helvetica, sans-serif' }}>
-                  <TaxInvoiceColGroup isIGST={isIGST} />
+                  <TaxInvoiceColGroup />
                   <tbody>
                     <tr>
                       <td colSpan={taxColCount} className="tax-cell text-center align-middle py-2">
@@ -529,44 +532,19 @@ const ChallanList = () => {
                       </td>
                     </tr>
 
-                    <tr className="tax-blue text-center font-bold tax-item-header-row">
-                      <td className="tax-cell" rowSpan={2}>Sr.<br />No.</td>
-                      <td className="tax-cell" rowSpan={2}>Name of product</td>
-                      <td className="tax-cell" rowSpan={2}>HSN/SAC</td>
-                      <td className="tax-cell" rowSpan={2}>QTY</td>
-                      <td className="tax-cell" rowSpan={2}>Unit</td>
-                      <td className="tax-cell" rowSpan={2}>Rate</td>
-                      <td className="tax-cell" rowSpan={2}>Taxable<br />Value</td>
-                      {isIGST ? (
-                        <td className="tax-cell" colSpan={2}>IGST</td>
-                      ) : (
+                    <TaxClassicItemsBlock
+                      itemLines={itemLines}
+                      freight={totalFreight}
+                      totalCgst={totalCgst}
+                      totalSgst={totalSgst}
+                      totalIgst={totalIgst}
+                      isIGST={isIGST}
+                      emptyProductRows={emptyProductRows}
+                      totalQty={totalQty}
+                      amountWithTax={amountWithTax}
+                      amountInWords={numberToWords(amountWithTax)}
+                      renderItemDescription={(row) => (
                         <>
-                          <td className="tax-cell" colSpan={2}>CGST</td>
-                          <td className="tax-cell" colSpan={2}>SGST</td>
-                        </>
-                      )}
-                      <td className="tax-cell" rowSpan={2}>Total</td>
-                    </tr>
-                    <tr className="tax-blue text-center font-bold tax-item-header-row">
-                      {isIGST ? (
-                        <>
-                          <td className="tax-cell">Rate</td>
-                          <td className="tax-cell">Amount</td>
-                        </>
-                      ) : (
-                        <>
-                          <td className="tax-cell">Rate</td>
-                          <td className="tax-cell">Amount</td>
-                          <td className="tax-cell">Rate</td>
-                          <td className="tax-cell">Amount</td>
-                        </>
-                      )}
-                    </tr>
-
-                    {itemLines.map((row) => (
-                      <tr key={`${row.item.challanNo || ''}-${row.idx}`}>
-                        <td className="tax-cell text-center align-top tax-item-value">{row.idx}</td>
-                        <td className="tax-cell align-top tax-item-value">
                           <div>{row.item.description}</div>
                           {row.item.jobNumber && (
                             <div className="text-[9px] font-bold mt-0.5">Job Ref: {row.item.jobNumber}</div>
@@ -574,122 +552,16 @@ const ChallanList = () => {
                           {isMergedPrint && row.item.challanNo && (
                             <div className="text-[9px] font-bold">Challan: {row.item.challanNo}</div>
                           )}
-                        </td>
-                        <td className="tax-cell text-center align-top tax-item-value">&nbsp;</td>
-                        <td className="tax-cell text-center align-top tax-item-value">{Number(row.item.qty || 0)}</td>
-                        <td className="tax-cell text-center align-top tax-item-value">PCS</td>
-                        <td className="tax-cell text-right align-top tax-item-value">{fmtAmt(row.item.rate)}</td>
-                        <td className="tax-cell text-right align-top tax-item-value">{fmtAmt(row.taxable)}</td>
-                        {isIGST ? (
-                          <>
-                            <td className="tax-cell text-center align-top tax-item-gst">{row.igstRate}%</td>
-                            <td className="tax-cell text-right align-top tax-item-gst">{fmtAmt(row.igstAmt)}</td>
-                          </>
-                        ) : (
-                          <>
-                            <td className="tax-cell text-center align-top tax-item-gst">{row.cgstRate}%</td>
-                            <td className="tax-cell text-right align-top tax-item-gst">{fmtAmt(row.cgstAmt)}</td>
-                            <td className="tax-cell text-center align-top tax-item-gst">{row.sgstRate}%</td>
-                            <td className="tax-cell text-right align-top tax-item-gst">{fmtAmt(row.sgstAmt)}</td>
-                          </>
-                        )}
-                        <td className="tax-cell text-right align-top tax-item-total">{fmtAmt(row.lineTotal)}</td>
-                      </tr>
-                    ))}
-
-                    <TaxItemEmptyRow rowCount={emptyProductRows} isIGST={isIGST} />
-
-                    {totalFreight > 0 && (
-                      <tr>
-                        <td className="tax-cell text-center align-top">{itemLines.length + 1}</td>
-                        <td className="tax-cell align-top">Freight</td>
-                        <td className="tax-cell">&nbsp;</td>
-                        <td className="tax-cell">&nbsp;</td>
-                        <td className="tax-cell">&nbsp;</td>
-                        <td className="tax-cell">&nbsp;</td>
-                        <td className="tax-cell text-right align-top">{fmtAmt(totalFreight)}</td>
-                        {isIGST ? (
-                          <>
-                            <td className="tax-cell text-center align-top tax-item-gst">{freightGstPercent}%</td>
-                            <td className="tax-cell text-right align-top tax-item-gst">{fmtAmt(freightIgstAmt)}</td>
-                          </>
-                        ) : (
-                          <>
-                            <td className="tax-cell text-center align-top tax-item-gst">{freightGstPercent / 2}%</td>
-                            <td className="tax-cell text-right align-top tax-item-gst">{fmtAmt(freightCgstAmt)}</td>
-                            <td className="tax-cell text-center align-top tax-item-gst">{freightGstPercent / 2}%</td>
-                            <td className="tax-cell text-right align-top tax-item-gst">{fmtAmt(freightSgstAmt)}</td>
-                          </>
-                        )}
-                        <td className="tax-cell text-right align-top font-bold">
-                          {fmtAmt(totalFreight + freightCgstAmt + freightSgstAmt + freightIgstAmt)}
-                        </td>
-                      </tr>
-                    )}
-
-                    <tr className="tax-blue font-bold">
-                      <td className="tax-cell" colSpan={3}>Total Quantity</td>
-                      <td className="tax-cell text-center">{totalQty}</td>
-                      <td className="tax-cell" colSpan={2}>&nbsp;</td>
-                      <td className="tax-cell text-right">{fmtAmt(totalTaxable)}</td>
-                      {isIGST ? (
-                        <>
-                          <td className="tax-cell">&nbsp;</td>
-                          <td className="tax-cell text-right tax-item-gst">{fmtAmt(totalIgst)}</td>
-                        </>
-                      ) : (
-                        <>
-                          <td className="tax-cell">&nbsp;</td>
-                          <td className="tax-cell text-right tax-item-gst">{fmtAmt(totalCgst)}</td>
-                          <td className="tax-cell">&nbsp;</td>
-                          <td className="tax-cell text-right tax-item-gst">{fmtAmt(totalSgst)}</td>
                         </>
                       )}
-                      <td className="tax-cell text-right">{fmtAmt(amountWithTax)}</td>
-                    </tr>
+                    />
 
-                    {/* Amount in words + summary */}
-                    <tr>
-                      <td colSpan={taxHalfColSpan} className="tax-cell align-top p-0">
-                        <div className="tax-blue tax-section-title text-center py-0.5 px-1">Total Challan Amount in words</div>
-                        <p className="text-center py-2 px-1 tax-amount-words">{numberToWords(amountWithTax)} Only</p>
-                      </td>
-                      <td colSpan={taxHalfColSpan} className="tax-cell align-top p-0">
-                        <table className="w-full border-collapse tax-summary-table">
-                          <tbody>
-                            <tr>
-                              <td className="tax-cell font-bold tax-summary-label">Total Amount Before Tax</td>
-                              <td className="tax-cell text-right font-bold tax-summary-value">{fmtAmt(amountBeforeTax)}</td>
-                            </tr>
-                            {isIGST ? (
-                              <tr>
-                                <td className="tax-cell font-bold tax-summary-label">Add : IGST</td>
-                                <td className="tax-cell text-right font-bold tax-summary-value">{fmtAmt(totalIgst)}</td>
-                              </tr>
-                            ) : (
-                              <>
-                                <tr>
-                                  <td className="tax-cell font-bold tax-summary-label">Add : CGST</td>
-                                  <td className="tax-cell text-right font-bold tax-summary-value">{fmtAmt(totalCgst)}</td>
-                                </tr>
-                                <tr>
-                                  <td className="tax-cell font-bold tax-summary-label">Add : SGST</td>
-                                  <td className="tax-cell text-right font-bold tax-summary-value">{fmtAmt(totalSgst)}</td>
-                                </tr>
-                              </>
-                            )}
-                            <tr className="tax-blue">
-                              <td className="tax-cell font-bold tax-summary-label">Tax Amount : GST</td>
-                              <td className="tax-cell text-right font-bold tax-summary-value">{fmtAmt(totalGstAmount)}</td>
-                            </tr>
-                            <tr className="tax-blue">
-                              <td className="tax-cell font-bold tax-summary-label">Amount With Tax</td>
-                              <td className="tax-cell text-right font-bold tax-summary-value">{fmtAmt(amountWithTax)}</td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </td>
-                    </tr>
+                    <TaxAnalysisSection
+                      groups={buildTaxAnalysisGroups(itemLines, totalFreight, isIGST, freightGstPercent)}
+                      isIGST={isIGST}
+                      taxAmountInWords={numberToWords(totalGstAmount)}
+                      colSpan={taxColCount}
+                    />
 
                     <tr>
                       <td colSpan={taxHalfColSpan} className="tax-cell align-top p-1">

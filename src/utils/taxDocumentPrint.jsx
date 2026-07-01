@@ -82,67 +82,333 @@ export const buildTaxItemLine = (item, idx, fallbackGst = 18, isIGST = false) =>
 
 export const EMPTY_PRODUCT_ROWS = 2;
 export const MIN_PRODUCT_TABLE_ROWS = 8;
+export const MIN_CHALLAN_PRODUCT_TABLE_ROWS = 6;
 
-export function getEmptyProductRowCount(usedRows = 0) {
-  const filler = MIN_PRODUCT_TABLE_ROWS - usedRows;
-  return filler > 0 ? filler : EMPTY_PRODUCT_ROWS;
+export function getEmptyProductRowCount(usedRows = 0, options = {}) {
+  const minRows = options.minRows ?? MIN_PRODUCT_TABLE_ROWS;
+  const filler = minRows - usedRows;
+  if (filler > 0) return filler;
+  if (options.noFallback) return 0;
+  return EMPTY_PRODUCT_ROWS;
 }
 
-export const getTaxTableColCount = (isIGST) => (isIGST ? 10 : 12);
+export const getTaxTableColCount = () => 10;
 
-export const TaxInvoiceColGroup = ({ isIGST = false }) => (
+export const TaxInvoiceColGroup = () => (
   <colgroup>
     <col style={{ width: '4%' }} />
-    <col style={{ width: '28%' }} />
-    <col style={{ width: '8%' }} />
-    <col style={{ width: '6%' }} />
     <col style={{ width: '5%' }} />
+    <col style={{ width: '24%' }} />
     <col style={{ width: '8%' }} />
-    <col style={{ width: '10%' }} />
-    {isIGST ? (
-      <>
-        <col style={{ width: '6%' }} />
-        <col style={{ width: '14%' }} />
-        <col style={{ width: '15%' }} />
-      </>
-    ) : (
-      <>
-        <col style={{ width: '5%' }} />
-        <col style={{ width: '9%' }} />
-        <col style={{ width: '5%' }} />
-        <col style={{ width: '9%' }} />
-        <col style={{ width: '10%' }} />
-      </>
-    )}
+    <col style={{ width: '7%' }} />
+    <col style={{ width: '9%' }} />
+    <col style={{ width: '8%' }} />
+    <col style={{ width: '8%' }} />
+    <col style={{ width: '5%' }} />
+    <col style={{ width: '22%' }} />
   </colgroup>
 );
 
 /** One tall row with per-column vertical borders (no horizontal lines in the empty zone). */
-export const TaxItemEmptyRow = ({ rowCount = 2, isIGST = false }) => (
-  <tr className="tax-item-empty-row" style={{ '--empty-rows': rowCount }}>
-    <td className="tax-item-empty-cell">&nbsp;</td>
-    <td className="tax-item-empty-cell">&nbsp;</td>
-    <td className="tax-item-empty-cell">&nbsp;</td>
-    <td className="tax-item-empty-cell">&nbsp;</td>
-    <td className="tax-item-empty-cell">&nbsp;</td>
-    <td className="tax-item-empty-cell">&nbsp;</td>
-    <td className="tax-item-empty-cell tax-blue">&nbsp;</td>
-    {isIGST ? (
-      <>
-        <td className="tax-item-empty-cell">&nbsp;</td>
-        <td className="tax-item-empty-cell">&nbsp;</td>
-      </>
-    ) : (
-      <>
-        <td className="tax-item-empty-cell">&nbsp;</td>
-        <td className="tax-item-empty-cell">&nbsp;</td>
-        <td className="tax-item-empty-cell">&nbsp;</td>
-        <td className="tax-item-empty-cell">&nbsp;</td>
-      </>
-    )}
-    <td className="tax-item-empty-cell">&nbsp;</td>
+export const TaxItemEmptyRow = ({ rowCount = 2 }) => (
+  <tr className="tax-item-empty-row tax-items-empty-band" style={{ '--empty-rows': rowCount }}>
+    {Array.from({ length: 10 }, (_, i) => (
+      <td key={i} className={`tax-item-empty-cell${i === 6 ? ' tax-blue' : ''}`}>&nbsp;</td>
+    ))}
   </tr>
 );
+
+export const ClassicTaxItemsHeader = () => (
+  <tr className="tax-item-header-row text-center font-bold">
+    <td className="tax-cell">Sl<br />No.</td>
+    <td className="tax-cell">No. &amp;<br />Kind of Pkgs.</td>
+    <td className="tax-cell text-left">Description of Goods</td>
+    <td className="tax-cell">HSN/SAC</td>
+    <td className="tax-cell">GST<br />Rate</td>
+    <td className="tax-cell">Alt.<br />Quantity</td>
+    <td className="tax-cell">Quantity</td>
+    <td className="tax-cell">Rate</td>
+    <td className="tax-cell">per</td>
+    <td className="tax-cell">Amount</td>
+  </tr>
+);
+
+export const ClassicTaxItemRow = ({ row, isIGST = false, children, stripeClass = 'tax-items-stripe-row tax-stripe-white' }) => {
+  const gstPercent = isIGST ? row.igstRate : row.cgstRate + row.sgstRate;
+  return (
+    <tr className={`tax-item-main-row ${stripeClass}`}>
+      <td className="tax-cell text-center align-top tax-item-value">{row.idx}</td>
+      <td className="tax-cell align-top">&nbsp;</td>
+      <td className="tax-cell align-top tax-item-name">{children || row.item.description}</td>
+      <td className="tax-cell text-center align-top tax-item-value">{row.item.hsn || ''}</td>
+      <td className="tax-cell text-center align-top tax-item-value">{gstPercent} %</td>
+      <td className="tax-cell text-right align-top">&nbsp;</td>
+      <td className="tax-cell text-right align-top tax-item-value">{Number(row.item.qty || 0)}</td>
+      <td className="tax-cell text-right align-top tax-item-value">{fmtAmt(row.item.rate)}</td>
+      <td className="tax-cell text-center align-top tax-item-value">PCS</td>
+      <td className="tax-cell text-right align-top tax-item-total">{fmtAmt(row.taxable)}</td>
+    </tr>
+  );
+};
+
+export const ClassicTaxItemsTotalRow = ({ totalQty, amountWithTax }) => (
+  <tr className="tax-item-grand-total-row font-bold">
+    <td className="tax-cell">&nbsp;</td>
+    <td className="tax-cell">&nbsp;</td>
+    <td className="tax-cell text-right tax-item-grand-label">Total</td>
+    <td className="tax-cell">&nbsp;</td>
+    <td className="tax-cell">&nbsp;</td>
+    <td className="tax-cell">&nbsp;</td>
+    <td className="tax-cell text-right">{totalQty}</td>
+    <td className="tax-cell">&nbsp;</td>
+    <td className="tax-cell">&nbsp;</td>
+    <td className="tax-cell text-right tax-item-grand-amount">{fmtAmt(amountWithTax)} ₹</td>
+  </tr>
+);
+
+export const ClassicAmountInWordsRow = ({ words }) => (
+  <tr className="tax-amount-words-row">
+    <td colSpan={10} className="tax-cell tax-amount-words-cell">
+      <span className="tax-amount-words-label">Amount Chargeable (in words):</span>{' '}
+      <span className="tax-amount-words-value">{words} Indian Rupees Only</span>
+      <span className="tax-amount-words-eoe">E. &amp; O.E</span>
+    </td>
+  </tr>
+);
+
+export const TaxClassicItemsBlock = ({
+  itemLines,
+  freight = 0,
+  totalCgst = 0,
+  totalSgst = 0,
+  totalIgst = 0,
+  isIGST = false,
+  emptyProductRows = 2,
+  totalQty = 0,
+  amountWithTax = 0,
+  amountInWords = '',
+  renderItemDescription,
+}) => {
+  let stripeIndex = 0;
+  const getStripeClass = () => {
+    const stripeClass = stripeIndex % 2 === 0 ? 'tax-items-stripe-row tax-stripe-white' : 'tax-items-stripe-row tax-stripe-grey';
+    stripeIndex += 1;
+    return stripeClass;
+  };
+
+  return (
+    <>
+      <ClassicTaxItemsHeader />
+      {itemLines.map((row) => (
+        <ClassicTaxItemRow
+          key={row.idx}
+          row={row}
+          isIGST={isIGST}
+          stripeClass={getStripeClass()}
+        >
+          {renderItemDescription ? renderItemDescription(row) : undefined}
+        </ClassicTaxItemRow>
+      ))}
+      <TaxItemGstChargeRows
+        freight={freight}
+        totalCgst={totalCgst}
+        totalSgst={totalSgst}
+        totalIgst={totalIgst}
+        isIGST={isIGST}
+        getStripeClass={getStripeClass}
+      />
+      {emptyProductRows > 0 && <TaxItemEmptyRow rowCount={emptyProductRows} />}
+      <ClassicTaxItemsTotalRow totalQty={totalQty} amountWithTax={amountWithTax} />
+      {amountInWords && <ClassicAmountInWordsRow words={amountInWords} />}
+    </>
+  );
+};
+
+export function buildTaxAnalysisGroups(itemLines = [], freight = 0, isIGST = false, freightGstPercent = 18) {
+  const buckets = new Map();
+
+  itemLines.forEach((row) => {
+    const key = (row.item.hsn || '').trim();
+    if (!buckets.has(key)) {
+      buckets.set(key, {
+        hsn: key,
+        taxable: 0,
+        cgstAmt: 0,
+        sgstAmt: 0,
+        igstAmt: 0,
+        cgstRate: row.cgstRate,
+        sgstRate: row.sgstRate,
+        igstRate: row.igstRate,
+      });
+    }
+    const bucket = buckets.get(key);
+    bucket.taxable += row.taxable;
+    bucket.cgstAmt += row.cgstAmt;
+    bucket.sgstAmt += row.sgstAmt;
+    bucket.igstAmt += row.igstAmt;
+  });
+
+  if (freight > 0) {
+    const freightKey = itemLines.length === 1 ? (itemLines[0].item.hsn || '').trim() : '';
+    if (!buckets.has(freightKey)) {
+      buckets.set(freightKey, {
+        hsn: freightKey,
+        taxable: 0,
+        cgstAmt: 0,
+        sgstAmt: 0,
+        igstAmt: 0,
+        cgstRate: isIGST ? 0 : freightGstPercent / 2,
+        sgstRate: isIGST ? 0 : freightGstPercent / 2,
+        igstRate: isIGST ? freightGstPercent : 0,
+      });
+    }
+    const bucket = buckets.get(freightKey);
+    bucket.taxable += freight;
+    if (isIGST) {
+      bucket.igstAmt += (freight * freightGstPercent) / 100;
+      bucket.igstRate = freightGstPercent;
+    } else {
+      const half = freightGstPercent / 2;
+      bucket.cgstAmt += (freight * half) / 100;
+      bucket.sgstAmt += (freight * half) / 100;
+      bucket.cgstRate = half;
+      bucket.sgstRate = half;
+    }
+  }
+
+  const groups = Array.from(buckets.values()).map((group) => ({
+    ...group,
+    totalTax: group.cgstAmt + group.sgstAmt + group.igstAmt,
+  }));
+
+  if (!groups.length) {
+    return [{
+      hsn: '',
+      taxable: 0,
+      cgstAmt: 0,
+      sgstAmt: 0,
+      igstAmt: 0,
+      cgstRate: 0,
+      sgstRate: 0,
+      igstRate: 0,
+      totalTax: 0,
+    }];
+  }
+
+  return groups;
+}
+
+export const TaxAnalysisSection = ({ groups = [], isIGST = false, taxAmountInWords = '', colSpan = 10 }) => {
+  const colCount = isIGST ? 5 : 7;
+  const rows = groups.length ? groups : [{
+    hsn: '',
+    taxable: 0,
+    cgstAmt: 0,
+    sgstAmt: 0,
+    igstAmt: 0,
+    cgstRate: 0,
+    sgstRate: 0,
+    igstRate: 0,
+    totalTax: 0,
+  }];
+
+  const totals = rows.reduce(
+    (acc, group) => ({
+      taxable: acc.taxable + group.taxable,
+      cgstAmt: acc.cgstAmt + group.cgstAmt,
+      sgstAmt: acc.sgstAmt + group.sgstAmt,
+      igstAmt: acc.igstAmt + group.igstAmt,
+      totalTax: acc.totalTax + group.totalTax,
+    }),
+    { taxable: 0, cgstAmt: 0, sgstAmt: 0, igstAmt: 0, totalTax: 0 },
+  );
+
+  return (
+    <tr>
+      <td colSpan={colSpan} className="tax-cell p-0">
+        <table className="tax-analysis-table w-full border-collapse">
+          <tbody>
+            <tr className="tax-analysis-title-row">
+              <td colSpan={colCount} className="tax-cell text-center font-bold">Tax Analysis</td>
+            </tr>
+            <tr className="tax-item-header-row text-center font-bold">
+              <td className="tax-cell" rowSpan={2}>HSN/SAC</td>
+              <td className="tax-cell" rowSpan={2}>Taxable<br />Value</td>
+              {isIGST ? (
+                <td className="tax-cell" colSpan={2}>IGST</td>
+              ) : (
+                <>
+                  <td className="tax-cell" colSpan={2}>CGST</td>
+                  <td className="tax-cell" colSpan={2}>SGST/UTGST</td>
+                </>
+              )}
+              <td className="tax-cell" rowSpan={2}>Total Tax<br />Amount</td>
+            </tr>
+            <tr className="tax-item-header-row text-center font-bold">
+              {isIGST ? (
+                <>
+                  <td className="tax-cell">Rate</td>
+                  <td className="tax-cell">Amount</td>
+                </>
+              ) : (
+                <>
+                  <td className="tax-cell">Rate</td>
+                  <td className="tax-cell">Amount</td>
+                  <td className="tax-cell">Rate</td>
+                  <td className="tax-cell">Amount</td>
+                </>
+              )}
+            </tr>
+            {rows.map((group, idx) => (
+              <tr key={idx} className="tax-analysis-data-row">
+                <td className="tax-cell text-center">{group.hsn || ''}</td>
+                <td className="tax-cell text-right">{fmtAmt(group.taxable)}</td>
+                {isIGST ? (
+                  <>
+                    <td className="tax-cell text-center">{group.igstRate}%</td>
+                    <td className="tax-cell text-right">{fmtAmt(group.igstAmt)}</td>
+                  </>
+                ) : (
+                  <>
+                    <td className="tax-cell text-center">{group.cgstRate}%</td>
+                    <td className="tax-cell text-right">{fmtAmt(group.cgstAmt)}</td>
+                    <td className="tax-cell text-center">{group.sgstRate}%</td>
+                    <td className="tax-cell text-right">{fmtAmt(group.sgstAmt)}</td>
+                  </>
+                )}
+                <td className="tax-cell text-right">{fmtAmt(group.totalTax)}</td>
+              </tr>
+            ))}
+            <tr className="tax-analysis-total-row font-bold">
+              <td className="tax-cell text-right">Total:</td>
+              <td className="tax-cell text-right">{fmtAmt(totals.taxable)}</td>
+              {isIGST ? (
+                <>
+                  <td className="tax-cell">&nbsp;</td>
+                  <td className="tax-cell text-right">{fmtAmt(totals.igstAmt)}</td>
+                </>
+              ) : (
+                <>
+                  <td className="tax-cell">&nbsp;</td>
+                  <td className="tax-cell text-right">{fmtAmt(totals.cgstAmt)}</td>
+                  <td className="tax-cell">&nbsp;</td>
+                  <td className="tax-cell text-right">{fmtAmt(totals.sgstAmt)}</td>
+                </>
+              )}
+              <td className="tax-cell text-right">{fmtAmt(totals.totalTax)}</td>
+            </tr>
+            <tr className="tax-analysis-words-row">
+              <td colSpan={colCount} className="tax-cell">
+                <span className="font-bold">Tax Amount (in words):</span>{' '}
+                <span className="tax-analysis-words-value">{taxAmountInWords} Indian Rupees Only</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+  );
+};
 
 export const CompanyBrandName = ({ className = '', large = false }) => (
   <p className={`tax-company-name company-brand-name ${large ? 'company-brand-name-lg' : ''} ${className}`.trim()}>
@@ -150,6 +416,45 @@ export const CompanyBrandName = ({ className = '', large = false }) => (
     <span className="company-brand-accent">{SELLER.brandSuffix}</span>
   </p>
 );
+
+export const TaxChargeSubRow = ({ label, amount, stripeClass = 'tax-items-stripe-row tax-stripe-grey', isTransport = false }) => (
+  <tr className={`tax-item-sub-row ${stripeClass}${isTransport ? ' tax-item-sub-transport' : ''}`}>
+    <td className="tax-cell tax-item-sub-pad">&nbsp;</td>
+    <td className="tax-cell tax-item-sub-pad">&nbsp;</td>
+    <td className="tax-cell tax-item-sub-label text-right">{label}</td>
+    <td className="tax-cell tax-item-sub-pad">&nbsp;</td>
+    <td className="tax-cell tax-item-sub-pad">&nbsp;</td>
+    <td className="tax-cell tax-item-sub-pad">&nbsp;</td>
+    <td className="tax-cell tax-item-sub-pad">&nbsp;</td>
+    <td className="tax-cell tax-item-sub-pad">&nbsp;</td>
+    <td className="tax-cell tax-item-sub-pad">&nbsp;</td>
+    <td className="tax-cell text-right tax-item-sub-amount">{fmtAmt(amount)}</td>
+  </tr>
+);
+
+export function getTaxChargeSubRowCount(freight = 0, isIGST = false) {
+  const gstRows = isIGST ? 1 : 2;
+  return gstRows + (freight > 0 ? 1 : 0);
+}
+
+export const TaxItemGstChargeRows = ({ freight = 0, totalCgst = 0, totalSgst = 0, totalIgst = 0, isIGST = false, getStripeClass }) => {
+  const stripe = () => (getStripeClass ? getStripeClass() : 'tax-items-stripe-row tax-stripe-grey');
+  return (
+    <>
+      {freight > 0 && (
+        <TaxChargeSubRow label="Transportation Outward Gst" amount={freight} stripeClass={stripe()} isTransport />
+      )}
+      {isIGST ? (
+        <TaxChargeSubRow label="IGST Integrated Gst" amount={totalIgst} stripeClass={stripe()} />
+      ) : (
+        <>
+          <TaxChargeSubRow label="SGST State Gst" amount={totalSgst} stripeClass={stripe()} />
+          <TaxChargeSubRow label="CGST Central Gst" amount={totalCgst} stripeClass={stripe()} />
+        </>
+      )}
+    </>
+  );
+};
 
 export const TAX_COPY_LINES = [
   { id: 'original', text: 'Original for Recipient' },
