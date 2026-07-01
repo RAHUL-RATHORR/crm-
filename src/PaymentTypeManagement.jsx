@@ -168,17 +168,17 @@ const PaymentTypeManagement = () => {
                           <div className="flex justify-center items-center gap-4">
                             <button
                               onClick={() => handleEdit(pt)}
-                              className="flex items-center gap-1.5 text-blue-600 hover:text-blue-800 font-bold text-xs transition-colors"
+                              className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
                               title="Edit"
                             >
-                              <Pencil size={14} /> EDIT
+                              <Pencil size={16} />
                             </button>
                             <button
                               onClick={() => handleDelete(pt._id)}
-                              className="flex items-center gap-1.5 text-red-500 hover:text-red-700 font-bold text-xs transition-colors"
+                              className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
                               title="Delete"
                             >
-                              <Trash2 size={14} /> DELETE
+                              <Trash2 size={16} />
                             </button>
                           </div>
                         </td>

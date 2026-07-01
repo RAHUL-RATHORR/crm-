@@ -4,6 +4,8 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { Plus, Trash2, X, Printer, UserPlus } from 'lucide-react';
 import { buildPartySuggestions, partyNameExists } from './utils/partySuggestions';
+import { masterItemToLineFields } from './utils/itemSuggestions';
+import ItemDescriptionInput from './components/ItemDescriptionInput';
 
 const EMPTY_PARTY_FORM = {
   partyName: '',
@@ -78,6 +80,7 @@ const AddInvoice = () => {
   });
 
   const [items, setItems] = useState(() => normalizeInvoiceItems(editData));
+  const [masterItems, setMasterItems] = useState([]);
 
   const [isPartyDropdownOpen, setIsPartyDropdownOpen] = useState(false);
   const [isAddPartyModalOpen, setIsAddPartyModalOpen] = useState(false);
@@ -112,6 +115,14 @@ const AddInvoice = () => {
       .then(res => res.json())
       .then(data => setJobCards(data))
       .catch(err => console.error("Error fetching Job Cards:", err));
+
+    fetch(`${API_BASE_URL}/api/items`)
+      .then(res => res.json())
+      .then((data) => {
+        const list = Array.isArray(data) ? data.filter((item) => item.isActive !== false) : [];
+        setMasterItems(list);
+      })
+      .catch(err => console.error('Error fetching items:', err));
   }, []);
 
   const handleInputChange = (e) => {
@@ -183,6 +194,18 @@ const AddInvoice = () => {
       prevItems.map((item) => {
         if (item.id !== id) return item;
         return calcInvoiceItem({ ...item, [field]: value });
+      })
+    );
+  };
+
+  const applyMasterItemToRow = (id, masterItem) => {
+    setItems((prevItems) =>
+      prevItems.map((item) => {
+        if (item.id !== id) return item;
+        return calcInvoiceItem({
+          ...item,
+          ...masterItemToLineFields(masterItem, { includeHsn: true }),
+        });
       })
     );
   };
@@ -468,8 +491,8 @@ const AddInvoice = () => {
         </div>
 
         {/* Items Section */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="overflow-x-auto">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-visible">
+          <div className="overflow-x-auto overflow-y-visible">
             <table className="w-full text-left border-collapse min-w-[980px]">
               <thead className="bg-gray-50">
                 <tr>
@@ -487,13 +510,12 @@ const AddInvoice = () => {
                 {computedItems.map((item) => (
                   <tr key={item.id} className="border-t border-gray-100 group">
                     <td className="px-6 py-4">
-                      <input
-                        type="text"
+                      <ItemDescriptionInput
                         value={item.description}
-                        onChange={(e) => handleItemChange(item.id, 'description', e.target.value)}
+                        onChange={(value) => handleItemChange(item.id, 'description', value)}
+                        onSelectMaster={(masterItem) => applyMasterItemToRow(item.id, masterItem)}
+                        masterItems={masterItems}
                         required
-                        placeholder="Description"
-                        className="w-full bg-white border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
                       />
                     </td>
                     <td className="px-6 py-4">

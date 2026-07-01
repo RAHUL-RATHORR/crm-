@@ -160,7 +160,7 @@ const ItemListManagement = () => {
             <form onSubmit={handleSave} className="p-6 space-y-4">
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-gray-700 uppercase tracking-wider">
-                  Item Name <span className="text-red-500">*</span>
+                  Item Name (Description) <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -272,7 +272,7 @@ const ItemListManagement = () => {
                 <thead>
                   <tr className="bg-gray-50 text-gray-600 uppercase text-[11px] font-bold tracking-wider">
                     <th className="px-4 py-3 w-14">S.No.</th>
-                    <th className="px-4 py-3">Item Name</th>
+                    <th className="px-4 py-3">Item Name (Description)</th>
                     <th className="px-4 py-3">HSN/SAC</th>
                     <th className="px-4 py-3 text-right">Rate</th>
                     <th className="px-4 py-3 text-center">per</th>
@@ -308,16 +308,18 @@ const ItemListManagement = () => {
                             <button
                               type="button"
                               onClick={() => handleEdit(item)}
-                              className="flex items-center gap-1 text-blue-600 hover:text-blue-800 font-bold text-xs"
+                              className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+                              title="Edit"
                             >
-                              <Pencil size={14} /> EDIT
+                              <Pencil size={16} />
                             </button>
                             <button
                               type="button"
                               onClick={() => handleDelete(item._id)}
-                              className="flex items-center gap-1 text-red-500 hover:text-red-700 font-bold text-xs"
+                              className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
+                              title="Delete"
                             >
-                              <Trash2 size={14} /> DELETE
+                              <Trash2 size={16} />
                             </button>
                           </div>
                         </td>

@@ -20,7 +20,9 @@ import {
   ChevronRight,
   Building,
   Menu as MenuIcon,
-  X as CloseIcon
+  X as CloseIcon,
+  LogOut,
+  Headphones,
 } from 'lucide-react';
 import Dashboard from './Dashboard';
 import JobCardForm from './JobCardForm';
@@ -39,8 +41,7 @@ import Statements from './Statements';
 import PaperStockStatements from './PaperStockStatements';
 import Estimates from './Estimates';
 import ItemListManagement from './ItemListManagement';
-import { LogOut } from 'lucide-react';
-
+import ContactSupport from './ContactSupport';
 
 const DropdownMenu = ({ title, icon: Icon, items, isActive }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -138,6 +139,174 @@ const DropdownMenu = ({ title, icon: Icon, items, isActive }) => {
               )}
             </div>
           ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ProfileMenu = ({ settingsItems, location, onContactSupport, onLogout }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const menuRef = useRef(null);
+  const closeTimerRef = useRef(null);
+
+  const isSettingsActive = location.pathname.startsWith('/settings');
+
+  const clearCloseTimer = () => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+  };
+
+  const openMenu = () => {
+    clearCloseTimer();
+    setIsOpen(true);
+  };
+
+  const scheduleClose = () => {
+    clearCloseTimer();
+    closeTimerRef.current = setTimeout(() => {
+      setIsOpen(false);
+      setIsSettingsOpen(false);
+    }, 280);
+  };
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        clearCloseTimer();
+        setIsOpen(false);
+        setIsSettingsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      clearCloseTimer();
+    };
+  }, []);
+
+  return (
+    <div
+      ref={menuRef}
+      className="flex items-center gap-2 bg-gray-50 pl-2 pr-3 py-1.5 rounded-full border border-gray-200 cursor-pointer hover:bg-gray-100 transition relative"
+      onMouseEnter={openMenu}
+      onMouseLeave={scheduleClose}
+    >
+      <button
+        type="button"
+        className="flex items-center"
+        onClick={() => {
+          clearCloseTimer();
+          setIsOpen((prev) => !prev);
+          if (isOpen) setIsSettingsOpen(false);
+        }}
+        aria-label="Profile menu"
+      >
+        <UserCircle size={24} className="text-blue-600" />
+      </button>
+
+      <div
+        className={`absolute top-full right-0 w-[220px] z-[60] transition-opacity duration-150 ${
+          isOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'
+        }`}
+        onMouseEnter={openMenu}
+        onMouseLeave={scheduleClose}
+      >
+        <div className="pt-2">
+          <div className="bg-white border border-gray-100 rounded-xl shadow-2xl p-2 space-y-1">
+            <div
+              className="relative"
+              onMouseEnter={() => {
+                openMenu();
+                setIsSettingsOpen(true);
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setIsSettingsOpen((prev) => !prev)}
+                className={`flex items-center justify-between w-full px-3 py-2.5 text-sm rounded-lg transition-colors ${
+                  isSettingsOpen || isSettingsActive
+                    ? 'bg-blue-50 text-blue-700'
+                    : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Settings size={16} className={isSettingsOpen || isSettingsActive ? 'text-blue-600' : 'text-gray-400'} />
+                  <span className="font-semibold">Settings</span>
+                </div>
+                <ChevronRight
+                  size={14}
+                  className={`transition-transform duration-200 ${
+                    isSettingsOpen ? 'text-blue-600 rotate-90' : 'text-gray-400'
+                  }`}
+                />
+              </button>
+
+              {isSettingsOpen && (
+                <>
+                  <div className="absolute right-full top-0 w-3 h-full" aria-hidden />
+                  <div
+                    className="absolute right-[calc(100%+10px)] top-0 min-w-[190px] bg-white border border-gray-100 rounded-xl shadow-[0_10px_40px_-4px_rgba(0,0,0,0.15)] p-2 space-y-1 z-[70]"
+                    onMouseEnter={() => {
+                      openMenu();
+                      setIsSettingsOpen(true);
+                    }}
+                  >
+                    {settingsItems.map((item) => (
+                      <button
+                        key={item.label}
+                        type="button"
+                        onClick={() => {
+                          item.onClick();
+                          clearCloseTimer();
+                          setIsOpen(false);
+                          setIsSettingsOpen(false);
+                        }}
+                        className={`flex items-center w-full px-3 py-2 text-xs font-semibold rounded-lg transition-colors ${
+                          location.pathname === item.path
+                            ? 'bg-blue-50 text-blue-700'
+                            : 'text-gray-600 hover:bg-blue-50 hover:text-blue-700'
+                        }`}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                onContactSupport();
+                clearCloseTimer();
+                setIsOpen(false);
+                setIsSettingsOpen(false);
+              }}
+              className={`flex items-center gap-3 w-full px-3 py-2.5 text-sm rounded-lg transition-colors ${
+                location.pathname === '/contact-support'
+                  ? 'bg-blue-50 text-blue-700'
+                  : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
+              }`}
+            >
+              <Headphones size={16} className={location.pathname === '/contact-support' ? 'text-blue-600' : 'text-gray-400'} />
+              <span className="font-semibold">Contact &amp; Support</span>
+            </button>
+
+            <div className="border-t border-gray-100 my-1" />
+
+            <button
+              type="button"
+              onClick={onLogout}
+              className="flex items-center gap-3 w-full px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            >
+              <LogOut size={16} /> Logout
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -256,18 +425,14 @@ export default function App() {
       dropdownItems: [
         { label: 'Estimate/Quotation', icon: Calculator, onClick: () => navigate('/estimates') },
         { label: 'Item List', icon: Package, onClick: () => navigate('/item-list') },
-        {
-          label: 'Settings',
-          icon: Settings,
-          isSubDropdown: true,
-          subItems: [
-            { label: 'Site Setting', onClick: () => navigate('/settings/site') },
-            { label: 'Social Setting', onClick: () => navigate('/settings/social') },
-            { label: 'Change Password', onClick: () => navigate('/settings/password') },
-          ]
-        },
       ],
     },
+  ];
+
+  const profileSettingsItems = [
+    { label: 'Site Setting', path: '/settings/site', onClick: () => navigate('/settings/site') },
+    { label: 'Social Setting', path: '/settings/social', onClick: () => navigate('/settings/social') },
+    { label: 'Change Password', path: '/settings/password', onClick: () => navigate('/settings/password') },
   ];
 
   const [notifications, setNotifications] = useState([]);
@@ -372,8 +537,7 @@ export default function App() {
                     (item.name === 'Challan' && location.pathname.includes('/challan')) ||
                     (item.name === 'Statements' && location.pathname.includes('/statements')) ||
                     (item.name === 'More' && (
-                      location.pathname.includes('/settings')
-                      || location.pathname.includes('/estimates')
+                      location.pathname.includes('/estimates')
                       || location.pathname.includes('/item-list')
                     ))
                   }
@@ -448,25 +612,16 @@ export default function App() {
             )}
           </div>
 
-          <div className="flex items-center gap-2 bg-gray-50 pl-2 pr-3 py-1.5 rounded-full border border-gray-200 cursor-pointer hover:bg-gray-100 transition group relative">
-            <UserCircle size={24} className="text-blue-600" />
-            {/* <span className="text-sm font-medium hidden md:block"></span> */}
-
-            <div className="absolute top-full right-0 mt-2 w-48 bg-white border border-gray-100 rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[60]">
-              <div className="p-2">
-                <button
-                  onClick={() => {
-                    localStorage.removeItem('isLoggedIn');
-                    navigate('/login');
-                    window.location.reload();
-                  }}
-                  className="flex items-center gap-3 w-full px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                >
-                  <LogOut size={16} /> Logout
-                </button>
-              </div>
-            </div>
-          </div>
+          <ProfileMenu
+            settingsItems={profileSettingsItems}
+            location={location}
+            onContactSupport={() => navigate('/contact-support')}
+            onLogout={() => {
+              localStorage.removeItem('isLoggedIn');
+              navigate('/login');
+              window.location.reload();
+            }}
+          />
         </div>
       </nav>
 
@@ -547,6 +702,54 @@ export default function App() {
                 </div>
               ))}
             </div>
+
+            <div className="mt-6 pt-4 border-t border-gray-100 space-y-1">
+              <div className="flex items-center gap-3 px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                <Settings size={14} />
+                Settings
+              </div>
+              {profileSettingsItems.map((item) => (
+                <button
+                  key={item.label}
+                  onClick={() => {
+                    item.onClick();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`flex items-center gap-3 w-[calc(100%-1.5rem)] ml-6 px-4 py-2.5 text-sm font-semibold rounded-xl transition ${
+                    location.pathname === item.path
+                      ? 'bg-blue-50 text-blue-600'
+                      : 'text-gray-600 hover:bg-blue-50 hover:text-blue-600'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+              <button
+                onClick={() => {
+                  navigate('/contact-support');
+                  setIsMobileMenuOpen(false);
+                }}
+                className={`flex items-center gap-3 w-full px-4 py-2.5 text-sm font-semibold rounded-xl transition ${
+                  location.pathname === '/contact-support'
+                    ? 'bg-blue-50 text-blue-600'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <Headphones size={18} />
+                Contact &amp; Support
+              </button>
+              <button
+                onClick={() => {
+                  localStorage.removeItem('isLoggedIn');
+                  navigate('/login');
+                  window.location.reload();
+                }}
+                className="flex items-center gap-3 w-full px-4 py-3 text-sm font-semibold text-red-600 hover:bg-red-50 rounded-xl transition mt-2"
+              >
+                <LogOut size={18} />
+                Logout
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -562,6 +765,7 @@ export default function App() {
           <Route path="/invoice/list" element={<InvoiceList />} />
           <Route path="/challan/add" element={<AddChallan />} />
           <Route path="/challan/list" element={<ChallanList />} />
+          <Route path="/contact-support" element={<ContactSupport />} />
           <Route path="/settings/password" element={<SettingsPage />} />
           <Route path="/settings/site" element={<SiteSettings />} />
           <Route path="/settings/social" element={<SocialSettings />} />

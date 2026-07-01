@@ -4,6 +4,8 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { X, Printer, UserPlus, Plus, Trash2 } from 'lucide-react';
 import { buildPartySuggestions, partyNameExists } from './utils/partySuggestions';
+import { masterItemToLineFields } from './utils/itemSuggestions';
+import ItemDescriptionInput from './components/ItemDescriptionInput';
 
 const EMPTY_PARTY_FORM = {
   partyName: '',
@@ -78,6 +80,7 @@ const AddChallan = () => {
   const editData = location.state?.editData;
 
   const [jobCards, setJobCards] = useState([]);
+  const [masterItems, setMasterItems] = useState([]);
   const [createJobCard, setCreateJobCard] = useState(false);
   const [newJobCardName, setNewJobCardName] = useState('');
   const [isPartyDropdownOpen, setIsPartyDropdownOpen] = useState(false);
@@ -125,6 +128,14 @@ const AddChallan = () => {
       .then(res => res.json())
       .then(data => setJobCards(data))
       .catch(err => console.error("Error fetching Job Cards:", err));
+
+    fetch(`${API_BASE_URL}/api/items`)
+      .then(res => res.json())
+      .then((data) => {
+        const list = Array.isArray(data) ? data.filter((item) => item.isActive !== false) : [];
+        setMasterItems(list);
+      })
+      .catch(err => console.error('Error fetching items:', err));
   }, []);
 
   useEffect(() => {
@@ -217,6 +228,15 @@ const AddChallan = () => {
   const handleItemChange = (index, field, value) => {
     const updatedItems = [...formData.items];
     updatedItems[index][field] = value;
+    setFormData(prev => ({ ...prev, items: updatedItems }));
+  };
+
+  const applyMasterItemToRow = (index, masterItem) => {
+    const updatedItems = [...formData.items];
+    updatedItems[index] = {
+      ...updatedItems[index],
+      ...masterItemToLineFields(masterItem, { includeHsn: false }),
+    };
     setFormData(prev => ({ ...prev, items: updatedItems }));
   };
 
@@ -488,8 +508,8 @@ const AddChallan = () => {
         </div>
 
         {/* Items Section */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="overflow-x-auto">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-visible">
+          <div className="overflow-x-auto overflow-y-visible">
             <table className="w-full text-left border-collapse min-w-[880px]">
               <thead className="bg-gray-50">
                 <tr>
@@ -506,13 +526,12 @@ const AddChallan = () => {
                 {totals.items.map((item, index) => (
                   <tr key={index} className="border-t border-gray-100 group">
                     <td className="px-6 py-4">
-                      <input
-                        type="text"
+                      <ItemDescriptionInput
                         value={item.description}
-                        onChange={(e) => handleItemChange(index, 'description', e.target.value)}
+                        onChange={(value) => handleItemChange(index, 'description', value)}
+                        onSelectMaster={(masterItem) => applyMasterItemToRow(index, masterItem)}
+                        masterItems={masterItems}
                         required
-                        placeholder="Description"
-                        className="w-full bg-white border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
                       />
                     </td>
                     <td className="px-2 py-4 text-center">

@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Settings as SettingsIcon, ShieldCheck, Lock, CheckCircle, AlertTriangle } from 'lucide-react';
 
 const Settings = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     oldPassword: '',
     newPassword: '',
@@ -76,7 +78,11 @@ const Settings = () => {
             <p className="text-xs text-indigo-100/80 leading-relaxed mb-4">
               If you've forgotten your current password, please contact the developer for a manual reset.
             </p>
-            <button className="text-xs font-bold uppercase tracking-wider text-white border-b border-indigo-400 pb-0.5 hover:text-indigo-300 transition-colors">
+            <button
+              type="button"
+              onClick={() => navigate('/contact-support')}
+              className="text-xs font-bold uppercase tracking-wider text-white border-b border-indigo-400 pb-0.5 hover:text-indigo-300 transition-colors"
+            >
               Contact Developer
             </button>
           </div>
