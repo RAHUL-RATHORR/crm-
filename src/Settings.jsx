@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings as SettingsIcon, ShieldCheck, Lock, CheckCircle, AlertTriangle } from 'lucide-react';
+import { ShieldCheck, Lock, CheckCircle, AlertTriangle } from 'lucide-react';
+import { API_BASE_URL } from './utils/apiBase';
+import { getCurrentUser } from './utils/permissions';
 
 const Settings = () => {
   const navigate = useNavigate();
+  const currentUser = getCurrentUser();
   const [formData, setFormData] = useState({
     oldPassword: '',
     newPassword: '',
@@ -16,17 +19,9 @@ const Settings = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handlePasswordChange = (e) => {
+  const handlePasswordChange = async (e) => {
     e.preventDefault();
     setStatus({ type: '', message: '' });
-
-    const storedAdmin = JSON.parse(localStorage.getItem('adminAuth'));
-
-    // Validation
-    if (formData.oldPassword !== storedAdmin.password) {
-      setStatus({ type: 'error', message: 'Old password does not match our records.' });
-      return;
-    }
 
     if (formData.newPassword !== formData.confirmPassword) {
       setStatus({ type: 'error', message: 'New password and confirm password do not match.' });
@@ -38,10 +33,39 @@ const Settings = () => {
       return;
     }
 
-    // Update password
+    if (currentUser?.email && currentUser.id !== 'local-admin') {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/auth/change-password`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: currentUser.email,
+            oldPassword: formData.oldPassword,
+            newPassword: formData.newPassword,
+          }),
+        });
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          setStatus({ type: 'error', message: errorData.error || 'Failed to update password.' });
+          return;
+        }
+        setFormData({ oldPassword: '', newPassword: '', confirmPassword: '' });
+        setStatus({ type: 'success', message: 'Password updated successfully! Next time you log in, use your new password.' });
+        return;
+      } catch (err) {
+        setStatus({ type: 'error', message: 'Unable to update password on server.' });
+        return;
+      }
+    }
+
+    const storedAdmin = JSON.parse(localStorage.getItem('adminAuth') || '{"email":"admin@gmail.com","password":"123456"}');
+    if (formData.oldPassword !== storedAdmin.password) {
+      setStatus({ type: 'error', message: 'Old password does not match our records.' });
+      return;
+    }
+
     const updatedAdmin = { ...storedAdmin, password: formData.newPassword };
     localStorage.setItem('adminAuth', JSON.stringify(updatedAdmin));
-
     setFormData({ oldPassword: '', newPassword: '', confirmPassword: '' });
     setStatus({ type: 'success', message: 'Password updated successfully! Next time you log in, use your new password.' });
   };

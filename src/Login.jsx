@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Building, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { API_BASE_URL } from './utils/apiBase';
+import { saveSession, tryLegacyLogin, getLegacyAdminUser } from './utils/authSession';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -8,47 +10,74 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Initialize default admin if not present
     const admin = localStorage.getItem('adminAuth');
     if (!admin) {
       localStorage.setItem('adminAuth', JSON.stringify({
         email: 'admin@gmail.com',
-        password: '123456'
+        password: '123456',
       }));
     }
 
-    // Redirect if already logged in
     const isLoggedIn = localStorage.getItem('isLoggedIn');
     if (isLoggedIn === 'true') {
+      if (!localStorage.getItem('currentUser')) {
+        saveSession(getLegacyAdminUser());
+      }
       navigate('/');
     }
   }, [navigate]);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
 
-    const storedAdmin = JSON.parse(localStorage.getItem('adminAuth'));
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), password }),
+      });
 
-    if (email === storedAdmin.email && password === storedAdmin.password) {
-      localStorage.setItem('isLoggedIn', 'true');
-      navigate('/');
-      window.location.reload(); // Ensure App state re-syncs
-    } else {
-      setError('Invalid email or password. Please try again.');
+      if (response.ok) {
+        const data = await response.json();
+        saveSession(data.user);
+        navigate('/');
+        window.location.reload();
+        return;
+      }
+
+      const legacyUser = tryLegacyLogin(email.trim(), password);
+      if (legacyUser) {
+        navigate('/');
+        window.location.reload();
+        return;
+      }
+
+      const errorData = await response.json().catch(() => ({}));
+      setError(errorData.error || 'Invalid email or password. Please try again.');
+    } catch (err) {
+      const legacyUser = tryLegacyLogin(email.trim(), password);
+      if (legacyUser) {
+        navigate('/');
+        window.location.reload();
+        return;
+      }
+      setError('Unable to connect to server. Try again or use admin@gmail.com / 123456');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-linear-to-br from-blue-600 via-indigo-700 to-purple-800 p-4 relative overflow-hidden font-sans">
-      {/* Decorative circles to mimic the screenshot's depth */}
       <div className="absolute top-[-10%] right-[-5%] w-64 h-64 bg-white opacity-5 rounded-full blur-3xl animate-pulse"></div>
       <div className="absolute bottom-[-10%] left-[-5%] w-96 h-96 bg-white opacity-5 rounded-full blur-3xl animate-pulse delay-1000"></div>
 
       <div className="w-full max-w-112.5 space-y-8 z-10 animate-fade-in">
-        {/* Logo Section */}
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-3 bg-white px-6 py-3 rounded-xl shadow-2xl">
             <div className="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center text-white">
@@ -61,7 +90,6 @@ const Login = () => {
           </div>
         </div>
 
-        {/* Login Card */}
         <div className="bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden transition-all duration-300 transform hover:scale-[1.01]">
           <div className="p-8 sm:p-10">
             <div className="text-center mb-10">
@@ -117,16 +145,16 @@ const Login = () => {
               <div className="pt-4">
                 <button
                   type="submit"
-                  className="w-full bg-[#1bc5a3] hover:bg-[#19b493] text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-[#1bc5a350] transition-all transform active:scale-95"
+                  disabled={isLoading}
+                  className="w-full bg-[#1bc5a3] hover:bg-[#19b493] disabled:opacity-70 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-[#1bc5a350] transition-all transform active:scale-95"
                 >
-                  Sign In
+                  {isLoading ? 'Signing In...' : 'Sign In'}
                 </button>
               </div>
             </form>
           </div>
         </div>
 
-        {/* Footer text */}
         <p className="text-center text-white/50 text-xs font-medium tracking-wide">
           &copy; {new Date().getFullYear()} Harihar Printers. All rights reserved.
         </p>

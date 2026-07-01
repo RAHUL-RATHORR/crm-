@@ -44,6 +44,8 @@ import Estimates from './Estimates';
 import ItemListManagement from './ItemListManagement';
 import ContactSupport from './ContactSupport';
 import StaffTeamManagement from './StaffTeamManagement';
+import { clearSession, saveSession, getLegacyAdminUser } from './utils/authSession';
+import { hasPermission, canAccessStaffTeam } from './utils/permissions';
 
 const DropdownMenu = ({ title, icon: Icon, items, isActive }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -147,7 +149,7 @@ const DropdownMenu = ({ title, icon: Icon, items, isActive }) => {
   );
 };
 
-const ProfileMenu = ({ settingsItems, staffTeamItems, location, onContactSupport, onLogout }) => {
+const ProfileMenu = ({ settingsItems, staffTeamItems, showStaffTeam, location, onContactSupport, onLogout }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isStaffOpen, setIsStaffOpen] = useState(false);
@@ -320,7 +322,7 @@ const ProfileMenu = ({ settingsItems, staffTeamItems, location, onContactSupport
               items: settingsItems,
             })}
 
-            {renderFlyout({
+            {showStaffTeam && renderFlyout({
               isSubOpen: isStaffOpen,
               setSubOpen: setIsStaffOpen,
               otherClose: () => setIsSettingsOpen(false),
@@ -382,6 +384,12 @@ export default function App() {
   });
 
   useEffect(() => {
+    if (localStorage.getItem('isLoggedIn') === 'true' && !localStorage.getItem('currentUser')) {
+      saveSession(getLegacyAdminUser());
+    }
+  }, []);
+
+  useEffect(() => {
     // Update Document Title
     document.title = siteSettings.siteTitle || 'Harihar Printers';
 
@@ -427,7 +435,7 @@ export default function App() {
     return <Routes><Route path="*" element={<Dashboard />} /></Routes>;
   }
 
-  const navigationItems = [
+  const allNavigationItems = [
     { name: 'Dashboard', icon: LayoutDashboard, path: '/' },
     {
       name: 'Job Card',
@@ -478,9 +486,41 @@ export default function App() {
     },
   ];
 
+  const navigationItems = allNavigationItems
+    .map((item) => {
+      if (!item.isDropdown) return item;
+      if (item.name === 'More') {
+        const dropdownItems = item.dropdownItems.filter((sub) => {
+          if (sub.label.includes('Estimate')) return hasPermission('estimates', 'view');
+          if (sub.label.includes('Item List')) return hasPermission('itemList', 'view');
+          return true;
+        });
+        return { ...item, dropdownItems };
+      }
+      return item;
+    })
+    .filter((item) => {
+      const moduleByName = {
+        Dashboard: 'dashboard',
+        'Job Card': 'jobCard',
+        Invoices: 'invoice',
+        Challan: 'challan',
+        Payments: 'payments',
+        'Paper Stock': 'paperStock',
+        Statements: 'statements',
+      };
+      if (item.name === 'More') return item.dropdownItems.length > 0;
+      const moduleKey = moduleByName[item.name];
+      return !moduleKey || hasPermission(moduleKey, 'view');
+    });
+
   const profileSettingsItems = [
-    { label: 'Site Setting', path: '/settings/site', onClick: () => navigate('/settings/site') },
-    { label: 'Social Setting', path: '/settings/social', onClick: () => navigate('/settings/social') },
+    ...(hasPermission('settings', 'edit')
+      ? [
+          { label: 'Site Setting', path: '/settings/site', onClick: () => navigate('/settings/site') },
+          { label: 'Social Setting', path: '/settings/social', onClick: () => navigate('/settings/social') },
+        ]
+      : []),
     { label: 'Change Password', path: '/settings/password', onClick: () => navigate('/settings/password') },
   ];
 
@@ -489,6 +529,14 @@ export default function App() {
     { label: 'Roles', path: '/staff-team/roles', onClick: () => navigate('/staff-team/roles') },
     { label: 'Permissions', path: '/staff-team/permissions', onClick: () => navigate('/staff-team/permissions') },
   ];
+
+  const showStaffTeamMenu = canAccessStaffTeam();
+
+  const handleLogout = () => {
+    clearSession();
+    navigate('/login');
+    window.location.reload();
+  };
 
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -670,13 +718,10 @@ export default function App() {
           <ProfileMenu
             settingsItems={profileSettingsItems}
             staffTeamItems={staffTeamItems}
+            showStaffTeam={showStaffTeamMenu}
             location={location}
             onContactSupport={() => navigate('/contact-support')}
-            onLogout={() => {
-              localStorage.removeItem('isLoggedIn');
-              navigate('/login');
-              window.location.reload();
-            }}
+            onLogout={handleLogout}
           />
         </div>
       </nav>
@@ -780,26 +825,30 @@ export default function App() {
                   {item.label}
                 </button>
               ))}
-              <div className="flex items-center gap-3 px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider mt-3">
-                <Users size={14} />
-                Staff &amp; Team
-              </div>
-              {staffTeamItems.map((item) => (
-                <button
-                  key={item.label}
-                  onClick={() => {
-                    item.onClick();
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className={`flex items-center gap-3 w-[calc(100%-1.5rem)] ml-6 px-4 py-2.5 text-sm font-semibold rounded-xl transition ${
-                    location.pathname === item.path
-                      ? 'bg-blue-50 text-blue-600'
-                      : 'text-gray-600 hover:bg-blue-50 hover:text-blue-600'
-                  }`}
-                >
-                  {item.label}
-                </button>
-              ))}
+              {showStaffTeamMenu && (
+                <>
+                  <div className="flex items-center gap-3 px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider mt-3">
+                    <Users size={14} />
+                    Staff &amp; Team
+                  </div>
+                  {staffTeamItems.map((item) => (
+                    <button
+                      key={item.label}
+                      onClick={() => {
+                        item.onClick();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={`flex items-center gap-3 w-[calc(100%-1.5rem)] ml-6 px-4 py-2.5 text-sm font-semibold rounded-xl transition ${
+                        location.pathname === item.path
+                          ? 'bg-blue-50 text-blue-600'
+                          : 'text-gray-600 hover:bg-blue-50 hover:text-blue-600'
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </>
+              )}
               <button
                 onClick={() => {
                   navigate('/contact-support');
@@ -815,11 +864,7 @@ export default function App() {
                 Contact &amp; Support
               </button>
               <button
-                onClick={() => {
-                  localStorage.removeItem('isLoggedIn');
-                  navigate('/login');
-                  window.location.reload();
-                }}
+                onClick={handleLogout}
                 className="flex items-center gap-3 w-full px-4 py-3 text-sm font-semibold text-red-600 hover:bg-red-50 rounded-xl transition mt-2"
               >
                 <LogOut size={18} />

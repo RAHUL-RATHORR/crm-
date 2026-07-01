@@ -31,6 +31,9 @@ import paperStockRoutes from "./routes/paperStockRoutes.js";
 import statementRoutes from "./routes/statementRoutes.js";
 import estimateRoutes from "./routes/estimateRoutes.js";
 import itemRoutes from "./routes/itemRoutes.js";
+import staffRoutes from "./routes/staffRoutes.js";
+import roleRoutes from "./routes/roleRoutes.js";
+import { seedStaffAndRoles } from "./utils/seedStaff.js";
 
 const app = express();
 app.use(cors());
@@ -85,6 +88,8 @@ const connectDB = async () => {
         await mongoose.connect(process.env.MONGO_URI);
 
         console.log("✅ MongoDB Connected Successfully");
+        await seedStaffAndRoles();
+        console.log("✅ Staff roles seeded");
     } catch (error) {
         console.error("❌ MongoDB Error:", error.message);
     }
@@ -102,6 +107,8 @@ app.use("/api/paper-stock", paperStockRoutes);
 app.use("/api/statements", statementRoutes);
 app.use("/api/estimate", estimateRoutes);
 app.use("/api/items", itemRoutes);
+app.use("/api/staff", staffRoutes);
+app.use("/api/roles", roleRoutes);
 
 // API Test Route (Internal)
 app.get("/api/health", (req, res) => {
