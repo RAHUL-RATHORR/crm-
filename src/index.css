@@ -1255,3 +1255,94 @@
     print-color-adjust: exact !important;
   }
 }
+
+/* ================= MOBILE SCREEN (forms, lists, print preview) ================= */
+@media (max-width: 767px) {
+  .print-modal-overlay {
+    padding: 0 !important;
+    align-items: stretch !important;
+  }
+
+  .print-modal-shell {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+  }
+
+  .print-modal-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: #ffffff;
+  }
+
+  .print-modal-toolbar {
+    width: 100%;
+  }
+
+  .tax-copy-controls {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 0.5rem !important;
+  }
+
+  .print-modal-actions {
+    width: 100%;
+  }
+
+  .print-modal-actions button {
+    min-height: 44px;
+  }
+
+  .a4-page-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    padding: 8px !important;
+  }
+
+  .tax-invoice-print-page,
+  #printable-invoice,
+  #printable-challan,
+  #printable-inner {
+    min-width: 720px;
+    width: 720px;
+    max-width: none !important;
+  }
+
+  .job-card-list-table-wrap {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .job-card-list-table-wrap table {
+    min-width: 720px;
+  }
+
+  .crm-items-table th,
+  .crm-items-table td {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+
+  .crm-items-table th {
+    padding-top: 0.625rem !important;
+    padding-bottom: 0.625rem !important;
+    font-size: 9px !important;
+  }
+
+  .crm-items-table td {
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+  }
+
+  .crm-items-table input {
+    font-size: 16px !important;
+  }
+}

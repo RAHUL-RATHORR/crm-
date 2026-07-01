@@ -334,28 +334,34 @@ const InvoiceList = () => {
 
       {/* Invoice Preview & Print Modal */}
       {isModalOpen && selectedInvoice && (
-        <div className="print-modal-overlay fixed inset-0 bg-black/60 z-100 flex items-center justify-center p-4 overflow-y-auto print:static print:overflow-visible print:bg-white print:p-0">
-          <div className="print-modal-shell bg-white border border-gray-300 w-full max-w-full relative max-h-[95vh] flex flex-col shadow-none print:max-h-none print:overflow-visible print:border-0 print:shadow-none">
-            {/* Modal Header */}
-            <div className="p-4 border-b flex justify-between items-center bg-white modal-header no-print">
-              <h2 className="text-xl font-bold text-gray-800">Invoice Preview</h2>
-              <div className="flex flex-wrap items-center justify-end gap-3">
+        <div className="print-modal-overlay fixed inset-0 bg-black/60 z-100 flex items-stretch sm:items-center justify-center p-0 sm:p-4 overflow-y-auto print:static print:overflow-visible print:bg-white print:p-0">
+          <div className="print-modal-shell bg-white border border-gray-300 w-full max-w-full relative h-[100dvh] sm:h-auto max-h-[100dvh] sm:max-h-[95vh] flex flex-col shadow-none print:max-h-none print:overflow-visible print:border-0 print:shadow-none print:h-auto">
+            <div className="modal-header print-modal-header no-print p-3 sm:p-4 border-b bg-white">
+              <div className="print-modal-title-row flex items-center justify-between gap-2">
+                <h2 className="text-lg sm:text-xl font-bold text-gray-800">Invoice Preview</h2>
+                <button
+                  onClick={closePreview}
+                  className="p-2 hover:bg-gray-200 rounded-full transition-colors shrink-0 sm:hidden"
+                  aria-label="Close preview"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="print-modal-toolbar mt-3 space-y-3">
                 <TaxCopyTypeControls selection={copySelection} onChange={handleCopySelectionChange} />
                 {getSelectedCopyIds(copySelection).length > 1 && (
-                  <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100">
+                  <span className="inline-block text-xs font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100">
                     {getSelectedCopyIds(copySelection).length} copies will print
                   </span>
                 )}
-                <div className="flex items-center gap-1.5 bg-gray-100 px-3 py-2 rounded-xl text-sm font-bold border border-gray-200">
-                  <span className="text-gray-500 font-medium">GST Mode:</span>
+                <div className="flex items-center gap-1.5 bg-gray-100 px-3 py-2.5 rounded-xl text-sm font-bold border border-gray-200 w-full sm:w-auto">
+                  <span className="text-gray-500 font-medium shrink-0">GST Mode:</span>
                   <select
                     value={tempGstType}
                     onChange={async (e) => {
                       const newType = e.target.value;
                       setTempGstType(newType);
-                      // Update state locally
                       setInvoices(prev => prev.map(inv => inv._id === selectedInvoice._id ? { ...inv, gstType: newType } : inv));
-                      // Update on server
                       try {
                         await fetch(`${API_BASE_URL}/api/invoice/${selectedInvoice._id}`, {
                           method: 'PUT',
@@ -366,36 +372,43 @@ const InvoiceList = () => {
                         console.error("Error updating GST Type on server:", err);
                       }
                     }}
-                    className="bg-transparent text-blue-700 outline-none cursor-pointer font-bold"
+                    className="bg-transparent text-blue-700 outline-none cursor-pointer font-bold w-full sm:w-auto"
                   >
                     <option value="CGST/SGST">CGST + SGST</option>
                     <option value="IGST">IGST</option>
                   </select>
                 </div>
+                <div className="print-modal-actions grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
                 <button
                   onClick={handleDownloadPDF}
                   disabled={isGenerating}
-                  className="flex items-center gap-2 bg-gray-100 text-gray-700 px-6 py-2 rounded-xl text-sm font-bold hover:bg-gray-200 transition-all disabled:opacity-50"
+                  className="flex items-center justify-center gap-2 bg-gray-100 text-gray-700 px-4 py-3 sm:px-6 sm:py-2 rounded-xl text-sm font-bold hover:bg-gray-200 transition-all disabled:opacity-50"
                 >
                   {isGenerating ? "..." : <Download size={18} />}
                   PDF
                 </button>
                 <button
                   onClick={handlePrint}
-                  className="inline-flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 transition-all shadow-lg active:scale-95"
+                  className="inline-flex items-center justify-center gap-2 px-4 py-3 sm:px-6 sm:py-2 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 transition-all shadow-lg active:scale-95"
                 >
                   <Printer size={18} /> Print
                 </button>
                 <button
                   onClick={closePreview}
-                  className="p-1 hover:bg-gray-200 rounded-full transition-colors"
+                  className="hidden sm:inline-flex p-2 hover:bg-gray-200 rounded-full transition-colors col-span-2 sm:col-auto justify-self-end"
+                  aria-label="Close preview"
                 >
                   <X size={20} />
                 </button>
+                </div>
               </div>
             </div>
 
-            <div className="p-2 overflow-y-auto grow a4-page-container print:overflow-visible print:max-h-none print:h-auto print:p-0 print:grow-0" id="printable-content">
+            <p className="print-preview-hint no-print px-3 py-2 text-[11px] font-semibold text-blue-700 bg-blue-50 border-b border-blue-100 sm:hidden">
+              Swipe left/right to view the full invoice before printing.
+            </p>
+
+            <div className="p-2 overflow-y-auto overflow-x-auto grow a4-page-container print:overflow-visible print:max-h-none print:h-auto print:p-0 print:grow-0" id="printable-content">
               <div
                 id="printable-invoice"
                 className="bg-white w-full shadow-none tax-invoice-print-page"

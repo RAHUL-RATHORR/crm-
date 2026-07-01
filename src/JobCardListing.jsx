@@ -316,8 +316,8 @@ export default function JobCardListing() {
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden no-print max-w-full">
-        <div className="w-full overflow-hidden">
-          <table className="w-full table-fixed text-xs text-left">
+        <div className="w-full overflow-x-auto job-card-list-table-wrap">
+          <table className="w-full table-fixed text-xs text-left min-w-[720px]">
             <colgroup>
               <col style={{ width: '28px' }} />
               {columnVisibility.partyName && <col style={{ width: '13%' }} />}
@@ -470,21 +470,27 @@ export default function JobCardListing() {
 
       {/* Print Preview Modal */}
       {isModalOpen && selectedCard && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 overflow-y-auto print:p-0 print:bg-white print:static print:block">
-          <div className="job-card-modal-shell bg-white border border-gray-300 w-full max-w-4xl relative max-h-[95vh] flex flex-col shadow-none print:border-0 print:max-w-none print:w-full print:max-h-none print:shadow-none">
-            {/* Modal Header */}
-            <div className="p-4 border-b flex justify-between items-center bg-white modal-header no-print">
-              <h2 className="text-xl font-bold text-gray-800">Job Card Preview</h2>
-              <button
-                onClick={closePreview}
-                className="p-1 hover:bg-gray-200 rounded-full transition-colors"
-              >
-                <X size={20} />
-              </button>
+        <div className="print-modal-overlay fixed inset-0 bg-black/60 z-100 flex items-stretch sm:items-center justify-center p-0 sm:p-4 overflow-y-auto print:static print:overflow-visible print:bg-white print:p-0">
+          <div className="print-modal-shell job-card-modal-shell bg-white border border-gray-300 w-full max-w-4xl sm:max-w-4xl relative h-[100dvh] sm:h-auto max-h-[100dvh] sm:max-h-[95vh] flex flex-col shadow-none print:max-h-none print:overflow-visible print:border-0 print:shadow-none print:h-auto">
+            <div className="modal-header print-modal-header no-print p-3 sm:p-4 border-b bg-white">
+              <div className="print-modal-title-row flex items-center justify-between gap-2">
+                <h2 className="text-lg sm:text-xl font-bold text-gray-800">Job Card Preview</h2>
+                <button
+                  onClick={closePreview}
+                  className="p-2 hover:bg-gray-200 rounded-full transition-colors shrink-0"
+                  aria-label="Close preview"
+                >
+                  <X size={20} />
+                </button>
+              </div>
             </div>
 
+            <p className="print-preview-hint no-print px-3 py-2 text-[11px] font-semibold text-blue-700 bg-blue-50 border-b border-blue-100 sm:hidden">
+              Swipe left/right to view the full job card before printing.
+            </p>
+
             {/* Modal Body - Printable Content */}
-            <div className="p-2 overflow-y-auto grow a4-page-container print:overflow-visible print:max-h-none print:h-auto print:p-0 print:grow-0" id="printable-content">
+            <div className="p-2 overflow-y-auto overflow-x-auto grow a4-page-container print:overflow-visible print:max-h-none print:h-auto print:p-0 print:grow-0" id="printable-content">
               <div
                 id="printable-inner"
                 className="bg-white w-full shadow-none tax-invoice-print-page"
@@ -641,23 +647,23 @@ export default function JobCardListing() {
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 border-t bg-white flex justify-end gap-3 modal-footer no-print">
+            <div className="p-3 sm:p-4 border-t bg-white flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 modal-footer no-print sticky bottom-0 z-10 shadow-[0_-4px_12px_rgba(0,0,0,0.06)]">
               <button
                 onClick={closePreview}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors"
+                className="w-full sm:w-auto px-4 py-3 sm:py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors rounded-lg"
               >
                 Cancel
               </button>
               <button
                 onClick={handlePrint}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 transition-colors"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-3 sm:py-2 text-sm font-bold text-white bg-green-600 hover:bg-green-700 transition-colors rounded-lg"
               >
                 <Printer size={16} /> Print
               </button>
               <button
                 onClick={handleSharePDF}
                 disabled={isGenerating}
-                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-all ${isGenerating ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+                className={`w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-3 sm:py-2 text-sm font-medium text-white transition-all rounded-lg ${isGenerating ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
                   }`}
               >
                 {isGenerating ? (
