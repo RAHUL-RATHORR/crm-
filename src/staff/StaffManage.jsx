@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Pencil, Trash2, Users, UserPlus } from 'lucide-react';
+import { Pencil, Trash2, Users, UserPlus, Eye, EyeOff } from 'lucide-react';
 import { API_BASE_URL } from '../utils/apiBase';
 import { canManageStaff } from '../utils/permissions';
 import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
@@ -23,6 +23,7 @@ const StaffManage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
   const canEdit = canManageStaff();
 
   const teams = useMemo(() => {
@@ -72,6 +73,7 @@ const StaffManage = () => {
     const staffRole = roles.find((r) => r.name === 'Staff') || roles[0];
     setForm({ ...EMPTY_FORM, roleId: staffRole?._id || '' });
     setEditingId(null);
+    setShowPassword(false);
   };
 
   const handleSave = async (e) => {
@@ -133,6 +135,7 @@ const StaffManage = () => {
       roleId: member.roleId || '',
       isActive: member.isActive !== false,
     });
+    setShowPassword(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -178,7 +181,7 @@ const StaffManage = () => {
               <UserPlus size={16} />
               {editingId ? 'Edit Staff' : 'Add Staff'}
             </div>
-            <form onSubmit={handleSave} className="p-5 space-y-4">
+            <form onSubmit={handleSave} autoComplete="off" className="p-5 space-y-4">
               {!canEdit && (
                 <p className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-lg p-3">
                   You have view-only access. Ask Admin to add or edit staff.
@@ -190,11 +193,45 @@ const StaffManage = () => {
               </div>
               <div>
                 <label className="text-[10px] font-bold text-gray-500 uppercase">Email *</label>
-                <input type="email" name="email" value={form.email} onChange={handleChange} required disabled={!canEdit} className="w-full mt-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm" />
+                <input
+                  type="email"
+                  name="email"
+                  value={form.email}
+                  onChange={handleChange}
+                  required
+                  disabled={!canEdit}
+                  autoComplete="off"
+                  readOnly={!editingId}
+                  onFocus={(e) => e.target.removeAttribute('readonly')}
+                  placeholder="Enter staff email"
+                  className="w-full mt-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm"
+                />
               </div>
               <div>
                 <label className="text-[10px] font-bold text-gray-500 uppercase">{editingId ? 'New Password' : 'Password *'}</label>
-                <input type="password" name="password" value={form.password} onChange={handleChange} disabled={!canEdit} placeholder={editingId ? 'Leave blank to keep current' : ''} className="w-full mt-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm" />
+                <div className="relative mt-1">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    name="password"
+                    value={form.password}
+                    onChange={handleChange}
+                    disabled={!canEdit}
+                    autoComplete="new-password"
+                    readOnly={!editingId}
+                    onFocus={(e) => e.target.removeAttribute('readonly')}
+                    placeholder={editingId ? 'Leave blank to keep current' : 'Enter password'}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 pr-10 text-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600 transition-colors"
+                    tabIndex={-1}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
               </div>
               <div>
                 <label className="text-[10px] font-bold text-gray-500 uppercase">Mobile</label>
