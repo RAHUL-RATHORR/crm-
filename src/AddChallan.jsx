@@ -17,7 +17,7 @@ const API_BASE_URL = window.location.hostname === 'localhost' || window.location
   ? 'https://crm-qpw8.onrender.com'
   : 'https://crm-qpw8.onrender.com';
 
-const defaultItem = () => ({ description: '', qty: 0, rate: 0, gstPercent: 18, total: 0, gstAmount: 0 });
+const defaultItem = () => ({ description: '', qty: 0, rate: 0, per: 'PCS', gstPercent: 18, total: 0, gstAmount: 0 });
 
 const backfillItemForEdit = (item, editData) => {
   const total = Number(item.total) || 0;
@@ -31,6 +31,7 @@ const backfillItemForEdit = (item, editData) => {
     description: item.description || '',
     qty,
     rate,
+    per: item.per ?? 'PCS',
     gstPercent: item.gstPercent ?? editData?.gstPercent ?? 18,
     total,
     gstAmount: item.gstAmount || 0,
@@ -283,7 +284,10 @@ const AddChallan = () => {
       partyContact: formData.partyContact,
       partyEmail: formData.partyEmail,
       partyGst: formData.partyGst,
-      items: computedItems,
+      items: computedItems.map((item) => ({
+        ...item,
+        per: String(item.per ?? '').trim() || 'PCS',
+      })),
       total: totals.subTotal,
       freight: totals.freight,
       gstPercent: invoiceGstPercent,
@@ -486,12 +490,13 @@ const AddChallan = () => {
         {/* Items Section */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[800px]">
+            <table className="w-full text-left border-collapse min-w-[880px]">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider w-56">Description *</th>
                   <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider text-center w-24">Qty *</th>
                   <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider text-center w-28">Rate *</th>
+                  <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider text-center w-20">per</th>
                   <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider text-center w-24">GST %</th>
                   <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider text-center w-32">Amount</th>
                   <th className="px-6 py-3 w-14"></th>
@@ -533,6 +538,17 @@ const AddChallan = () => {
                           min="0"
                           step="any"
                           className="w-24 bg-white border border-gray-200 rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm text-center"
+                        />
+                      </div>
+                    </td>
+                    <td className="px-2 py-4 text-center">
+                      <div className="flex justify-center">
+                        <input
+                          type="text"
+                          value={item.per ?? ''}
+                          onChange={(e) => handleItemChange(index, 'per', e.target.value)}
+                          placeholder="PCS"
+                          className="w-16 bg-white border border-gray-200 rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm text-center uppercase"
                         />
                       </div>
                     </td>

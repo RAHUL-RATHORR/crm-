@@ -152,7 +152,7 @@ export const ClassicTaxItemRow = ({ row, isIGST = false, children, stripeClass =
       <td className="tax-cell text-right align-top">&nbsp;</td>
       <td className="tax-cell text-right align-top tax-item-value">{Number(row.item.qty || 0)}</td>
       <td className="tax-cell text-right align-top tax-item-value">{fmtAmt(row.item.rate)}</td>
-      <td className="tax-cell text-center align-top tax-item-value">PCS</td>
+      <td className="tax-cell text-center align-top tax-item-value">{(row.item.per || 'PCS').trim() || 'PCS'}</td>
       <td className="tax-cell text-right align-top tax-item-total">{fmtAmt(row.taxable)}</td>
     </tr>
   );

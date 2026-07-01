@@ -16,6 +16,7 @@ import {
   PlusSquare,
   Calculator,
   Settings,
+  Package,
   ChevronRight,
   Building,
   Menu as MenuIcon,
@@ -37,6 +38,7 @@ import PaperStockManagement from './PaperStockManagement';
 import Statements from './Statements';
 import PaperStockStatements from './PaperStockStatements';
 import Estimates from './Estimates';
+import ItemListManagement from './ItemListManagement';
 import { LogOut } from 'lucide-react';
 
 
@@ -253,6 +255,7 @@ export default function App() {
       isDropdown: true,
       dropdownItems: [
         { label: 'Estimate/Quotation', icon: Calculator, onClick: () => navigate('/estimates') },
+        { label: 'Item List', icon: Package, onClick: () => navigate('/item-list') },
         {
           label: 'Settings',
           icon: Settings,
@@ -368,7 +371,11 @@ export default function App() {
                     (item.name === 'Invoices' && location.pathname.includes('/invoice')) ||
                     (item.name === 'Challan' && location.pathname.includes('/challan')) ||
                     (item.name === 'Statements' && location.pathname.includes('/statements')) ||
-                    (item.name === 'More' && location.pathname.includes('/settings'))
+                    (item.name === 'More' && (
+                      location.pathname.includes('/settings')
+                      || location.pathname.includes('/estimates')
+                      || location.pathname.includes('/item-list')
+                    ))
                   }
                 />
               );
@@ -564,6 +571,7 @@ export default function App() {
           <Route path="/statements/invoice" element={<Statements defaultTab="invoices" />} />
           <Route path="/statements/paper-stock" element={<PaperStockStatements />} />
           <Route path="/estimates" element={<Estimates />} />
+          <Route path="/item-list" element={<ItemListManagement />} />
         </Routes>
       </div>
     </div>

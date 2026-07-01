@@ -23,6 +23,7 @@ const defaultInvoiceItem = () => ({
   hsn: '',
   qty: 0,
   rate: 0,
+  per: 'PCS',
   gstPercent: 18,
   total: 0,
   gstAmount: 0,
@@ -43,6 +44,7 @@ const normalizeInvoiceItems = (editData) => {
       ...item,
       id: item.id || item._id || Date.now() + Math.random(),
       hsn: item.hsn || '',
+      per: item.per ?? 'PCS',
       gstPercent: item.gstPercent ?? editData.gstPercent ?? 18,
     }, editData.gstPercent ?? 18));
   }
@@ -247,7 +249,10 @@ const AddInvoice = () => {
     partyContact: formData.partyContact,
     partyEmail: formData.partyEmail,
     partyGst: formData.partyGst,
-    items: computedItems,
+    items: computedItems.map((item) => ({
+      ...item,
+      per: String(item.per ?? '').trim() || 'PCS',
+    })),
     subTotal,
     freight,
     reverseCharge: formData.reverseCharge || 'No',
@@ -465,13 +470,14 @@ const AddInvoice = () => {
         {/* Items Section */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[900px]">
+            <table className="w-full text-left border-collapse min-w-[980px]">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider w-56">Description *</th>
                   <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider w-40">HSN/SAC</th>
                   <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider text-center w-24">Qty *</th>
                   <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider text-center w-28">Rate *</th>
+                  <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider text-center w-20">per</th>
                   <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider text-center w-24">GST %</th>
                   <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider text-center w-32">Amount</th>
                   <th className="px-6 py-3 w-14"></th>
@@ -518,6 +524,17 @@ const AddInvoice = () => {
                           onChange={(e) => handleItemChange(item.id, 'rate', e.target.value)}
                           required
                           className="w-24 bg-white border border-gray-200 rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm text-center"
+                        />
+                      </div>
+                    </td>
+                    <td className="px-2 py-4 text-center">
+                      <div className="flex justify-center">
+                        <input
+                          type="text"
+                          value={item.per ?? ''}
+                          onChange={(e) => handleItemChange(item.id, 'per', e.target.value)}
+                          placeholder="PCS"
+                          className="w-16 bg-white border border-gray-200 rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm text-center uppercase"
                         />
                       </div>
                     </td>
