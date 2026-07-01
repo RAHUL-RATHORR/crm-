@@ -35,6 +35,13 @@ export const fmtTaxDate = (value) => {
 export const fmtAmt = (value) =>
   Number(value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+export const fmtTaxRate = (rate) => {
+  const n = Number(rate || 0);
+  if (!n) return '';
+  const text = parseFloat(n.toFixed(2)).toString();
+  return `${text}%`;
+};
+
 export const getStateFromGst = (gstNo) => {
   const gst = (gstNo || '').trim();
   if (gst.length >= 2 && gst !== 'URP') {
@@ -299,7 +306,7 @@ export function buildTaxAnalysisGroups(itemLines = [], freight = 0, isIGST = fal
 }
 
 export const TaxAnalysisSection = ({ groups = [], isIGST = false, taxAmountInWords = '', colSpan = 10 }) => {
-  const colCount = isIGST ? 5 : 7;
+  const colCount = isIGST ? 4 : 6;
   const rows = groups.length ? groups : [{
     hsn: '',
     taxable: 0,
@@ -325,14 +332,32 @@ export const TaxAnalysisSection = ({ groups = [], isIGST = false, taxAmountInWor
 
   return (
     <tr>
-      <td colSpan={colSpan} className="tax-cell p-0">
+      <td colSpan={colSpan} className="tax-cell tax-analysis-wrap p-0">
         <table className="tax-analysis-table w-full border-collapse">
+          <colgroup>
+            {isIGST ? (
+              <>
+                <col style={{ width: '22%' }} />
+                <col style={{ width: '14%' }} />
+                <col style={{ width: '22%' }} />
+                <col style={{ width: '22%' }} />
+              </>
+            ) : (
+              <>
+                <col style={{ width: '18%' }} />
+                <col style={{ width: '10%' }} />
+                <col style={{ width: '16%' }} />
+                <col style={{ width: '10%' }} />
+                <col style={{ width: '16%' }} />
+                <col style={{ width: '18%' }} />
+              </>
+            )}
+          </colgroup>
           <tbody>
             <tr className="tax-analysis-title-row">
               <td colSpan={colCount} className="tax-cell text-center font-bold">Tax Analysis</td>
             </tr>
-            <tr className="tax-item-header-row text-center font-bold">
-              <td className="tax-cell" rowSpan={2}>HSN/SAC</td>
+            <tr className="tax-analysis-header-row text-center font-bold">
               <td className="tax-cell" rowSpan={2}>Taxable<br />Value</td>
               {isIGST ? (
                 <td className="tax-cell" colSpan={2}>IGST</td>
@@ -344,7 +369,7 @@ export const TaxAnalysisSection = ({ groups = [], isIGST = false, taxAmountInWor
               )}
               <td className="tax-cell" rowSpan={2}>Total Tax<br />Amount</td>
             </tr>
-            <tr className="tax-item-header-row text-center font-bold">
+            <tr className="tax-analysis-header-row text-center font-bold">
               {isIGST ? (
                 <>
                   <td className="tax-cell">Rate</td>
@@ -361,18 +386,17 @@ export const TaxAnalysisSection = ({ groups = [], isIGST = false, taxAmountInWor
             </tr>
             {rows.map((group, idx) => (
               <tr key={idx} className="tax-analysis-data-row">
-                <td className="tax-cell text-center">{group.hsn || ''}</td>
                 <td className="tax-cell text-right">{fmtAmt(group.taxable)}</td>
                 {isIGST ? (
                   <>
-                    <td className="tax-cell text-center">{group.igstRate}%</td>
+                    <td className="tax-cell text-center">{fmtTaxRate(group.igstRate)}</td>
                     <td className="tax-cell text-right">{fmtAmt(group.igstAmt)}</td>
                   </>
                 ) : (
                   <>
-                    <td className="tax-cell text-center">{group.cgstRate}%</td>
+                    <td className="tax-cell text-center">{fmtTaxRate(group.cgstRate)}</td>
                     <td className="tax-cell text-right">{fmtAmt(group.cgstAmt)}</td>
-                    <td className="tax-cell text-center">{group.sgstRate}%</td>
+                    <td className="tax-cell text-center">{fmtTaxRate(group.sgstRate)}</td>
                     <td className="tax-cell text-right">{fmtAmt(group.sgstAmt)}</td>
                   </>
                 )}
@@ -380,8 +404,10 @@ export const TaxAnalysisSection = ({ groups = [], isIGST = false, taxAmountInWor
               </tr>
             ))}
             <tr className="tax-analysis-total-row font-bold">
-              <td className="tax-cell text-right">Total:</td>
-              <td className="tax-cell text-right">{fmtAmt(totals.taxable)}</td>
+              <td className="tax-cell tax-analysis-total-first text-right">
+                <span className="tax-analysis-total-label">Total:</span>
+                <span>{fmtAmt(totals.taxable)}</span>
+              </td>
               {isIGST ? (
                 <>
                   <td className="tax-cell">&nbsp;</td>
