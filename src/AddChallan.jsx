@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { X, Printer, UserPlus } from 'lucide-react';
+import { X, Printer, UserPlus, Plus, Trash2 } from 'lucide-react';
 import { buildPartySuggestions, partyNameExists } from './utils/partySuggestions';
 
 const EMPTY_PARTY_FORM = {
@@ -11,7 +11,6 @@ const EMPTY_PARTY_FORM = {
   contactNo: '',
   emailId: '',
   gstNo: '',
-  jobName: 'Direct Challan',
 };
 
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -56,22 +55,6 @@ const normalizeItems = (editData) => {
   return [defaultItem()];
 };
 
-const parseJobQty = (value) => {
-  const match = String(value || '').match(/[\d.]+/);
-  return match ? parseFloat(match[0]) : 0;
-};
-
-const itemFromJobCard = (card) => ({
-  description: `${card.jobName || 'Job'} (${card.jobNumber || ''})`.trim(),
-  qty: parseJobQty(card.jobQty),
-  rate: 0,
-  gstPercent: 18,
-  total: 0,
-  gstAmount: 0,
-  jobCardId: card._id || card.id,
-  jobNumber: card.jobNumber || '',
-});
-
 const calcItemTotals = (item) => {
   const qty = parseFloat(item.qty || 0);
   const rate = parseFloat(item.rate || 0);
@@ -94,7 +77,8 @@ const AddChallan = () => {
   const editData = location.state?.editData;
 
   const [jobCards, setJobCards] = useState([]);
-  const [pickedJobIds, setPickedJobIds] = useState([]);
+  const [createJobCard, setCreateJobCard] = useState(false);
+  const [newJobCardName, setNewJobCardName] = useState('');
   const [isPartyDropdownOpen, setIsPartyDropdownOpen] = useState(false);
   const [isAddPartyModalOpen, setIsAddPartyModalOpen] = useState(false);
   const [partyForm, setPartyForm] = useState(EMPTY_PARTY_FORM);
@@ -106,6 +90,10 @@ const AddChallan = () => {
     challanNo: editData ? editData.challanNo : 'CHLN' + String(Date.now()).slice(-4),
     jobCardId: editData ? editData.jobCardId : '',
     partyName: editData ? editData.partyName : '',
+    partyAddress: editData?.partyAddress || '',
+    partyContact: editData?.partyContact || '',
+    partyEmail: editData?.partyEmail || '',
+    partyGst: editData?.partyGst || '',
     items: normalizeItems(editData),
     total: editData ? editData.total : 0,
     gstAmount: editData ? (editData.gstAmount || 0) : 0,
@@ -159,34 +147,10 @@ const AddChallan = () => {
   const showAddPartyButton = formData.partyName.trim().length > 0
     && !partyNameExists(partySuggestions, formData.partyName);
 
-  useEffect(() => {
-    if (formData.jobCardId) {
-      const selectedCard = jobCards.find(card => (card._id === formData.jobCardId || card.id === parseInt(formData.jobCardId)));
-      if (selectedCard && formData.partyName !== selectedCard.partyName) {
-        setFormData(prev => ({ ...prev, partyName: selectedCard.partyName }));
-      }
-    }
-  }, [formData.jobCardId, jobCards]);
-
-  const filteredJobCards = formData.partyName
-    ? jobCards.filter(card => card.partyName && card.partyName.toLowerCase().includes(formData.partyName.toLowerCase()))
-    : jobCards;
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    if (name === 'jobCardId') {
-      const selectedCard = jobCards.find(card => (card._id === value || card.id === parseInt(value)));
-      setFormData(prev => ({
-        ...prev,
-        jobCardId: value,
-        partyName: selectedCard?.partyName || prev.partyName,
-        items: selectedCard ? [itemFromJobCard(selectedCard)] : prev.items,
-      }));
-      return;
-    }
     if (name === 'partyName') {
-      setPickedJobIds([]);
-      setFormData(prev => ({ ...prev, partyName: value, jobCardId: '' }));
+      setFormData(prev => ({ ...prev, partyName: value }));
       setIsPartyDropdownOpen(true);
       return;
     }
@@ -194,14 +158,13 @@ const AddChallan = () => {
   };
 
   const applyPartySuggestion = (party) => {
-    const linkedCard = jobCards.find((card) => card.jobNumber === party.jobNumber)
-      || jobCards.find((card) => (card.partyName || '').trim().toLowerCase() === party.partyName.toLowerCase());
-
-    setPickedJobIds([]);
     setFormData((prev) => ({
       ...prev,
       partyName: party.partyName,
-      jobCardId: linkedCard?._id || linkedCard?.id || '',
+      partyAddress: party.address || prev.partyAddress,
+      partyContact: party.contactNo || prev.partyContact,
+      partyEmail: party.emailId || prev.partyEmail,
+      partyGst: party.gstNo || prev.partyGst,
     }));
     setIsPartyDropdownOpen(false);
   };
@@ -229,36 +192,17 @@ const AddChallan = () => {
 
     setIsSavingParty(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/jobcard`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          partyName: partyForm.partyName.trim(),
-          companyName: partyForm.partyName.trim(),
-          address: partyForm.address.trim(),
-          contactNo: partyForm.contactNo.trim(),
-          emailId: partyForm.emailId.trim(),
-          gstNo: partyForm.gstNo.trim(),
-          jobName: partyForm.jobName.trim() || 'Direct Challan',
-          jobDate: new Date().toISOString(),
-          jobQty: '1',
-        }),
-      });
+      const partyName = partyForm.partyName.trim();
+      const partySnapshot = {
+        partyName,
+        partyAddress: partyForm.address.trim(),
+        partyContact: partyForm.contactNo.trim(),
+        partyEmail: partyForm.emailId.trim(),
+        partyGst: partyForm.gstNo.trim(),
+      };
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to save party');
-      }
+      setFormData((prev) => ({ ...prev, ...partySnapshot }));
 
-      const savedJobCard = await response.json();
-      setJobCards((prev) => [savedJobCard, ...prev]);
-      setPickedJobIds([]);
-      setFormData((prev) => ({
-        ...prev,
-        partyName: savedJobCard.partyName || partyForm.partyName.trim(),
-        jobCardId: savedJobCard._id || savedJobCard.id || '',
-        items: [itemFromJobCard(savedJobCard)],
-      }));
       setIsAddPartyModalOpen(false);
       setPartyForm(EMPTY_PARTY_FORM);
     } catch (err) {
@@ -267,32 +211,6 @@ const AddChallan = () => {
     } finally {
       setIsSavingParty(false);
     }
-  };
-
-  const toggleJobPick = (id) => {
-    setPickedJobIds(prev => (
-      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
-    ));
-  };
-
-  const addSelectedJobsToItems = () => {
-    const picked = filteredJobCards.filter(card => pickedJobIds.includes(card._id || card.id));
-    if (!picked.length) return;
-
-    const newItems = picked.map(itemFromJobCard);
-    const existingDescs = new Set(formData.items.map(i => i.description).filter(Boolean));
-    const toAdd = newItems.filter(i => !existingDescs.has(i.description));
-
-    setFormData(prev => {
-      const hasContent = prev.items.some(i => i.description || i.qty || i.rate);
-      const merged = hasContent ? [...prev.items, ...toAdd] : toAdd.length ? toAdd : [defaultItem()];
-      return {
-        ...prev,
-        items: merged,
-        jobCardId: prev.jobCardId || (picked[0]._id || picked[0].id),
-      };
-    });
-    setPickedJobIds([]);
   };
 
   const handleItemChange = (index, field, value) => {
@@ -309,12 +227,41 @@ const AddChallan = () => {
   };
 
   const removeItem = (index) => {
+    if (formData.items.length <= 1) return;
     const updatedItems = formData.items.filter((_, i) => i !== index);
     setFormData(prev => ({ ...prev, items: updatedItems }));
   };
 
-  const buildChallanPayload = () => {
-    const selectedCard = jobCards.find(card => (card._id === formData.jobCardId || card.id === parseInt(formData.jobCardId)));
+  const createJobCardEntry = async () => {
+    const firstItem = totals.items[0];
+    const response = await fetch(`${API_BASE_URL}/api/jobcard`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        partyName: formData.partyName.trim(),
+        companyName: formData.partyName.trim(),
+        address: formData.partyAddress,
+        contactNo: formData.partyContact,
+        emailId: formData.partyEmail,
+        gstNo: formData.partyGst,
+        jobName: newJobCardName.trim() || firstItem?.description?.trim() || 'Direct Challan',
+        jobDate: challanDate.toISOString(),
+        jobQty: String(firstItem?.qty || 1),
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to create job card');
+    }
+
+    const savedJobCard = await response.json();
+    setJobCards((prev) => [savedJobCard, ...prev]);
+    return savedJobCard;
+  };
+
+  const buildChallanPayload = (linkedJobCard = null) => {
+    const selectedCard = linkedJobCard;
     const jobNumbersFromItems = [...new Set(
       formData.items
         .map(i => i.jobNumber || (i.description?.match(/\((JOB[^)]+)\)/)?.[1]))
@@ -328,10 +275,14 @@ const AddChallan = () => {
     return {
       challanNo: formData.challanNo,
       date: challanDate.toISOString(),
-      jobCardId: formData.jobCardId,
+      jobCardId: linkedJobCard?._id || linkedJobCard?.id || undefined,
       jobNumber: jobNumbersFromItems.length ? jobNumbersFromItems.join(', ') : (selectedCard?.jobNumber || ''),
       jobName: selectedCard?.jobName || '',
       partyName: formData.partyName,
+      partyAddress: formData.partyAddress,
+      partyContact: formData.partyContact,
+      partyEmail: formData.partyEmail,
+      partyGst: formData.partyGst,
       items: computedItems,
       total: totals.subTotal,
       freight: totals.freight,
@@ -349,10 +300,15 @@ const AddChallan = () => {
   };
 
   const saveChallan = async () => {
+    let linkedJobCard = null;
+    if (createJobCard) {
+      linkedJobCard = await createJobCardEntry();
+    }
+
     const response = await fetch(`${API_BASE_URL}/api/challan`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(buildChallanPayload()),
+      body: JSON.stringify(buildChallanPayload(linkedJobCard)),
     });
 
     if (!response.ok) {
@@ -415,7 +371,8 @@ const AddChallan = () => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        {/* Basic Details */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-visible">
           <div className="bg-blue-900 text-white px-6 py-2 w-fit relative font-semibold text-xs sm:text-sm rounded-br-2xl">
             Basic Details
           </div>
@@ -444,7 +401,7 @@ const AddChallan = () => {
             <div className="space-y-1 relative z-20" ref={partyDropdownRef}>
               <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Party *</label>
               <div className="flex gap-2">
-                <div className="relative flex-1">
+                <div className="relative flex-1 min-w-0">
                   <input
                     type="text"
                     name="partyName"
@@ -458,11 +415,11 @@ const AddChallan = () => {
                       if (match) applyPartySuggestion(match);
                     }}
                     required
-                    placeholder="Type or select Party"
-                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm font-medium"
+                    placeholder="Type party name..."
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
                   />
                   {isPartyDropdownOpen && filteredPartySuggestions.length > 0 && (
-                    <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden">
+                    <div className="absolute z-50 mt-1 w-full min-w-[220px] bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden">
                       <div className="px-3 py-2 bg-gray-50 border-b border-gray-100 text-[10px] font-bold text-gray-500 uppercase tracking-wide">
                         Existing parties
                       </div>
@@ -488,7 +445,7 @@ const AddChallan = () => {
                   <button
                     type="button"
                     onClick={openAddPartyModal}
-                    className="shrink-0 inline-flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2.5 rounded-lg text-sm font-bold transition-all shadow-sm active:scale-95"
+                    className="shrink-0 inline-flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-2.5 rounded-lg text-sm font-bold transition-all shadow-sm active:scale-95"
                     title="Add new party"
                   >
                     <UserPlus size={16} />
@@ -498,219 +455,206 @@ const AddChallan = () => {
               </div>
               {showAddPartyButton && (
                 <p className="text-[11px] text-emerald-700 font-semibold px-1">
-                  New party — click Add to enter details
+                  New party — click Add
                 </p>
               )}
             </div>
-            <div className="space-y-1">
-              <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Job Card *</label>
-              <select
-                name="jobCardId"
-                value={formData.jobCardId}
-                onChange={handleInputChange}
-                required
-                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
-              >
-                <option value="">{formData.partyName ? `Select Job (${filteredJobCards.length} found)` : "Select Job"}</option>
-                {filteredJobCards.map(card => (
-                  <option key={card._id || card.id} value={card._id || card.id}>({card.jobNumber}) {card.jobName} - {card.partyName}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {formData.partyName && filteredJobCards.length > 0 && (
-            <div className="px-4 sm:px-6 pb-4 border-t border-gray-50">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3 mt-4">
-                <p className="text-xs font-bold text-gray-600 uppercase tracking-wider">
-                  Multiple Jobs — select karke items mein add karo ({filteredJobCards.length} found)
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setPickedJobIds(filteredJobCards.map(c => c._id || c.id))}
-                  className="text-xs text-blue-600 hover:text-blue-800 font-semibold self-start"
-                >
-                  Select All
-                </button>
-              </div>
-              <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-lg divide-y divide-gray-100 mb-3 bg-gray-50">
-                {filteredJobCards.map(card => {
-                  const id = card._id || card.id;
-                  return (
-                    <label key={id} className="flex items-start gap-3 p-3 hover:bg-white cursor-pointer transition-colors">
-                      <input
-                        type="checkbox"
-                        checked={pickedJobIds.includes(id)}
-                        onChange={() => toggleJobPick(id)}
-                        className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                      <span className="text-sm text-gray-800 leading-snug">
-                        <span className="font-semibold text-blue-700">({card.jobNumber})</span> {card.jobName}
-                      </span>
-                    </label>
-                  );
-                })}
-              </div>
-              <button
-                type="button"
-                onClick={addSelectedJobsToItems}
-                disabled={pickedJobIds.length === 0}
-                className="w-full sm:w-auto text-sm bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-lg font-bold shadow-sm transition-colors flex items-center justify-center gap-2"
-              >
-                <span className="text-lg leading-none">+</span>
-                Add Selected to Items ({pickedJobIds.length})
-              </button>
-            </div>
-          )}
-
-          <div className="p-4 sm:p-6 border-t border-gray-50 mt-4 pt-6">
-            <div className="flex justify-between items-center mb-4">
-              <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Items</label>
-              <button type="button" onClick={addItem} className="text-sm bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1 rounded-md font-semibold transition-colors flex items-center gap-1">
-                <span className="text-lg leading-none">+</span> Add Row
-              </button>
-            </div>
-
-            {totals.items.map((item, index) => (
-              <div key={index} className="grid grid-cols-1 sm:grid-cols-12 gap-4 sm:gap-3 mb-4 items-end bg-gray-50 p-4 rounded-xl border border-gray-100 relative group">
-                <div className="sm:col-span-4 space-y-1">
-                  <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Description *</label>
-                  <input
-                    type="text"
-                    value={item.description}
-                    onChange={(e) => handleItemChange(index, 'description', e.target.value)}
-                    required
-                    placeholder="Item description"
-                    className="w-full bg-white border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
-                  />
-                </div>
-                <div className="sm:col-span-2 space-y-1">
-                  <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Qty *</label>
-                  <input
-                    type="number"
-                    value={item.qty}
-                    onChange={(e) => handleItemChange(index, 'qty', e.target.value)}
-                    required
-                    min="0"
-                    step="any"
-                    className="w-full bg-white border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
-                  />
-                </div>
-                <div className="sm:col-span-2 space-y-1">
-                  <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Rate *</label>
-                  <input
-                    type="number"
-                    value={item.rate}
-                    onChange={(e) => handleItemChange(index, 'rate', e.target.value)}
-                    required
-                    min="0"
-                    step="any"
-                    className="w-full bg-white border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
-                  />
-                </div>
-                <div className="sm:col-span-1 space-y-1">
-                  <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">GST %</label>
-                  <input
-                    type="number"
-                    value={item.gstPercent}
-                    onChange={(e) => handleItemChange(index, 'gstPercent', e.target.value)}
-                    min="0"
-                    step="any"
-                    className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
-                  />
-                </div>
-                <div className="sm:col-span-2 space-y-1">
-                  <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Amount</label>
-                  <div className="w-full bg-transparent border border-transparent rounded-lg px-2 py-2.5 text-sm font-bold text-gray-700">
-                    ₹ {item.total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                  </div>
-                </div>
-                {formData.items.length > 1 && (
-                  <div className="sm:col-span-1 flex justify-end sm:justify-center mb-2">
-                    <button type="button" onClick={() => removeItem(index)} className="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                      </svg>
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-
-          <div className="p-4 sm:p-6 border-t border-gray-50">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 sm:gap-6">
+            <label className="inline-flex items-center gap-2 cursor-pointer text-sm font-semibold text-gray-800 whitespace-nowrap self-end pb-2.5">
+              <input
+                type="checkbox"
+                checked={createJobCard}
+                onChange={(e) => setCreateJobCard(e.target.checked)}
+                className="rounded border-gray-400 text-blue-600 focus:ring-blue-500 h-4 w-4"
+              />
+              Create Job Card
+            </label>
+            {createJobCard && (
               <div className="space-y-1">
-                <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Sub Total *</label>
-                <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-base font-semibold text-gray-800">
-                  ₹ {totals.subTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                </div>
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Freight</label>
+                <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Job / Item Name</label>
                 <input
-                  type="number"
-                  name="freight"
-                  min="0"
-                  step="0.01"
-                  value={formData.freight}
-                  onChange={handleInputChange}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-base font-semibold text-gray-800"
-                  placeholder="0.00"
+                  type="text"
+                  value={newJobCardName}
+                  onChange={(e) => setNewJobCardName(e.target.value)}
+                  placeholder={totals.items[0]?.description?.trim() || 'Uses first item description if blank'}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
                 />
               </div>
-              <div className="space-y-1">
-                <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">GST Amount</label>
-                <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-base font-semibold text-gray-800">
-                  ₹ {totals.gstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                </div>
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">GST Type *</label>
-                <select
-                  name="gstType"
-                  value={formData.gstType}
-                  onChange={handleInputChange}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-base font-semibold text-gray-800 outline-none cursor-pointer"
-                >
-                  <option value="CGST/SGST">CGST + SGST</option>
-                  <option value="IGST">IGST</option>
-                </select>
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Reverse Charge</label>
-                <select
-                  name="reverseCharge"
-                  value={formData.reverseCharge}
-                  onChange={handleInputChange}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-base font-semibold text-gray-800 outline-none cursor-pointer"
-                >
-                  <option value="No">No</option>
-                  <option value="Yes">Yes</option>
-                </select>
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Grand Total</label>
-                <div className="bg-gray-100 border border-gray-200 rounded-lg px-4 py-2.5 text-base sm:text-lg font-bold text-blue-600">
-                  ₹ {totals.grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                </div>
-              </div>
-            </div>
+            )}
+          </div>
+        </div>
+
+        {/* Items Section */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[800px]">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider w-56">Description *</th>
+                  <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider text-center w-24">Qty *</th>
+                  <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider text-center w-28">Rate *</th>
+                  <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider text-center w-24">GST %</th>
+                  <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider text-center w-32">Amount</th>
+                  <th className="px-6 py-3 w-14"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {totals.items.map((item, index) => (
+                  <tr key={index} className="border-t border-gray-100 group">
+                    <td className="px-6 py-4">
+                      <input
+                        type="text"
+                        value={item.description}
+                        onChange={(e) => handleItemChange(index, 'description', e.target.value)}
+                        required
+                        placeholder="Description"
+                        className="w-full bg-white border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+                      />
+                    </td>
+                    <td className="px-2 py-4 text-center">
+                      <div className="flex justify-center">
+                        <input
+                          type="number"
+                          value={item.qty}
+                          onChange={(e) => handleItemChange(index, 'qty', e.target.value)}
+                          required
+                          min="0"
+                          step="any"
+                          className="w-20 bg-white border border-gray-200 rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm text-center"
+                        />
+                      </div>
+                    </td>
+                    <td className="px-2 py-4 text-center">
+                      <div className="flex justify-center">
+                        <input
+                          type="number"
+                          value={item.rate}
+                          onChange={(e) => handleItemChange(index, 'rate', e.target.value)}
+                          required
+                          min="0"
+                          step="any"
+                          className="w-24 bg-white border border-gray-200 rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm text-center"
+                        />
+                      </div>
+                    </td>
+                    <td className="px-2 py-4 text-center">
+                      <div className="flex justify-center">
+                        <input
+                          type="number"
+                          value={item.gstPercent}
+                          onChange={(e) => handleItemChange(index, 'gstPercent', e.target.value)}
+                          min="0"
+                          step="any"
+                          className="w-20 bg-white border border-gray-200 rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm text-center"
+                        />
+                      </div>
+                    </td>
+                    <td className="px-2 py-4 text-center">
+                      <div className="flex justify-center">
+                        <input
+                          type="text"
+                          value={Number(item.total || 0).toFixed(2)}
+                          readOnly
+                          className="w-28 bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 focus:outline-none text-sm text-center font-semibold text-blue-700"
+                        />
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <button
+                        type="button"
+                        onClick={() => removeItem(index)}
+                        className="text-red-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50 transition-all opacity-100"
+                        title="Remove row"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
 
-          <div className="p-4 sm:p-6 border-t border-gray-50">
-            <div className="space-y-1">
-              <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Note</label>
-              <textarea
-                name="note"
-                value={formData.note}
-                onChange={handleInputChange}
-                rows="1"
-                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
-                placeholder="Enter additional notes..."
-              ></textarea>
+          <div className="p-4 flex justify-end bg-gray-50/50">
+            <button
+              type="button"
+              onClick={addItem}
+              className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm active:scale-95"
+            >
+              <Plus size={16} /> Add Row
+            </button>
+          </div>
+        </div>
+
+        {/* Calculations */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 space-y-2">
+            <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Sub Total *</label>
+            <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-base sm:text-lg font-semibold text-gray-800">
+              ₹ {totals.subTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
             </div>
           </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 space-y-2">
+            <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Freight</label>
+            <input
+              type="number"
+              name="freight"
+              min="0"
+              step="0.01"
+              value={formData.freight}
+              onChange={handleInputChange}
+              className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-base sm:text-lg font-semibold text-gray-800"
+              placeholder="0.00"
+            />
+          </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 space-y-2">
+            <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">GST Amount</label>
+            <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-base sm:text-lg font-semibold text-gray-800">
+              ₹ {totals.gstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+            </div>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 space-y-2">
+            <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">GST Type *</label>
+            <select
+              name="gstType"
+              value={formData.gstType}
+              onChange={handleInputChange}
+              className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-base sm:text-lg font-semibold text-gray-800 outline-none cursor-pointer"
+            >
+              <option value="CGST/SGST">CGST + SGST</option>
+              <option value="IGST">IGST</option>
+            </select>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 space-y-2">
+            <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Reverse Charge</label>
+            <select
+              name="reverseCharge"
+              value={formData.reverseCharge}
+              onChange={handleInputChange}
+              className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-base sm:text-lg font-semibold text-gray-800 outline-none cursor-pointer"
+            >
+              <option value="No">No</option>
+              <option value="Yes">Yes</option>
+            </select>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 space-y-2 sm:col-span-2 lg:col-span-1">
+            <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Grand Total</label>
+            <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-base sm:text-lg font-bold text-blue-600">
+              ₹ {totals.grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+            </div>
+          </div>
+        </div>
+
+        {/* Note */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 space-y-2">
+          <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Note</label>
+          <textarea
+            name="note"
+            value={formData.note}
+            onChange={handleInputChange}
+            rows="2"
+            className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+            placeholder="Enter additional notes..."
+          />
         </div>
 
         <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4">
@@ -801,16 +745,6 @@ const AddChallan = () => {
                   type="email"
                   name="emailId"
                   value={partyForm.emailId}
-                  onChange={handlePartyFormChange}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-gray-700 uppercase tracking-wider">Job / Item Name</label>
-                <input
-                  type="text"
-                  name="jobName"
-                  value={partyForm.jobName}
                   onChange={handlePartyFormChange}
                   className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />

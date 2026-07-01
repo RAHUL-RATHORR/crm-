@@ -7,6 +7,10 @@ const challanSchema = new mongoose.Schema({
   jobNumber: { type: String },
   jobName: { type: String },
   partyName: { type: String, required: true },
+  partyAddress: { type: String, default: '' },
+  partyContact: { type: String, default: '' },
+  partyEmail: { type: String, default: '' },
+  partyGst: { type: String, default: '' },
   description: { type: String }, // Optional for backward compatibility
   qty: { type: Number, default: 0 },
   rate: { type: Number, default: 0 },

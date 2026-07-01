@@ -1,9 +1,9 @@
 export const getBillToDetails = (jobCard, partyFallback = {}) => ({
   partyName: partyFallback.partyName || jobCard?.partyName || '',
-  address: jobCard?.address || partyFallback.partyName || '',
-  contactNo: jobCard?.contactNo || '',
-  gstNo: jobCard?.gstNo || partyFallback.partyGstin || 'URP',
-  emailId: jobCard?.emailId || '',
+  address: jobCard?.address || partyFallback.partyAddress || partyFallback.address || '',
+  contactNo: jobCard?.contactNo || partyFallback.partyContact || partyFallback.contactNo || '',
+  gstNo: jobCard?.gstNo || partyFallback.partyGst || partyFallback.partyGstin || 'URP',
+  emailId: jobCard?.emailId || partyFallback.partyEmail || partyFallback.emailId || '',
 });
 
 export const getShipToDetails = (jobCard, partyFallback = {}) => {

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { Plus, Trash2, Search, ChevronDown, X, Printer, UserPlus } from 'lucide-react';
+import { Plus, Trash2, X, Printer, UserPlus } from 'lucide-react';
 import { buildPartySuggestions, partyNameExists } from './utils/partySuggestions';
 
 const EMPTY_PARTY_FORM = {
@@ -11,7 +11,6 @@ const EMPTY_PARTY_FORM = {
   contactNo: '',
   emailId: '',
   gstNo: '',
-  jobName: 'Direct Invoice',
 };
 
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -60,21 +59,23 @@ const AddInvoice = () => {
     editData?.orderDate ? new Date(editData.orderDate) : (editData?.date ? new Date(editData.date) : new Date())
   );
   const [jobCards, setJobCards] = useState([]);
+  const [createJobCard, setCreateJobCard] = useState(false);
+  const [newJobCardName, setNewJobCardName] = useState('');
   const [formData, setFormData] = useState({
     invoiceNo: editData ? editData.invoiceNumber : 'INVN' + String(Date.now()).slice(-4),
     jobCard: editData ? editData.jobCard : '',
     orderNo: editData ? (editData.orderNo || editData.jobCard || '') : '',
     party: editData ? editData.partyName : '',
+    partyAddress: editData?.partyAddress || '',
+    partyContact: editData?.partyContact || '',
+    partyEmail: editData?.partyEmail || '',
+    partyGst: editData?.partyGst || '',
     gstType: editData ? (editData.gstType || 'CGST/SGST') : 'CGST/SGST',
     freight: editData ? (editData.freight || 0) : 0,
     reverseCharge: editData ? (editData.reverseCharge || 'No') : 'No',
   });
 
   const [items, setItems] = useState(() => normalizeInvoiceItems(editData));
-
-  const [jobCardSearchTerm, setJobCardSearchTerm] = useState('');
-  const [isJobCardDropdownOpen, setIsJobCardDropdownOpen] = useState(false);
-  const jobCardDropdownRef = useRef(null);
 
   const [isPartyDropdownOpen, setIsPartyDropdownOpen] = useState(false);
   const [isAddPartyModalOpen, setIsAddPartyModalOpen] = useState(false);
@@ -94,22 +95,8 @@ const AddInvoice = () => {
   const showAddPartyButton = formData.party.trim().length > 0
     && !partyNameExists(partySuggestions, formData.party);
 
-  const filteredJobCards = jobCards.filter((card) => {
-    const query = jobCardSearchTerm.toLowerCase();
-    return (
-      card.jobNumber?.toLowerCase().includes(query) ||
-      card.partyName?.toLowerCase().includes(query) ||
-      card.jobName?.toLowerCase().includes(query)
-    );
-  });
-
-  const selectedJobCard = jobCards.find((card) => card.jobNumber === formData.jobCard);
-
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (jobCardDropdownRef.current && !jobCardDropdownRef.current.contains(event.target)) {
-        setIsJobCardDropdownOpen(false);
-      }
       if (partyDropdownRef.current && !partyDropdownRef.current.contains(event.target)) {
         setIsPartyDropdownOpen(false);
       }
@@ -117,16 +104,6 @@ const AddInvoice = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  useEffect(() => {
-    if (!isJobCardDropdownOpen) {
-      setJobCardSearchTerm('');
-    }
-  }, [isJobCardDropdownOpen]);
-
-  const openJobCardDropdown = () => {
-    setIsJobCardDropdownOpen(true);
-  };
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/api/jobcard`)
@@ -144,15 +121,13 @@ const AddInvoice = () => {
   };
 
   const applyPartySuggestion = (party) => {
-    const latestJobCard = jobCards.find(
-      (card) => (card.partyName || card.companyName || '').trim().toLowerCase() === party.partyName.toLowerCase()
-    );
-
     setFormData((prev) => ({
       ...prev,
       party: party.partyName,
-      jobCard: latestJobCard?.jobNumber || party.jobNumber || prev.jobCard,
-      orderNo: latestJobCard?.jobNumber || party.jobNumber || prev.orderNo,
+      partyAddress: party.address || prev.partyAddress,
+      partyContact: party.contactNo || prev.partyContact,
+      partyEmail: party.emailId || prev.partyEmail,
+      partyGst: party.gstNo || prev.partyGst,
     }));
     setIsPartyDropdownOpen(false);
   };
@@ -180,35 +155,17 @@ const AddInvoice = () => {
 
     setIsSavingParty(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/jobcard`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          partyName: partyForm.partyName.trim(),
-          companyName: partyForm.partyName.trim(),
-          address: partyForm.address.trim(),
-          contactNo: partyForm.contactNo.trim(),
-          emailId: partyForm.emailId.trim(),
-          gstNo: partyForm.gstNo.trim(),
-          jobName: partyForm.jobName.trim() || 'Direct Invoice',
-          jobDate: new Date().toISOString(),
-          jobQty: '1',
-        }),
-      });
+      const partyName = partyForm.partyName.trim();
+      const partySnapshot = {
+        party: partyName,
+        partyAddress: partyForm.address.trim(),
+        partyContact: partyForm.contactNo.trim(),
+        partyEmail: partyForm.emailId.trim(),
+        partyGst: partyForm.gstNo.trim(),
+      };
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to save party');
-      }
+      setFormData((prev) => ({ ...prev, ...partySnapshot }));
 
-      const savedJobCard = await response.json();
-      setJobCards((prev) => [savedJobCard, ...prev]);
-      setFormData((prev) => ({
-        ...prev,
-        party: savedJobCard.partyName || partyForm.partyName.trim(),
-        jobCard: savedJobCard.jobNumber || prev.jobCard,
-        orderNo: savedJobCard.jobNumber || prev.orderNo,
-      }));
       setIsAddPartyModalOpen(false);
       setPartyForm(EMPTY_PARTY_FORM);
     } catch (err) {
@@ -217,20 +174,6 @@ const AddInvoice = () => {
     } finally {
       setIsSavingParty(false);
     }
-  };
-
-  const handleJobCardSelect = (card) => {
-    setFormData((prev) => ({
-      ...prev,
-      jobCard: card.jobNumber,
-      orderNo: card.jobNumber || '',
-      party: card.partyName || '',
-    }));
-    if (card.jobDate) {
-      setOrderDate(new Date(card.jobDate));
-    }
-    setIsJobCardDropdownOpen(false);
-    setJobCardSearchTerm('');
   };
 
   const handleItemChange = (id, field, value) => {
@@ -265,13 +208,45 @@ const AddInvoice = () => {
     ? Math.round(computedItems.reduce((sum, item) => sum + item.gstPercent, 0) / computedItems.length)
     : 18;
 
-  const buildInvoicePayload = () => ({
+  const createJobCardEntry = async () => {
+    const firstItem = computedItems[0];
+    const response = await fetch(`${API_BASE_URL}/api/jobcard`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        partyName: formData.party.trim(),
+        companyName: formData.party.trim(),
+        address: formData.partyAddress,
+        contactNo: formData.partyContact,
+        emailId: formData.partyEmail,
+        gstNo: formData.partyGst,
+        jobName: newJobCardName.trim() || firstItem?.description?.trim() || 'Direct Invoice',
+        jobDate: invoiceDate.toISOString(),
+        jobQty: String(firstItem?.qty || 1),
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to create job card');
+    }
+
+    const savedJobCard = await response.json();
+    setJobCards((prev) => [savedJobCard, ...prev]);
+    return savedJobCard;
+  };
+
+  const buildInvoicePayload = (jobCardNumber = '') => ({
     invoiceNumber: formData.invoiceNo,
     date: invoiceDate.toISOString(),
-    jobCard: formData.jobCard,
-    orderNo: formData.orderNo,
+    jobCard: jobCardNumber,
+    orderNo: jobCardNumber || formData.orderNo,
     orderDate: orderDate.toISOString(),
     partyName: formData.party,
+    partyAddress: formData.partyAddress,
+    partyContact: formData.partyContact,
+    partyEmail: formData.partyEmail,
+    partyGst: formData.partyGst,
     items: computedItems,
     subTotal,
     freight,
@@ -283,10 +258,16 @@ const AddInvoice = () => {
   });
 
   const saveInvoice = async () => {
+    let jobCardNumber = formData.jobCard || '';
+    if (createJobCard) {
+      const savedJobCard = await createJobCardEntry();
+      jobCardNumber = savedJobCard.jobNumber || '';
+    }
+
     const response = await fetch(`${API_BASE_URL}/api/invoice`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(buildInvoicePayload()),
+      body: JSON.stringify(buildInvoicePayload(jobCardNumber)),
     });
 
     if (!response.ok) {
@@ -396,71 +377,10 @@ const AddInvoice = () => {
                 className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
               />
             </div>
-            <div className="space-y-1 relative z-30" ref={jobCardDropdownRef}>
-              <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Job Card *</label>
-              <input type="hidden" name="jobCard" value={formData.jobCard} required />
-
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
-                <input
-                  type="text"
-                  value={jobCardSearchTerm}
-                  onChange={(e) => {
-                    setJobCardSearchTerm(e.target.value);
-                    setIsJobCardDropdownOpen(true);
-                  }}
-                  onFocus={openJobCardDropdown}
-                  placeholder={selectedJobCard ? `${selectedJobCard.jobNumber} - ${selectedJobCard.partyName}` : 'Search job no, party, item...'}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-lg pl-9 pr-10 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
-                />
-                <button
-                  type="button"
-                  onClick={() => setIsJobCardDropdownOpen(!isJobCardDropdownOpen)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 rounded"
-                  aria-label="Toggle job card list"
-                >
-                  <ChevronDown size={18} className={`transition-transform ${isJobCardDropdownOpen ? 'rotate-180' : ''}`} />
-                </button>
-              </div>
-
-              {selectedJobCard && !isJobCardDropdownOpen && (
-                <p className="text-[11px] text-blue-700 font-semibold px-1 truncate">
-                  Selected: {selectedJobCard.jobNumber} - {selectedJobCard.partyName}
-                </p>
-              )}
-
-              {isJobCardDropdownOpen && (
-                <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden">
-                  <div className="px-3 py-2 bg-gray-50 border-b border-gray-100 text-[10px] font-bold text-gray-500 uppercase tracking-wide">
-                    {filteredJobCards.length} job card{filteredJobCards.length !== 1 ? 's' : ''} found
-                  </div>
-                  <div className="max-h-60 overflow-y-auto">
-                    {filteredJobCards.length > 0 ? (
-                      filteredJobCards.map((card) => (
-                        <button
-                          key={card._id || card.jobNumber}
-                          type="button"
-                          onClick={() => handleJobCardSelect(card)}
-                          className={`w-full text-left px-4 py-2.5 text-sm hover:bg-blue-50 transition-colors border-b border-gray-50 last:border-0 ${formData.jobCard === card.jobNumber ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'}`}
-                        >
-                          <span className="font-semibold text-blue-700">{card.jobNumber}</span>
-                          <span className="text-gray-500"> - {card.partyName}</span>
-                          {card.jobName && <span className="block text-xs text-gray-400 mt-0.5 truncate">{card.jobName}</span>}
-                        </button>
-                      ))
-                    ) : (
-                      <div className="px-4 py-6 text-center text-sm text-gray-400 italic">
-                        No job card found
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
             <div className="space-y-1 relative z-20" ref={partyDropdownRef}>
               <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Party *</label>
               <div className="flex gap-2">
-                <div className="relative flex-1">
+                <div className="relative flex-1 min-w-0">
                   <input
                     type="text"
                     name="party"
@@ -478,7 +398,7 @@ const AddInvoice = () => {
                     className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
                   />
                   {isPartyDropdownOpen && filteredPartySuggestions.length > 0 && (
-                    <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden">
+                    <div className="absolute z-50 mt-1 w-full min-w-[220px] bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden">
                       <div className="px-3 py-2 bg-gray-50 border-b border-gray-100 text-[10px] font-bold text-gray-500 uppercase tracking-wide">
                         Existing parties
                       </div>
@@ -504,7 +424,7 @@ const AddInvoice = () => {
                   <button
                     type="button"
                     onClick={openAddPartyModal}
-                    className="shrink-0 inline-flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2.5 rounded-lg text-sm font-bold transition-all shadow-sm active:scale-95"
+                    className="shrink-0 inline-flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-2.5 rounded-lg text-sm font-bold transition-all shadow-sm active:scale-95"
                     title="Add new party"
                   >
                     <UserPlus size={16} />
@@ -514,10 +434,31 @@ const AddInvoice = () => {
               </div>
               {showAddPartyButton && (
                 <p className="text-[11px] text-emerald-700 font-semibold px-1">
-                  New party — click Add to enter details
+                  New party — click Add
                 </p>
               )}
             </div>
+            <label className="inline-flex items-center gap-2 cursor-pointer text-sm font-semibold text-gray-800 whitespace-nowrap self-end pb-2.5">
+              <input
+                type="checkbox"
+                checked={createJobCard}
+                onChange={(e) => setCreateJobCard(e.target.checked)}
+                className="rounded border-gray-400 text-blue-600 focus:ring-blue-500 h-4 w-4"
+              />
+              Create Job Card
+            </label>
+            {createJobCard && (
+              <div className="space-y-1">
+                <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Job / Item Name</label>
+                <input
+                  type="text"
+                  value={newJobCardName}
+                  onChange={(e) => setNewJobCardName(e.target.value)}
+                  placeholder={computedItems[0]?.description?.trim() || 'Uses first item description if blank'}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+                />
+              </div>
+            )}
           </div>
         </div>
 
@@ -776,16 +717,6 @@ const AddInvoice = () => {
                   type="email"
                   name="emailId"
                   value={partyForm.emailId}
-                  onChange={handlePartyFormChange}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-gray-700 uppercase tracking-wider">Job / Item Name</label>
-                <input
-                  type="text"
-                  name="jobName"
-                  value={partyForm.jobName}
                   onChange={handlePartyFormChange}
                   className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
