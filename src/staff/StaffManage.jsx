@@ -2,12 +2,16 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Pencil, Trash2, Users, UserPlus, Eye, EyeOff } from 'lucide-react';
 import { API_BASE_URL } from '../utils/apiBase';
 import { canManageStaff } from '../utils/permissions';
+import { preserveSession } from '../utils/authSession';
 import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
+
+const ADMIN_EMAIL = 'admin@gmail.com';
 
 const EMPTY_FORM = {
   name: '',
   email: '',
   password: '',
+  confirmPassword: '',
   mobile: '',
   team: '',
   roleId: '',
@@ -24,12 +28,20 @@ const StaffManage = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const canEdit = canManageStaff();
+
+  const assignableRoles = useMemo(() => {
+    const editingAdmin = editingId && form.email.trim().toLowerCase() === ADMIN_EMAIL;
+    return roles.filter((role) => editingAdmin || role.name !== 'Admin');
+  }, [roles, editingId, form.email]);
 
   const teams = useMemo(() => {
     const set = new Set(staff.map((s) => s.team).filter(Boolean));
     return Array.from(set).sort();
   }, [staff]);
+
+  const isEditingAdmin = editingId && form.email.trim().toLowerCase() === ADMIN_EMAIL;
 
   const filteredStaff = staff.filter((member) => {
     const q = search.trim().toLowerCase();
@@ -59,21 +71,32 @@ const StaffManage = () => {
 
   useEffect(() => {
     if (!form.roleId && roles.length) {
-      const staffRole = roles.find((r) => r.name === 'Staff') || roles[0];
+      const staffRole = roles.find((r) => r.name === 'Staff')
+        || roles.find((r) => r.name !== 'Admin')
+        || roles[0];
       setForm((prev) => ({ ...prev, roleId: staffRole._id }));
     }
   }, [roles, form.roleId]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setForm((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+    const fieldMap = {
+      'staff-email': 'email',
+      'staff-password': 'password',
+      'staff-confirm-password': 'confirmPassword',
+    };
+    const fieldName = fieldMap[name] || name;
+    setForm((prev) => ({ ...prev, [fieldName]: type === 'checkbox' ? checked : value }));
   };
 
   const resetForm = () => {
-    const staffRole = roles.find((r) => r.name === 'Staff') || roles[0];
+    const staffRole = roles.find((r) => r.name === 'Staff')
+      || roles.find((r) => r.name !== 'Admin')
+      || roles[0];
     setForm({ ...EMPTY_FORM, roleId: staffRole?._id || '' });
     setEditingId(null);
     setShowPassword(false);
+    setShowConfirmPassword(false);
   };
 
   const handleSave = async (e) => {
@@ -85,6 +108,14 @@ const StaffManage = () => {
     }
     if (!editingId && !form.password.trim()) {
       alert('Password is required for new staff');
+      return;
+    }
+    if (!editingId && !form.confirmPassword.trim()) {
+      alert('Please confirm the password');
+      return;
+    }
+    if (form.password.trim() && form.password !== form.confirmPassword) {
+      alert('Password and confirm password do not match');
       return;
     }
 
@@ -115,6 +146,7 @@ const StaffManage = () => {
       }
 
       await fetchData();
+      preserveSession();
       resetForm();
     } catch (err) {
       alert(err.message || 'Failed to save staff member');
@@ -130,12 +162,14 @@ const StaffManage = () => {
       name: member.name || '',
       email: member.email || '',
       password: '',
+      confirmPassword: '',
       mobile: member.mobile || '',
       team: member.team || '',
       roleId: member.roleId || '',
       isActive: member.isActive !== false,
     });
     setShowPassword(false);
+    setShowConfirmPassword(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -151,6 +185,7 @@ const StaffManage = () => {
       const response = await fetch(`${API_BASE_URL}/api/staff/${deletingId}`, { method: 'DELETE' });
       if (response.ok) {
         await fetchData();
+        preserveSession();
         if (editingId === deletingId) resetForm();
       } else {
         const errorData = await response.json().catch(() => ({}));
@@ -182,6 +217,8 @@ const StaffManage = () => {
               {editingId ? 'Edit Staff' : 'Add Staff'}
             </div>
             <form onSubmit={handleSave} autoComplete="off" className="p-5 space-y-4">
+              <input type="text" name="fake-username" autoComplete="username" className="hidden" tabIndex={-1} aria-hidden />
+              <input type="password" name="fake-password" autoComplete="current-password" className="hidden" tabIndex={-1} aria-hidden />
               {!canEdit && (
                 <p className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-lg p-3">
                   You have view-only access. Ask Admin to add or edit staff.
@@ -195,11 +232,12 @@ const StaffManage = () => {
                 <label className="text-[10px] font-bold text-gray-500 uppercase">Email *</label>
                 <input
                   type="email"
-                  name="email"
+                  name="staff-email"
+                  id="staff-email"
                   value={form.email}
                   onChange={handleChange}
                   required
-                  disabled={!canEdit}
+                  disabled={!canEdit || isEditingAdmin}
                   autoComplete="off"
                   readOnly={!editingId}
                   onFocus={(e) => e.target.removeAttribute('readonly')}
@@ -211,15 +249,17 @@ const StaffManage = () => {
                 <label className="text-[10px] font-bold text-gray-500 uppercase">{editingId ? 'New Password' : 'Password *'}</label>
                 <div className="relative mt-1">
                   <input
-                    type={showPassword ? 'text' : 'password'}
-                    name="password"
+                    type="text"
+                    name="staff-password"
+                    id="staff-password"
                     value={form.password}
                     onChange={handleChange}
                     disabled={!canEdit}
-                    autoComplete="new-password"
+                    autoComplete="off"
                     readOnly={!editingId}
                     onFocus={(e) => e.target.removeAttribute('readonly')}
                     placeholder={editingId ? 'Leave blank to keep current' : 'Enter password'}
+                    style={{ WebkitTextSecurity: showPassword ? 'none' : 'disc' }}
                     className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 pr-10 text-sm"
                   />
                   <button
@@ -230,6 +270,34 @@ const StaffManage = () => {
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-gray-500 uppercase">{editingId ? 'Confirm New Password' : 'Confirm Password *'}</label>
+                <div className="relative mt-1">
+                  <input
+                    type="text"
+                    name="staff-confirm-password"
+                    id="staff-confirm-password"
+                    value={form.confirmPassword}
+                    onChange={handleChange}
+                    disabled={!canEdit}
+                    autoComplete="off"
+                    readOnly={!editingId}
+                    onFocus={(e) => e.target.removeAttribute('readonly')}
+                    placeholder={editingId ? 'Re-enter new password' : 'Confirm password'}
+                    style={{ WebkitTextSecurity: showConfirmPassword ? 'none' : 'disc' }}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 pr-10 text-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600 transition-colors"
+                    tabIndex={-1}
+                    aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                  >
+                    {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
               </div>
@@ -246,14 +314,14 @@ const StaffManage = () => {
               </div>
               <div>
                 <label className="text-[10px] font-bold text-gray-500 uppercase">Role *</label>
-                <select name="roleId" value={form.roleId} onChange={handleChange} required disabled={!canEdit} className="w-full mt-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm">
-                  {roles.map((role) => (
+                <select name="roleId" value={form.roleId} onChange={handleChange} required disabled={!canEdit || isEditingAdmin} className="w-full mt-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm">
+                  {assignableRoles.map((role) => (
                     <option key={role._id} value={role._id}>{role.name}</option>
                   ))}
                 </select>
               </div>
               <label className="inline-flex items-center gap-2 text-sm text-gray-700">
-                <input type="checkbox" name="isActive" checked={form.isActive} onChange={handleChange} disabled={!canEdit} className="rounded border-gray-300 text-blue-600" />
+                <input type="checkbox" name="isActive" checked={form.isActive} onChange={handleChange} disabled={!canEdit || isEditingAdmin} className="rounded border-gray-300 text-blue-600" />
                 Active
               </label>
               {canEdit && (

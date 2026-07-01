@@ -41,7 +41,7 @@ export async function seedStaffAndRoles() {
       admin.roleName = 'Admin';
       changed = true;
     }
-    if (admin.isActive === undefined) {
+    if (admin.isActive === undefined || admin.isActive === false) {
       admin.isActive = true;
       changed = true;
     }

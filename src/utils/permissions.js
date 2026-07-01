@@ -1,5 +1,4 @@
 export const MODULES = [
-  { key: 'dashboard', label: 'Dashboard' },
   { key: 'jobCard', label: 'Job Card' },
   { key: 'invoice', label: 'Invoice' },
   { key: 'challan', label: 'Challan' },
@@ -50,8 +49,29 @@ export const getCurrentUser = () => {
 export const hasPermission = (moduleKey, action = 'view') => {
   const user = getCurrentUser();
   if (!user) return true;
+  if (moduleKey === 'dashboard') return user.roleName === 'Admin';
   if (user.roleName === 'Admin') return true;
   return !!user.permissions?.[moduleKey]?.[action];
+};
+
+export const canAccessDashboard = () => hasPermission('dashboard', 'view');
+
+export const isAdminUser = () => {
+  const user = getCurrentUser();
+  return !user || user.roleName === 'Admin';
+};
+
+export const getDefaultRoute = () => {
+  if (canAccessDashboard()) return '/';
+  if (hasPermission('jobCard', 'view')) return '/job-card-list';
+  if (hasPermission('invoice', 'view')) return '/invoice/list';
+  if (hasPermission('challan', 'view')) return '/challan/list';
+  if (hasPermission('payments', 'view')) return '/payment-type';
+  if (hasPermission('paperStock', 'view')) return '/paper-stock';
+  if (hasPermission('statements', 'view')) return '/statements/invoice';
+  if (hasPermission('estimates', 'view')) return '/estimates';
+  if (hasPermission('itemList', 'view')) return '/item-list';
+  return '/contact-support';
 };
 
 export const canAccessStaffTeam = () => hasPermission('staffTeam', 'view');

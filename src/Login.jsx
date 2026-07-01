@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Building, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { API_BASE_URL } from './utils/apiBase';
 import { saveSession, tryLegacyLogin, getLegacyAdminUser } from './utils/authSession';
+import { getDefaultRoute } from './utils/permissions';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -26,7 +27,7 @@ const Login = () => {
       if (!localStorage.getItem('currentUser')) {
         saveSession(getLegacyAdminUser());
       }
-      navigate('/');
+      navigate(getDefaultRoute());
     }
   }, [navigate]);
 
@@ -45,14 +46,14 @@ const Login = () => {
       if (response.ok) {
         const data = await response.json();
         saveSession(data.user);
-        navigate('/');
+        navigate(getDefaultRoute());
         window.location.reload();
         return;
       }
 
       const legacyUser = tryLegacyLogin(email.trim(), password);
       if (legacyUser) {
-        navigate('/');
+        navigate(getDefaultRoute());
         window.location.reload();
         return;
       }
@@ -62,7 +63,7 @@ const Login = () => {
     } catch (err) {
       const legacyUser = tryLegacyLogin(email.trim(), password);
       if (legacyUser) {
-        navigate('/');
+        navigate(getDefaultRoute());
         window.location.reload();
         return;
       }

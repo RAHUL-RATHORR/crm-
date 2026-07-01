@@ -2,6 +2,10 @@ import express from 'express';
 import User from '../models/User.js';
 import Role from '../models/Role.js';
 
+const ADMIN_EMAIL = 'admin@gmail.com';
+
+const isAdminEmail = (email) => String(email || '').trim().toLowerCase() === ADMIN_EMAIL;
+
 const router = express.Router();
 
 const sanitizeUser = (user, role) => ({
@@ -47,12 +51,18 @@ router.post('/', async (req, res) => {
     if (!name?.trim()) return res.status(400).json({ error: 'Name is required' });
     if (!email?.trim()) return res.status(400).json({ error: 'Email is required' });
     if (!password?.trim()) return res.status(400).json({ error: 'Password is required' });
+    if (isAdminEmail(email)) {
+      return res.status(400).json({ error: 'Admin account already exists and cannot be recreated' });
+    }
 
     const existing = await User.findOne({ email: email.trim().toLowerCase() });
     if (existing) return res.status(400).json({ error: 'Email already exists' });
 
     const role = roleId ? await Role.findById(roleId) : await Role.findOne({ name: 'Staff' });
     if (!role) return res.status(400).json({ error: 'Invalid role selected' });
+    if (role.name === 'Admin') {
+      return res.status(400).json({ error: 'Admin role cannot be assigned to new staff' });
+    }
 
     const user = await User.create({
       name: name.trim(),
@@ -77,9 +87,17 @@ router.put('/:id', async (req, res) => {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ error: 'Staff member not found' });
 
+    const isProtectedAdmin = isAdminEmail(user.email);
+
     if (name?.trim()) user.name = name.trim();
     if (email?.trim()) {
       const emailLower = email.trim().toLowerCase();
+      if (isProtectedAdmin && emailLower !== ADMIN_EMAIL) {
+        return res.status(400).json({ error: 'Admin email cannot be changed' });
+      }
+      if (!isProtectedAdmin && isAdminEmail(emailLower)) {
+        return res.status(400).json({ error: 'This email is reserved for the admin account' });
+      }
       const duplicate = await User.findOne({ email: emailLower, _id: { $ne: user._id } });
       if (duplicate) return res.status(400).json({ error: 'Email already exists' });
       user.email = emailLower;
@@ -90,10 +108,21 @@ router.put('/:id', async (req, res) => {
     if (roleId) {
       const role = await Role.findById(roleId);
       if (!role) return res.status(400).json({ error: 'Invalid role selected' });
+      if (isProtectedAdmin && role.name !== 'Admin') {
+        return res.status(400).json({ error: 'Admin role cannot be changed' });
+      }
+      if (!isProtectedAdmin && role.name === 'Admin') {
+        return res.status(400).json({ error: 'Admin role cannot be assigned to staff' });
+      }
       user.roleId = role._id;
       user.roleName = role.name;
     }
-    if (isActive !== undefined) user.isActive = !!isActive;
+    if (isActive !== undefined) {
+      if (isProtectedAdmin && !isActive) {
+        return res.status(400).json({ error: 'Admin account cannot be deactivated' });
+      }
+      user.isActive = !!isActive;
+    }
 
     await user.save();
     const role = user.roleId ? await Role.findById(user.roleId) : null;

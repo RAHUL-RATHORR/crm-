@@ -45,7 +45,7 @@ import ItemListManagement from './ItemListManagement';
 import ContactSupport from './ContactSupport';
 import StaffTeamManagement from './StaffTeamManagement';
 import { clearSession, saveSession, getLegacyAdminUser } from './utils/authSession';
-import { hasPermission, canAccessStaffTeam } from './utils/permissions';
+import { hasPermission, canAccessStaffTeam, canAccessDashboard, getDefaultRoute, isAdminUser } from './utils/permissions';
 
 const DropdownMenu = ({ title, icon: Icon, items, isActive }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -430,9 +430,9 @@ export default function App() {
     );
   }
 
-  // If logged in and on /login, redirect to dashboard
+  // If logged in and on /login, redirect to default home
   if (isLoggedIn && location.pathname === '/login') {
-    return <Routes><Route path="*" element={<Dashboard />} /></Routes>;
+    return <Routes><Route path="*" element={<Navigate to={getDefaultRoute()} replace />} /></Routes>;
   }
 
   const allNavigationItems = [
@@ -500,8 +500,8 @@ export default function App() {
       return item;
     })
     .filter((item) => {
+      if (item.name === 'Dashboard') return canAccessDashboard();
       const moduleByName = {
-        Dashboard: 'dashboard',
         'Job Card': 'jobCard',
         Invoices: 'invoice',
         Challan: 'challan',
@@ -513,6 +513,42 @@ export default function App() {
       const moduleKey = moduleByName[item.name];
       return !moduleKey || hasPermission(moduleKey, 'view');
     });
+
+  const moduleByNavName = {
+    'Job Card': 'jobCard',
+    Invoices: 'invoice',
+    Challan: 'challan',
+    Payments: 'payments',
+    'Paper Stock': 'paperStock',
+    Statements: 'statements',
+    More: null,
+  };
+
+  const displayNavigationItems = isAdminUser()
+    ? navigationItems
+    : navigationItems.flatMap((item) => {
+        if (!item.isDropdown) return [item];
+        const moduleKey = moduleByNavName[item.name];
+        return item.dropdownItems
+          .filter((sub) => {
+            const isAddAction = /add new|add /i.test(sub.label);
+            if (isAddAction && moduleKey) return hasPermission(moduleKey, 'create');
+            return true;
+          })
+          .map((sub) => ({
+            name: sub.label,
+            icon: sub.icon || item.icon,
+            onClick: sub.onClick,
+            matchPath: sub.label.includes('Job Card') ? '/job-card'
+              : sub.label.includes('Invoice') ? '/invoice'
+              : sub.label.includes('Challan') ? '/challan'
+              : sub.label.includes('Estimate') ? '/estimates'
+              : sub.label.includes('Item List') ? '/item-list'
+              : sub.label.includes('Paper Stock') ? '/statements/paper-stock'
+              : sub.label.includes('Statements') ? '/statements'
+              : '',
+          }));
+      });
 
   const profileSettingsItems = [
     ...(hasPermission('settings', 'edit')
@@ -624,8 +660,10 @@ export default function App() {
 
         {/* Desktop Navigation */}
         <div className="hidden xl:flex flex-1 min-w-0 items-center justify-center gap-1 xl:gap-1.5 2xl:gap-2.5 whitespace-nowrap flex-nowrap">
-          {navigationItems.map((item, idx) => {
-            const isActive = location.pathname === item.path || (item.path && location.pathname.startsWith(item.path) && item.path !== '/');
+          {displayNavigationItems.map((item, idx) => {
+            const isActive = item.matchPath
+              ? location.pathname.includes(item.matchPath)
+              : location.pathname === item.path || (item.path && location.pathname.startsWith(item.path) && item.path !== '/');
 
             if (item.isDropdown) {
               return (
@@ -651,8 +689,11 @@ export default function App() {
             return (
               <button
                 key={item.name}
-                onClick={() => item.path && navigate(item.path)}
-                className={`flex items-center gap-1.5 px-2 xl:px-2.5 2xl:px-3 h-9 text-[13px] font-medium rounded-md transition-colors whitespace-nowrap flex-nowrap shrink-0 ${isActive || (idx === 0 && location.pathname === '/')
+                onClick={() => {
+                  if (item.onClick) item.onClick();
+                  else if (item.path) navigate(item.path);
+                }}
+                className={`flex items-center gap-1.5 px-2 xl:px-2.5 2xl:px-3 h-9 text-[13px] font-medium rounded-md transition-colors whitespace-nowrap flex-nowrap shrink-0 ${isActive || (idx === 0 && location.pathname === '/' && isAdminUser())
                   ? 'bg-blue-50 text-blue-600'
                   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   }`}
@@ -745,7 +786,7 @@ export default function App() {
           </div>
           <div className="p-4 overflow-y-auto h-[calc(100%-80px)]">
             <div className="space-y-2">
-              {navigationItems.map((item) => (
+              {displayNavigationItems.map((item) => (
                 <div key={item.name}>
                   {item.isDropdown ? (
                     <div className="space-y-1">
@@ -790,11 +831,16 @@ export default function App() {
                   ) : (
                     <button
                       onClick={() => {
-                        if (item.path) navigate(item.path);
+                        if (item.onClick) item.onClick();
+                        else if (item.path) navigate(item.path);
                         setIsMobileMenuOpen(false);
                       }}
-                      className={`flex items-center gap-3 w-full px-4 py-3 text-sm font-semibold rounded-xl transition ${location.pathname === item.path ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-50'
-                        }`}
+                      className={`flex items-center gap-3 w-full px-4 py-3 text-sm font-semibold rounded-xl transition ${
+                        (item.matchPath && location.pathname.includes(item.matchPath))
+                        || location.pathname === item.path
+                          ? 'bg-blue-50 text-blue-600'
+                          : 'text-gray-700 hover:bg-gray-50'
+                      }`}
                     >
                       <item.icon size={18} />
                       {item.name}
@@ -879,7 +925,7 @@ export default function App() {
       <div className="w-full px-4 sm:px-6 lg:px-8">
         {/* Routing Content */}
         <Routes>
-          <Route path="/" element={<Dashboard />} />
+          <Route path="/" element={canAccessDashboard() ? <Dashboard /> : <Navigate to={getDefaultRoute()} replace />} />
           <Route path="/job-card" element={<JobCardForm />} />
           <Route path="/job-card-list" element={<JobCardListing />} />
           <Route path="/invoice/add" element={<AddInvoice />} />

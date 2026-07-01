@@ -1,8 +1,16 @@
-import { fullPermissions } from './permissions';
+import { fullPermissions, getCurrentUser } from './permissions';
 
 export const saveSession = (user) => {
   localStorage.setItem('isLoggedIn', 'true');
   localStorage.setItem('currentUser', JSON.stringify(user));
+};
+
+export const preserveSession = () => {
+  const user = getCurrentUser();
+  if (user) {
+    localStorage.setItem('isLoggedIn', 'true');
+    localStorage.setItem('currentUser', JSON.stringify(user));
+  }
 };
 
 export const clearSession = () => {

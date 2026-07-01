@@ -1,5 +1,4 @@
 export const MODULES = [
-  { key: 'dashboard', label: 'Dashboard' },
   { key: 'jobCard', label: 'Job Card' },
   { key: 'invoice', label: 'Invoice' },
   { key: 'challan', label: 'Challan' },
@@ -40,17 +39,16 @@ export const fullPermissions = () => {
 
 export const managerPermissions = () => {
   const permissions = emptyPermissions();
-  const modules = ['dashboard', 'jobCard', 'invoice', 'challan', 'payments', 'paperStock', 'statements', 'estimates', 'itemList'];
+  const modules = ['jobCard', 'invoice', 'challan', 'payments', 'paperStock', 'statements', 'estimates', 'itemList'];
   modules.forEach((key) => {
     permissions[key] = { view: true, create: true, edit: true, delete: false, print: true };
   });
-  permissions.dashboard.delete = false;
   return permissions;
 };
 
 export const staffPermissions = () => {
   const permissions = emptyPermissions();
-  ['dashboard', 'jobCard', 'invoice', 'challan', 'itemList'].forEach((key) => {
+  ['jobCard', 'invoice', 'challan', 'itemList'].forEach((key) => {
     permissions[key] = { view: true, create: true, edit: true, delete: false, print: true };
   });
   return permissions;
