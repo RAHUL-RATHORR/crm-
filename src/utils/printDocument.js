@@ -299,7 +299,7 @@ export function printElement(elementId, options = {}) {
           .job-card-print-page [class*="text-rose"] { color: #be123c !important; font-weight: 800 !important; }
           .job-card-letterhead { border-color: #000 !important; }
           .job-card-letterhead .job-card-brand { font-weight: 900 !important; color: #000 !important; }
-          .job-card-letterhead .job-card-brand .text-blue-600 { color: #1d4ed8 !important; font-weight: 900 !important; }
+          .job-card-letterhead .job-card-brand .text-blue-600 { color: #000000 !important; font-weight: 900 !important; }
           .job-card-letterhead .job-card-letterhead-line { color: #000 !important; font-weight: 700 !important; }
           .job-card-letterhead .job-card-letterhead-line .text-blue-600 { color: #1d4ed8 !important; font-weight: 800 !important; }
           .job-card-doc-badge {
@@ -310,11 +310,11 @@ export function printElement(elementId, options = {}) {
             font-weight: 900 !important;
           }
           .job-card-print-table .job-card-brand {
-            color: #111827 !important;
+            color: #000000 !important;
             font-weight: 900 !important;
           }
           .job-card-print-table .job-card-brand .company-brand-accent {
-            color: #2563eb !important;
+            color: #000000 !important;
             font-weight: 900 !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
@@ -342,7 +342,7 @@ export function printElement(elementId, options = {}) {
           .job-card-print-table .job-card-work-instructions-text {
             font-weight: 900 !important;
             color: #000 !important;
-            font-size: 11px !important;
+            font-size: 14px !important;
             line-height: 1.55 !important;
           }
           ` : ''}
@@ -400,9 +400,9 @@ export function printElement(elementId, options = {}) {
             color: #000 !important;
           }
           .tax-invoice-print-page .tax-company-name { font-weight: 900 !important; }
-          .tax-invoice-print-page .company-brand-name { color: #111827 !important; font-weight: 900 !important; }
+          .tax-invoice-print-page .company-brand-name { color: #000000 !important; font-weight: 900 !important; }
           .tax-invoice-print-page .company-brand-accent {
-            color: #2563eb !important;
+            color: #000000 !important;
             font-weight: 900 !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;

@@ -616,7 +616,7 @@ export default function JobCardListing() {
                       <td colSpan={12} className="tax-cell align-top p-0">
                         <div className="tax-blue job-card-section-title text-center py-1 px-2">Work Instructions</div>
                         <div className="job-card-section-body job-card-work-instructions p-2">
-                          <p className="job-card-work-instructions-text text-[11px] leading-relaxed m-0">
+                          <p className="job-card-work-instructions-text leading-relaxed m-0">
                             {selectedCard.notes?.trim()
                               ? selectedCard.notes
                               : 'Handle with care. Ensure high quality print and accurate alignment.'}

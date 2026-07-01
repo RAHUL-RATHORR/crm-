@@ -7,7 +7,7 @@ const ItemDescriptionInput = ({
   onChange,
   onSelectMaster,
   masterItems = [],
-  placeholder = 'Search Item List or type description...',
+  placeholder = 'Enter description...',
   required = false,
   className = 'w-full bg-white border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm',
 }) => {
@@ -59,9 +59,6 @@ const ItemDescriptionInput = ({
         zIndex: 9999,
       }}
     >
-      <div className="px-3 py-2 bg-gray-50 border-b border-gray-100 text-[10px] font-bold text-gray-500 uppercase tracking-wide">
-        From Item List
-      </div>
       <div className="max-h-48 overflow-y-auto">
         {suggestions.map((item) => (
           <button

@@ -439,7 +439,7 @@ export const TaxAnalysisSection = ({ groups = [], isIGST = false, taxAmountInWor
 export const CompanyBrandName = ({ className = '', large = false }) => (
   <p className={`tax-company-name company-brand-name ${large ? 'company-brand-name-lg' : ''} ${className}`.trim()}>
     {SELLER.brandName}{' '}
-    <span className="company-brand-accent">{SELLER.brandSuffix}</span>
+    <span className="company-brand-accent" style={{ color: '#000000' }}>{SELLER.brandSuffix}</span>
   </p>
 );
 
@@ -539,7 +539,7 @@ export const JobCardLetterhead = ({ docTitle = 'JOB CARD' }) => (
     <div className="grow pr-4">
       <h1 className="job-card-brand text-[34px] font-black tracking-tight text-gray-900 leading-none mb-2">
         {SELLER.brandName}{' '}
-        <span className="company-brand-accent">{SELLER.brandSuffix}</span>
+        <span className="company-brand-accent" style={{ color: '#000000' }}>{SELLER.brandSuffix}</span>
       </h1>
       <div className="space-y-0.5">
         <p className="job-card-letterhead-line text-[10px] text-gray-800 leading-snug">

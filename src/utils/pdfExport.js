@@ -48,6 +48,11 @@ const sanitizeDOMInIframe = (doc) => {
     try {
       const computed = window.getComputedStyle(el);
       
+      // Brand name suffix — always black on tax documents
+      if (el.classList?.contains('company-brand-accent')) {
+        el.style.color = '#000000';
+      }
+
       // Sanitizing Text Color
       if (computed.color && (computed.color.includes('okl') || computed.color.includes('color-mix'))) {
         el.style.color = '#1e293b'; 
@@ -192,9 +197,9 @@ export const downloadAsPDF = async (elementId, filename, onProgressChange = () =
             .tax-invoice-print-page .tax-blue,
             .tax-invoice-print-page .tax-item-header-row .tax-cell { font-weight: 900 !important; color: #000 !important; }
             .tax-invoice-print-page .tax-company-name { font-weight: 900 !important; }
-            .tax-invoice-print-page .company-brand-name { color: #111827 !important; font-weight: 900 !important; }
+            .tax-invoice-print-page .company-brand-name { color: #000000 !important; font-weight: 900 !important; }
             .tax-invoice-print-page .company-brand-accent {
-              color: #2563eb !important;
+              color: #000000 !important;
               font-weight: 900 !important;
               -webkit-print-color-adjust: exact !important;
               print-color-adjust: exact !important;
@@ -212,15 +217,15 @@ export const downloadAsPDF = async (elementId, filename, onProgressChange = () =
               font-weight: 900 !important;
               color: #000 !important;
               white-space: pre-wrap !important;
-              font-size: 11px !important;
+              font-size: 14px !important;
               line-height: 1.55 !important;
             }
             .job-card-print-table .job-card-brand {
-              color: #111827 !important;
+              color: #000000 !important;
               font-weight: 900 !important;
             }
             .job-card-print-table .job-card-brand .company-brand-accent {
-              color: #2563eb !important;
+              color: #000000 !important;
               font-weight: 900 !important;
               -webkit-print-color-adjust: exact !important;
               print-color-adjust: exact !important;
