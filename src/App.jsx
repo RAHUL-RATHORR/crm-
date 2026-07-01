@@ -23,6 +23,7 @@ import {
   X as CloseIcon,
   LogOut,
   Headphones,
+  Users,
 } from 'lucide-react';
 import Dashboard from './Dashboard';
 import JobCardForm from './JobCardForm';
@@ -42,6 +43,7 @@ import PaperStockStatements from './PaperStockStatements';
 import Estimates from './Estimates';
 import ItemListManagement from './ItemListManagement';
 import ContactSupport from './ContactSupport';
+import StaffTeamManagement from './StaffTeamManagement';
 
 const DropdownMenu = ({ title, icon: Icon, items, isActive }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -145,13 +147,20 @@ const DropdownMenu = ({ title, icon: Icon, items, isActive }) => {
   );
 };
 
-const ProfileMenu = ({ settingsItems, location, onContactSupport, onLogout }) => {
+const ProfileMenu = ({ settingsItems, staffTeamItems, location, onContactSupport, onLogout }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isStaffOpen, setIsStaffOpen] = useState(false);
   const menuRef = useRef(null);
   const closeTimerRef = useRef(null);
 
   const isSettingsActive = location.pathname.startsWith('/settings');
+  const isStaffActive = location.pathname.startsWith('/staff-team');
+
+  const closeSubmenus = () => {
+    setIsSettingsOpen(false);
+    setIsStaffOpen(false);
+  };
 
   const clearCloseTimer = () => {
     if (closeTimerRef.current) {
@@ -169,16 +178,20 @@ const ProfileMenu = ({ settingsItems, location, onContactSupport, onLogout }) =>
     clearCloseTimer();
     closeTimerRef.current = setTimeout(() => {
       setIsOpen(false);
-      setIsSettingsOpen(false);
+      closeSubmenus();
     }, 280);
+  };
+
+  const closeAll = () => {
+    clearCloseTimer();
+    setIsOpen(false);
+    closeSubmenus();
   };
 
   useEffect(() => {
     function handleClickOutside(event) {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
-        clearCloseTimer();
-        setIsOpen(false);
-        setIsSettingsOpen(false);
+        closeAll();
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -187,6 +200,84 @@ const ProfileMenu = ({ settingsItems, location, onContactSupport, onLogout }) =>
       clearCloseTimer();
     };
   }, []);
+
+  const renderFlyout = (config) => {
+    const {
+      isSubOpen,
+      setSubOpen,
+      otherClose,
+      isActive,
+      icon: Icon,
+      label,
+      items,
+    } = config;
+
+    return (
+      <div
+        className="relative"
+        onMouseEnter={() => {
+          openMenu();
+          otherClose();
+          setSubOpen(true);
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => {
+            otherClose();
+            setSubOpen((prev) => !prev);
+          }}
+          className={`flex items-center justify-between w-full px-3 py-2.5 text-sm rounded-lg transition-colors ${
+            isSubOpen || isActive
+              ? 'bg-blue-50 text-blue-700'
+              : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <Icon size={16} className={isSubOpen || isActive ? 'text-blue-600' : 'text-gray-400'} />
+            <span className="font-semibold">{label}</span>
+          </div>
+          <ChevronRight
+            size={14}
+            className={`transition-transform duration-200 ${
+              isSubOpen ? 'text-blue-600 rotate-90' : 'text-gray-400'
+            }`}
+          />
+        </button>
+
+        {isSubOpen && (
+          <>
+            <div className="absolute right-full top-0 w-3 h-full" aria-hidden />
+            <div
+              className="absolute right-[calc(100%+10px)] top-0 min-w-[210px] bg-white border border-gray-100 rounded-xl shadow-[0_10px_40px_-4px_rgba(0,0,0,0.15)] p-2 space-y-1 z-[70]"
+              onMouseEnter={() => {
+                openMenu();
+                setSubOpen(true);
+              }}
+            >
+              {items.map((item) => (
+                <button
+                  key={item.label}
+                  type="button"
+                  onClick={() => {
+                    item.onClick();
+                    closeAll();
+                  }}
+                  className={`flex items-center w-full px-3 py-2 text-xs font-semibold rounded-lg transition-colors ${
+                    location.pathname === item.path
+                      ? 'bg-blue-50 text-blue-700'
+                      : 'text-gray-600 hover:bg-blue-50 hover:text-blue-700'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div
@@ -200,8 +291,10 @@ const ProfileMenu = ({ settingsItems, location, onContactSupport, onLogout }) =>
         className="flex items-center"
         onClick={() => {
           clearCloseTimer();
-          setIsOpen((prev) => !prev);
-          if (isOpen) setIsSettingsOpen(false);
+          setIsOpen((prev) => {
+            if (prev) closeSubmenus();
+            return !prev;
+          });
         }}
         aria-label="Profile menu"
       >
@@ -217,75 +310,31 @@ const ProfileMenu = ({ settingsItems, location, onContactSupport, onLogout }) =>
       >
         <div className="pt-2">
           <div className="bg-white border border-gray-100 rounded-xl shadow-2xl p-2 space-y-1">
-            <div
-              className="relative"
-              onMouseEnter={() => {
-                openMenu();
-                setIsSettingsOpen(true);
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => setIsSettingsOpen((prev) => !prev)}
-                className={`flex items-center justify-between w-full px-3 py-2.5 text-sm rounded-lg transition-colors ${
-                  isSettingsOpen || isSettingsActive
-                    ? 'bg-blue-50 text-blue-700'
-                    : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <Settings size={16} className={isSettingsOpen || isSettingsActive ? 'text-blue-600' : 'text-gray-400'} />
-                  <span className="font-semibold">Settings</span>
-                </div>
-                <ChevronRight
-                  size={14}
-                  className={`transition-transform duration-200 ${
-                    isSettingsOpen ? 'text-blue-600 rotate-90' : 'text-gray-400'
-                  }`}
-                />
-              </button>
+            {renderFlyout({
+              isSubOpen: isSettingsOpen,
+              setSubOpen: setIsSettingsOpen,
+              otherClose: () => setIsStaffOpen(false),
+              isActive: isSettingsActive,
+              icon: Settings,
+              label: 'Settings',
+              items: settingsItems,
+            })}
 
-              {isSettingsOpen && (
-                <>
-                  <div className="absolute right-full top-0 w-3 h-full" aria-hidden />
-                  <div
-                    className="absolute right-[calc(100%+10px)] top-0 min-w-[190px] bg-white border border-gray-100 rounded-xl shadow-[0_10px_40px_-4px_rgba(0,0,0,0.15)] p-2 space-y-1 z-[70]"
-                    onMouseEnter={() => {
-                      openMenu();
-                      setIsSettingsOpen(true);
-                    }}
-                  >
-                    {settingsItems.map((item) => (
-                      <button
-                        key={item.label}
-                        type="button"
-                        onClick={() => {
-                          item.onClick();
-                          clearCloseTimer();
-                          setIsOpen(false);
-                          setIsSettingsOpen(false);
-                        }}
-                        className={`flex items-center w-full px-3 py-2 text-xs font-semibold rounded-lg transition-colors ${
-                          location.pathname === item.path
-                            ? 'bg-blue-50 text-blue-700'
-                            : 'text-gray-600 hover:bg-blue-50 hover:text-blue-700'
-                        }`}
-                      >
-                        {item.label}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
+            {renderFlyout({
+              isSubOpen: isStaffOpen,
+              setSubOpen: setIsStaffOpen,
+              otherClose: () => setIsSettingsOpen(false),
+              isActive: isStaffActive,
+              icon: Users,
+              label: 'Staff & Team',
+              items: staffTeamItems,
+            })}
 
             <button
               type="button"
               onClick={() => {
                 onContactSupport();
-                clearCloseTimer();
-                setIsOpen(false);
-                setIsSettingsOpen(false);
+                closeAll();
               }}
               className={`flex items-center gap-3 w-full px-3 py-2.5 text-sm rounded-lg transition-colors ${
                 location.pathname === '/contact-support'
@@ -433,6 +482,12 @@ export default function App() {
     { label: 'Site Setting', path: '/settings/site', onClick: () => navigate('/settings/site') },
     { label: 'Social Setting', path: '/settings/social', onClick: () => navigate('/settings/social') },
     { label: 'Change Password', path: '/settings/password', onClick: () => navigate('/settings/password') },
+  ];
+
+  const staffTeamItems = [
+    { label: 'Manage Staff & Teams', path: '/staff-team/manage', onClick: () => navigate('/staff-team/manage') },
+    { label: 'Roles', path: '/staff-team/roles', onClick: () => navigate('/staff-team/roles') },
+    { label: 'Permissions', path: '/staff-team/permissions', onClick: () => navigate('/staff-team/permissions') },
   ];
 
   const [notifications, setNotifications] = useState([]);
@@ -614,6 +669,7 @@ export default function App() {
 
           <ProfileMenu
             settingsItems={profileSettingsItems}
+            staffTeamItems={staffTeamItems}
             location={location}
             onContactSupport={() => navigate('/contact-support')}
             onLogout={() => {
@@ -724,6 +780,26 @@ export default function App() {
                   {item.label}
                 </button>
               ))}
+              <div className="flex items-center gap-3 px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider mt-3">
+                <Users size={14} />
+                Staff &amp; Team
+              </div>
+              {staffTeamItems.map((item) => (
+                <button
+                  key={item.label}
+                  onClick={() => {
+                    item.onClick();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`flex items-center gap-3 w-[calc(100%-1.5rem)] ml-6 px-4 py-2.5 text-sm font-semibold rounded-xl transition ${
+                    location.pathname === item.path
+                      ? 'bg-blue-50 text-blue-600'
+                      : 'text-gray-600 hover:bg-blue-50 hover:text-blue-600'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
               <button
                 onClick={() => {
                   navigate('/contact-support');
@@ -769,6 +845,10 @@ export default function App() {
           <Route path="/settings/password" element={<SettingsPage />} />
           <Route path="/settings/site" element={<SiteSettings />} />
           <Route path="/settings/social" element={<SocialSettings />} />
+          <Route path="/staff-team" element={<Navigate to="/staff-team/manage" replace />} />
+          <Route path="/staff-team/manage" element={<StaffTeamManagement page="manage" />} />
+          <Route path="/staff-team/roles" element={<StaffTeamManagement page="roles" />} />
+          <Route path="/staff-team/permissions" element={<StaffTeamManagement page="permissions" />} />
           <Route path="/payment-type" element={<PaymentTypeManagement />} />
           <Route path="/paper-stock" element={<PaperStockManagement />} />
           <Route path="/statements" element={<Navigate to="/statements/invoice" replace />} />
