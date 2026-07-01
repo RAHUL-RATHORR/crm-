@@ -67,7 +67,7 @@ router.delete('/:id', async (req, res) => {
   try {
     const role = await Role.findById(req.params.id);
     if (!role) return res.status(404).json({ error: 'Role not found' });
-    if (role.isSystem) return res.status(400).json({ error: 'System roles cannot be deleted' });
+    if (role.name === 'Admin') return res.status(400).json({ error: 'Admin role cannot be deleted' });
 
     const inUse = await User.countDocuments({ roleId: role._id, isActive: true });
     if (inUse > 0) return res.status(400).json({ error: 'Role is assigned to active staff members' });

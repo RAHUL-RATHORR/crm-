@@ -77,6 +77,8 @@ const StaffRoles = () => {
     setIsDeleteModalOpen(true);
   };
 
+  const visibleRoles = roles.filter((role) => role.name !== 'Admin');
+
   const confirmDelete = async () => {
     if (!deletingId) return;
     try {
@@ -103,7 +105,7 @@ const StaffRoles = () => {
           <div className="bg-blue-600 w-1.5 h-6 rounded-full" />
           Roles
         </h1>
-        <p className="text-sm text-gray-500 mt-1">Create roles like Admin, Manager and Staff.</p>
+        <p className="text-sm text-gray-500 mt-1">Create and manage roles like Manager, Staff or custom roles.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -137,7 +139,7 @@ const StaffRoles = () => {
               </tr>
             </thead>
             <tbody>
-              {roles.map((role) => (
+              {visibleRoles.map((role) => (
                 <tr key={role._id} className="border-t border-gray-100">
                   <td className="px-4 py-3 text-sm font-semibold text-gray-900">{role.name}</td>
                   <td className="px-4 py-3 text-sm text-gray-600">{role.description || '-'}</td>
@@ -146,9 +148,7 @@ const StaffRoles = () => {
                     <td className="px-4 py-3">
                       <div className="flex justify-center gap-2">
                         <button type="button" onClick={() => handleEdit(role)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"><Pencil size={16} /></button>
-                        {!role.isSystem && (
-                          <button type="button" onClick={() => handleDelete(role._id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg"><Trash2 size={16} /></button>
-                        )}
+                        <button type="button" onClick={() => handleDelete(role._id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg"><Trash2 size={16} /></button>
                       </div>
                     </td>
                   )}
