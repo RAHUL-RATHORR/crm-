@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Pencil, Trash2, Plus } from 'lucide-react';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
+import { API_BASE_URL } from './utils/apiBase';
 
 const PaymentTypeManagement = () => {
   const [paymentTypes, setPaymentTypes] = useState([]);
@@ -14,7 +15,7 @@ const PaymentTypeManagement = () => {
   }, []);
 
   const fetchPayments = () => {
-    fetch('https://crm-qpw8.onrender.com/api/payment-type')
+    fetch(`${API_BASE_URL}/api/payment-type`)
       .then(res => res.json())
       .then(data => setPaymentTypes(data))
       .catch(err => console.error("Error fetching Payment Types:", err));
@@ -26,8 +27,8 @@ const PaymentTypeManagement = () => {
 
     try {
       const url = editingId
-        ? `https://crm-qpw8.onrender.com/api/payment-type/${editingId}`
-        : 'https://crm-qpw8.onrender.com/api/payment-type';
+        ? `${API_BASE_URL}/api/payment-type/${editingId}`
+        : `${API_BASE_URL}/api/payment-type`;
       const method = editingId ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
@@ -63,7 +64,7 @@ const PaymentTypeManagement = () => {
   const confirmDelete = async () => {
     if (deletingId) {
       try {
-        const response = await fetch(`https://crm-qpw8.onrender.com/api/payment-type/${deletingId}`, {
+        const response = await fetch(`${API_BASE_URL}/api/payment-type/${deletingId}`, {
           method: 'DELETE'
         });
         if (response.ok) {

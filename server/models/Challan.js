@@ -32,6 +32,7 @@ const challanSchema = new mongoose.Schema({
   reverseCharge: { type: String, default: 'No' },
   note: { type: String },
   paymentStatus: { type: String, default: 'Pending' },
+  paymentType: { type: String, default: '' },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 }, { timestamps: true });

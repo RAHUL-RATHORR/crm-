@@ -5,17 +5,21 @@ import Invoice from '../models/Invoice.js';
 // POST /api/invoice - Create or Update Invoice
 router.post('/', async (req, res) => {
   try {
-    const { invoiceNumber } = req.body;
-    
+    const { invoiceNumber, paymentType } = req.body;
+    const payload = {
+      ...req.body,
+      paymentType: paymentType != null ? String(paymentType) : '',
+    };
+
     let invoice;
     if (invoiceNumber) {
        invoice = await Invoice.findOneAndUpdate(
         { invoiceNumber },
-        { ...req.body },
+        payload,
         { new: true, upsert: true, setDefaultsOnInsert: true }
       );
     } else {
-      invoice = new Invoice(req.body);
+      invoice = new Invoice(payload);
       await invoice.save();
     }
 

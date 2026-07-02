@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Plus, Trash2, MoreHorizontal, Truck, Pencil, ChevronDown, Check, AlertCircle, Printer, X, Download, Phone, Mail, Globe, Building2, MapPin, Calendar, FileDigit } from 'lucide-react';
 import { downloadAsPDF } from './utils/pdfExport';
 import { printElement } from './utils/printDocument';
+import { mergePaymentType, mergePaymentTypeList, removeStoredPaymentType } from './utils/paymentTypeStorage';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
 import { getBillToDetails, getShipToDetails } from './utils/shipAddress';
 import { numberToWords } from './utils/numberToWords';
@@ -95,9 +96,15 @@ const ChallanList = () => {
 
   useEffect(() => {
     const printId = location.state?.printChallanId;
+    const printDoc = location.state?.printDoc;
     if (!printId || !challans.length) return;
 
-    const ch = challans.find((item) => item._id === printId);
+    const fromList = challans.find((item) => item._id === printId);
+    const ch = mergePaymentType(
+      fromList
+        ? { ...fromList, paymentType: fromList.paymentType || printDoc?.paymentType || '' }
+        : printDoc,
+    );
     if (!ch) return;
 
     setPreviewChallans([ch]);
@@ -116,7 +123,7 @@ const ChallanList = () => {
   const fetchChallans = () => {
     fetch('https://crm-qpw8.onrender.com/api/challan')
       .then(res => res.json())
-      .then(data => setChallans(data))
+      .then((data) => setChallans(mergePaymentTypeList(data)))
       .catch(err => console.error("Error fetching Challans:", err));
   };
 
@@ -132,6 +139,8 @@ const ChallanList = () => {
           method: 'DELETE'
         });
         if (response.ok) {
+          const deleted = challans.find((ch) => ch._id === challanToDelete);
+          removeStoredPaymentType(challanToDelete, deleted?.challanNo);
           fetchChallans();
           setIsDeleteModalOpen(false);
           setChallanToDelete(null);
@@ -192,14 +201,15 @@ const ChallanList = () => {
   const clearSelection = () => setSelectedChallanIds([]);
 
   const openPreview = (ch) => {
-    setPreviewChallans([ch]);
-    setTempGstType(ch.gstType || 'CGST/SGST');
+    const merged = mergePaymentType(ch);
+    setPreviewChallans([merged]);
+    setTempGstType(merged.gstType || 'CGST/SGST');
     setCopySelection({ ...DEFAULT_TAX_COPY_SELECTION });
     setIsModalOpen(true);
   };
 
   const openMergedPreview = () => {
-    const selected = challans.filter((ch) => selectedChallanIds.includes(ch._id));
+    const selected = challans.filter((ch) => selectedChallanIds.includes(ch._id)).map(mergePaymentType);
     if (selected.length < 2) {
       alert('Combined print ke liye kam se kam 2 challan select karo.');
       return;
@@ -511,6 +521,7 @@ const ChallanList = () => {
                           ['Vehicle No.', ''],
                           ['Date of Supply', fmtTaxDate(challanDate)],
                           ['Place of Supply', 'Jaipur'],
+                          ['Payment Type', primaryChallan.paymentType || '-'],
                           ['Job Ref', jobRefLabel || ''],
                         ]} />
                       </td>

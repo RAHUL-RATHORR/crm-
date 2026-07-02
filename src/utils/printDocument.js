@@ -399,6 +399,11 @@ export function printElement(elementId, options = {}) {
             font-weight: 900 !important;
             color: #000 !important;
           }
+          .tax-invoice-print-page .tax-title-text {
+            font-size: 20px !important;
+            letter-spacing: 0.05em !important;
+            padding: 7px 0 !important;
+          }
           .tax-invoice-print-page .tax-company-name { font-weight: 900 !important; }
           .tax-invoice-print-page .company-brand-name { color: #000000 !important; font-weight: 900 !important; }
           .tax-invoice-print-page .company-brand-accent {

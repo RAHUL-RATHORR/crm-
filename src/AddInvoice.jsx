@@ -6,6 +6,9 @@ import { Plus, Trash2, X, Printer, UserPlus } from 'lucide-react';
 import { buildPartySuggestions, partyNameExists } from './utils/partySuggestions';
 import { masterItemToLineFields } from './utils/itemSuggestions';
 import ItemDescriptionInput from './components/ItemDescriptionInput';
+import PaymentTypeSection from './components/PaymentTypeSection';
+import { usePaymentTypes } from './utils/usePaymentTypes';
+import { getStoredPaymentType, setStoredPaymentType } from './utils/paymentTypeStorage';
 
 const EMPTY_PARTY_FORM = {
   partyName: '',
@@ -77,10 +80,12 @@ const AddInvoice = () => {
     gstType: editData ? (editData.gstType || 'CGST/SGST') : 'CGST/SGST',
     freight: editData ? (editData.freight || 0) : 0,
     reverseCharge: editData ? (editData.reverseCharge || 'No') : 'No',
+    paymentType: editData?.paymentType || getStoredPaymentType(editData?._id, editData?.invoiceNumber) || '',
   });
 
   const [items, setItems] = useState(() => normalizeInvoiceItems(editData));
   const [masterItems, setMasterItems] = useState([]);
+  const { paymentTypes, loading: paymentTypesLoading } = usePaymentTypes();
 
   const [isPartyDropdownOpen, setIsPartyDropdownOpen] = useState(false);
   const [isAddPartyModalOpen, setIsAddPartyModalOpen] = useState(false);
@@ -283,6 +288,7 @@ const AddInvoice = () => {
     gstType: formData.gstType,
     gstAmount,
     totalAmount: grandTotal,
+    paymentType: formData.paymentType || '',
   });
 
   const saveInvoice = async () => {
@@ -303,7 +309,10 @@ const AddInvoice = () => {
       throw new Error(errorData.error || 'Failed to save invoice');
     }
 
-    return response.json();
+    const saved = await response.json();
+    const paymentType = saved.paymentType || formData.paymentType || '';
+    setStoredPaymentType(saved._id, saved.invoiceNumber, paymentType);
+    return { ...saved, paymentType };
   };
 
   const handleSubmit = async (e) => {
@@ -334,7 +343,9 @@ const AddInvoice = () => {
     setIsSavingInvoice(true);
     try {
       const saved = await saveInvoice();
-      navigate('/invoice/list', { state: { printInvoiceId: saved._id } });
+      navigate('/invoice/list', {
+        state: { printInvoiceId: saved._id, printDoc: saved },
+      });
     } catch (err) {
       console.error('Error saving invoice:', err);
       alert(err.message || 'Failed to save invoice. Is server running?');
@@ -611,6 +622,13 @@ const AddInvoice = () => {
             </button>
           </div>
         </div>
+
+        <PaymentTypeSection
+          value={formData.paymentType}
+          onChange={(value) => setFormData((prev) => ({ ...prev, paymentType: value }))}
+          paymentTypes={paymentTypes}
+          loading={paymentTypesLoading}
+        />
 
         {/* Calculations */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6">

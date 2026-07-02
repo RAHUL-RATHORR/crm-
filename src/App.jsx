@@ -217,17 +217,13 @@ const ProfileMenu = ({ settingsItems, staffTeamItems, showStaffTeam, location, o
     } = config;
 
     return (
-      <div
-        className="relative"
-        onMouseEnter={() => {
-          openMenu();
-          otherClose();
-          setSubOpen(true);
-        }}
-      >
+      <div className="relative">
         <button
           type="button"
-          onClick={() => {
+          onClick={(e) => {
+            e.stopPropagation();
+            clearCloseTimer();
+            openMenu();
             otherClose();
             setSubOpen((prev) => !prev);
           }}
@@ -241,10 +237,10 @@ const ProfileMenu = ({ settingsItems, staffTeamItems, showStaffTeam, location, o
             <Icon size={16} className={isSubOpen || isActive ? 'text-blue-600' : 'text-gray-400'} />
             <span className="font-semibold">{label}</span>
           </div>
-          <ChevronRight
+          <ChevronDown
             size={14}
             className={`transition-transform duration-200 ${
-              isSubOpen ? 'text-blue-600 rotate-90' : 'text-gray-400'
+              isSubOpen ? 'text-blue-600 rotate-180' : 'text-gray-400'
             }`}
           />
         </button>
@@ -255,6 +251,7 @@ const ProfileMenu = ({ settingsItems, staffTeamItems, showStaffTeam, location, o
             <div
               className="absolute right-[calc(100%+10px)] top-0 min-w-[210px] bg-white border border-gray-100 rounded-xl shadow-[0_10px_40px_-4px_rgba(0,0,0,0.15)] p-2 space-y-1 z-[70]"
               onMouseEnter={() => {
+                clearCloseTimer();
                 openMenu();
                 setSubOpen(true);
               }}
@@ -370,6 +367,7 @@ export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobileSettingsOpen, setIsMobileSettingsOpen] = useState(false);
 
   // Auth Protection
   const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
@@ -853,16 +851,33 @@ export default function App() {
             </div>
 
             <div className="mt-6 pt-4 border-t border-gray-100 space-y-1">
-              <div className="flex items-center gap-3 px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
-                <Settings size={14} />
-                Settings
-              </div>
-              {profileSettingsItems.map((item) => (
+              <button
+                type="button"
+                onClick={() => setIsMobileSettingsOpen((prev) => !prev)}
+                className={`flex items-center justify-between w-full px-4 py-2.5 text-sm rounded-xl transition ${
+                  isMobileSettingsOpen || location.pathname.startsWith('/settings')
+                    ? 'bg-blue-50 text-blue-700'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Settings size={16} className={isMobileSettingsOpen ? 'text-blue-600' : 'text-gray-400'} />
+                  <span className="font-semibold">Settings</span>
+                </div>
+                <ChevronDown
+                  size={14}
+                  className={`transition-transform duration-200 ${
+                    isMobileSettingsOpen ? 'text-blue-600 rotate-180' : 'text-gray-400'
+                  }`}
+                />
+              </button>
+              {isMobileSettingsOpen && profileSettingsItems.map((item) => (
                 <button
                   key={item.label}
                   onClick={() => {
                     item.onClick();
                     setIsMobileMenuOpen(false);
+                    setIsMobileSettingsOpen(false);
                   }}
                   className={`flex items-center gap-3 w-[calc(100%-1.5rem)] ml-6 px-4 py-2.5 text-sm font-semibold rounded-xl transition ${
                     location.pathname === item.path

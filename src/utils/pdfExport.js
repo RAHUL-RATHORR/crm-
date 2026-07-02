@@ -204,6 +204,13 @@ export const downloadAsPDF = async (elementId, filename, onProgressChange = () =
               -webkit-print-color-adjust: exact !important;
               print-color-adjust: exact !important;
             }
+            .tax-invoice-print-page .tax-title-text {
+              font-size: 20px !important;
+              font-weight: 900 !important;
+              letter-spacing: 0.05em !important;
+              padding: 7px 0 !important;
+              color: #000 !important;
+            }
             .tax-invoice-print-page .tax-field-value,
             .tax-invoice-print-page .tax-item-value,
             .tax-invoice-print-page .tax-item-gst { font-weight: 800 !important; color: #000 !important; }

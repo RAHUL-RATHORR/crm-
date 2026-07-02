@@ -203,8 +203,9 @@
   flex: 1;
   text-align: center;
   font-weight: 800;
-  font-size: 14px;
-  padding: 5px 0;
+  font-size: 18px;
+  letter-spacing: 0.04em;
+  padding: 6px 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1067,6 +1068,13 @@
   .tax-invoice-print-page .tax-amount-words-row .tax-cell {
     background-color: #ececec !important;
     border-top: none !important;
+  }
+
+  .tax-invoice-print-page .tax-title-text {
+    font-size: 20px !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.05em !important;
+    padding: 7px 0 !important;
   }
 
   .tax-invoice-print-page .tax-analysis-table .tax-analysis-title-row .tax-cell {

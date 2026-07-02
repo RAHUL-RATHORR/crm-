@@ -6,6 +6,9 @@ import { X, Printer, UserPlus, Plus, Trash2 } from 'lucide-react';
 import { buildPartySuggestions, partyNameExists } from './utils/partySuggestions';
 import { masterItemToLineFields } from './utils/itemSuggestions';
 import ItemDescriptionInput from './components/ItemDescriptionInput';
+import PaymentTypeSection from './components/PaymentTypeSection';
+import { usePaymentTypes } from './utils/usePaymentTypes';
+import { getStoredPaymentType, setStoredPaymentType } from './utils/paymentTypeStorage';
 
 const EMPTY_PARTY_FORM = {
   partyName: '',
@@ -123,8 +126,11 @@ const AddChallan = () => {
     freight: editData ? (editData.freight || 0) : 0,
     gstType: editData ? (editData.gstType || 'CGST/SGST') : 'CGST/SGST',
     reverseCharge: editData ? (editData.reverseCharge || 'No') : 'No',
-    note: editData ? editData.note : ''
+    note: editData ? editData.note : '',
+    paymentType: editData?.paymentType || getStoredPaymentType(editData?._id, editData?.challanNo) || '',
   });
+
+  const { paymentTypes, loading: paymentTypesLoading } = usePaymentTypes();
 
   const totals = useMemo(() => {
     const items = formData.items.map(calcItemTotals);
@@ -385,6 +391,7 @@ const AddChallan = () => {
       qty: computedItems.length > 0 ? computedItems[0].qty : 0,
       rate: computedItems.length > 0 ? computedItems[0].rate : 0,
       paymentStatus: editData ? (editData.paymentStatus || 'Pending') : 'Pending',
+      paymentType: formData.paymentType || '',
     };
   };
 
@@ -405,7 +412,10 @@ const AddChallan = () => {
       throw new Error(errorData.error || 'Failed to save challan');
     }
 
-    return response.json();
+    const saved = await response.json();
+    const paymentType = saved.paymentType || formData.paymentType || '';
+    setStoredPaymentType(saved._id, saved.challanNo, paymentType);
+    return { ...saved, paymentType };
   };
 
   const handleSubmit = async (e) => {
@@ -436,7 +446,9 @@ const AddChallan = () => {
     setIsSavingChallan(true);
     try {
       const saved = await saveChallan();
-      navigate('/challan/list', { state: { printChallanId: saved._id } });
+      navigate('/challan/list', {
+        state: { printChallanId: saved._id, printDoc: saved },
+      });
     } catch (err) {
       console.error('Error saving challan:', err);
       alert(err.message || 'Failed to save challan. Is server running?');
@@ -754,6 +766,13 @@ const AddChallan = () => {
             </button>
           </div>
         </div>
+
+        <PaymentTypeSection
+          value={formData.paymentType}
+          onChange={(value) => setFormData((prev) => ({ ...prev, paymentType: value }))}
+          paymentTypes={paymentTypes}
+          loading={paymentTypesLoading}
+        />
 
         {/* Calculations */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6">

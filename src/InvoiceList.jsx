@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Plus, Trash2, MoreHorizontal, Pencil, Printer, Eye, X, Download, Phone, Mail, Globe, Building2, MapPin, Calendar, FileDigit, AlertCircle, ChevronDown, Check } from 'lucide-react';
 import { downloadAsPDF } from './utils/pdfExport';
 import { printElement } from './utils/printDocument';
+import { mergePaymentType, mergePaymentTypeList, removeStoredPaymentType } from './utils/paymentTypeStorage';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
 import { getBillToDetails, getShipToDetails } from './utils/shipAddress';
 import { numberToWords } from './utils/numberToWords';
@@ -82,9 +83,15 @@ const InvoiceList = () => {
 
   useEffect(() => {
     const printId = location.state?.printInvoiceId;
+    const printDoc = location.state?.printDoc;
     if (!printId || !invoices.length) return;
 
-    const inv = invoices.find((item) => item._id === printId);
+    const fromList = invoices.find((item) => item._id === printId);
+    const inv = mergePaymentType(
+      fromList
+        ? { ...fromList, paymentType: fromList.paymentType || printDoc?.paymentType || '' }
+        : printDoc,
+    );
     if (!inv) return;
 
     setSelectedInvoice(inv);
@@ -103,7 +110,7 @@ const InvoiceList = () => {
   const fetchInvoice = () => {
     fetch(`${API_BASE_URL}/api/invoice`)
       .then(res => res.json())
-      .then(data => setInvoices(data))
+      .then((data) => setInvoices(mergePaymentTypeList(data)))
       .catch(err => console.error("Error fetching Invoices:", err));
   };
 
@@ -119,6 +126,8 @@ const InvoiceList = () => {
           method: 'DELETE'
         });
         if (response.ok) {
+          const deleted = invoices.find((inv) => inv._id === invoiceToDelete);
+          removeStoredPaymentType(invoiceToDelete, deleted?.invoiceNumber);
           fetchInvoice();
           setIsDeleteModalOpen(false);
           setInvoiceToDelete(null);
@@ -154,8 +163,9 @@ const InvoiceList = () => {
   };
 
   const openPreview = (inv) => {
-    setSelectedInvoice(inv);
-    setTempGstType(inv.gstType || 'CGST/SGST');
+    const merged = mergePaymentType(inv);
+    setSelectedInvoice(merged);
+    setTempGstType(merged.gstType || 'CGST/SGST');
     setCopySelection({ ...DEFAULT_TAX_COPY_SELECTION });
     setIsModalOpen(true);
   };
@@ -453,6 +463,7 @@ const InvoiceList = () => {
                           ['Vehicle No.', ''],
                           ['Date of Supply', fmtTaxDate(selectedInvoice.date)],
                           ['Place of Supply', 'Jaipur'],
+                          ['Payment Type', selectedInvoice.paymentType || '-'],
                         ]} />
                       </td>
                     </tr>

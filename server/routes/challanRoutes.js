@@ -5,17 +5,21 @@ import Challan from '../models/Challan.js';
 // POST /api/challan - Create or Update Challan
 router.post('/', async (req, res) => {
   try {
-    const { challanNo } = req.body;
+    const { challanNo, paymentType } = req.body;
+    const payload = {
+      ...req.body,
+      paymentType: paymentType != null ? String(paymentType) : '',
+    };
 
     let challan;
     if (challanNo) {
       challan = await Challan.findOneAndUpdate(
         { challanNo },
-        { ...req.body },
+        payload,
         { new: true, upsert: true, setDefaultsOnInsert: true }
       );
     } else {
-      challan = new Challan(req.body);
+      challan = new Challan(payload);
       await challan.save();
     }
 

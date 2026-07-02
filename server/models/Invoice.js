@@ -32,6 +32,7 @@ const invoiceSchema = new mongoose.Schema({
   totalAmount: { type: Number, default: 0 },
   paidAmount: { type: Number, default: 0 },
   paymentStatus: { type: String, default: 'Pending' },
+  paymentType: { type: String, default: '' },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 }, { timestamps: true });
