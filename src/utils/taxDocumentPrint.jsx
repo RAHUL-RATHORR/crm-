@@ -94,16 +94,12 @@ export const buildTaxItemLine = (item, idx, fallbackGst = 18, isIGST = false) =>
   };
 };
 
-export const EMPTY_PRODUCT_ROWS = 2;
-export const MIN_PRODUCT_TABLE_ROWS = 8;
-export const MIN_CHALLAN_PRODUCT_TABLE_ROWS = 6;
+export const MIN_PRODUCT_TABLE_ROWS = 14;
+export const MIN_CHALLAN_PRODUCT_TABLE_ROWS = 14;
 
 export function getEmptyProductRowCount(usedRows = 0, options = {}) {
   const minRows = options.minRows ?? MIN_PRODUCT_TABLE_ROWS;
-  const filler = minRows - usedRows;
-  if (filler > 0) return filler;
-  if (options.noFallback) return 0;
-  return EMPTY_PRODUCT_ROWS;
+  return Math.max(0, minRows - usedRows);
 }
 
 export const getTaxTableColCount = () => 7;

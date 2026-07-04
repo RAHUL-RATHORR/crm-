@@ -7,7 +7,7 @@ import { mergePaymentType, mergePaymentTypeList, removeStoredPaymentType } from 
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
 import { getBillToDetails, getShipToDetails } from './utils/shipAddress';
 import { numberToWords } from './utils/numberToWords';
-import { SELLER, fmtTaxDate, fmtAmt, getStateFromGst, formatStateWithCode, TaxFieldsTable, buildTaxItemLine, getEmptyProductRowCount, CompanyBrandName, TaxCopyBox, TaxCopyTypeControls, DEFAULT_TAX_COPY_SELECTION, getSelectedCopyIds, getPreviewHighlightCopy, TaxInvoiceColGroup, getTaxTableColCount, getTaxTableHalfColSpans, getTaxChargeSubRowCount, TaxClassicItemsBlock, buildTaxAnalysisGroups, TaxAnalysisSection } from './utils/taxDocumentPrint';
+import { SELLER, fmtTaxDate, fmtAmt, getStateFromGst, formatStateWithCode, TaxFieldsTable, buildTaxItemLine, getEmptyProductRowCount, CompanyBrandName, TaxCopyBox, TaxCopyTypeControls, DEFAULT_TAX_COPY_SELECTION, getSelectedCopyIds, getPreviewHighlightCopy, TaxInvoiceColGroup, getTaxTableColCount, getTaxTableHalfColSpans, getTaxChargeSubRowCount, TaxClassicItemsBlock, buildTaxAnalysisGroups, TaxAnalysisSection, MIN_PRODUCT_TABLE_ROWS } from './utils/taxDocumentPrint';
 
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'https://crm-qpw8.onrender.com'
@@ -70,7 +70,9 @@ const InvoiceList = () => {
   const amountBeforeTax = totalTaxable;
   const amountWithTax = selectedInvoice?.totalAmount || 0;
   const productRowCount = itemLines.length + getTaxChargeSubRowCount(freight, isIGST);
-  const emptyProductRows = selectedInvoice ? getEmptyProductRowCount(productRowCount) : 0;
+  const emptyProductRows = selectedInvoice
+    ? getEmptyProductRowCount(productRowCount, { minRows: MIN_PRODUCT_TABLE_ROWS })
+    : 0;
 
   useEffect(() => {
     fetchInvoice();

@@ -68,7 +68,6 @@ const ChallanList = () => {
   const productRowCount = itemLines.length + getTaxChargeSubRowCount(totalFreight, isIGST);
   const emptyProductRows = getEmptyProductRowCount(productRowCount, {
     minRows: MIN_CHALLAN_PRODUCT_TABLE_ROWS,
-    noFallback: true,
   });
 
   const partyCounts = challans.reduce((acc, ch) => {
