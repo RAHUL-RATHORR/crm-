@@ -5,69 +5,26 @@ import {
   Calendar,
   User,
   Hash,
-  ArrowDownCircle,
-  ArrowUpCircle,
   Trash2,
   CheckCircle2,
-  AlertCircle,
   ChevronDown,
   FileText,
-  IndianRupee,
   Clock,
-  TrendingUp
+  TrendingUp,
+  Printer,
 } from 'lucide-react';
+import { SELLER } from './utils/taxDocumentPrint';
+import { printElement } from './utils/printDocument';
+import {
+  buildFinancialStatement,
+  formatStatementDate,
+  formatStatementDateTime,
+  getDefaultMonthValue,
+  getMonthOptions,
+  getPeriodLabel,
+} from './utils/buildFinancialStatement';
 
-const buildInvoiceTransactions = (invoices, statements) => {
-  const deductRows = (invoices || []).map((inv) => ({
-    _id: `inv-${inv._id}`,
-    transactionType: 'deduct',
-    date: inv.date || inv.createdAt,
-    invoiceNumber: inv.invoiceNumber,
-    partyName: inv.partyName,
-    amount: Number(inv.totalAmount) || 0,
-    paymentMethod: null,
-    notes: 'Invoice raised',
-    createdAt: inv.createdAt || inv.date,
-  }));
-
-  const addRows = (statements || []).map((stmt) => ({
-    _id: `stmt-${stmt._id}`,
-    sourceId: stmt._id,
-    transactionType: 'add',
-    date: stmt.date,
-    invoiceNumber: stmt.invoiceNumber,
-    partyName: stmt.partyName,
-    amount: Number(stmt.amount) || 0,
-    paymentMethod: stmt.paymentMethod,
-    notes: stmt.notes,
-    createdAt: stmt.createdAt || stmt.date,
-  }));
-
-  const merged = [...deductRows, ...addRows].sort(
-    (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
-  );
-
-  let balance = 0;
-  return merged
-    .map((row) => {
-      if (row.transactionType === 'deduct') balance += row.amount;
-      else balance = Math.max(0, balance - row.amount);
-      return { ...row, balanceAfter: balance };
-    })
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-};
-
-const formatDateTime = (value) => {
-  const date = new Date(value);
-  return date.toLocaleString('en-IN', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true,
-  });
-};
+const fmtAmt = (value) => `₹${Number(value || 0).toLocaleString('en-IN')}`;
 
 const Statements = ({ defaultTab = 'transactions' }) => {
   const [statements, setStatements] = useState([]);
@@ -75,7 +32,10 @@ const Statements = ({ defaultTab = 'transactions' }) => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [invoiceSearch, setInvoiceSearch] = useState('');
-  const [invoiceTypeFilter, setInvoiceTypeFilter] = useState('all');
+  const [invoiceStatusFilter, setInvoiceStatusFilter] = useState('all');
+  const [periodFilter, setPeriodFilter] = useState('all');
+  const [selectedMonth, setSelectedMonth] = useState(getDefaultMonthValue());
+  const [statementDateRange, setStatementDateRange] = useState({ start: '', end: '' });
   const [dateFilter, setDateFilter] = useState('1m');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [customRange, setCustomRange] = useState({ start: '', end: '' });
@@ -144,29 +104,36 @@ const Statements = ({ defaultTab = 'transactions' }) => {
     }
   });
 
-  // Show all invoices in statements listing
-  const invoiceTransactions = useMemo(
-    () => buildInvoiceTransactions(invoices, statements),
-    [invoices, statements]
+  const monthOptions = useMemo(() => getMonthOptions(24), []);
+
+  const financialStatement = useMemo(
+    () => buildFinancialStatement({
+      invoices,
+      payments: statements,
+      periodFilter,
+      selectedMonth,
+      dateRange: statementDateRange,
+      statusFilter: invoiceStatusFilter,
+      searchQuery: invoiceSearch,
+    }),
+    [invoices, statements, periodFilter, selectedMonth, statementDateRange, invoiceStatusFilter, invoiceSearch]
   );
 
-  const filteredInvoiceTransactions = invoiceTransactions.filter((item) => {
-    const matchesType = invoiceTypeFilter === 'all' || item.transactionType === invoiceTypeFilter;
-    const query = invoiceSearch.toLowerCase();
-    const matchesSearch =
-      (item.partyName || '').toLowerCase().includes(query) ||
-      (item.invoiceNumber || '').toLowerCase().includes(query) ||
-      (item.paymentMethod || '').toLowerCase().includes(query) ||
-      (item.notes || '').toLowerCase().includes(query);
-    return matchesType && matchesSearch;
-  });
+  const {
+    displayEntries,
+    openingBalance,
+    closingBalance,
+    totalWithdrawal,
+    totalDeposit,
+    completeCount,
+    pendingCount,
+  } = financialStatement;
 
-  const totalPaymentAdded = filteredInvoiceTransactions
-    .filter((t) => t.transactionType === 'add')
-    .reduce((sum, t) => sum + (t.amount || 0), 0);
-  const totalInvoiceDeducted = filteredInvoiceTransactions
-    .filter((t) => t.transactionType === 'deduct')
-    .reduce((sum, t) => sum + (t.amount || 0), 0);
+  const periodLabel = getPeriodLabel(periodFilter, selectedMonth, statementDateRange);
+
+  const handlePrintStatement = () => {
+    printElement('printable-financial-statement');
+  };
 
   // Summary stats
   const totalInvoiced = invoices.reduce((acc, inv) => acc + (inv.totalAmount || 0), 0);
@@ -390,161 +357,274 @@ const Statements = ({ defaultTab = 'transactions' }) => {
         </div>
       )}
 
-      {/* INVOICE STATEMENTS TAB */}
+      {/* INVOICE STATEMENTS TAB — Bank Statement Style */}
       {(!showTabs || activeTab === 'invoices') && (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-5">
-              <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600">
-                <ArrowUpCircle size={26} />
+          <div className="flex flex-col gap-3 mb-6">
+            <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-3">
+              <div className="flex bg-white p-2 rounded-2xl shadow-sm gap-2 w-fit">
+                {[
+                  { id: 'complete', label: 'Complete', count: completeCount },
+                  { id: 'pending', label: 'Pending', count: pendingCount },
+                ].map((filter) => (
+                  <button
+                    key={filter.id}
+                    type="button"
+                    onClick={() => setInvoiceStatusFilter((prev) => (prev === filter.id ? 'all' : filter.id))}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all ${
+                      invoiceStatusFilter === filter.id
+                        ? filter.id === 'complete'
+                          ? 'bg-emerald-600 text-white'
+                          : 'bg-red-500 text-white'
+                        : 'text-gray-500 hover:bg-gray-50'
+                    }`}
+                  >
+                    {filter.label}
+                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                      invoiceStatusFilter === filter.id ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'
+                    }`}>
+                      {filter.count}
+                    </span>
+                  </button>
+                ))}
               </div>
-              <div>
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Payment Added</p>
-                <h3 className="text-2xl font-black text-gray-900 tracking-tight">₹{totalPaymentAdded.toLocaleString()}</h3>
-              </div>
-            </div>
-            <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-5">
-              <div className="w-14 h-14 bg-red-50 rounded-2xl flex items-center justify-center text-red-500">
-                <ArrowDownCircle size={26} />
-              </div>
-              <div>
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Invoice Deducted</p>
-                <h3 className="text-2xl font-black text-gray-900 tracking-tight">₹{totalInvoiceDeducted.toLocaleString()}</h3>
-              </div>
-            </div>
-          </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 mb-6">
-            <div className="flex bg-white p-2 rounded-2xl shadow-sm gap-2">
-              {[
-                { id: 'all', label: 'All' },
-                { id: 'add', label: 'Added' },
-                { id: 'deduct', label: 'Deducted' },
-              ].map((filter) => (
-                <button
-                  key={filter.id}
-                  type="button"
-                  onClick={() => setInvoiceTypeFilter(filter.id)}
-                  className={`px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all ${
-                    invoiceTypeFilter === filter.id ? 'bg-gray-900 text-white' : 'text-gray-500 hover:bg-gray-50'
-                  }`}
-                >
-                  {filter.label}
-                </button>
-              ))}
+              <div className="flex flex-col lg:flex-row flex-wrap gap-3 xl:ml-auto">
+                <div className="flex flex-wrap bg-white p-2 rounded-2xl shadow-sm gap-2">
+                  {[
+                    { id: 'all', label: 'All Statements' },
+                    { id: 'month', label: 'By Month' },
+                    { id: 'range', label: 'By Date' },
+                  ].map((filter) => (
+                    <button
+                      key={filter.id}
+                      type="button"
+                      onClick={() => setPeriodFilter(filter.id)}
+                      className={`px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all ${
+                        periodFilter === filter.id ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:bg-gray-50'
+                      }`}
+                    >
+                      {filter.label}
+                    </button>
+                  ))}
+                </div>
+
+                {periodFilter === 'month' && (
+                  <div className="flex items-center gap-2 bg-white p-2 rounded-2xl shadow-sm border border-gray-100">
+                    <Calendar size={16} className="text-indigo-500 ml-2" />
+                    <select
+                      value={selectedMonth}
+                      onChange={(e) => setSelectedMonth(e.target.value)}
+                      className="px-3 py-2 rounded-xl text-sm font-bold text-gray-700 outline-none bg-transparent cursor-pointer"
+                    >
+                      {monthOptions.map((opt) => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {periodFilter === 'range' && (
+                  <div className="flex flex-wrap items-center gap-2 bg-white p-2 rounded-2xl shadow-sm border border-gray-100">
+                    <Calendar size={16} className="text-indigo-500 ml-2" />
+                    <input
+                      type="date"
+                      value={statementDateRange.start}
+                      onChange={(e) => setStatementDateRange({ ...statementDateRange, start: e.target.value })}
+                      className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-indigo-500/20"
+                    />
+                    <span className="text-gray-400 text-sm font-bold">to</span>
+                    <input
+                      type="date"
+                      value={statementDateRange.end}
+                      onChange={(e) => setStatementDateRange({ ...statementDateRange, end: e.target.value })}
+                      className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-indigo-500/20"
+                    />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
         <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="p-6 border-b border-gray-50 flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="p-6 border-b border-gray-50 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 no-print">
             <div>
-              <h2 className="text-lg font-bold text-gray-900">Invoice Statements</h2>
-              <p className="text-xs text-gray-500 mt-0.5">Invoice raised aur payment received ki poori history</p>
+              <h2 className="text-lg font-bold text-gray-900">Account Statement</h2>
+              <p className="text-xs text-gray-500 mt-0.5">
+                {periodLabel}
+                {invoiceStatusFilter === 'complete' ? ' • Complete entries only' : invoiceStatusFilter === 'pending' ? ' • Pending entries only' : ''}
+              </p>
             </div>
-            <div className="relative w-full md:w-64">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input type="text" placeholder="Search invoice, party, method..."
-                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500/20"
-                value={invoiceSearch} onChange={(e) => setInvoiceSearch(e.target.value)}
-              />
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
+              <div className="relative w-full sm:w-64">
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search party, invoice, ref..."
+                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  value={invoiceSearch}
+                  onChange={(e) => setInvoiceSearch(e.target.value)}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={handlePrintStatement}
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all"
+              >
+                <Printer size={16} />
+                Print Statement
+              </button>
             </div>
           </div>
 
-          <div className="overflow-x-auto min-h-[300px]">
-            <table className="w-full text-left whitespace-nowrap">
-              <thead>
-                <tr className="bg-gray-50/50 text-[11px] font-black uppercase text-gray-900 tracking-[0.12em] border-b border-gray-100">
-                  <th className="px-6 py-4">Date & Time</th>
-                  <th className="px-6 py-4">Invoice #</th>
-                  <th className="px-6 py-4">Party Name</th>
-                  <th className="px-6 py-4 text-center">Action</th>
-                  <th className="px-6 py-4 text-right">Amount</th>
-                  <th className="px-6 py-4">Method / Note</th>
-                  <th className="px-6 py-4 text-right">Balance Due</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {loading ? (
-                  <tr><td colSpan="7" className="px-6 py-20 text-center text-gray-400 font-bold animate-pulse uppercase">Loading Invoices...</td></tr>
-                ) : filteredInvoiceTransactions.length === 0 ? (
-                  <tr><td colSpan="7" className="px-6 py-20 text-center text-gray-400 italic font-medium">No invoice statements found matching your search.</td></tr>
-                ) : (
-                  filteredInvoiceTransactions.map((item) => (
-                    <tr key={item._id} className="hover:bg-gray-50/60 transition-colors group">
-                      <td className="px-6 py-5">
-                        <div className="flex items-center gap-2 text-sm font-bold text-gray-700">
-                          <Calendar size={14} className="text-emerald-500" />
-                          {formatDateTime(item.createdAt)}
-                        </div>
-                      </td>
-                      <td className="px-6 py-5">
-                        <div className="flex items-center gap-2">
-                          <FileText size={14} className="text-indigo-500" />
-                          <span className="font-black text-indigo-700 text-sm">{item.invoiceNumber}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-5">
-                        <div className="flex items-center gap-2">
-                          <User size={13} className="text-gray-400" />
-                          <p className="font-bold text-gray-900 text-sm">{item.partyName}</p>
-                        </div>
-                      </td>
-                      <td className="px-6 py-5 text-center">
-                        {item.transactionType === 'add' ? (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-[10px] font-black uppercase ring-1 ring-emerald-100">
-                            <ArrowUpCircle size={12} /> Payment Added
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-600 rounded-full text-[10px] font-black uppercase ring-1 ring-red-100">
-                            <ArrowDownCircle size={12} /> Invoice Deducted
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-5 text-right">
-                        <p className={`font-black text-sm ${item.transactionType === 'add' ? 'text-emerald-600' : 'text-red-500'}`}>
-                          {item.transactionType === 'add' ? '+' : '-'}₹{item.amount?.toLocaleString()}
-                        </p>
-                      </td>
-                      <td className="px-6 py-5">
-                        {item.transactionType === 'add' ? (
-                          <div className="space-y-1">
-                            <span className="inline-flex items-center px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full text-[10px] font-black uppercase ring-1 ring-blue-100">
-                              {item.paymentMethod}
-                            </span>
-                            {item.notes && <p className="text-[10px] text-gray-400 italic">{item.notes}</p>}
-                          </div>
-                        ) : (
-                          <span className="text-xs font-semibold text-gray-500 italic">{item.notes || 'Invoice raised'}</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-5 text-right">
-                        <p className={`font-black text-sm ${item.balanceAfter > 0 ? 'text-red-500' : 'text-emerald-600'}`}>
-                          ₹{Math.max(0, item.balanceAfter || 0).toLocaleString()}
-                        </p>
+          <div id="printable-financial-statement" className="financial-statement-print bg-white">
+            <div className="financial-statement-header">
+              <div className="financial-statement-header-grid">
+                <div className="financial-statement-doc-title-block">
+                  <p className="financial-statement-doc-title-line">A C C O U N T</p>
+                  <p className="financial-statement-doc-title-line financial-statement-doc-title-line-second">S T A T E M E N T</p>
+                </div>
+
+                <div className="financial-statement-company">
+                  <h3>{SELLER.name}</h3>
+                  <p>{SELLER.address}</p>
+                  <p>{SELLER.tel}, {SELLER.email}</p>
+                  <p><span className="financial-statement-label">MSME REGD NO :-</span> {SELLER.msmeRegNo}</p>
+                  <p><span className="financial-statement-label">GSTIN :</span> {SELLER.gstin}</p>
+                </div>
+
+                <div className="financial-statement-bank">
+                  <p className="financial-statement-bank-label">Bank Details</p>
+                  <p><span className="financial-statement-muted">Account Holder:</span> <span className="financial-statement-strong">{SELLER.bank.holder}</span></p>
+                  <p><span className="financial-statement-muted">Bank:</span> <span className="financial-statement-strong">{SELLER.bank.name}</span></p>
+                  <p><span className="financial-statement-muted">A/c No:</span> <span className="financial-statement-strong">{SELLER.bank.account}</span></p>
+                  <p><span className="financial-statement-muted">IFSC:</span> <span className="financial-statement-strong">{SELLER.bank.ifsc}</span></p>
+                  <p><span className="financial-statement-muted">Branch:</span> <span className="financial-statement-strong">{SELLER.bank.branch}</span></p>
+                </div>
+              </div>
+
+              <div className="financial-statement-summary-grid grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4 pt-4 border-t border-indigo-100">
+                <div className="bg-white rounded-xl border border-gray-100 px-4 py-3">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Statement Period</p>
+                  <p className="text-sm font-black text-gray-900 mt-1">{periodLabel}</p>
+                </div>
+                <div className="bg-white rounded-xl border border-gray-100 px-4 py-3">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Opening Balance</p>
+                  <p className="text-sm font-black text-gray-900 mt-1">{fmtAmt(openingBalance)}</p>
+                </div>
+                <div className="bg-white rounded-xl border border-gray-100 px-4 py-3">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Generated On</p>
+                  <p className="text-sm font-black text-gray-900 mt-1">{formatStatementDateTime(new Date())}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto min-h-[300px] financial-statement-table-wrap">
+              <table className="w-full text-left border-collapse financial-statement-table" style={{ tableLayout: 'fixed' }}>
+                <colgroup>
+                  <col style={{ width: '9%' }} />
+                  <col className="financial-statement-col-value-date" style={{ width: '9%' }} />
+                  <col style={{ width: '28%' }} />
+                  <col style={{ width: '12%' }} />
+                  <col style={{ width: '14%' }} />
+                  <col style={{ width: '14%' }} />
+                  <col style={{ width: '14%' }} />
+                </colgroup>
+                <thead>
+                  <tr className="bg-indigo-600 text-white text-sm font-black uppercase tracking-wide">
+                    <th className="px-4 py-3 border border-indigo-500">Txn Date</th>
+                    <th className="financial-statement-col-value-date px-4 py-3 border border-indigo-500">Value Date</th>
+                    <th className="financial-statement-col-particulars px-4 py-3 border border-indigo-500">Particulars</th>
+                    <th className="px-4 py-3 border border-indigo-500">Chq / Ref No.</th>
+                    <th className="px-4 py-3 border border-indigo-500 text-right">Withdrawal (Dr)</th>
+                    <th className="px-4 py-3 border border-indigo-500 text-right">Deposit (Cr)</th>
+                    <th className="px-4 py-3 border border-indigo-500 text-right">Balance</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loading ? (
+                    <tr>
+                      <td colSpan="7" className="px-6 py-20 text-center text-gray-400 font-bold animate-pulse uppercase border border-gray-100">
+                        Loading Statement...
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  ) : (
+                    <>
+                      {periodFilter !== 'all' && (
+                        <tr className="bg-amber-50/70">
+                          <td className="px-4 py-3 border border-gray-200 text-base font-bold text-gray-700" colSpan="4">
+                            Opening Balance b/f
+                          </td>
+                          <td className="px-4 py-3 border border-gray-200 text-right text-base font-bold text-gray-400">—</td>
+                          <td className="px-4 py-3 border border-gray-200 text-right text-base font-bold text-gray-400">—</td>
+                          <td className="px-4 py-3 border border-gray-200 text-right text-base font-black text-gray-900">{fmtAmt(openingBalance)}</td>
+                        </tr>
+                      )}
 
-          {filteredInvoiceTransactions.length > 0 && (
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex flex-wrap gap-6 justify-end text-sm">
-              <div className="flex items-center gap-2">
-                <span className="text-gray-500 font-medium">Payment Added:</span>
-                <span className="font-black text-emerald-600">₹{totalPaymentAdded.toLocaleString()}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-gray-500 font-medium">Invoice Deducted:</span>
-                <span className="font-black text-red-500">₹{totalInvoiceDeducted.toLocaleString()}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-gray-500 font-medium">Net Due:</span>
-                <span className="font-black text-gray-900">₹{Math.max(0, totalInvoiceDeducted - totalPaymentAdded).toLocaleString()}</span>
-              </div>
+                      {displayEntries.length === 0 ? (
+                        <tr>
+                          <td colSpan="7" className="px-6 py-16 text-center text-gray-400 italic font-medium border border-gray-100">
+                            Is period / filter ke liye koi entry nahi mili.
+                          </td>
+                        </tr>
+                      ) : (
+                        displayEntries.map((entry) => (
+                          <tr key={entry.id} className="hover:bg-gray-50/60 transition-colors">
+                            <td className="px-4 py-3 border border-gray-200 text-base font-bold text-gray-800">
+                              {formatStatementDate(entry.date)}
+                            </td>
+                            <td className="financial-statement-col-value-date px-4 py-3 border border-gray-200 text-base font-semibold text-gray-600">
+                              {formatStatementDate(entry.date)}
+                            </td>
+                            <td className="financial-statement-col-particulars px-4 py-3 border border-gray-200 text-base font-semibold text-gray-800 break-words">
+                              {entry.particulars}
+                            </td>
+                            <td className="px-4 py-3 border border-gray-200 text-base font-black text-indigo-700 break-all">
+                              {entry.refNo}
+                            </td>
+                            <td className="px-4 py-3 border border-gray-200 text-right text-base font-black text-red-600">
+                              {entry.withdrawal > 0 ? fmtAmt(entry.withdrawal) : '—'}
+                            </td>
+                            <td className="px-4 py-3 border border-gray-200 text-right text-base font-black text-emerald-600">
+                              {entry.deposit > 0 ? fmtAmt(entry.deposit) : '—'}
+                            </td>
+                            <td className="px-4 py-3 border border-gray-200 text-right text-base font-black text-gray-900">
+                              {fmtAmt(entry.balanceAfter)}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </>
+                  )}
+                </tbody>
+              </table>
             </div>
-          )}
+
+            {!loading && displayEntries.length > 0 && (
+              <div className="financial-statement-totals px-6 py-4 bg-gray-50 border-t border-gray-200 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Total Withdrawal (Dr)</p>
+                  <p className="font-black text-red-600 mt-1">{fmtAmt(totalWithdrawal)}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Total Deposit (Cr)</p>
+                  <p className="font-black text-emerald-600 mt-1">{fmtAmt(totalDeposit)}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Closing Balance</p>
+                  <p className="font-black text-gray-900 mt-1">{fmtAmt(closingBalance)}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Entries in Statement</p>
+                  <p className="font-black text-indigo-700 mt-1">{displayEntries.length}</p>
+                </div>
+              </div>
+            )}
+
+            <div className="financial-statement-footer px-6 py-3 border-t border-gray-100 text-[10px] text-gray-400 italic text-center">
+              This is a computer generated statement and does not require signature. | {SELLER.name} | {SELLER.email}
+            </div>
+          </div>
         </div>
         </>
       )}

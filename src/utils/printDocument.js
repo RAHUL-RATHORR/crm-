@@ -71,14 +71,16 @@ export function printElement(elementId, options = {}) {
 
   const isJobCard = elementId === 'printable-inner';
   const isEstimate = elementId === 'printable-estimate' || element.classList.contains('estimate-print-page');
+  const isFinancialStatement = elementId === 'printable-financial-statement' || element.classList.contains('financial-statement-print');
   const isTaxInvoice = elementId === 'printable-invoice' || elementId === 'printable-challan' || elementId === 'printable-inner' || elementId === 'printable-estimate' || element.classList.contains('tax-invoice-print-page') || element.classList.contains('estimate-print-page');
   const isChallan = elementId === 'printable-challan' || element.classList.contains('challan-print-page');
-  const isFullWidth = isJobCard || isTaxInvoice || isChallan || isEstimate;
-  const pageMargin = isFullWidth ? '5mm' : '12mm';
-  const contentPadding = isFullWidth ? '2mm 3mm' : '6mm 8mm';
+  const isFullWidth = isJobCard || isTaxInvoice || isChallan || isEstimate || isFinancialStatement;
+  const pageMargin = isFinancialStatement ? '4mm' : isFullWidth ? '5mm' : '12mm';
+  const contentPadding = isFinancialStatement ? '2mm 3mm' : isFullWidth ? '2mm 3mm' : '6mm 8mm';
   const wrapperStyle = isFullWidth
     ? 'width:100%;max-width:100%;margin:0;padding:0;background:#ffffff;box-sizing:border-box;min-height:100vh;'
     : 'width:210mm;max-width:210mm;margin:0 auto;padding:0;background:white;box-sizing:border-box;';
+  const iframeWidth = isFinancialStatement ? '297mm' : '210mm';
 
   document.getElementById('print-root-temp')?.remove();
   document.body.classList.remove('is-printing');
@@ -90,7 +92,7 @@ export function printElement(elementId, options = {}) {
     position: 'fixed',
     left: '-20000px',
     top: '0',
-    width: '210mm',
+    width: iframeWidth,
     height: '4000px',
     border: 'none',
   });
@@ -108,7 +110,7 @@ export function printElement(elementId, options = {}) {
         <meta charset="UTF-8" />
         <title>Print</title>
         <style>
-          @page { size: A4; margin: ${pageMargin}; }
+          @page { size: ${isFinancialStatement ? 'A4 landscape' : 'A4'}; margin: ${pageMargin}; }
           * {
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
@@ -489,6 +491,177 @@ export function printElement(elementId, options = {}) {
           .estimate-print-page.estimate-print-compact td,
           .estimate-print-page.estimate-print-compact th { padding-top: 2px !important; padding-bottom: 2px !important; font-size: 9px !important; }
           .estimate-print-page.estimate-print-compact .estimate-print-meta-grid > div { padding: 4px !important; }
+          ` : ''}
+          ${isFinancialStatement ? `
+          @page { size: A4 landscape; margin: 4mm !important; background: white; }
+          html, body, body > div, .financial-statement-print {
+            background: #ffffff !important;
+            width: 100% !important;
+            max-width: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: visible !important;
+          }
+          .financial-statement-print {
+            padding: 2mm 3mm !important;
+          }
+          .financial-statement-print .overflow-x-auto,
+          .financial-statement-print .financial-statement-table-wrap {
+            overflow: visible !important;
+            min-height: 0 !important;
+          }
+          .financial-statement-print .financial-statement-header {
+            background: #eef2ff !important;
+            border-bottom: 1px solid #c7d2fe !important;
+            padding: 4mm 3mm !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          .financial-statement-print .financial-statement-header-grid {
+            display: grid !important;
+            grid-template-columns: 1fr 42% !important;
+            grid-template-rows: auto auto !important;
+            column-gap: 5mm !important;
+            row-gap: 3mm !important;
+            align-items: start !important;
+          }
+          .financial-statement-print .financial-statement-doc-title-block {
+            grid-column: 2 !important;
+            grid-row: 1 !important;
+            display: block !important;
+            width: 100% !important;
+            text-align: right !important;
+            margin: 0 !important;
+            padding: 3mm 2mm !important;
+            border-top: 2px solid #4338ca !important;
+            border-bottom: 2px solid #4338ca !important;
+            background: transparent !important;
+            box-sizing: border-box !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          .financial-statement-print .financial-statement-company {
+            grid-column: 1 !important;
+            grid-row: 2 !important;
+            flex: none !important;
+            max-width: none !important;
+          }
+          .financial-statement-print .financial-statement-bank {
+            grid-column: 2 !important;
+            grid-row: 2 !important;
+            text-align: right !important;
+          }
+          .financial-statement-print .financial-statement-company h3 {
+            margin: 0 0 1mm 0 !important;
+            font-size: 16px !important;
+            font-weight: 900 !important;
+            line-height: 1.15 !important;
+            color: #111827 !important;
+            text-transform: uppercase !important;
+          }
+          .financial-statement-print .financial-statement-company p,
+          .financial-statement-print .financial-statement-bank p {
+            margin: 0.5mm 0 !important;
+            font-size: 9px !important;
+            line-height: 1.35 !important;
+            color: #1f2937 !important;
+            font-weight: 600 !important;
+          }
+          .financial-statement-print .financial-statement-doc-title-line {
+            display: block !important;
+            text-align: right !important;
+            font-size: 20px !important;
+            font-weight: 900 !important;
+            letter-spacing: 0.35em !important;
+            line-height: 1.3 !important;
+            color: #1e1b4b !important;
+            margin: 0 !important;
+            padding-right: 0.15em !important;
+            text-transform: uppercase !important;
+          }
+          .financial-statement-print .financial-statement-doc-title-line-second {
+            margin-top: 2mm !important;
+          }
+          .financial-statement-print .financial-statement-bank-label {
+            color: #4338ca !important;
+            font-size: 9px !important;
+            font-weight: 900 !important;
+            letter-spacing: 0.1em !important;
+            text-transform: uppercase !important;
+            margin-bottom: 1.5mm !important;
+          }
+          .financial-statement-print .financial-statement-muted {
+            color: #6b7280 !important;
+            font-weight: 700 !important;
+          }
+          .financial-statement-print .financial-statement-strong,
+          .financial-statement-print .financial-statement-label {
+            color: #111827 !important;
+            font-weight: 900 !important;
+          }
+          .financial-statement-print .financial-statement-summary-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            gap: 2mm !important;
+            margin-top: 2mm !important;
+            padding-top: 2mm !important;
+          }
+          .financial-statement-print .financial-statement-summary-grid > div {
+            padding: 2mm !important;
+          }
+          .financial-statement-print svg,
+          .financial-statement-print .lucide {
+            display: none !important;
+          }
+          .financial-statement-table {
+            width: 100% !important;
+            max-width: 100% !important;
+            table-layout: fixed !important;
+            border-collapse: collapse !important;
+            font-size: 12px !important;
+            line-height: 1.35 !important;
+          }
+          .financial-statement-table th,
+          .financial-statement-table td {
+            padding: 3px 4px !important;
+            white-space: normal !important;
+            word-break: break-word !important;
+            overflow-wrap: anywhere !important;
+            vertical-align: top !important;
+            font-size: 12px !important;
+          }
+          .financial-statement-col-value-date {
+            display: none !important;
+          }
+          .financial-statement-table .financial-statement-col-particulars {
+            width: 28% !important;
+          }
+          .financial-statement-print .financial-statement-footer {
+            padding: 2mm 2mm !important;
+            font-size: 7px !important;
+          }
+          .financial-statement-print .financial-statement-totals {
+            padding: 2mm !important;
+            gap: 2mm !important;
+            grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+          }
+          .financial-statement-print .financial-statement-totals p {
+            font-size: 7px !important;
+          }
+          .financial-statement-table thead {
+            display: table-header-group !important;
+          }
+          .financial-statement-table tr {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+          .financial-statement-table th {
+            background-color: #4338ca !important;
+            color: #fff !important;
+            font-size: 11px !important;
+            letter-spacing: 0 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
           ` : ''}
         </style>
       </head>
