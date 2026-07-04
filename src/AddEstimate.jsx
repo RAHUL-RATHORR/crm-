@@ -6,6 +6,8 @@ import { Plus, Trash2, X, Printer, UserPlus } from 'lucide-react';
 import { buildPartySuggestions, partyNameExists } from './utils/partySuggestions';
 import { masterItemToLineFields } from './utils/itemSuggestions';
 import ItemDescriptionInput from './components/ItemDescriptionInput';
+import { useMasterItemsAutoSave } from './hooks/useMasterItemsAutoSave';
+import { setStoredItemNotes, mapLineItemsForSave } from './utils/itemNoteStorage';
 import PaymentTypeSection from './components/PaymentTypeSection';
 import { usePaymentTypes } from './utils/usePaymentTypes';
 
@@ -24,6 +26,7 @@ const API_BASE_URL = window.location.hostname === 'localhost' || window.location
 const defaultEstimateItem = () => ({
   id: Date.now() + Math.random(),
   description: '',
+  descriptionNote: '',
   hsn: '',
   qty: 0,
   rate: 0,
@@ -47,6 +50,7 @@ const normalizeEstimateItems = (editData) => {
     return editData.items.map((item) => calcEstimateItem({
       ...item,
       id: item.id || item._id || Date.now() + Math.random(),
+      descriptionNote: item.descriptionNote || '',
       hsn: item.hsn || '',
       per: item.per ?? 'PCS',
       gstPercent: item.gstPercent ?? editData.gstPercent ?? 18,
@@ -220,7 +224,11 @@ const AddEstimate = () => {
         if (item.id !== id) return item;
         return calcEstimateItem({
           ...item,
-          ...masterItemToLineFields(masterItem, { includeHsn: true }),
+          ...masterItemToLineFields(masterItem, {
+            includeHsn: true,
+            currentQty: item.qty,
+            existingNote: item.descriptionNote,
+          }),
         });
       }),
     );
@@ -237,6 +245,8 @@ const AddEstimate = () => {
   };
 
   const computedItems = useMemo(() => items.map((item) => calcEstimateItem(item)), [items]);
+
+  useMasterItemsAutoSave(computedItems, masterItems, setMasterItems, API_BASE_URL);
 
   const subTotal = computedItems.reduce((sum, item) => sum + (item.total || 0), 0);
   const itemsGstAmount = computedItems.reduce((sum, item) => sum + (item.gstAmount || 0), 0);
@@ -296,10 +306,7 @@ const AddEstimate = () => {
       partyGst: formData.partyGst,
       address: formData.partyAddress,
       gstNo: formData.partyGst,
-      items: computedItems.map((item) => ({
-        ...item,
-        per: String(item.per ?? '').trim() || 'PCS',
-      })),
+      items: mapLineItemsForSave(computedItems),
       subTotal,
       freight,
       reverseCharge: formData.reverseCharge || 'No',
@@ -336,7 +343,13 @@ const AddEstimate = () => {
       throw new Error(errorData.error || 'Failed to save estimate');
     }
 
-    return response.json();
+    const saved = await response.json();
+    const savedItems = mapLineItemsForSave(computedItems).map((item, index) => ({
+      ...item,
+      descriptionNote: computedItems[index]?.descriptionNote || item.descriptionNote || '',
+    }));
+    setStoredItemNotes(saved._id, saved.quoteNumber, savedItems);
+    return { ...saved, items: savedItems };
   };
 
   const handleSubmit = async (e) => {
@@ -547,7 +560,9 @@ const AddEstimate = () => {
                     <td className="px-6 py-4">
                       <ItemDescriptionInput
                         value={item.description}
+                        note={item.descriptionNote || ''}
                         onChange={(value) => handleItemChange(item.id, 'description', value)}
+                        onNoteChange={(value) => handleItemChange(item.id, 'descriptionNote', value)}
                         onSelectMaster={(masterItem) => applyMasterItemToRow(item.id, masterItem)}
                         masterItems={masterItems}
                         required

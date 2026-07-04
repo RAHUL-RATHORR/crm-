@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 
 const itemSchema = new mongoose.Schema({
   description: { type: String, default: '' },
+  descriptionNote: { type: String, default: '' },
   hsn: { type: String, default: '' },
   qty: { type: Number, default: 0 },
   rate: { type: Number, default: 0 },

@@ -70,7 +70,6 @@ export const getDefaultRoute = () => {
   if (hasPermission('paperStock', 'view')) return '/paper-stock';
   if (hasPermission('statements', 'view')) return '/statements/invoice';
   if (hasPermission('estimates', 'view')) return '/estimates';
-  if (hasPermission('itemList', 'view')) return '/item-list';
   return '/contact-support';
 };
 

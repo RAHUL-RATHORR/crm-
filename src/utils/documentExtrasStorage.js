@@ -1,4 +1,5 @@
 import { mergePaymentType } from './paymentTypeStorage';
+import { mergeItemNotes } from './itemNoteStorage';
 
 const STORAGE_KEY = 'crm_doc_extras';
 
@@ -36,6 +37,7 @@ export function setStoredDocumentExtras(id, docNo, extras = {}) {
     vehicleNo: extras.vehicleNo != null ? String(extras.vehicleNo) : '',
     state: extras.state != null ? String(extras.state) : '',
     stateCode: extras.stateCode != null ? String(extras.stateCode) : '',
+    freight: extras.freight != null ? Number(extras.freight) || 0 : 0,
   };
   storageKeys(id, docNo).forEach((key) => {
     map[key] = value;
@@ -63,6 +65,7 @@ export function mergeDocumentExtras(doc) {
     vehicleNo: doc.vehicleNo || stored.vehicleNo || '',
     state: doc.state || stored.state || '',
     stateCode: doc.stateCode || stored.stateCode || '',
+    freight: Number(doc.freight) > 0 ? Number(doc.freight) : (Number(stored.freight) || Number(doc.freight) || 0),
   };
 }
 
@@ -73,17 +76,28 @@ export function mergeDocumentExtrasList(docs) {
 export function mergePrintDoc(base, printDoc) {
   if (!base) return printDoc;
   if (!printDoc) return base;
+
+  const mergedItems = (base.items || printDoc.items || []).map((item, index) => {
+    const printItem = printDoc.items?.[index];
+    return {
+      ...item,
+      descriptionNote: item.descriptionNote || printItem?.descriptionNote || '',
+    };
+  });
+
   return {
     ...base,
     paymentType: base.paymentType || printDoc.paymentType || '',
     vehicleNo: base.vehicleNo || printDoc.vehicleNo || '',
     state: base.state || printDoc.state || '',
     stateCode: base.stateCode || printDoc.stateCode || '',
+    freight: Number(base.freight) > 0 ? Number(base.freight) : (Number(printDoc.freight) || Number(base.freight) || 0),
+    items: mergedItems.length ? mergedItems : (base.items || printDoc.items),
   };
 }
 
 export function mergeDocumentForPrint(doc) {
-  return mergeDocumentExtras(mergePaymentType(doc));
+  return mergeItemNotes(mergeDocumentExtras(mergePaymentType(doc)));
 }
 
 export function mergeDocumentForPrintList(docs) {

@@ -10,13 +10,11 @@ import {
   Wallet,
   Layers,
   FileLock,
-  MoreHorizontal,
   ChevronDown,
   List,
   PlusSquare,
   Calculator,
   Settings,
-  Package,
   ChevronRight,
   Building,
   Menu as MenuIcon,
@@ -475,44 +473,24 @@ export default function App() {
         { label: 'Paper Stock Statements', icon: Layers, onClick: () => navigate('/statements/paper-stock') },
       ],
     },
-    {
-      name: 'More',
-      icon: MoreHorizontal,
-      isDropdown: true,
-      dropdownItems: [
-        { label: 'Estimate/Quotation', icon: Calculator, onClick: () => navigate('/estimates') },
-        { label: 'Item List', icon: Package, onClick: () => navigate('/item-list') },
-      ],
-    },
+    { name: 'Estimate & Quotation', icon: Calculator, path: '/estimates' },
   ];
 
-  const navigationItems = allNavigationItems
-    .map((item) => {
-      if (!item.isDropdown) return item;
-      if (item.name === 'More') {
-        const dropdownItems = item.dropdownItems.filter((sub) => {
-          if (sub.label.includes('Estimate')) return hasPermission('estimates', 'view');
-          if (sub.label.includes('Item List')) return hasPermission('itemList', 'view');
-          return true;
-        });
-        return { ...item, dropdownItems };
-      }
-      return item;
-    })
-    .filter((item) => {
-      if (item.name === 'Dashboard') return canAccessDashboard();
-      const moduleByName = {
-        'Job Card': 'jobCard',
-        Invoices: 'invoice',
-        Challan: 'challan',
-        Payments: 'payments',
-        'Paper Stock': 'paperStock',
-        Statements: 'statements',
-      };
-      if (item.name === 'More') return item.dropdownItems.length > 0;
-      const moduleKey = moduleByName[item.name];
-      return !moduleKey || hasPermission(moduleKey, 'view');
-    });
+  const navigationItems = allNavigationItems.filter((item) => {
+    if (item.name === 'Dashboard') return canAccessDashboard();
+    const moduleByName = {
+      'Job Card': 'jobCard',
+      Invoices: 'invoice',
+      Challan: 'challan',
+      Payments: 'payments',
+      'Paper Stock': 'paperStock',
+      Statements: 'statements',
+      'Estimate & Quotation': 'estimates',
+    };
+    if (item.isDropdown && item.dropdownItems.length === 0) return false;
+    const moduleKey = moduleByName[item.name];
+    return !moduleKey || hasPermission(moduleKey, 'view');
+  });
 
   const moduleByNavName = {
     'Job Card': 'jobCard',
@@ -521,7 +499,7 @@ export default function App() {
     Payments: 'payments',
     'Paper Stock': 'paperStock',
     Statements: 'statements',
-    More: null,
+    'Estimate & Quotation': 'estimates',
   };
 
   const displayNavigationItems = isAdminUser()
@@ -543,7 +521,6 @@ export default function App() {
               : sub.label.includes('Invoice') ? '/invoice'
               : sub.label.includes('Challan') ? '/challan'
               : sub.label.includes('Estimate') ? '/estimates'
-              : sub.label.includes('Item List') ? '/item-list'
               : sub.label.includes('Paper Stock') ? '/statements/paper-stock'
               : sub.label.includes('Statements') ? '/statements'
               : '',
@@ -676,11 +653,7 @@ export default function App() {
                     (item.name === 'Job Card' && location.pathname.includes('/job-card')) ||
                     (item.name === 'Invoices' && location.pathname.includes('/invoice')) ||
                     (item.name === 'Challan' && location.pathname.includes('/challan')) ||
-                    (item.name === 'Statements' && location.pathname.includes('/statements')) ||
-                    (item.name === 'More' && (
-                      location.pathname.includes('/estimates')
-                      || location.pathname.includes('/item-list')
-                    ))
+                    (item.name === 'Statements' && location.pathname.includes('/statements'))
                   }
                 />
               );

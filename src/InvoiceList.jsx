@@ -10,10 +10,11 @@ import {
   mergePrintDoc,
   removeStoredDocumentExtras,
 } from './utils/documentExtrasStorage';
+import { mergeItemNotes, mergeItemNotesList, removeStoredItemNotes } from './utils/itemNoteStorage';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
 import { getBillToDetails, getShipToDetails } from './utils/shipAddress';
 import { numberToWords } from './utils/numberToWords';
-import { SELLER, fmtTaxDate, fmtAmt, getStateFromGst, formatStateWithCode, TaxFieldsTable, SellerGstinMsmeLines, buildTaxItemLine, getEmptyProductRowCount, CompanyBrandName, TaxCopyBox, TaxCopyTypeControls, DEFAULT_TAX_COPY_SELECTION, getSelectedCopyIds, getPreviewHighlightCopy, TaxInvoiceColGroup, getTaxTableColCount, getTaxTableHalfColSpans, getTaxChargeSubRowCount, TaxClassicItemsBlock, buildTaxAnalysisGroups, TaxAnalysisSection, MIN_PRODUCT_TABLE_ROWS } from './utils/taxDocumentPrint';
+import { SELLER, fmtTaxDate, fmtAmt, getStateFromGst, formatStateWithCode, TaxFieldsTable, SellerGstinMsmeLines, TaxTermsAndReceiverSignature, TaxBankAndAuthorisedSignature, buildTaxItemLine, getEmptyProductRowCount, CompanyBrandName, TaxCopyBox, TaxCopyTypeControls, DEFAULT_TAX_COPY_SELECTION, getSelectedCopyIds, getPreviewHighlightCopy, TaxInvoiceColGroup, getTaxTableColCount, getTaxTableHalfColSpans, getTaxChargeSubRowCount, TaxClassicItemsBlock, buildTaxAnalysisGroups, TaxAnalysisSection, MIN_PRODUCT_TABLE_ROWS } from './utils/taxDocumentPrint';
 
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'https://crm-qpw8.onrender.com'
@@ -134,6 +135,7 @@ const InvoiceList = () => {
           const deleted = invoices.find((inv) => inv._id === invoiceToDelete);
           removeStoredPaymentType(invoiceToDelete, deleted?.invoiceNumber);
           removeStoredDocumentExtras(invoiceToDelete, deleted?.invoiceNumber);
+          removeStoredItemNotes(invoiceToDelete, deleted?.invoiceNumber);
           fetchInvoice();
           setIsDeleteModalOpen(false);
           setInvoiceToDelete(null);
@@ -309,7 +311,7 @@ const InvoiceList = () => {
                             <Printer size={16} />
                           </button>
                           <button
-                            onClick={() => navigate('/invoice/add', { state: { editData: inv } })}
+                            onClick={() => navigate('/invoice/add', { state: { editData: mergeDocumentForPrint(inv) } })}
                             className="bg-teal-50 text-teal-600 p-2 rounded-lg hover:bg-teal-100 transition-all active:scale-90"
                             title="Edit invoice"
                           >
@@ -526,28 +528,11 @@ const InvoiceList = () => {
 
                     {/* Terms + Bank / Signature */}
                     <tr>
-                      <td colSpan={taxHalfColSpan} className="tax-cell align-top p-1">
-                        <p className="tax-section-title mb-1">Terms And Conditions</p>
-                        <ol className="tax-terms-list">
-                          <li>Goods once sold will not be taken back.</li>
-                          <li>Any Dispute Shall Subject to Jaipur Jurisdiction.</li>
-                          <li>E.&amp;O.E.</li>
-                          <li>The company is not responsible for any transit damage or loss.</li>
-                          <li>All Goods Return / Replace only if damage by company transport.</li>
-                        </ol>
+                      <td colSpan={taxHalfColSpan} className="tax-cell tax-footer-cell align-top p-1">
+                        <TaxTermsAndReceiverSignature />
                       </td>
-                      <td colSpan={taxHalfColSpanRight} className="tax-cell align-top p-1">
-                        <p className="tax-section-title mb-1">Bank Details</p>
-                        <TaxFieldsTable rows={[
-                          ['Account Holder Name', SELLER.bank.holder],
-                          ['Bank Account Number', SELLER.bank.account],
-                          ['Bank IFSC Code', SELLER.bank.ifsc],
-                          ['Bank Name', SELLER.bank.name],
-                          ['Bank Branch Name', SELLER.bank.branch],
-                        ]} />
-                        <p className="tax-section-title text-right mt-2">For, {SELLER.name}</p>
-                        <div className="tax-sign-space">&nbsp;</div>
-                        <p className="text-right tax-section-title">Authorised Signatory</p>
+                      <td colSpan={taxHalfColSpanRight} className="tax-cell tax-footer-cell align-top p-1">
+                        <TaxBankAndAuthorisedSignature />
                       </td>
                     </tr>
                   </tbody>

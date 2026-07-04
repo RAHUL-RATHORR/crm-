@@ -6,10 +6,12 @@ import { Plus, Trash2, X, Printer, UserPlus } from 'lucide-react';
 import { buildPartySuggestions, partyNameExists } from './utils/partySuggestions';
 import { masterItemToLineFields } from './utils/itemSuggestions';
 import ItemDescriptionInput from './components/ItemDescriptionInput';
+import { useMasterItemsAutoSave } from './hooks/useMasterItemsAutoSave';
 import PaymentTypeSection from './components/PaymentTypeSection';
 import { usePaymentTypes } from './utils/usePaymentTypes';
 import { getStoredPaymentType, setStoredPaymentType } from './utils/paymentTypeStorage';
 import { setStoredDocumentExtras, getStoredDocumentExtras } from './utils/documentExtrasStorage';
+import { setStoredItemNotes, mapLineItemsForSave } from './utils/itemNoteStorage';
 import { validateStateAndCode } from './utils/indianStateCodes';
 
 const EMPTY_PARTY_FORM = {
@@ -27,6 +29,7 @@ const API_BASE_URL = window.location.hostname === 'localhost' || window.location
 const defaultInvoiceItem = () => ({
   id: Date.now() + Math.random(),
   description: '',
+  descriptionNote: '',
   hsn: '',
   qty: 0,
   rate: 0,
@@ -50,6 +53,7 @@ const normalizeInvoiceItems = (editData) => {
     return editData.items.map((item) => calcInvoiceItem({
       ...item,
       id: item.id || item._id || Date.now() + Math.random(),
+      descriptionNote: item.descriptionNote || '',
       hsn: item.hsn || '',
       per: item.per ?? 'PCS',
       gstPercent: item.gstPercent ?? editData.gstPercent ?? 18,
@@ -81,7 +85,7 @@ const AddInvoice = () => {
     partyEmail: editData?.partyEmail || '',
     partyGst: editData?.partyGst || '',
     gstType: editData ? (editData.gstType || 'CGST/SGST') : 'CGST/SGST',
-    freight: editData ? (editData.freight || 0) : 0,
+    freight: editData ? (editData.freight ?? storedExtras?.freight ?? 0) : 0,
     reverseCharge: editData ? (editData.reverseCharge || 'No') : 'No',
     paymentType: editData?.paymentType || getStoredPaymentType(editData?._id, editData?.invoiceNumber) || '',
     vehicleNo: editData?.vehicleNo || storedExtras?.vehicleNo || '',
@@ -231,7 +235,11 @@ const AddInvoice = () => {
         if (item.id !== id) return item;
         return calcInvoiceItem({
           ...item,
-          ...masterItemToLineFields(masterItem, { includeHsn: true }),
+          ...masterItemToLineFields(masterItem, {
+            includeHsn: true,
+            currentQty: item.qty,
+            existingNote: item.descriptionNote,
+          }),
         });
       })
     );
@@ -248,6 +256,8 @@ const AddInvoice = () => {
   };
 
   const computedItems = useMemo(() => items.map((item) => calcInvoiceItem(item)), [items]);
+
+  useMasterItemsAutoSave(computedItems, masterItems, setMasterItems, API_BASE_URL);
 
   const subTotal = computedItems.reduce((sum, item) => sum + (item.total || 0), 0);
   const itemsGstAmount = computedItems.reduce((sum, item) => sum + (item.gstAmount || 0), 0);
@@ -299,10 +309,7 @@ const AddInvoice = () => {
     partyContact: formData.partyContact,
     partyEmail: formData.partyEmail,
     partyGst: formData.partyGst,
-    items: computedItems.map((item) => ({
-      ...item,
-      per: String(item.per ?? '').trim() || 'PCS',
-    })),
+    items: mapLineItemsForSave(computedItems),
     subTotal,
     freight,
     reverseCharge: formData.reverseCharge || 'No',
@@ -341,9 +348,21 @@ const AddInvoice = () => {
       vehicleNo: saved.vehicleNo || formData.vehicleNo || '',
       state: saved.state || formData.state || 'Rajasthan',
       stateCode: saved.stateCode || formData.stateCode || '08',
+      freight: Number(saved.freight) || Number(formData.freight) || 0,
     };
     setStoredDocumentExtras(saved._id, saved.invoiceNumber, extras);
-    return { ...saved, paymentType, ...extras };
+    setStoredItemNotes(saved._id, saved.invoiceNumber, computedItems);
+    const savedItems = mapLineItemsForSave(computedItems).map((item, index) => ({
+      ...item,
+      descriptionNote: computedItems[index]?.descriptionNote || item.descriptionNote || '',
+    }));
+    return {
+      ...saved,
+      paymentType,
+      ...extras,
+      freight: extras.freight,
+      items: savedItems,
+    };
   };
 
   const handleSubmit = async (e) => {
@@ -609,7 +628,9 @@ const AddInvoice = () => {
                     <td className="px-6 py-4">
                       <ItemDescriptionInput
                         value={item.description}
+                        note={item.descriptionNote || ''}
                         onChange={(value) => handleItemChange(item.id, 'description', value)}
+                        onNoteChange={(value) => handleItemChange(item.id, 'descriptionNote', value)}
                         onSelectMaster={(masterItem) => applyMasterItemToRow(item.id, masterItem)}
                         masterItems={masterItems}
                         required

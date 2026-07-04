@@ -16,6 +16,7 @@ const challanSchema = new mongoose.Schema({
   rate: { type: Number, default: 0 },
   items: [{
     description: { type: String, required: true },
+    descriptionNote: { type: String, default: '' },
     qty: { type: Number, default: 0 },
     rate: { type: Number, default: 0 },
     per: { type: String, default: 'PCS' },

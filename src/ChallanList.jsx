@@ -10,11 +10,12 @@ import {
   mergePrintDoc,
   removeStoredDocumentExtras,
 } from './utils/documentExtrasStorage';
+import { removeStoredItemNotes } from './utils/itemNoteStorage';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
 import { getBillToDetails, getShipToDetails } from './utils/shipAddress';
 import { numberToWords } from './utils/numberToWords';
 import { getChallanLineItems, computeLineItemsTotals, buildMergedChallanMeta } from './utils/challanTotals';
-import { SELLER, fmtTaxDate, fmtAmt, getStateFromGst, formatStateWithCode, TaxFieldsTable, SellerGstinMsmeLines, buildTaxItemLine, getEmptyProductRowCount, CompanyBrandName, TaxCopyBox, TaxCopyTypeControls, DEFAULT_TAX_COPY_SELECTION, getSelectedCopyIds, getPreviewHighlightCopy, TaxInvoiceColGroup, getTaxTableColCount, getTaxTableHalfColSpans, getTaxChargeSubRowCount, TaxClassicItemsBlock, buildTaxAnalysisGroups, TaxAnalysisSection, MIN_CHALLAN_PRODUCT_TABLE_ROWS } from './utils/taxDocumentPrint';
+import { SELLER, fmtTaxDate, fmtAmt, getStateFromGst, formatStateWithCode, TaxFieldsTable, SellerGstinMsmeLines, TaxTermsAndReceiverSignature, TaxBankAndAuthorisedSignature, buildTaxItemLine, getEmptyProductRowCount, CompanyBrandName, TaxCopyBox, TaxCopyTypeControls, DEFAULT_TAX_COPY_SELECTION, getSelectedCopyIds, getPreviewHighlightCopy, TaxInvoiceColGroup, getTaxTableColCount, getTaxTableHalfColSpans, getTaxChargeSubRowCount, TaxClassicItemsBlock, buildTaxAnalysisGroups, TaxAnalysisSection, MIN_CHALLAN_PRODUCT_TABLE_ROWS } from './utils/taxDocumentPrint';
 
 const ChallanList = () => {
   const navigate = useNavigate();
@@ -144,6 +145,7 @@ const ChallanList = () => {
           const deleted = challans.find((ch) => ch._id === challanToDelete);
           removeStoredPaymentType(challanToDelete, deleted?.challanNo);
           removeStoredDocumentExtras(challanToDelete, deleted?.challanNo);
+          removeStoredItemNotes(challanToDelete, deleted?.challanNo);
           fetchChallans();
           setIsDeleteModalOpen(false);
           setChallanToDelete(null);
@@ -385,7 +387,7 @@ const ChallanList = () => {
                             <Printer size={16} />
                           </button>
                           <button
-                            onClick={() => navigate('/challan/add', { state: { editData: ch } })}
+                            onClick={() => navigate('/challan/add', { state: { editData: mergeDocumentForPrint(ch) } })}
                             className="bg-teal-50 text-teal-600 p-2 rounded-lg hover:bg-teal-100 transition-all active:scale-90"
                             title="Edit challan"
                           >
@@ -589,28 +591,11 @@ const ChallanList = () => {
                     />
 
                     <tr>
-                      <td colSpan={taxHalfColSpan} className="tax-cell align-top p-1">
-                        <p className="tax-section-title mb-1">Terms And Conditions</p>
-                        <ol className="tax-terms-list">
-                          <li>Goods once sold will not be taken back.</li>
-                          <li>Any Dispute Shall Subject to Jaipur Jurisdiction.</li>
-                          <li>E.&amp;O.E.</li>
-                          <li>The company is not responsible for any transit damage or loss.</li>
-                          <li>All Goods Return / Replace only if damage by company transport.</li>
-                        </ol>
+                      <td colSpan={taxHalfColSpan} className="tax-cell tax-footer-cell align-top p-1">
+                        <TaxTermsAndReceiverSignature />
                       </td>
-                      <td colSpan={taxHalfColSpanRight} className="tax-cell align-top p-1">
-                        <p className="tax-section-title mb-1">Bank Details</p>
-                        <TaxFieldsTable rows={[
-                          ['Account Holder Name', SELLER.bank.holder],
-                          ['Bank Account Number', SELLER.bank.account],
-                          ['Bank IFSC Code', SELLER.bank.ifsc],
-                          ['Bank Name', SELLER.bank.name],
-                          ['Bank Branch Name', SELLER.bank.branch],
-                        ]} />
-                        <p className="tax-section-title text-right mt-2">For, {SELLER.name}</p>
-                        <div className="tax-sign-space">&nbsp;</div>
-                        <p className="text-right tax-section-title">Authorised Signatory</p>
+                      <td colSpan={taxHalfColSpanRight} className="tax-cell tax-footer-cell align-top p-1">
+                        <TaxBankAndAuthorisedSignature />
                       </td>
                     </tr>
                   </tbody>

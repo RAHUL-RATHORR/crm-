@@ -5,13 +5,14 @@ import Invoice from '../models/Invoice.js';
 // POST /api/invoice - Create or Update Invoice
 router.post('/', async (req, res) => {
   try {
-    const { invoiceNumber, paymentType, vehicleNo, state, stateCode } = req.body;
+    const { invoiceNumber, paymentType, vehicleNo, state, stateCode, freight } = req.body;
     const payload = {
       ...req.body,
       paymentType: paymentType != null ? String(paymentType) : '',
       vehicleNo: vehicleNo != null ? String(vehicleNo) : '',
       state: state != null ? String(state) : 'Rajasthan',
       stateCode: stateCode != null ? String(stateCode) : '08',
+      freight: Number(freight) || 0,
     };
 
     let invoice;

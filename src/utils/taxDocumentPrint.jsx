@@ -1,5 +1,6 @@
 import React from 'react';
 import { Phone, Mail } from 'lucide-react';
+import { getItemPrintDescription, getItemPrintNote } from './itemSuggestions';
 
 export const SELLER = {
   name: 'HARIHAR PRINTERS',
@@ -79,6 +80,45 @@ export const SellerGstinMsmeLines = () => (
   </>
 );
 
+export const TaxTermsAndReceiverSignature = () => (
+  <div className="tax-footer-col">
+    <div className="tax-footer-col-top">
+      <p className="tax-section-title mb-1">Terms And Conditions</p>
+      <ol className="tax-terms-list">
+        <li>Goods once sold will not be taken back.</li>
+        <li>Any Dispute Shall Subject to Jaipur Jurisdiction.</li>
+        <li>E.&amp;O.E.</li>
+        <li>The company is not responsible for any transit damage or loss.</li>
+        <li>All Goods Return / Replace only if damage by company transport.</li>
+      </ol>
+    </div>
+    <div className="tax-footer-sign-block">
+      <div className="tax-sign-space">&nbsp;</div>
+      <p className="tax-section-title">Receiver signature</p>
+    </div>
+  </div>
+);
+
+export const TaxBankAndAuthorisedSignature = () => (
+  <div className="tax-footer-col">
+    <div className="tax-footer-col-top">
+      <p className="tax-section-title mb-1">Bank Details</p>
+      <TaxFieldsTable rows={[
+        ['Account Holder Name', SELLER.bank.holder],
+        ['Bank Account Number', SELLER.bank.account],
+        ['Bank IFSC Code', SELLER.bank.ifsc],
+        ['Bank Name', SELLER.bank.name],
+        ['Bank Branch Name', SELLER.bank.branch],
+      ]} />
+    </div>
+    <div className="tax-footer-sign-block tax-footer-sign-block-right">
+      <p className="tax-section-title text-right">For, {SELLER.name}</p>
+      <div className="tax-sign-space">&nbsp;</div>
+      <p className="text-right tax-section-title">Authorised Signatory</p>
+    </div>
+  </div>
+);
+
 export const buildTaxItemLine = (item, idx, fallbackGst = 18, isIGST = false) => {
   const taxable = Number(item.total) || Number(item.qty || 0) * Number(item.rate || 0);
   const pct = Number(item.gstPercent ?? fallbackGst);
@@ -151,12 +191,26 @@ export const ClassicTaxItemsHeader = () => (
   </tr>
 );
 
+export const ItemPrintDescription = ({ item }) => {
+  const description = getItemPrintDescription(item);
+  const note = getItemPrintNote(item);
+  if (!note) return description;
+  return (
+    <div className="tax-item-print-desc">
+      <div>{description}</div>
+      <div className="tax-item-print-note">{note}</div>
+    </div>
+  );
+};
+
 export const ClassicTaxItemRow = ({ row, isIGST = false, children, stripeClass = 'tax-items-stripe-row tax-stripe-white' }) => {
   const gstPercent = isIGST ? row.igstRate : row.cgstRate + row.sgstRate;
   return (
     <tr className={`tax-item-main-row ${stripeClass}`}>
       <td className="tax-cell text-center align-top tax-item-value">{row.idx}</td>
-      <td className="tax-cell align-top tax-item-name">{children || row.item.description}</td>
+      <td className="tax-cell align-top tax-item-name">
+        {children || <ItemPrintDescription item={row.item} />}
+      </td>
       <td className="tax-cell text-center align-top tax-item-value">{row.item.hsn || ''}</td>
       <td className="tax-cell text-center align-top tax-item-value">{gstPercent} %</td>
       <td className="tax-cell text-right align-top tax-item-value">{fmtAmt(row.item.rate)}</td>
@@ -475,7 +529,7 @@ export const TaxItemGstChargeRows = ({ freight = 0, totalCgst = 0, totalSgst = 0
   return (
     <>
       {freight > 0 && (
-        <TaxChargeSubRow label="Transportation Outward Gst" amount={freight} stripeClass={stripe()} isTransport />
+        <TaxChargeSubRow label="Freight" amount={freight} stripeClass={stripe()} isTransport />
       )}
       {isIGST ? (
         <TaxChargeSubRow label="IGST Integrated Gst" amount={totalIgst} stripeClass={stripe()} />

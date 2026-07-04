@@ -6,10 +6,12 @@ import { X, Printer, UserPlus, Plus, Trash2 } from 'lucide-react';
 import { buildPartySuggestions, partyNameExists } from './utils/partySuggestions';
 import { masterItemToLineFields } from './utils/itemSuggestions';
 import ItemDescriptionInput from './components/ItemDescriptionInput';
+import { useMasterItemsAutoSave } from './hooks/useMasterItemsAutoSave';
 import PaymentTypeSection from './components/PaymentTypeSection';
 import { usePaymentTypes } from './utils/usePaymentTypes';
 import { getStoredPaymentType, setStoredPaymentType } from './utils/paymentTypeStorage';
 import { setStoredDocumentExtras, getStoredDocumentExtras } from './utils/documentExtrasStorage';
+import { setStoredItemNotes, mapLineItemsForSave } from './utils/itemNoteStorage';
 import { validateStateAndCode } from './utils/indianStateCodes';
 
 const EMPTY_PARTY_FORM = {
@@ -41,7 +43,16 @@ const itemFromJobCard = (card) => ({
   jobNumber: card.jobNumber || '',
 });
 
-const defaultItem = () => ({ description: '', qty: 0, rate: 0, per: 'PCS', gstPercent: 18, total: 0, gstAmount: 0 });
+const defaultItem = () => ({
+  description: '',
+  descriptionNote: '',
+  qty: 0,
+  rate: 0,
+  per: 'PCS',
+  gstPercent: 18,
+  total: 0,
+  gstAmount: 0,
+});
 
 const backfillItemForEdit = (item, editData) => {
   const total = Number(item.total) || 0;
@@ -53,6 +64,7 @@ const backfillItemForEdit = (item, editData) => {
   }
   return {
     description: item.description || '',
+    descriptionNote: item.descriptionNote || '',
     qty,
     rate,
     per: item.per ?? 'PCS',
@@ -127,7 +139,7 @@ const AddChallan = () => {
     total: editData ? editData.total : 0,
     gstAmount: editData ? (editData.gstAmount || 0) : 0,
     grandTotal: editData ? (editData.grandTotal || editData.total || 0) : 0,
-    freight: editData ? (editData.freight || 0) : 0,
+    freight: editData ? (editData.freight ?? storedExtras?.freight ?? 0) : 0,
     gstType: editData ? (editData.gstType || 'CGST/SGST') : 'CGST/SGST',
     reverseCharge: editData ? (editData.reverseCharge || 'No') : 'No',
     note: editData ? editData.note : '',
@@ -153,6 +165,8 @@ const AddChallan = () => {
     const roundOff = grandTotal - rawGrandTotal;
     return { items, subTotal, freight, gstAmount, halfGst, grandTotal, roundOff };
   }, [formData.items, formData.freight]);
+
+  useMasterItemsAutoSave(totals.items, masterItems, setMasterItems, API_BASE_URL);
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/api/jobcard`)
@@ -325,11 +339,15 @@ const AddChallan = () => {
 
   const applyMasterItemToRow = (index, masterItem) => {
     const updatedItems = [...formData.items];
-    updatedItems[index] = {
+    updatedItems[index] = calcItemTotals({
       ...updatedItems[index],
-      ...masterItemToLineFields(masterItem, { includeHsn: false }),
-    };
-    setFormData(prev => ({ ...prev, items: updatedItems }));
+      ...masterItemToLineFields(masterItem, {
+        includeHsn: false,
+        currentQty: updatedItems[index].qty,
+        existingNote: updatedItems[index].descriptionNote,
+      }),
+    });
+    setFormData((prev) => ({ ...prev, items: updatedItems }));
   };
 
   const addItem = () => {
@@ -397,10 +415,7 @@ const AddChallan = () => {
       partyContact: formData.partyContact,
       partyEmail: formData.partyEmail,
       partyGst: formData.partyGst,
-      items: computedItems.map((item) => ({
-        ...item,
-        per: String(item.per ?? '').trim() || 'PCS',
-      })),
+      items: mapLineItemsForSave(computedItems),
       total: totals.subTotal,
       freight: totals.freight,
       gstPercent: invoiceGstPercent,
@@ -444,9 +459,21 @@ const AddChallan = () => {
       vehicleNo: saved.vehicleNo || formData.vehicleNo || '',
       state: saved.state || formData.state || 'Rajasthan',
       stateCode: saved.stateCode || formData.stateCode || '08',
+      freight: Number(saved.freight) || Number(formData.freight) || 0,
     };
     setStoredDocumentExtras(saved._id, saved.challanNo, extras);
-    return { ...saved, paymentType, ...extras };
+    const savedItems = mapLineItemsForSave(formData.items.map(calcItemTotals)).map((item, index) => ({
+      ...item,
+      descriptionNote: formData.items[index]?.descriptionNote || item.descriptionNote || '',
+    }));
+    setStoredItemNotes(saved._id, saved.challanNo, savedItems);
+    return {
+      ...saved,
+      paymentType,
+      ...extras,
+      freight: extras.freight,
+      items: savedItems,
+    };
   };
 
   const handleSubmit = async (e) => {
@@ -758,7 +785,9 @@ const AddChallan = () => {
                     <td className="px-6 py-4">
                       <ItemDescriptionInput
                         value={item.description}
+                        note={formData.items[index]?.descriptionNote || ''}
                         onChange={(value) => handleItemChange(index, 'description', value)}
+                        onNoteChange={(value) => handleItemChange(index, 'descriptionNote', value)}
                         onSelectMaster={(masterItem) => applyMasterItemToRow(index, masterItem)}
                         masterItems={masterItems}
                         required

@@ -5,13 +5,14 @@ import Challan from '../models/Challan.js';
 // POST /api/challan - Create or Update Challan
 router.post('/', async (req, res) => {
   try {
-    const { challanNo, paymentType, vehicleNo, state, stateCode } = req.body;
+    const { challanNo, paymentType, vehicleNo, state, stateCode, freight } = req.body;
     const payload = {
       ...req.body,
       paymentType: paymentType != null ? String(paymentType) : '',
       vehicleNo: vehicleNo != null ? String(vehicleNo) : '',
       state: state != null ? String(state) : 'Rajasthan',
       stateCode: stateCode != null ? String(stateCode) : '08',
+      freight: Number(freight) || 0,
     };
 
     let challan;
