@@ -70,9 +70,10 @@ export function printElement(elementId, options = {}) {
   }
 
   const isJobCard = elementId === 'printable-inner';
-  const isTaxInvoice = elementId === 'printable-invoice' || elementId === 'printable-challan' || elementId === 'printable-inner' || element.classList.contains('tax-invoice-print-page');
+  const isEstimate = elementId === 'printable-estimate' || element.classList.contains('estimate-print-page');
+  const isTaxInvoice = elementId === 'printable-invoice' || elementId === 'printable-challan' || elementId === 'printable-inner' || elementId === 'printable-estimate' || element.classList.contains('tax-invoice-print-page') || element.classList.contains('estimate-print-page');
   const isChallan = elementId === 'printable-challan' || element.classList.contains('challan-print-page');
-  const isFullWidth = isJobCard || isTaxInvoice || isChallan;
+  const isFullWidth = isJobCard || isTaxInvoice || isChallan || isEstimate;
   const pageMargin = isFullWidth ? '5mm' : '12mm';
   const contentPadding = isFullWidth ? '2mm 3mm' : '6mm 8mm';
   const wrapperStyle = isFullWidth
@@ -437,6 +438,57 @@ export function printElement(elementId, options = {}) {
           .tax-invoice-print-page tr.tax-print-only-signature {
             display: table-row !important;
           }
+          ` : ''}
+          ${isEstimate ? `
+          @page { size: A4; margin: 4mm !important; background: white; }
+          html, body, body > div, .estimate-print-page {
+            background: #ffffff !important;
+            width: 100% !important;
+            max-width: none !important;
+            margin: 0 !important;
+          }
+          .estimate-print-page {
+            width: 100% !important;
+            max-width: none !important;
+            padding: 2mm 3mm !important;
+            margin: 0 !important;
+          }
+          .estimate-print-page tr { page-break-inside: auto !important; break-inside: auto !important; }
+          .estimate-print-page .estimate-print-footer,
+          .estimate-print-page .estimate-print-items-block {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+          .estimate-print-page .estimate-print-header { margin-bottom: 6px !important; }
+          .estimate-print-page .estimate-print-section { margin-bottom: 6px !important; }
+          .estimate-print-page .estimate-print-meta-grid { margin-bottom: 6px !important; }
+          .estimate-print-page .estimate-print-items-block { margin-bottom: 6px !important; min-height: 0 !important; overflow: visible !important; }
+          .estimate-print-page .estimate-print-table { table-layout: fixed !important; width: 100% !important; }
+          .estimate-print-page .estimate-print-desc-col,
+          .estimate-print-page .estimate-print-desc-cell {
+            width: 34% !important;
+            min-width: 90px !important;
+            word-break: break-word !important;
+            overflow: visible !important;
+            visibility: visible !important;
+            color: #000 !important;
+            -webkit-text-fill-color: #000 !important;
+          }
+          .estimate-print-page .estimate-print-item-desc,
+          .estimate-print-page .estimate-print-item-note {
+            color: #000 !important;
+            -webkit-text-fill-color: #000 !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            display: block !important;
+            font-weight: 800 !important;
+          }
+          .estimate-print-page .estimate-print-title { font-size: 22px !important; line-height: 1.1 !important; }
+          .estimate-print-page .estimate-print-footer { margin-top: 8px !important; }
+          .estimate-print-page .estimate-print-empty-row td { padding-top: 4px !important; padding-bottom: 4px !important; }
+          .estimate-print-page.estimate-print-compact td,
+          .estimate-print-page.estimate-print-compact th { padding-top: 2px !important; padding-bottom: 2px !important; font-size: 9px !important; }
+          .estimate-print-page.estimate-print-compact .estimate-print-meta-grid > div { padding: 4px !important; }
           ` : ''}
         </style>
       </head>

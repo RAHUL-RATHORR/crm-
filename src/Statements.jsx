@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Search,
   CreditCard,
@@ -6,6 +6,7 @@ import {
   User,
   Hash,
   ArrowDownCircle,
+  ArrowUpCircle,
   Trash2,
   CheckCircle2,
   AlertCircle,
@@ -16,12 +17,65 @@ import {
   TrendingUp
 } from 'lucide-react';
 
+const buildInvoiceTransactions = (invoices, statements) => {
+  const deductRows = (invoices || []).map((inv) => ({
+    _id: `inv-${inv._id}`,
+    transactionType: 'deduct',
+    date: inv.date || inv.createdAt,
+    invoiceNumber: inv.invoiceNumber,
+    partyName: inv.partyName,
+    amount: Number(inv.totalAmount) || 0,
+    paymentMethod: null,
+    notes: 'Invoice raised',
+    createdAt: inv.createdAt || inv.date,
+  }));
+
+  const addRows = (statements || []).map((stmt) => ({
+    _id: `stmt-${stmt._id}`,
+    sourceId: stmt._id,
+    transactionType: 'add',
+    date: stmt.date,
+    invoiceNumber: stmt.invoiceNumber,
+    partyName: stmt.partyName,
+    amount: Number(stmt.amount) || 0,
+    paymentMethod: stmt.paymentMethod,
+    notes: stmt.notes,
+    createdAt: stmt.createdAt || stmt.date,
+  }));
+
+  const merged = [...deductRows, ...addRows].sort(
+    (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+  );
+
+  let balance = 0;
+  return merged
+    .map((row) => {
+      if (row.transactionType === 'deduct') balance += row.amount;
+      else balance = Math.max(0, balance - row.amount);
+      return { ...row, balanceAfter: balance };
+    })
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+};
+
+const formatDateTime = (value) => {
+  const date = new Date(value);
+  return date.toLocaleString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  });
+};
+
 const Statements = ({ defaultTab = 'transactions' }) => {
   const [statements, setStatements] = useState([]);
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [invoiceSearch, setInvoiceSearch] = useState('');
+  const [invoiceTypeFilter, setInvoiceTypeFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('1m');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [customRange, setCustomRange] = useState({ start: '', end: '' });
@@ -91,23 +145,33 @@ const Statements = ({ defaultTab = 'transactions' }) => {
   });
 
   // Show all invoices in statements listing
-  const filteredInvoices = invoices.filter(inv => {
-    const matchesSearch = inv.partyName?.toLowerCase().includes(invoiceSearch.toLowerCase()) ||
-      inv.invoiceNumber?.toLowerCase().includes(invoiceSearch.toLowerCase());
-    return matchesSearch;
+  const invoiceTransactions = useMemo(
+    () => buildInvoiceTransactions(invoices, statements),
+    [invoices, statements]
+  );
+
+  const filteredInvoiceTransactions = invoiceTransactions.filter((item) => {
+    const matchesType = invoiceTypeFilter === 'all' || item.transactionType === invoiceTypeFilter;
+    const query = invoiceSearch.toLowerCase();
+    const matchesSearch =
+      (item.partyName || '').toLowerCase().includes(query) ||
+      (item.invoiceNumber || '').toLowerCase().includes(query) ||
+      (item.paymentMethod || '').toLowerCase().includes(query) ||
+      (item.notes || '').toLowerCase().includes(query);
+    return matchesType && matchesSearch;
   });
+
+  const totalPaymentAdded = filteredInvoiceTransactions
+    .filter((t) => t.transactionType === 'add')
+    .reduce((sum, t) => sum + (t.amount || 0), 0);
+  const totalInvoiceDeducted = filteredInvoiceTransactions
+    .filter((t) => t.transactionType === 'deduct')
+    .reduce((sum, t) => sum + (t.amount || 0), 0);
 
   // Summary stats
   const totalInvoiced = invoices.reduce((acc, inv) => acc + (inv.totalAmount || 0), 0);
   const totalCollected = invoices.reduce((acc, inv) => acc + (inv.paidAmount || 0), 0);
   const totalPending = totalInvoiced - totalCollected;
-
-  const getStatusBadge = (inv) => {
-    const balance = inv.totalAmount - (inv.paidAmount || 0);
-    if (balance <= 0) return { label: 'Paid', bg: 'bg-emerald-50', text: 'text-emerald-700', ring: 'ring-emerald-100' };
-    if ((inv.paidAmount || 0) > 0) return { label: 'Partial', bg: 'bg-amber-50', text: 'text-amber-700', ring: 'ring-amber-100' };
-    return { label: 'Pending', bg: 'bg-red-50', text: 'text-red-600', ring: 'ring-red-100' };
-  };
 
   return (
     <div className="w-full px-4 mt-8 pb-12 text-gray-800 animate-in fade-in duration-500">
@@ -328,15 +392,58 @@ const Statements = ({ defaultTab = 'transactions' }) => {
 
       {/* INVOICE STATEMENTS TAB */}
       {(!showTabs || activeTab === 'invoices') && (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-5">
+              <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600">
+                <ArrowUpCircle size={26} />
+              </div>
+              <div>
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Payment Added</p>
+                <h3 className="text-2xl font-black text-gray-900 tracking-tight">₹{totalPaymentAdded.toLocaleString()}</h3>
+              </div>
+            </div>
+            <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-5">
+              <div className="w-14 h-14 bg-red-50 rounded-2xl flex items-center justify-center text-red-500">
+                <ArrowDownCircle size={26} />
+              </div>
+              <div>
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Invoice Deducted</p>
+                <h3 className="text-2xl font-black text-gray-900 tracking-tight">₹{totalInvoiceDeducted.toLocaleString()}</h3>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3 mb-6">
+            <div className="flex bg-white p-2 rounded-2xl shadow-sm gap-2">
+              {[
+                { id: 'all', label: 'All' },
+                { id: 'add', label: 'Added' },
+                { id: 'deduct', label: 'Deducted' },
+              ].map((filter) => (
+                <button
+                  key={filter.id}
+                  type="button"
+                  onClick={() => setInvoiceTypeFilter(filter.id)}
+                  className={`px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all ${
+                    invoiceTypeFilter === filter.id ? 'bg-gray-900 text-white' : 'text-gray-500 hover:bg-gray-50'
+                  }`}
+                >
+                  {filter.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
         <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="p-6 border-b border-gray-50 flex flex-col md:flex-row justify-between items-center gap-4">
             <div>
               <h2 className="text-lg font-bold text-gray-900">Invoice Statements</h2>
-              <p className="text-xs text-gray-500 mt-0.5">Showing all invoice records and balances</p>
+              <p className="text-xs text-gray-500 mt-0.5">Invoice raised aur payment received ki poori history</p>
             </div>
             <div className="relative w-full md:w-64">
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input type="text" placeholder="Search invoices..."
+              <input type="text" placeholder="Search invoice, party, method..."
                 className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500/20"
                 value={invoiceSearch} onChange={(e) => setInvoiceSearch(e.target.value)}
               />
@@ -346,86 +453,100 @@ const Statements = ({ defaultTab = 'transactions' }) => {
           <div className="overflow-x-auto min-h-[300px]">
             <table className="w-full text-left whitespace-nowrap">
               <thead>
-                <tr className="bg-gray-50/50 text-[11px] font-black uppercase text-gray-900 tracking-[0.2em] border-b border-gray-100">
-                  <th className="px-8 py-4">Invoice #</th>
-                  <th className="px-8 py-4">Party Name</th>
-                  <th className="px-8 py-4 text-center">Date</th>
-                  <th className="px-8 py-4 text-right">Total Amount</th>
-                  <th className="px-8 py-4 text-right">Paid</th>
-                  <th className="px-8 py-4 text-right">Balance Due</th>
-                  <th className="px-8 py-4 text-center">Status</th>
+                <tr className="bg-gray-50/50 text-[11px] font-black uppercase text-gray-900 tracking-[0.12em] border-b border-gray-100">
+                  <th className="px-6 py-4">Date & Time</th>
+                  <th className="px-6 py-4">Invoice #</th>
+                  <th className="px-6 py-4">Party Name</th>
+                  <th className="px-6 py-4 text-center">Action</th>
+                  <th className="px-6 py-4 text-right">Amount</th>
+                  <th className="px-6 py-4">Method / Note</th>
+                  <th className="px-6 py-4 text-right">Balance Due</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {loading ? (
-                  <tr><td colSpan="7" className="px-8 py-20 text-center text-gray-400 font-bold animate-pulse uppercase">Loading Invoices...</td></tr>
-                ) : filteredInvoices.length === 0 ? (
-                  <tr><td colSpan="7" className="px-8 py-20 text-center text-gray-400 italic font-medium">No invoices found matching your search.</td></tr>
+                  <tr><td colSpan="7" className="px-6 py-20 text-center text-gray-400 font-bold animate-pulse uppercase">Loading Invoices...</td></tr>
+                ) : filteredInvoiceTransactions.length === 0 ? (
+                  <tr><td colSpan="7" className="px-6 py-20 text-center text-gray-400 italic font-medium">No invoice statements found matching your search.</td></tr>
                 ) : (
-                  filteredInvoices.map((inv) => {
-                    const balance = (inv.totalAmount || 0) - (inv.paidAmount || 0);
-                    const badge = getStatusBadge(inv);
-                    return (
-                      <tr key={inv._id} className="hover:bg-gray-50/60 transition-colors group">
-                        <td className="px-8 py-5">
-                          <div className="flex items-center gap-2.5">
-                            <div className="p-2 bg-indigo-50 rounded-xl text-indigo-600">
-                              <FileText size={16} />
-                            </div>
-                            <span className="font-black text-indigo-700 text-sm">{inv.invoiceNumber}</span>
-                          </div>
-                        </td>
-                        <td className="px-8 py-5">
-                          <div className="flex items-center gap-2">
-                            <User size={13} className="text-gray-400" />
-                            <p className="font-bold text-gray-900 text-sm">{inv.partyName}</p>
-                          </div>
-                        </td>
-                        <td className="px-8 py-5 text-gray-500 text-sm">
-                          {new Date(inv.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
-                        </td>
-                        <td className="px-8 py-5 text-right">
-                          <p className="font-black text-gray-900 text-sm">₹{(inv.totalAmount || 0).toLocaleString()}</p>
-                        </td>
-                        <td className="px-8 py-5 text-right">
-                          <p className="font-bold text-emerald-600 text-sm">₹{(inv.paidAmount || 0).toLocaleString()}</p>
-                        </td>
-                        <td className="px-8 py-5 text-right">
-                          <p className={`font-black text-sm ${balance > 0 ? 'text-red-500' : 'text-emerald-600'}`}>
-                            ₹{Math.max(0, balance).toLocaleString()}
-                          </p>
-                        </td>
-                        <td className="px-8 py-5 text-center">
-                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase ring-1 ${badge.bg} ${badge.text} ${badge.ring}`}>
-                            {badge.label}
+                  filteredInvoiceTransactions.map((item) => (
+                    <tr key={item._id} className="hover:bg-gray-50/60 transition-colors group">
+                      <td className="px-6 py-5">
+                        <div className="flex items-center gap-2 text-sm font-bold text-gray-700">
+                          <Calendar size={14} className="text-emerald-500" />
+                          {formatDateTime(item.createdAt)}
+                        </div>
+                      </td>
+                      <td className="px-6 py-5">
+                        <div className="flex items-center gap-2">
+                          <FileText size={14} className="text-indigo-500" />
+                          <span className="font-black text-indigo-700 text-sm">{item.invoiceNumber}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5">
+                        <div className="flex items-center gap-2">
+                          <User size={13} className="text-gray-400" />
+                          <p className="font-bold text-gray-900 text-sm">{item.partyName}</p>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5 text-center">
+                        {item.transactionType === 'add' ? (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-[10px] font-black uppercase ring-1 ring-emerald-100">
+                            <ArrowUpCircle size={12} /> Payment Added
                           </span>
-                        </td>
-                      </tr>
-                    );
-                  })
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-600 rounded-full text-[10px] font-black uppercase ring-1 ring-red-100">
+                            <ArrowDownCircle size={12} /> Invoice Deducted
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-5 text-right">
+                        <p className={`font-black text-sm ${item.transactionType === 'add' ? 'text-emerald-600' : 'text-red-500'}`}>
+                          {item.transactionType === 'add' ? '+' : '-'}₹{item.amount?.toLocaleString()}
+                        </p>
+                      </td>
+                      <td className="px-6 py-5">
+                        {item.transactionType === 'add' ? (
+                          <div className="space-y-1">
+                            <span className="inline-flex items-center px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full text-[10px] font-black uppercase ring-1 ring-blue-100">
+                              {item.paymentMethod}
+                            </span>
+                            {item.notes && <p className="text-[10px] text-gray-400 italic">{item.notes}</p>}
+                          </div>
+                        ) : (
+                          <span className="text-xs font-semibold text-gray-500 italic">{item.notes || 'Invoice raised'}</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-5 text-right">
+                        <p className={`font-black text-sm ${item.balanceAfter > 0 ? 'text-red-500' : 'text-emerald-600'}`}>
+                          ₹{Math.max(0, item.balanceAfter || 0).toLocaleString()}
+                        </p>
+                      </td>
+                    </tr>
+                  ))
                 )}
               </tbody>
             </table>
           </div>
 
-          {/* Footer totals */}
-          {filteredInvoices.length > 0 && (
-            <div className="px-8 py-4 bg-gray-50 border-t border-gray-100 flex flex-wrap gap-6 justify-end text-sm">
+          {filteredInvoiceTransactions.length > 0 && (
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex flex-wrap gap-6 justify-end text-sm">
               <div className="flex items-center gap-2">
-                <span className="text-gray-500 font-medium">Total Invoiced:</span>
-                <span className="font-black text-gray-900">₹{filteredInvoices.reduce((a, i) => a + (i.totalAmount || 0), 0).toLocaleString()}</span>
+                <span className="text-gray-500 font-medium">Payment Added:</span>
+                <span className="font-black text-emerald-600">₹{totalPaymentAdded.toLocaleString()}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-gray-500 font-medium">Total Paid:</span>
-                <span className="font-black text-emerald-600">₹{filteredInvoices.reduce((a, i) => a + (i.paidAmount || 0), 0).toLocaleString()}</span>
+                <span className="text-gray-500 font-medium">Invoice Deducted:</span>
+                <span className="font-black text-red-500">₹{totalInvoiceDeducted.toLocaleString()}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-gray-500 font-medium">Total Due:</span>
-                <span className="font-black text-red-500">₹{filteredInvoices.reduce((a, i) => a + Math.max(0, (i.totalAmount || 0) - (i.paidAmount || 0)), 0).toLocaleString()}</span>
+                <span className="text-gray-500 font-medium">Net Due:</span>
+                <span className="font-black text-gray-900">₹{Math.max(0, totalInvoiceDeducted - totalPaymentAdded).toLocaleString()}</span>
               </div>
             </div>
           )}
         </div>
+        </>
       )}
     </div>
   );

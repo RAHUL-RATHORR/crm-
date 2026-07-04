@@ -15,6 +15,22 @@ import {
   Pencil,
 } from 'lucide-react';
 import { downloadAsPDF } from './utils/pdfExport';
+import { printElement } from './utils/printDocument';
+import { mergeItemNotes } from './utils/itemNoteStorage';
+import {
+  SELLER,
+  fmtTaxDate,
+  fmtAmt,
+  TaxFieldsTable,
+  SellerGstinMsmeLines,
+  CompanyBrandName,
+  TaxTermsAndReceiverSignature,
+  TaxBankAndAuthorisedSignature,
+  EstimateColGroup,
+  ESTIMATE_COL_COUNT,
+  getEstimateHalfColSpans,
+  EstimateItemsBlock,
+} from './utils/taxDocumentPrint';
 
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'https://crm-qpw8.onrender.com'
@@ -24,6 +40,42 @@ const formatQuoteDate = (value) => {
   if (!value) return '';
   return new Date(value).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
 };
+
+const getEstimateLineItems = (estimate) => {
+  if (estimate?.items?.length) {
+    return estimate.items.map((item, index) => ({
+      idx: index + 1,
+      description: item.description || '',
+      descriptionNote: item.descriptionNote || '',
+      hsn: item.hsn || '',
+      qty: Number(item.qty) || 0,
+      rate: Number(item.rate) || 0,
+      per: (item.per || 'PCS').trim() || 'PCS',
+      gstPercent: Number(item.gstPercent ?? estimate.gstPercent ?? 18),
+      total: Number(item.total) || 0,
+      gstAmount: Number(item.gstAmount) || 0,
+    }));
+  }
+
+  const qty = Number(estimate?.jobQty) || 1;
+  const total = Number(estimate?.totalAmount) || 0;
+  return [{
+    idx: 1,
+    description: estimate?.jobName || 'Printing Job',
+    descriptionNote: '',
+    hsn: '',
+    qty,
+    rate: qty > 0 ? total / qty : total,
+    per: 'PCS',
+    gstPercent: Number(estimate?.gstPercent ?? 18),
+    total,
+    gstAmount: Number(estimate?.gstAmount) || 0,
+  }];
+};
+
+const MIN_ESTIMATE_PRINT_ROWS = 8;
+
+const getEstimateEmptyRows = (itemCount) => Math.max(0, MIN_ESTIMATE_PRINT_ROWS - itemCount);
 
 export default function Estimates() {
   const navigate = useNavigate();
@@ -67,17 +119,14 @@ export default function Estimates() {
     if (!printId || !estimates.length) return;
 
     const fromList = estimates.find((item) => item._id === printId);
-    const estimate = fromList || printDoc;
+    const estimate = mergeItemNotes(fromList || printDoc);
     if (!estimate) return;
 
     setSelectedEstimate(estimate);
     setIsModalOpen(true);
 
     const timer = setTimeout(() => {
-      window.scrollTo(0, 0);
-      const container = document.querySelector('.a4-page-container');
-      if (container) container.scrollTop = 0;
-      window.print();
+      printElement('printable-estimate');
     }, 1000);
 
     navigate('/estimates', { replace: true, state: {} });
@@ -131,7 +180,7 @@ export default function Estimates() {
   };
 
   const handlePrint = (estimate) => {
-    setSelectedEstimate(estimate);
+    setSelectedEstimate(mergeItemNotes(estimate));
     setIsModalOpen(true);
   };
 
@@ -141,16 +190,13 @@ export default function Estimates() {
   };
 
   const executePrint = () => {
-    window.scrollTo(0, 0);
-    const container = document.querySelector('.a4-page-container');
-    if (container) container.scrollTop = 0;
-    window.print();
+    printElement('printable-estimate');
   };
 
   const handleDownloadPDF = async () => {
     if (!selectedEstimate) return;
     await downloadAsPDF(
-      'printable-inner',
+      'printable-estimate',
       `Quotation_${selectedEstimate.quoteNumber}`,
       setIsGenerating
     );
@@ -163,7 +209,20 @@ export default function Estimates() {
   );
 
   const selectedPrice = selectedEstimate ? Number(prices[selectedEstimate._id] ?? selectedEstimate.totalAmount ?? 0) : 0;
-  const selectedQty = Number(selectedEstimate?.jobQty) || 1;
+  const printItems = selectedEstimate ? getEstimateLineItems(selectedEstimate) : [];
+  const emptyPrintRows = getEstimateEmptyRows(printItems.length);
+  const compactPrint = printItems.length >= 4;
+  const printSubTotal = Number(selectedEstimate?.subTotal) || printItems.reduce((sum, row) => sum + row.total, 0);
+  const printFreight = Number(selectedEstimate?.freight) || 0;
+  const printGstAmount = Number(selectedEstimate?.gstAmount) || 0;
+  const printGrandTotal = selectedPrice || Number(selectedEstimate?.totalAmount) || (printSubTotal + printFreight + printGstAmount);
+  const printGstType = selectedEstimate?.gstType || 'CGST/SGST';
+  const printReverseCharge = selectedEstimate?.reverseCharge || 'No';
+  const printPaymentType = selectedEstimate?.paymentType || '—';
+  const partyAddress = selectedEstimate?.partyAddress || selectedEstimate?.address || '';
+  const partyGst = selectedEstimate?.partyGst || selectedEstimate?.gstNo || 'URP';
+  const estHalfColSpan = getEstimateHalfColSpans().left;
+  const estHalfColSpanRight = getEstimateHalfColSpans().right;
 
   return (
     <div className="w-full min-w-0 max-w-full mt-8 pb-12 animate-in fade-in duration-500 overflow-x-hidden">
@@ -339,8 +398,8 @@ export default function Estimates() {
       </div>
 
       {isModalOpen && selectedEstimate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 overflow-y-auto">
-          <div className="bg-white border border-gray-300 w-full max-w-4xl relative max-h-[95vh] flex flex-col shadow-none">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-2 sm:p-4 overflow-y-auto print-modal-overlay">
+          <div className="print-modal-shell bg-white border border-gray-300 w-full max-w-full relative h-[100dvh] sm:h-auto max-h-[100dvh] sm:max-h-[95vh] flex flex-col shadow-none print:max-h-none print:overflow-visible print:border-0 print:shadow-none print:h-auto">
             <div className="p-4 border-b flex justify-between items-center bg-white modal-header no-print">
               <h2 className="text-xl font-bold text-gray-800">Quotation Preview</h2>
               <div className="flex items-center gap-3">
@@ -364,162 +423,99 @@ export default function Estimates() {
               </div>
             </div>
 
-            <div className="p-8 overflow-y-auto flex-grow a4-page-container" id="printable-content">
+            <div className="p-2 sm:p-4 overflow-y-auto overflow-x-auto grow a4-page-container print:overflow-visible print:max-h-none print:h-auto print:p-0 print:grow-0" id="printable-content">
               <div
-                id="printable-inner"
-                className="bg-white mx-auto shadow-none a4-page font-sans"
-                style={{ color: '#334155' }}
+                id="printable-estimate"
+                className={`tax-invoice-print-page estimate-print-page bg-white w-full shadow-none${compactPrint ? ' tax-print-compact' : ''}`}
               >
-                <div className="flex justify-between items-start mb-8">
-                  <div>
-                    <h1 className="text-4xl font-bold mb-1" style={{ color: '#5E9681' }}>
-                      Computer Quotation
-                    </h1>
-                    <div className="mt-2">
-                      <h2 className="text-xl font-bold text-gray-800 tracking-tight">Harihar Printers</h2>
-                      <p className="text-[10px] text-gray-700 font-medium italic">Your Vision, Our Print.</p>
-                    </div>
-                  </div>
+                <table className="tax-invoice w-full border-collapse text-black" style={{ fontSize: '11px', fontFamily: 'Arial, Helvetica, sans-serif' }}>
+                  <EstimateColGroup />
+                  <tbody>
+                    <tr>
+                      <td colSpan={ESTIMATE_COL_COUNT} className="tax-cell text-center align-middle py-2">
+                        <CompanyBrandName uppercase />
+                        <p className="tax-header-line">{SELLER.address}</p>
+                        <p className="tax-header-line">{SELLER.tel}, {SELLER.email}</p>
+                        <SellerGstinMsmeLines />
+                      </td>
+                    </tr>
 
-                  <div className="w-48 border border-gray-200 rounded-lg overflow-hidden">
-                    <table className="w-full text-[12px]">
-                      <tbody className="divide-y divide-gray-200">
-                        <tr className="bg-gray-50/50">
-                          <td className="px-2 py-1.5 font-bold text-gray-700 uppercase">DATE :</td>
-                          <td className="px-2 py-1.5 font-bold text-right text-gray-800">{formatQuoteDate(selectedEstimate.quoteDate)}</td>
-                        </tr>
-                        <tr>
-                          <td className="px-2 py-1.5 font-bold text-gray-700 uppercase">Quote No :</td>
-                          <td className="px-2 py-1.5 font-bold text-right text-gray-800">{selectedEstimate.quoteNumber}</td>
-                        </tr>
-                        <tr className="bg-gray-50/50">
-                          <td className="px-2 py-1.5 font-bold text-gray-700 uppercase">Expiration :</td>
-                          <td className="px-2 py-1.5 font-bold text-right text-gray-800">
-                            {formatQuoteDate(new Date(new Date(selectedEstimate.quoteDate).getTime() + 7 * 24 * 60 * 60 * 1000))}
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                    <tr>
+                      <td colSpan={ESTIMATE_COL_COUNT} className="tax-cell tax-blue p-0">
+                        <div className="tax-title-bar">
+                          <div className="tax-title-text">ESTIMATE &amp; QUOTATION</div>
+                        </div>
+                      </td>
+                    </tr>
 
-                <div className="flex justify-between gap-10 mb-8 px-1">
-                  <div className="flex-1">
-                    <h4 className="text-[11px] font-black text-gray-900 border-b-2 mb-2 pb-0.5 inline-block uppercase tracking-wider">Address :</h4>
-                    <div className="text-[12px] space-y-1 font-medium text-gray-600">
-                      <p className="font-bold text-gray-800">Harihar Printers</p>
-                      <p>Office: J-97, Ashok Chowk, Adarsh Nagar, Jaipur</p>
-                      <p>Factory: G-139, Hirawala Ind. Area, Kanota, Jaipur</p>
-                      <p>Tel: +91 94140-43763</p>
-                    </div>
-                  </div>
-                  <div className="flex-1 text-right">
-                    <h4 className="text-[11px] font-black text-gray-900 border-b-2 mb-2 pb-0.5 inline-block uppercase tracking-wider">Quote To :</h4>
-                    <div className="text-[12px] space-y-1 font-medium text-gray-600">
-                      <p className="font-bold uppercase text-xs" style={{ color: '#5E9681' }}>{selectedEstimate.partyName}</p>
-                      <p className="uppercase">{selectedEstimate.address || selectedEstimate.partyName}</p>
-                      <p>GSTIN: <span className="font-bold">{selectedEstimate.gstNo || 'URP'}</span></p>
-                      <p>Jaipur, Rajasthan</p>
-                    </div>
-                  </div>
-                </div>
+                    <tr>
+                      <td colSpan={estHalfColSpan} className="tax-cell align-top p-1">
+                        <TaxFieldsTable rows={[
+                          ['Quote No.', selectedEstimate.quoteNumber],
+                          ['Quote Date', fmtTaxDate(selectedEstimate.quoteDate)],
+                          ['Order No.', selectedEstimate.orderNo || selectedEstimate.jobCard || '-'],
+                          ['Order Date', fmtTaxDate(selectedEstimate.orderDate || selectedEstimate.quoteDate)],
+                          ['Reverse Charge', printReverseCharge],
+                        ]} />
+                      </td>
+                      <td colSpan={estHalfColSpanRight} className="tax-cell align-top p-1">
+                        <TaxFieldsTable rows={[
+                          ['Payment Type', printPaymentType],
+                          ['GST Type', printGstType],
+                          ['Payment Terms', selectedEstimate.paymentTerms || '7 Days'],
+                          ['Sales Person', selectedEstimate.salesPerson || 'Admin'],
+                          ['Valid Until', fmtTaxDate(new Date(new Date(selectedEstimate.quoteDate).getTime() + 7 * 24 * 60 * 60 * 1000))],
+                        ]} />
+                      </td>
+                    </tr>
 
-                <div className="grid grid-cols-4 mb-8 border border-gray-200">
-                  {[
-                    { label: 'SALES PERSON', value: selectedEstimate.salesPerson || 'Admin' },
-                    { label: 'Quote Number', value: selectedEstimate.quoteNumber },
-                    { label: 'PAYMENT TERMS', value: selectedEstimate.paymentTerms || '7 Days' },
-                    { label: 'DUE DATE', value: formatQuoteDate(selectedEstimate.quoteDate) },
-                  ].map((item, i) => (
-                    <div key={i} className={`p-2 border-r border-gray-200 last:border-0 ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'}`}>
-                      <p className="text-[10px] font-black text-gray-600 uppercase mb-1" style={{ color: '#5E9681' }}>{item.label}</p>
-                      <p className="text-[12px] font-bold text-gray-800">{item.value}</p>
-                    </div>
-                  ))}
-                </div>
+                    <tr>
+                      <td colSpan={estHalfColSpan} className="tax-cell align-top p-0">
+                        <div className="tax-blue tax-section-title text-center py-0.5 px-1">From | Seller Details</div>
+                        <div className="p-1">
+                          <TaxFieldsTable rows={[
+                            ['Name', SELLER.name],
+                            ['Office', SELLER.office],
+                            ['Factory', SELLER.factory],
+                            ['Tel', SELLER.tel],
+                            ['Email', SELLER.email],
+                            ['GSTIN', SELLER.gstin],
+                          ]} />
+                        </div>
+                      </td>
+                      <td colSpan={estHalfColSpanRight} className="tax-cell align-top p-0">
+                        <div className="tax-blue tax-section-title text-center py-0.5 px-1">Quote To | Party Details</div>
+                        <div className="p-1">
+                          <TaxFieldsTable rows={[
+                            ['Name', selectedEstimate.partyName],
+                            ['Address', partyAddress || '-'],
+                            ['Mobile', selectedEstimate.partyContact || '-'],
+                            ['Email', selectedEstimate.partyEmail || '-'],
+                            ['GSTIN', partyGst],
+                          ]} />
+                        </div>
+                      </td>
+                    </tr>
 
-                <div className="mb-8 border border-gray-200 rounded-sm overflow-hidden min-h-[300px] flex flex-col">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="text-white text-[12px] font-black uppercase tracking-widest" style={{ backgroundColor: '#5E9681' }}>
-                        <th className="px-4 py-2.5 border-r border-teal-500/30 w-12 text-center">S.No</th>
-                        <th className="px-4 py-2.5 border-r border-teal-500/30">Description of Goods</th>
-                        <th className="px-4 py-2.5 border-r border-teal-500/30 text-center w-20">Qty</th>
-                        <th className="px-4 py-2.5 border-r border-teal-500/30 text-right w-24">Rate</th>
-                        <th className="px-4 py-2.5 text-right w-32">Amount</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100 flex-grow">
-                      <tr className="text-[13px] group">
-                        <td className="px-4 py-4 border-r border-gray-50 text-center font-bold text-gray-600 align-top">1</td>
-                        <td className="px-4 py-4 border-r border-gray-50 align-top">
-                          <div className="space-y-1">
-                            <p className="font-black text-teal-900 uppercase text-xs">{selectedEstimate.jobName || 'Printing Job'}</p>
-                            <p className="text-[11px] text-gray-700 font-medium leading-relaxed italic">
-                              Printing Specifications: {selectedEstimate.printingType || 'Full Color'} /
-                              Size: {selectedEstimate.pageSize || 'Standard'} /
-                              Paper: {selectedEstimate.paper || 'Premium Stock'}
-                            </p>
-                          </div>
-                        </td>
-                        <td className="px-4 py-4 border-r border-gray-100 font-bold align-top text-center text-gray-700">
-                          {selectedEstimate.jobQty}
-                        </td>
-                        <td className="px-4 py-4 border-r border-gray-100 font-bold align-top text-right text-gray-700">
-                          ₹ {(selectedPrice / selectedQty).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                        </td>
-                        <td className="px-4 py-4 font-black align-top text-right text-gray-900">
-                          ₹ {selectedPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                        </td>
-                      </tr>
-                      {[1, 2, 3, 4, 5].map((i) => (
-                        <tr key={i} className="border-0">
-                          <td className="px-4 py-4 border-r border-gray-50">&nbsp;</td>
-                          <td className="px-4 py-4 border-r border-gray-50">&nbsp;</td>
-                          <td className="px-4 py-4 border-r border-gray-50">&nbsp;</td>
-                          <td className="px-4 py-4 border-r border-gray-50">&nbsp;</td>
-                          <td className="px-4 py-4">&nbsp;</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                    <EstimateItemsBlock
+                      items={printItems}
+                      emptyProductRows={emptyPrintRows}
+                      freight={printFreight}
+                      gstAmount={printGstAmount}
+                      gstType={printGstType}
+                      grandTotal={printGrandTotal}
+                    />
 
-                  <div className="border-t border-gray-200 mt-auto bg-gray-50/50">
-                    <div className="flex flex-col w-56 ml-auto border-l border-gray-200">
-                      <div className="flex justify-between px-4 py-2 border-b border-gray-200">
-                        <span className="text-[11px] font-bold text-gray-700 uppercase">Sub Total</span>
-                        <span className="text-[12px] font-bold text-gray-800">₹ {selectedPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                      </div>
-                      <div className="flex justify-between px-4 py-2 border-b border-gray-200">
-                        <span className="text-[11px] font-bold text-gray-700 uppercase">GST (If applicable)</span>
-                        <span className="text-[12px] font-bold text-gray-800">As per norms</span>
-                      </div>
-                      <div className="flex justify-between px-4 py-3" style={{ backgroundColor: '#5E9681' }}>
-                        <span className="text-[12px] font-black text-white uppercase tracking-wider">Grand Total</span>
-                        <span className="text-sm font-black text-white">₹ {selectedPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-12 text-[11px] text-gray-700 space-y-4">
-                  <p className="font-medium">
-                    This Quotation is prepared by: <span className="font-bold text-gray-800 ml-1">{selectedEstimate.salesPerson || 'Admin'} @ Harihar Printers</span>
-                  </p>
-
-                  <div className="pt-8 grid grid-cols-2 gap-20">
-                    <div className="border-t border-gray-300 pt-1">
-                      <p className="font-bold uppercase tracking-widest text-[#5E9681]">Quotation accepted by :</p>
-                    </div>
-                    <div className="border-t border-gray-300 pt-1 text-right">
-                      <p className="font-bold uppercase tracking-widest text-[#5E9681]">Authorised Signatory</p>
-                    </div>
-                  </div>
-
-                  <p className="text-center pt-8 font-medium">
-                    If you have any enquiries about this, please contact us on Tel: <span className="text-gray-900 font-bold">+91 0141-2600850, 94140-43763</span>
-                  </p>
-                </div>
+                    <tr>
+                      <td colSpan={estHalfColSpan} className="tax-cell tax-footer-cell align-top p-1">
+                        <TaxTermsAndReceiverSignature />
+                      </td>
+                      <td colSpan={estHalfColSpanRight} className="tax-cell tax-footer-cell align-top p-1">
+                        <TaxBankAndAuthorisedSignature />
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>

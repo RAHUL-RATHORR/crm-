@@ -82,9 +82,10 @@ export const downloadAsPDF = async (elementId, filename, onProgressChange = () =
     if (!element) throw new Error(`Element with ID "${elementId}" not found`);
 
     const isJobCard = elementId === 'printable-inner';
-    const isTaxInvoice = elementId === 'printable-invoice' || elementId === 'printable-challan' || elementId === 'printable-inner' || element.classList.contains('tax-invoice-print-page');
+    const isEstimate = elementId === 'printable-estimate' || element.classList.contains('estimate-print-page');
+    const isTaxInvoice = elementId === 'printable-invoice' || elementId === 'printable-challan' || elementId === 'printable-inner' || elementId === 'printable-estimate' || element.classList.contains('tax-invoice-print-page') || element.classList.contains('estimate-print-page');
     const isChallan = elementId === 'printable-challan' || element.classList.contains('challan-print-page');
-    const isFullWidth = isJobCard || isTaxInvoice || isChallan;
+    const isFullWidth = isJobCard || isTaxInvoice || isChallan || isEstimate;
     const pageMargin = isFullWidth ? '5mm' : '12mm';
     const contentWidth = isFullWidth ? '100%' : '186mm';
     const contentMaxWidth = isFullWidth ? '100%' : '186mm';

@@ -243,6 +243,109 @@ export const ClassicTaxItemsHeader = () => (
   </tr>
 );
 
+export const ESTIMATE_COL_COUNT = 8;
+
+export const getEstimateHalfColSpans = () => ({ left: 4, right: 4 });
+
+export const EstimateColGroup = () => (
+  <colgroup>
+    <col style={{ width: '5%' }} />
+    <col style={{ width: '30%' }} />
+    <col style={{ width: '10%' }} />
+    <col style={{ width: '8%' }} />
+    <col style={{ width: '6%' }} />
+    <col style={{ width: '12%' }} />
+    <col style={{ width: '8%' }} />
+    <col style={{ width: '21%' }} />
+  </colgroup>
+);
+
+export const EstimateItemsHeader = () => (
+  <tr className="tax-item-header-row text-center font-bold">
+    <td className="tax-cell">Sl No.</td>
+    <td className="tax-cell text-left">Description of Goods</td>
+    <td className="tax-cell">HSN/SAC</td>
+    <td className="tax-cell">Qty</td>
+    <td className="tax-cell">per</td>
+    <td className="tax-cell">Rate</td>
+    <td className="tax-cell">GST Rate</td>
+    <td className="tax-cell">Amount</td>
+  </tr>
+);
+
+export const EstimateItemRow = ({ row, stripeClass = 'tax-items-stripe-row tax-stripe-white' }) => (
+  <tr className={`tax-item-main-row ${stripeClass}`}>
+    <td className="tax-cell text-center align-top tax-item-value">{row.idx}</td>
+    <td className="tax-cell align-top tax-item-name">
+      <ItemPrintDescription item={row} />
+    </td>
+    <td className="tax-cell text-center align-top tax-item-value">{row.hsn || ''}</td>
+    <td className="tax-cell text-center align-top tax-item-value">{row.qty}</td>
+    <td className="tax-cell text-center align-top tax-item-value">{(row.per || 'PCS').trim() || 'PCS'}</td>
+    <td className="tax-cell text-right align-top tax-item-value">{fmtAmt(row.rate)}</td>
+    <td className="tax-cell text-center align-top tax-item-value">{row.gstPercent} %</td>
+    <td className="tax-cell text-right align-top tax-item-total">{fmtAmt(row.total)}</td>
+  </tr>
+);
+
+export const EstimateEmptyRow = ({ rowCount = 1 }) => (
+  <tr className="tax-item-empty-row tax-items-empty-band" style={{ '--empty-rows': rowCount }}>
+    {Array.from({ length: ESTIMATE_COL_COUNT }, (_, i) => (
+      <td key={i} className="tax-item-empty-cell">&nbsp;</td>
+    ))}
+  </tr>
+);
+
+export const EstimateChargeSubRow = ({ label, amount, stripeClass = 'tax-items-stripe-row tax-stripe-grey', isTransport = false }) => (
+  <tr className={`tax-item-sub-row ${stripeClass}${isTransport ? ' tax-item-sub-transport' : ''}`}>
+    <td className="tax-cell tax-item-sub-pad">&nbsp;</td>
+    <td colSpan={6} className="tax-cell tax-item-sub-label text-right">{label}</td>
+    <td className="tax-cell text-right tax-item-sub-amount">{fmtAmt(amount)}</td>
+  </tr>
+);
+
+export const EstimateGrandTotalRow = ({ amountWithTax }) => (
+  <tr className="tax-item-grand-total-row font-bold">
+    <td className="tax-cell" colSpan={6}>&nbsp;</td>
+    <td className="tax-cell text-right tax-item-grand-label">Total</td>
+    <td className="tax-cell text-right tax-item-grand-amount">{fmtAmt(amountWithTax)} ₹</td>
+  </tr>
+);
+
+export const EstimateItemsBlock = ({
+  items = [],
+  emptyProductRows = 0,
+  freight = 0,
+  gstAmount = 0,
+  gstType = 'CGST/SGST',
+  grandTotal = 0,
+}) => {
+  let stripeIndex = 0;
+  const getStripeClass = () => {
+    const stripeClass = stripeIndex % 2 === 0 ? 'tax-items-stripe-row tax-stripe-white' : 'tax-items-stripe-row tax-stripe-grey';
+    stripeIndex += 1;
+    return stripeClass;
+  };
+  const gstLabel = gstType === 'IGST' ? 'IGST' : 'CGST + SGST';
+
+  return (
+    <>
+      <EstimateItemsHeader />
+      {items.map((row) => (
+        <EstimateItemRow key={row.idx} row={row} stripeClass={getStripeClass()} />
+      ))}
+      {freight > 0 && (
+        <EstimateChargeSubRow label="Freight" amount={freight} stripeClass={getStripeClass()} isTransport />
+      )}
+      {gstAmount > 0 && (
+        <EstimateChargeSubRow label={gstLabel} amount={gstAmount} stripeClass={getStripeClass()} />
+      )}
+      {emptyProductRows > 0 && <EstimateEmptyRow rowCount={emptyProductRows} />}
+      <EstimateGrandTotalRow amountWithTax={grandTotal} />
+    </>
+  );
+};
+
 export const ItemPrintDescription = ({ item }) => {
   const description = getItemPrintDescription(item);
   const note = getItemPrintNote(item);

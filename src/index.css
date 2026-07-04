@@ -102,6 +102,17 @@
   color: #000;
 }
 
+.estimate-print-page {
+  width: 100%;
+  max-width: 100%;
+  min-height: auto;
+  padding: 3mm 4mm;
+  margin: 0;
+  box-sizing: border-box;
+  background: #fff;
+  color: #334155;
+}
+
 /* GST traditional invoice layout */
 .gst-invoice {
   border: 1px solid #000;
@@ -1000,7 +1011,7 @@ tr.tax-terms-bank-section {
   }
 
   /* The actual A4 Sheet */
-  .a4-page:not(.job-card-print-page):not(.tax-invoice-print-page):not(.challan-print-page) {
+  .a4-page:not(.job-card-print-page):not(.tax-invoice-print-page):not(.challan-print-page):not(.estimate-print-page) {
     width: 186mm !important;
     max-width: 186mm !important;
     min-height: auto !important;
@@ -1033,11 +1044,93 @@ tr.tax-terms-bank-section {
     background: #ffffff !important;
   }
 
+  .estimate-print-page {
+    width: 100% !important;
+    max-width: none !important;
+    min-height: auto !important;
+    padding: 2mm 3mm !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+  }
+
   #printable-invoice,
   #printable-challan,
+  #printable-estimate,
   #printable-inner,
   #printable-content {
     background: #ffffff !important;
+  }
+
+  #printable-content:has(#printable-estimate) {
+    min-height: auto !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    flex: none !important;
+    width: 100% !important;
+    max-width: none !important;
+    padding: 0 !important;
+  }
+
+  .estimate-print-page .estimate-print-items-block {
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
+
+  .estimate-print-page .estimate-print-table {
+    table-layout: fixed !important;
+    width: 100% !important;
+  }
+
+  .estimate-print-page .estimate-print-desc-col,
+  .estimate-print-page .estimate-print-desc-cell {
+    width: 34% !important;
+    min-width: 90px !important;
+    word-break: break-word !important;
+    overflow: visible !important;
+    color: #000 !important;
+    -webkit-text-fill-color: #000 !important;
+  }
+
+  .estimate-print-page .estimate-print-item-desc,
+  .estimate-print-page .estimate-print-item-note {
+    color: #000 !important;
+    -webkit-text-fill-color: #000 !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    display: block !important;
+  }
+
+  .estimate-print-page.estimate-print-compact td,
+  .estimate-print-page.estimate-print-compact th {
+    padding-top: 2px !important;
+    padding-bottom: 2px !important;
+    font-size: 9px !important;
+    line-height: 1.15 !important;
+  }
+
+  .estimate-print-page.estimate-print-compact .estimate-print-meta-grid > div {
+    padding: 4px !important;
+  }
+
+  .estimate-print-page.estimate-print-compact .estimate-print-title {
+    font-size: 20px !important;
+  }
+
+  .estimate-print-page .estimate-print-empty-row td {
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+  }
+
+  .estimate-print-page tr {
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+  }
+
+  .estimate-print-page .estimate-print-footer,
+  .estimate-print-page .estimate-print-items-block {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   .tax-invoice-print-page .tax-invoice,
@@ -1391,7 +1484,8 @@ tr.tax-terms-bank-section {
   .challan-print-page,
   #printable-content,
   #printable-content:has(#printable-invoice),
-  #printable-content:has(#printable-challan) {
+  #printable-content:has(#printable-challan),
+  #printable-content:has(#printable-estimate) {
     min-height: auto !important;
     height: auto !important;
     max-height: none !important;
@@ -1401,6 +1495,7 @@ tr.tax-terms-bank-section {
 
   #printable-invoice,
   #printable-challan,
+  #printable-estimate,
   #printable-inner {
     visibility: visible !important;
     display: block !important;
@@ -1512,9 +1607,10 @@ tr.tax-terms-bank-section {
   .tax-invoice-print-page,
   #printable-invoice,
   #printable-challan,
+  #printable-estimate,
   #printable-inner {
     min-width: 720px;
-    width: 720px;
+    width: 100%;
     max-width: none !important;
   }
 
