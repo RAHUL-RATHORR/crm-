@@ -14,7 +14,7 @@ import { mergeItemNotes, mergeItemNotesList, removeStoredItemNotes } from './uti
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
 import { getBillToDetails, getShipToDetails } from './utils/shipAddress';
 import { numberToWords } from './utils/numberToWords';
-import { SELLER, fmtTaxDate, fmtAmt, getStateFromGst, formatStateWithCode, TaxFieldsTable, SellerGstinMsmeLines, TaxTermsAndReceiverSignature, TaxBankAndAuthorisedSignature, buildTaxItemLine, getEmptyProductRowCount, CompanyBrandName, TaxCopyBox, TaxCopyTypeControls, DEFAULT_TAX_COPY_SELECTION, getSelectedCopyIds, getPreviewHighlightCopy, TaxInvoiceColGroup, getTaxTableColCount, getTaxTableHalfColSpans, getTaxChargeSubRowCount, TaxClassicItemsBlock, buildTaxAnalysisGroups, TaxAnalysisSection, MIN_PRODUCT_TABLE_ROWS } from './utils/taxDocumentPrint';
+import { SELLER, fmtTaxDate, fmtAmt, getStateFromGst, formatStateWithCode, TaxFieldsTable, SellerGstinMsmeLines, TaxDocumentSignaturesRow, TaxTermsAndReceiverSignature, TaxBankAndAuthorisedSignature, buildTaxItemLine, getEmptyProductRowCount, CompanyBrandName, TaxCopyBox, TaxCopyTypeControls, DEFAULT_TAX_COPY_SELECTION, getSelectedCopyIds, getPreviewHighlightCopy, TaxInvoiceColGroup, getTaxTableColCount, getTaxTableHalfColSpans, getTaxChargeSubRowCount, TaxClassicItemsBlock, buildTaxAnalysisGroups, TaxAnalysisSection } from './utils/taxDocumentPrint';
 
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'https://crm-qpw8.onrender.com'
@@ -78,8 +78,10 @@ const InvoiceList = () => {
   const amountWithTax = selectedInvoice?.totalAmount || 0;
   const productRowCount = itemLines.length + getTaxChargeSubRowCount(freight, isIGST);
   const emptyProductRows = selectedInvoice
-    ? getEmptyProductRowCount(productRowCount, { minRows: MIN_PRODUCT_TABLE_ROWS })
+    ? getEmptyProductRowCount(productRowCount, { itemLineCount: itemLines.length })
     : 0;
+  const showPage1SignatureRow = itemLines.length >= 7;
+  const compactPrint = itemLines.length >= 8;
 
   useEffect(() => {
     fetchInvoice();
@@ -429,7 +431,7 @@ const InvoiceList = () => {
             <div className="p-2 overflow-y-auto overflow-x-auto grow a4-page-container print:overflow-visible print:max-h-none print:h-auto print:p-0 print:grow-0" id="printable-content">
               <div
                 id="printable-invoice"
-                className="bg-white w-full shadow-none tax-invoice-print-page"
+                className={`bg-white w-full shadow-none tax-invoice-print-page${compactPrint ? ' tax-print-compact' : ''}`}
               >
                 <table className="tax-invoice w-full border-collapse text-black" style={{ fontSize: '11px', fontFamily: 'Arial, Helvetica, sans-serif' }}>
                   <TaxInvoiceColGroup />
@@ -526,8 +528,15 @@ const InvoiceList = () => {
                       colSpan={taxColCount}
                     />
 
-                    {/* Terms + Bank / Signature */}
-                    <tr>
+                    {showPage1SignatureRow && (
+                      <TaxDocumentSignaturesRow
+                        leftColSpan={taxHalfColSpan}
+                        rightColSpan={taxHalfColSpanRight}
+                        printOnly
+                      />
+                    )}
+
+                    <tr className="tax-terms-bank-section">
                       <td colSpan={taxHalfColSpan} className="tax-cell tax-footer-cell align-top p-1">
                         <TaxTermsAndReceiverSignature />
                       </td>

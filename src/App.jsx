@@ -473,7 +473,15 @@ export default function App() {
         { label: 'Paper Stock Statements', icon: Layers, onClick: () => navigate('/statements/paper-stock') },
       ],
     },
-    { name: 'Estimate & Quotation', icon: Calculator, path: '/estimates' },
+    {
+      name: 'Estimate & Quotation',
+      icon: Calculator,
+      isDropdown: true,
+      dropdownItems: [
+        { label: 'Listing', icon: List, onClick: () => navigate('/estimates') },
+        { label: 'Add New', icon: PlusSquare, onClick: () => navigate('/estimates/add') },
+      ],
+    },
   ];
 
   const navigationItems = allNavigationItems.filter((item) => {
@@ -517,10 +525,13 @@ export default function App() {
             name: sub.label,
             icon: sub.icon || item.icon,
             onClick: sub.onClick,
-            matchPath: sub.label.includes('Job Card') ? '/job-card'
+            matchPath: item.name === 'Estimate & Quotation' && sub.label === 'Add New'
+              ? '/estimates/add'
+              : item.name === 'Estimate & Quotation'
+              ? '/estimates'
+              : sub.label.includes('Job Card') ? '/job-card'
               : sub.label.includes('Invoice') ? '/invoice'
               : sub.label.includes('Challan') ? '/challan'
-              : sub.label.includes('Estimate') ? '/estimates'
               : sub.label.includes('Paper Stock') ? '/statements/paper-stock'
               : sub.label.includes('Statements') ? '/statements'
               : '',
@@ -653,7 +664,8 @@ export default function App() {
                     (item.name === 'Job Card' && location.pathname.includes('/job-card')) ||
                     (item.name === 'Invoices' && location.pathname.includes('/invoice')) ||
                     (item.name === 'Challan' && location.pathname.includes('/challan')) ||
-                    (item.name === 'Statements' && location.pathname.includes('/statements'))
+                    (item.name === 'Statements' && location.pathname.includes('/statements')) ||
+                    (item.name === 'Estimate & Quotation' && location.pathname.includes('/estimates'))
                   }
                 />
               );

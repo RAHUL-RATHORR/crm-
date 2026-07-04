@@ -203,6 +203,14 @@ export function printElement(elementId, options = {}) {
           thead { display: table-header-group !important; }
           tbody { display: table-row-group !important; }
           tr { display: table-row !important; page-break-inside: avoid; }
+          .tax-invoice-print-page tr { page-break-inside: auto !important; break-inside: auto !important; }
+          .tax-invoice-print-page tr.tax-signature-section,
+          .tax-invoice-print-page tr.tax-terms-bank-section,
+          .tax-invoice-print-page tr.tax-item-grand-total-row,
+          .tax-invoice-print-page tr.tax-amount-words-row {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
           td, th { display: table-cell !important; }
           ${sanitizedStyles}
           .invoice-print-page, .challan-print-page {
@@ -426,6 +434,9 @@ export function printElement(elementId, options = {}) {
           .tax-invoice-print-page .tax-item-gst { font-weight: 800 !important; color: #000 !important; }
           .tax-print-copy-page { page-break-inside: avoid; }
           .tax-print-copy-page:not(:last-child) { page-break-after: always !important; break-after: page !important; }
+          .tax-invoice-print-page tr.tax-print-only-signature {
+            display: table-row !important;
+          }
           ` : ''}
         </style>
       </head>

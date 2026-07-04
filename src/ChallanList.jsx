@@ -15,7 +15,7 @@ import DeleteConfirmationModal from './components/DeleteConfirmationModal';
 import { getBillToDetails, getShipToDetails } from './utils/shipAddress';
 import { numberToWords } from './utils/numberToWords';
 import { getChallanLineItems, computeLineItemsTotals, buildMergedChallanMeta } from './utils/challanTotals';
-import { SELLER, fmtTaxDate, fmtAmt, getStateFromGst, formatStateWithCode, TaxFieldsTable, SellerGstinMsmeLines, TaxTermsAndReceiverSignature, TaxBankAndAuthorisedSignature, buildTaxItemLine, getEmptyProductRowCount, CompanyBrandName, TaxCopyBox, TaxCopyTypeControls, DEFAULT_TAX_COPY_SELECTION, getSelectedCopyIds, getPreviewHighlightCopy, TaxInvoiceColGroup, getTaxTableColCount, getTaxTableHalfColSpans, getTaxChargeSubRowCount, TaxClassicItemsBlock, buildTaxAnalysisGroups, TaxAnalysisSection, MIN_CHALLAN_PRODUCT_TABLE_ROWS } from './utils/taxDocumentPrint';
+import { SELLER, fmtTaxDate, fmtAmt, getStateFromGst, formatStateWithCode, TaxFieldsTable, SellerGstinMsmeLines, TaxDocumentSignaturesRow, TaxTermsAndReceiverSignature, TaxBankAndAuthorisedSignature, buildTaxItemLine, getEmptyProductRowCount, CompanyBrandName, TaxCopyBox, TaxCopyTypeControls, DEFAULT_TAX_COPY_SELECTION, getSelectedCopyIds, getPreviewHighlightCopy, TaxInvoiceColGroup, getTaxTableColCount, getTaxTableHalfColSpans, getTaxChargeSubRowCount, TaxClassicItemsBlock, buildTaxAnalysisGroups, TaxAnalysisSection } from './utils/taxDocumentPrint';
 
 const ChallanList = () => {
   const navigate = useNavigate();
@@ -72,10 +72,12 @@ const ChallanList = () => {
   const challanDate = mergedMeta.date || primaryChallan?.date || primaryChallan?.createdAt;
   const challanNoLabel = isMergedPrint ? mergedMeta.challanLabel : primaryChallan?.challanNo;
   const jobRefLabel = isMergedPrint ? mergedMeta.jobRefLabel : primaryChallan?.jobNumber;
-  const productRowCount = itemLines.length + getTaxChargeSubRowCount(totalFreight, isIGST);
-  const emptyProductRows = getEmptyProductRowCount(productRowCount, {
-    minRows: MIN_CHALLAN_PRODUCT_TABLE_ROWS,
-  });
+  const emptyProductRows = getEmptyProductRowCount(
+    itemLines.length + getTaxChargeSubRowCount(totalFreight, isIGST),
+    { itemLineCount: itemLines.length },
+  );
+  const showPage1SignatureRow = itemLines.length >= 7;
+  const compactPrint = itemLines.length >= 8;
 
   const partyCounts = challans.reduce((acc, ch) => {
     const name = (ch.partyName || '').trim();
@@ -487,7 +489,7 @@ const ChallanList = () => {
             <div className="p-2 overflow-y-auto overflow-x-auto grow a4-page-container print:overflow-visible print:max-h-none print:h-auto print:p-0 print:grow-0" id="printable-content">
               <div
                 id="printable-challan"
-                className="bg-white w-full shadow-none tax-invoice-print-page"
+                className={`bg-white w-full shadow-none tax-invoice-print-page${compactPrint ? ' tax-print-compact' : ''}`}
               >
                 <table className="tax-invoice w-full border-collapse text-black" style={{ fontSize: '11px', fontFamily: 'Arial, Helvetica, sans-serif' }}>
                   <TaxInvoiceColGroup />
@@ -590,7 +592,15 @@ const ChallanList = () => {
                       colSpan={taxColCount}
                     />
 
-                    <tr>
+                    {showPage1SignatureRow && (
+                      <TaxDocumentSignaturesRow
+                        leftColSpan={taxHalfColSpan}
+                        rightColSpan={taxHalfColSpanRight}
+                        printOnly
+                      />
+                    )}
+
+                    <tr className="tax-terms-bank-section">
                       <td colSpan={taxHalfColSpan} className="tax-cell tax-footer-cell align-top p-1">
                         <TaxTermsAndReceiverSignature />
                       </td>

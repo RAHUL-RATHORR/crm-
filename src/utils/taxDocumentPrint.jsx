@@ -80,6 +80,50 @@ export const SellerGstinMsmeLines = () => (
   </>
 );
 
+export const TaxTermsSection = () => (
+  <>
+    <p className="tax-section-title mb-1">Terms And Conditions</p>
+    <ol className="tax-terms-list">
+      <li>Goods once sold will not be taken back.</li>
+      <li>Any Dispute Shall Subject to Jaipur Jurisdiction.</li>
+      <li>E.&amp;O.E.</li>
+      <li>The company is not responsible for any transit damage or loss.</li>
+      <li>All Goods Return / Replace only if damage by company transport.</li>
+    </ol>
+  </>
+);
+
+export const TaxBankDetailsSection = () => (
+  <>
+    <p className="tax-section-title mb-1">Bank Details</p>
+    <TaxFieldsTable rows={[
+      ['Account Holder Name', SELLER.bank.holder],
+      ['Bank Account Number', SELLER.bank.account],
+      ['Bank IFSC Code', SELLER.bank.ifsc],
+      ['Bank Name', SELLER.bank.name],
+      ['Bank Branch Name', SELLER.bank.branch],
+    ]} />
+  </>
+);
+
+export const TaxDocumentSignaturesRow = ({ leftColSpan, rightColSpan, printOnly = false }) => (
+  <tr className={`tax-signature-section${printOnly ? ' tax-print-only-signature' : ''}`}>
+    <td colSpan={leftColSpan} className="tax-cell align-top p-1">
+      <div className="tax-footer-sign-block">
+        <div className="tax-sign-space">&nbsp;</div>
+        <p className="tax-section-title">Receiver signature</p>
+      </div>
+    </td>
+    <td colSpan={rightColSpan} className="tax-cell align-top p-1">
+      <div className="tax-footer-sign-block tax-footer-sign-block-right">
+        <p className="tax-section-title text-right">For, {SELLER.name}</p>
+        <div className="tax-sign-space">&nbsp;</div>
+        <p className="text-right tax-section-title">Authorised Signatory</p>
+      </div>
+    </td>
+  </tr>
+);
+
 export const TaxTermsAndReceiverSignature = () => (
   <div className="tax-footer-col">
     <div className="tax-footer-col-top">
@@ -145,9 +189,17 @@ export const buildTaxItemLine = (item, idx, fallbackGst = 18, isIGST = false) =>
 export const MIN_PRODUCT_TABLE_ROWS = 14;
 export const MIN_CHALLAN_PRODUCT_TABLE_ROWS = 14;
 
+/** Short invoices get filler rows for entry space; cap avoids pushing footer to page 2. */
 export function getEmptyProductRowCount(usedRows = 0, options = {}) {
+  const itemLineCount = options.itemLineCount ?? 0;
   const minRows = options.minRows ?? MIN_PRODUCT_TABLE_ROWS;
-  return Math.max(0, minRows - usedRows);
+
+  if (itemLineCount >= 8) {
+    return 0;
+  }
+
+  const maxEmpty = itemLineCount <= 4 ? 6 : 3;
+  return Math.max(0, Math.min(maxEmpty, minRows - usedRows));
 }
 
 export const getTaxTableColCount = () => 7;
