@@ -150,14 +150,14 @@
 
 .tax-invoice .tax-company-name {
   font-weight: 800;
-  font-size: 18px;
+  font-size: 30px;
   letter-spacing: 0.04em;
   color: #000;
 }
 
 .tax-invoice .company-brand-name {
   font-weight: 900;
-  font-size: 18px;
+  font-size: 30px;
   letter-spacing: 0.04em;
   color: #000000;
 }
@@ -1088,9 +1088,9 @@
 
   .tax-invoice-print-page .tax-company-name,
   .tax-invoice-print-page .company-brand-name {
-    font-size: 20px !important;
+    font-size: 36px !important;
     font-weight: 900 !important;
-    letter-spacing: 0.05em !important;
+    letter-spacing: 0.04em !important;
     color: #000000 !important;
   }
 
@@ -1149,15 +1149,15 @@
 
   .tax-invoice-print-page .tax-company-name {
     font-weight: 900 !important;
-    font-size: 20px !important;
-    letter-spacing: 0.05em !important;
+    font-size: 36px !important;
+    letter-spacing: 0.04em !important;
   }
 
   .tax-invoice-print-page .company-brand-name {
     color: #000000 !important;
     font-weight: 900 !important;
-    font-size: 20px !important;
-    letter-spacing: 0.05em !important;
+    font-size: 36px !important;
+    letter-spacing: 0.04em !important;
   }
 
   .tax-invoice-print-page .company-brand-accent {

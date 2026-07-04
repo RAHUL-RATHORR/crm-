@@ -199,8 +199,8 @@ export const downloadAsPDF = async (elementId, filename, onProgressChange = () =
             .tax-invoice-print-page .tax-company-name,
             .tax-invoice-print-page .company-brand-name {
               font-weight: 900 !important;
-              font-size: 20px !important;
-              letter-spacing: 0.05em !important;
+              font-size: 36px !important;
+              letter-spacing: 0.04em !important;
               color: #000000 !important;
             }
             .tax-invoice-print-page .company-brand-accent {
