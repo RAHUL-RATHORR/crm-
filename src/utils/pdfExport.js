@@ -196,8 +196,13 @@ export const downloadAsPDF = async (elementId, filename, onProgressChange = () =
             .tax-invoice-print-page .tax-section-title,
             .tax-invoice-print-page .tax-blue,
             .tax-invoice-print-page .tax-item-header-row .tax-cell { font-weight: 900 !important; color: #000 !important; }
-            .tax-invoice-print-page .tax-company-name { font-weight: 900 !important; }
-            .tax-invoice-print-page .company-brand-name { color: #000000 !important; font-weight: 900 !important; }
+            .tax-invoice-print-page .tax-company-name,
+            .tax-invoice-print-page .company-brand-name {
+              font-weight: 900 !important;
+              font-size: 20px !important;
+              letter-spacing: 0.05em !important;
+              color: #000000 !important;
+            }
             .tax-invoice-print-page .company-brand-accent {
               color: #000000 !important;
               font-weight: 900 !important;

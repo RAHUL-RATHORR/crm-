@@ -133,9 +133,9 @@
 
 .tax-invoice .tax-cell {
   border: 1px solid #000;
-  padding: 3px 5px;
+  padding: 2px 4px;
   vertical-align: top;
-  line-height: 1.4;
+  line-height: 1.2;
   color: #000;
   font-weight: 700;
 }
@@ -150,13 +150,15 @@
 
 .tax-invoice .tax-company-name {
   font-weight: 800;
-  font-size: 16px;
-  letter-spacing: 0.5px;
+  font-size: 18px;
+  letter-spacing: 0.04em;
   color: #000;
 }
 
 .tax-invoice .company-brand-name {
   font-weight: 900;
+  font-size: 18px;
+  letter-spacing: 0.04em;
   color: #000000;
 }
 
@@ -261,7 +263,8 @@
 
 .tax-fields-inner td {
   border: none;
-  padding: 1px 2px;
+  padding: 0 2px 1px 0;
+  line-height: 1.2;
   vertical-align: top;
 }
 
@@ -401,8 +404,9 @@
 }
 
 .tax-invoice .tax-amount-words-cell {
-  padding: 6px 8px;
+  padding: 2px 6px;
   font-size: 10px;
+  line-height: 1.2;
 }
 
 .tax-invoice .tax-amount-words-label {
@@ -436,8 +440,8 @@
 .tax-analysis-table .tax-cell {
   border: 1px solid #000 !important;
   font-size: 10px;
-  padding: 4px 6px;
-  line-height: 1.35;
+  padding: 1px 4px;
+  line-height: 1.15;
   vertical-align: middle;
   color: #000;
   font-weight: 700;
@@ -449,33 +453,38 @@
   background-color: #e2efda !important;
   font-weight: 900;
   font-size: 11px;
-  padding: 5px;
+  padding: 2px 4px;
   text-align: center;
 }
 
 .tax-analysis-table .tax-analysis-header-row .tax-cell {
   background-color: #ffffff !important;
   font-weight: 800;
-  font-size: 10px;
+  font-size: 9px;
   text-align: center;
   vertical-align: middle;
+  padding: 1px 3px;
+  line-height: 1.15;
 }
 
 .tax-analysis-table .tax-analysis-data-row .tax-cell {
   background-color: #f2f2f2 !important;
   font-weight: 700;
+  padding: 1px 4px;
 }
 
 .tax-analysis-table .tax-analysis-total-row .tax-cell {
   background-color: #ffffff !important;
   font-weight: 900;
   border-top: 1px solid #000 !important;
+  padding: 1px 4px;
 }
 
 .tax-analysis-table .tax-analysis-words-row .tax-cell {
   background-color: #ececec !important;
   font-size: 10px;
-  padding: 5px 8px;
+  padding: 2px 6px;
+  line-height: 1.2;
   text-align: left;
 }
 
@@ -515,13 +524,13 @@
   padding-left: 1.2rem;
   margin: 0;
   font-size: 9px;
-  line-height: 1.45;
+  line-height: 1.25;
   font-weight: 600;
   color: #111;
 }
 
 .tax-sign-space {
-  height: 55px;
+  height: 40px;
 }
 
 .tax-invoice .tax-item-empty-row .tax-item-empty-cell {
@@ -1077,6 +1086,14 @@
     padding: 7px 0 !important;
   }
 
+  .tax-invoice-print-page .tax-company-name,
+  .tax-invoice-print-page .company-brand-name {
+    font-size: 20px !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.05em !important;
+    color: #000000 !important;
+  }
+
   .tax-invoice-print-page .tax-analysis-table .tax-analysis-title-row .tax-cell {
     background-color: #e2efda !important;
   }
@@ -1100,8 +1117,24 @@
 
   .tax-invoice-print-page .tax-analysis-table .tax-cell {
     border: 1px solid #000 !important;
+    padding: 1px 3px !important;
+    line-height: 1.1 !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+  }
+
+  .tax-invoice-print-page .tax-analysis-table .tax-analysis-title-row .tax-cell {
+    padding: 2px 3px !important;
+  }
+
+  .tax-invoice-print-page .tax-analysis-table .tax-analysis-words-row .tax-cell {
+    padding: 2px 5px !important;
+    line-height: 1.15 !important;
+  }
+
+  .tax-invoice-print-page .tax-amount-words-cell {
+    padding: 2px 5px !important;
+    line-height: 1.15 !important;
   }
 
   .tax-invoice-print-page .tax-item-sub-amount,
@@ -1116,11 +1149,15 @@
 
   .tax-invoice-print-page .tax-company-name {
     font-weight: 900 !important;
+    font-size: 20px !important;
+    letter-spacing: 0.05em !important;
   }
 
   .tax-invoice-print-page .company-brand-name {
     color: #000000 !important;
     font-weight: 900 !important;
+    font-size: 20px !important;
+    letter-spacing: 0.05em !important;
   }
 
   .tax-invoice-print-page .company-brand-accent {

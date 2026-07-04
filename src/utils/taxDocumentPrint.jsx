@@ -50,6 +50,13 @@ export const getStateFromGst = (gstNo) => {
   return { state: 'Rajasthan', code: '08' };
 };
 
+export const formatStateWithCode = (state, code) => {
+  const stateText = (state || '').trim();
+  const codeText = (code || '').trim();
+  if (stateText && codeText) return `${stateText}, Code : ${codeText}`;
+  return stateText || codeText || '';
+};
+
 export const TaxFieldsTable = ({ rows }) => (
   <table className="tax-fields-inner w-full">
     <tbody>
@@ -99,41 +106,41 @@ export function getEmptyProductRowCount(usedRows = 0, options = {}) {
   return EMPTY_PRODUCT_ROWS;
 }
 
-export const getTaxTableColCount = () => 10;
+export const getTaxTableColCount = () => 7;
+
+export const getTaxTableHalfColSpans = () => {
+  const total = getTaxTableColCount();
+  const left = Math.floor(total / 2);
+  return { left, right: total - left };
+};
 
 export const TaxInvoiceColGroup = () => (
   <colgroup>
-    <col style={{ width: '4%' }} />
     <col style={{ width: '5%' }} />
-    <col style={{ width: '24%' }} />
-    <col style={{ width: '8%' }} />
-    <col style={{ width: '7%' }} />
-    <col style={{ width: '9%' }} />
-    <col style={{ width: '8%' }} />
-    <col style={{ width: '8%' }} />
-    <col style={{ width: '5%' }} />
-    <col style={{ width: '22%' }} />
+    <col style={{ width: '32%' }} />
+    <col style={{ width: '10%' }} />
+    <col style={{ width: '10%' }} />
+    <col style={{ width: '12%' }} />
+    <col style={{ width: '6%' }} />
+    <col style={{ width: '25%' }} />
   </colgroup>
 );
 
 /** One tall row with per-column vertical borders (no horizontal lines in the empty zone). */
 export const TaxItemEmptyRow = ({ rowCount = 2 }) => (
   <tr className="tax-item-empty-row tax-items-empty-band" style={{ '--empty-rows': rowCount }}>
-    {Array.from({ length: 10 }, (_, i) => (
-      <td key={i} className={`tax-item-empty-cell${i === 6 ? ' tax-blue' : ''}`}>&nbsp;</td>
+    {Array.from({ length: getTaxTableColCount() }, (_, i) => (
+      <td key={i} className="tax-item-empty-cell">&nbsp;</td>
     ))}
   </tr>
 );
 
 export const ClassicTaxItemsHeader = () => (
   <tr className="tax-item-header-row text-center font-bold">
-    <td className="tax-cell">Sl<br />No.</td>
-    <td className="tax-cell">No. &amp;<br />Kind of Pkgs.</td>
+    <td className="tax-cell">Sl No.</td>
     <td className="tax-cell text-left">Description of Goods</td>
     <td className="tax-cell">HSN/SAC</td>
-    <td className="tax-cell">GST<br />Rate</td>
-    <td className="tax-cell">Alt.<br />Quantity</td>
-    <td className="tax-cell">Quantity</td>
+    <td className="tax-cell">GST Rate</td>
     <td className="tax-cell">Rate</td>
     <td className="tax-cell">per</td>
     <td className="tax-cell">Amount</td>
@@ -145,12 +152,9 @@ export const ClassicTaxItemRow = ({ row, isIGST = false, children, stripeClass =
   return (
     <tr className={`tax-item-main-row ${stripeClass}`}>
       <td className="tax-cell text-center align-top tax-item-value">{row.idx}</td>
-      <td className="tax-cell align-top">&nbsp;</td>
       <td className="tax-cell align-top tax-item-name">{children || row.item.description}</td>
       <td className="tax-cell text-center align-top tax-item-value">{row.item.hsn || ''}</td>
       <td className="tax-cell text-center align-top tax-item-value">{gstPercent} %</td>
-      <td className="tax-cell text-right align-top">&nbsp;</td>
-      <td className="tax-cell text-right align-top tax-item-value">{Number(row.item.qty || 0)}</td>
       <td className="tax-cell text-right align-top tax-item-value">{fmtAmt(row.item.rate)}</td>
       <td className="tax-cell text-center align-top tax-item-value">{(row.item.per || 'PCS').trim() || 'PCS'}</td>
       <td className="tax-cell text-right align-top tax-item-total">{fmtAmt(row.taxable)}</td>
@@ -158,15 +162,12 @@ export const ClassicTaxItemRow = ({ row, isIGST = false, children, stripeClass =
   );
 };
 
-export const ClassicTaxItemsTotalRow = ({ totalQty, amountWithTax }) => (
+export const ClassicTaxItemsTotalRow = ({ amountWithTax }) => (
   <tr className="tax-item-grand-total-row font-bold">
-    <td className="tax-cell">&nbsp;</td>
     <td className="tax-cell">&nbsp;</td>
     <td className="tax-cell text-right tax-item-grand-label">Total</td>
     <td className="tax-cell">&nbsp;</td>
     <td className="tax-cell">&nbsp;</td>
-    <td className="tax-cell">&nbsp;</td>
-    <td className="tax-cell text-right">{totalQty}</td>
     <td className="tax-cell">&nbsp;</td>
     <td className="tax-cell">&nbsp;</td>
     <td className="tax-cell text-right tax-item-grand-amount">{fmtAmt(amountWithTax)} ₹</td>
@@ -175,7 +176,7 @@ export const ClassicTaxItemsTotalRow = ({ totalQty, amountWithTax }) => (
 
 export const ClassicAmountInWordsRow = ({ words }) => (
   <tr className="tax-amount-words-row">
-    <td colSpan={10} className="tax-cell tax-amount-words-cell">
+    <td colSpan={getTaxTableColCount()} className="tax-cell tax-amount-words-cell">
       <span className="tax-amount-words-label">Amount Chargeable (in words):</span>{' '}
       <span className="tax-amount-words-value">{words} Indian Rupees Only</span>
       <span className="tax-amount-words-eoe">E. &amp; O.E</span>
@@ -191,7 +192,6 @@ export const TaxClassicItemsBlock = ({
   totalIgst = 0,
   isIGST = false,
   emptyProductRows = 2,
-  totalQty = 0,
   amountWithTax = 0,
   amountInWords = '',
   renderItemDescription,
@@ -225,7 +225,7 @@ export const TaxClassicItemsBlock = ({
         getStripeClass={getStripeClass}
       />
       {emptyProductRows > 0 && <TaxItemEmptyRow rowCount={emptyProductRows} />}
-      <ClassicTaxItemsTotalRow totalQty={totalQty} amountWithTax={amountWithTax} />
+      <ClassicTaxItemsTotalRow amountWithTax={amountWithTax} />
       {amountInWords && <ClassicAmountInWordsRow words={amountInWords} />}
     </>
   );
@@ -305,7 +305,7 @@ export function buildTaxAnalysisGroups(itemLines = [], freight = 0, isIGST = fal
   return groups;
 }
 
-export const TaxAnalysisSection = ({ groups = [], isIGST = false, taxAmountInWords = '', colSpan = 10 }) => {
+export const TaxAnalysisSection = ({ groups = [], isIGST = false, taxAmountInWords = '', colSpan = getTaxTableColCount() }) => {
   const colCount = isIGST ? 4 : 6;
   const rows = groups.length ? groups : [{
     hsn: '',
@@ -358,31 +358,21 @@ export const TaxAnalysisSection = ({ groups = [], isIGST = false, taxAmountInWor
               <td colSpan={colCount} className="tax-cell text-center font-bold">Tax Analysis</td>
             </tr>
             <tr className="tax-analysis-header-row text-center font-bold">
-              <td className="tax-cell" rowSpan={2}>Taxable<br />Value</td>
-              {isIGST ? (
-                <td className="tax-cell" colSpan={2}>IGST</td>
-              ) : (
-                <>
-                  <td className="tax-cell" colSpan={2}>CGST</td>
-                  <td className="tax-cell" colSpan={2}>SGST/UTGST</td>
-                </>
-              )}
-              <td className="tax-cell" rowSpan={2}>Total Tax<br />Amount</td>
-            </tr>
-            <tr className="tax-analysis-header-row text-center font-bold">
+              <td className="tax-cell">Taxable Value</td>
               {isIGST ? (
                 <>
-                  <td className="tax-cell">Rate</td>
-                  <td className="tax-cell">Amount</td>
+                  <td className="tax-cell">IGST Rate</td>
+                  <td className="tax-cell">IGST Amount</td>
                 </>
               ) : (
                 <>
-                  <td className="tax-cell">Rate</td>
-                  <td className="tax-cell">Amount</td>
-                  <td className="tax-cell">Rate</td>
-                  <td className="tax-cell">Amount</td>
+                  <td className="tax-cell">CGST Rate</td>
+                  <td className="tax-cell">CGST Amount</td>
+                  <td className="tax-cell">SGST Rate</td>
+                  <td className="tax-cell">SGST Amount</td>
                 </>
               )}
+              <td className="tax-cell">Total Tax Amount</td>
             </tr>
             {rows.map((group, idx) => (
               <tr key={idx} className="tax-analysis-data-row">
@@ -446,10 +436,7 @@ export const CompanyBrandName = ({ className = '', large = false }) => (
 export const TaxChargeSubRow = ({ label, amount, stripeClass = 'tax-items-stripe-row tax-stripe-grey', isTransport = false }) => (
   <tr className={`tax-item-sub-row ${stripeClass}${isTransport ? ' tax-item-sub-transport' : ''}`}>
     <td className="tax-cell tax-item-sub-pad">&nbsp;</td>
-    <td className="tax-cell tax-item-sub-pad">&nbsp;</td>
     <td className="tax-cell tax-item-sub-label text-right">{label}</td>
-    <td className="tax-cell tax-item-sub-pad">&nbsp;</td>
-    <td className="tax-cell tax-item-sub-pad">&nbsp;</td>
     <td className="tax-cell tax-item-sub-pad">&nbsp;</td>
     <td className="tax-cell tax-item-sub-pad">&nbsp;</td>
     <td className="tax-cell tax-item-sub-pad">&nbsp;</td>

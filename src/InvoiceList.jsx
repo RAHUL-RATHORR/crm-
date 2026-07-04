@@ -7,7 +7,7 @@ import { mergePaymentType, mergePaymentTypeList, removeStoredPaymentType } from 
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
 import { getBillToDetails, getShipToDetails } from './utils/shipAddress';
 import { numberToWords } from './utils/numberToWords';
-import { SELLER, fmtTaxDate, fmtAmt, getStateFromGst, TaxFieldsTable, buildTaxItemLine, getEmptyProductRowCount, CompanyBrandName, TaxCopyBox, TaxCopyTypeControls, DEFAULT_TAX_COPY_SELECTION, getSelectedCopyIds, getPreviewHighlightCopy, TaxInvoiceColGroup, getTaxTableColCount, getTaxChargeSubRowCount, TaxClassicItemsBlock, buildTaxAnalysisGroups, TaxAnalysisSection } from './utils/taxDocumentPrint';
+import { SELLER, fmtTaxDate, fmtAmt, getStateFromGst, formatStateWithCode, TaxFieldsTable, buildTaxItemLine, getEmptyProductRowCount, CompanyBrandName, TaxCopyBox, TaxCopyTypeControls, DEFAULT_TAX_COPY_SELECTION, getSelectedCopyIds, getPreviewHighlightCopy, TaxInvoiceColGroup, getTaxTableColCount, getTaxTableHalfColSpans, getTaxChargeSubRowCount, TaxClassicItemsBlock, buildTaxAnalysisGroups, TaxAnalysisSection } from './utils/taxDocumentPrint';
 
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'https://crm-qpw8.onrender.com'
@@ -30,7 +30,7 @@ const InvoiceList = () => {
   const freight = selectedInvoice ? (Number(selectedInvoice.freight) || 0) : 0;
   const isIGST = tempGstType === 'IGST';
   const taxColCount = getTaxTableColCount();
-  const taxHalfColSpan = taxColCount / 2;
+  const { left: taxHalfColSpan, right: taxHalfColSpanRight } = getTaxTableHalfColSpans();
   const itemsSubTotal = selectedInvoice
     ? (Number(selectedInvoice.subTotal) || (selectedInvoice.items || []).reduce((sum, item) => sum + (Number(item.total) || 0), 0))
     : 0;
@@ -63,7 +63,6 @@ const InvoiceList = () => {
       )
     : [];
 
-  const totalQty = itemLines.reduce((sum, row) => sum + (Number(row.item.qty) || 0), 0);
   const totalTaxable = itemsSubTotal + freight;
   const totalCgst = itemLines.reduce((sum, row) => sum + row.cgstAmt, 0) + freightCgstAmt;
   const totalSgst = itemLines.reduce((sum, row) => sum + row.sgstAmt, 0) + freightSgstAmt;
@@ -453,11 +452,10 @@ const InvoiceList = () => {
                           ['Reverse Charge', selectedInvoice.reverseCharge || 'No'],
                           ['Invoice No.', selectedInvoice.invoiceNumber],
                           ['Invoice Date', fmtTaxDate(selectedInvoice.date)],
-                          ['State', SELLER.state],
-                          ['State Code', SELLER.stateCode],
+                          ['State', formatStateWithCode(SELLER.state, SELLER.stateCode)],
                         ]} />
                       </td>
-                      <td colSpan={taxHalfColSpan} className="tax-cell align-top p-1">
+                      <td colSpan={taxHalfColSpanRight} className="tax-cell align-top p-1">
                         <TaxFieldsTable rows={[
                           ['Transportation Mode', 'Road'],
                           ['Vehicle No.', ''],
@@ -479,12 +477,11 @@ const InvoiceList = () => {
                             ['E-MAIL', billTo.emailId || '-'],
                             ['GSTIN', billTo.gstNo || 'URP'],
                             ['MOBILE', billTo.contactNo || '-'],
-                            ['State', billToState.state],
-                            ['State Code', billToState.code],
+                            ['State', formatStateWithCode(billToState.state, billToState.code)],
                           ]} />
                         </div>
                       </td>
-                      <td colSpan={taxHalfColSpan} className="tax-cell align-top p-0">
+                      <td colSpan={taxHalfColSpanRight} className="tax-cell align-top p-0">
                         <div className="tax-blue tax-section-title text-center py-0.5 px-1">Details of Consignee | Shipped to:</div>
                         <div className="p-1">
                           <TaxFieldsTable rows={[
@@ -493,8 +490,7 @@ const InvoiceList = () => {
                             ['E-MAIL', shipTo.emailId || '-'],
                             ['GSTIN', shipTo.gstNo || 'URP'],
                             ['MOBILE', shipTo.contactNo || '-'],
-                            ['State', shipToState.state],
-                            ['State Code', shipToState.code],
+                            ['State', formatStateWithCode(shipToState.state, shipToState.code)],
                           ]} />
                         </div>
                       </td>
@@ -508,7 +504,6 @@ const InvoiceList = () => {
                       totalIgst={totalIgst}
                       isIGST={isIGST}
                       emptyProductRows={emptyProductRows}
-                      totalQty={totalQty}
                       amountWithTax={amountWithTax}
                       amountInWords={numberToWords(amountWithTax)}
                     />
@@ -520,18 +515,10 @@ const InvoiceList = () => {
                       colSpan={taxColCount}
                     />
 
-                    {/* Bank + Signature */}
+                    {/* Terms + Bank / Signature */}
                     <tr>
                       <td colSpan={taxHalfColSpan} className="tax-cell align-top p-1">
-                        <p className="tax-section-title mb-1">Bank Details</p>
-                        <TaxFieldsTable rows={[
-                          ['Account Holder Name', SELLER.bank.holder],
-                          ['Bank Account Number', SELLER.bank.account],
-                          ['Bank IFSC Code', SELLER.bank.ifsc],
-                          ['Bank Name', SELLER.bank.name],
-                          ['Bank Branch Name', SELLER.bank.branch],
-                        ]} />
-                        <p className="tax-section-title mt-2 mb-1">Terms And Conditions</p>
+                        <p className="tax-section-title mb-1">Terms And Conditions</p>
                         <ol className="tax-terms-list">
                           <li>Goods once sold will not be taken back.</li>
                           <li>Any Dispute Shall Subject to Jaipur Jurisdiction.</li>
@@ -540,9 +527,16 @@ const InvoiceList = () => {
                           <li>All Goods Return / Replace only if damage by company transport.</li>
                         </ol>
                       </td>
-                      <td colSpan={taxHalfColSpan} className="tax-cell align-top p-1">
-                        <p className="text-center mb-2 tax-header-line">Certified that the particular given above are true and correct</p>
-                        <p className="tax-section-title text-right">For, {SELLER.name}</p>
+                      <td colSpan={taxHalfColSpanRight} className="tax-cell align-top p-1">
+                        <p className="tax-section-title mb-1">Bank Details</p>
+                        <TaxFieldsTable rows={[
+                          ['Account Holder Name', SELLER.bank.holder],
+                          ['Bank Account Number', SELLER.bank.account],
+                          ['Bank IFSC Code', SELLER.bank.ifsc],
+                          ['Bank Name', SELLER.bank.name],
+                          ['Bank Branch Name', SELLER.bank.branch],
+                        ]} />
+                        <p className="tax-section-title text-right mt-2">For, {SELLER.name}</p>
                         <div className="tax-sign-space">&nbsp;</div>
                         <p className="text-right tax-section-title">Authorised Signatory</p>
                       </td>
