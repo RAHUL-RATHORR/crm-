@@ -364,13 +364,16 @@ export function printElement(elementId, options = {}) {
             margin: 0 !important;
           }
           .tax-invoice-print-page .tax-invoice,
-          .tax-invoice-print-page .tax-cell,
+          .tax-invoice-print-page .tax-cell:not(.tax-blue),
           .tax-invoice-print-page .job-card-section-body,
           .tax-invoice-print-page .job-card-meta-cell,
           .tax-invoice-print-page .job-card-work-instructions {
             background-color: #ffffff !important;
           }
+          .tax-invoice-print-page .tax-cell.tax-blue,
           .tax-invoice-print-page .tax-blue,
+          .tax-invoice-print-page .tax-title-bar,
+          .tax-invoice-print-page .tax-title-text,
           .tax-invoice-print-page .tax-copy-box,
           .job-card-print-table .job-card-section-title {
             background-color: #d9e9f7 !important;

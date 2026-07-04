@@ -9,6 +9,7 @@ export const SELLER = {
   office: 'J-97, Ashok Chowk, Adarsh Nagar, Jaipur-302 004',
   factory: 'G-139, Hirawala Industrial Area, Kanota, Agra Road, Jaipur',
   gstin: '08AALPC9959M1ZV',
+  msmeRegNo: 'UDHYAM-RJ-17-0014267',
   pan: 'AALPC9959M',
   state: 'Rajasthan',
   stateCode: '08',
@@ -69,6 +70,13 @@ export const TaxFieldsTable = ({ rows }) => (
       ))}
     </tbody>
   </table>
+);
+
+export const SellerGstinMsmeLines = () => (
+  <>
+    <p className="tax-header-line"><span className="tax-field-label">MSME REGD NO :-</span> {SELLER.msmeRegNo}</p>
+    <p className="tax-header-line"><span className="tax-field-label">GSTIN :</span> {SELLER.gstin}</p>
+  </>
 );
 
 export const buildTaxItemLine = (item, idx, fallbackGst = 18, isIGST = false) => {
@@ -302,7 +310,7 @@ export function buildTaxAnalysisGroups(itemLines = [], freight = 0, isIGST = fal
 }
 
 export const TaxAnalysisSection = ({ groups = [], isIGST = false, taxAmountInWords = '', colSpan = getTaxTableColCount() }) => {
-  const colCount = isIGST ? 4 : 6;
+  const colCount = isIGST ? 5 : 7;
   const rows = groups.length ? groups : [{
     hsn: '',
     taxable: 0,
@@ -333,18 +341,20 @@ export const TaxAnalysisSection = ({ groups = [], isIGST = false, taxAmountInWor
           <colgroup>
             {isIGST ? (
               <>
-                <col style={{ width: '22%' }} />
-                <col style={{ width: '14%' }} />
-                <col style={{ width: '22%' }} />
-                <col style={{ width: '22%' }} />
+                <col style={{ width: '12%' }} />
+                <col style={{ width: '18%' }} />
+                <col style={{ width: '12%' }} />
+                <col style={{ width: '19%' }} />
+                <col style={{ width: '19%' }} />
               </>
             ) : (
               <>
+                <col style={{ width: '12%' }} />
                 <col style={{ width: '18%' }} />
-                <col style={{ width: '10%' }} />
-                <col style={{ width: '16%' }} />
-                <col style={{ width: '10%' }} />
-                <col style={{ width: '16%' }} />
+                <col style={{ width: '11%' }} />
+                <col style={{ width: '15%' }} />
+                <col style={{ width: '11%' }} />
+                <col style={{ width: '15%' }} />
                 <col style={{ width: '18%' }} />
               </>
             )}
@@ -354,24 +364,36 @@ export const TaxAnalysisSection = ({ groups = [], isIGST = false, taxAmountInWor
               <td colSpan={colCount} className="tax-cell text-center font-bold">Tax Analysis</td>
             </tr>
             <tr className="tax-analysis-header-row text-center font-bold">
-              <td className="tax-cell">Taxable Value</td>
+              <td className="tax-cell tax-analysis-hsn" rowSpan={2}>HSN/SAC</td>
+              <td className="tax-cell" rowSpan={2}>Taxable<br />Value</td>
+              {isIGST ? (
+                <td className="tax-cell" colSpan={2}>IGST</td>
+              ) : (
+                <>
+                  <td className="tax-cell" colSpan={2}>CGST</td>
+                  <td className="tax-cell" colSpan={2}>SGST/UTGST</td>
+                </>
+              )}
+              <td className="tax-cell" rowSpan={2}>Total Tax<br />Amount</td>
+            </tr>
+            <tr className="tax-analysis-header-row text-center font-bold">
               {isIGST ? (
                 <>
-                  <td className="tax-cell">IGST Rate</td>
-                  <td className="tax-cell">IGST Amount</td>
+                  <td className="tax-cell">Rate</td>
+                  <td className="tax-cell">Amount</td>
                 </>
               ) : (
                 <>
-                  <td className="tax-cell">CGST Rate</td>
-                  <td className="tax-cell">CGST Amount</td>
-                  <td className="tax-cell">SGST Rate</td>
-                  <td className="tax-cell">SGST Amount</td>
+                  <td className="tax-cell">Rate</td>
+                  <td className="tax-cell">Amount</td>
+                  <td className="tax-cell">Rate</td>
+                  <td className="tax-cell">Amount</td>
                 </>
               )}
-              <td className="tax-cell">Total Tax Amount</td>
             </tr>
             {rows.map((group, idx) => (
               <tr key={idx} className="tax-analysis-data-row">
+                <td className="tax-cell tax-analysis-hsn text-center">{group.hsn || ''}</td>
                 <td className="tax-cell text-right">{fmtAmt(group.taxable)}</td>
                 {isIGST ? (
                   <>
@@ -390,10 +412,8 @@ export const TaxAnalysisSection = ({ groups = [], isIGST = false, taxAmountInWor
               </tr>
             ))}
             <tr className="tax-analysis-total-row font-bold">
-              <td className="tax-cell tax-analysis-total-first text-right">
-                <span className="tax-analysis-total-label">Total:</span>
-                <span>{fmtAmt(totals.taxable)}</span>
-              </td>
+              <td className="tax-cell tax-analysis-total-label text-right">Total:</td>
+              <td className="tax-cell text-right">{fmtAmt(totals.taxable)}</td>
               {isIGST ? (
                 <>
                   <td className="tax-cell">&nbsp;</td>
@@ -557,6 +577,10 @@ export const JobCardLetterhead = ({ docTitle = 'JOB CARD' }) => (
         <span>
           GSTIN:{' '}
           <span className="text-gray-900 font-black normal-case tracking-normal">{SELLER.gstin}</span>
+        </span>
+        <span>
+          MSME REGD NO:-{' '}
+          <span className="text-gray-900 font-black normal-case tracking-normal">{SELLER.msmeRegNo}</span>
         </span>
         <span>
           PAN:{' '}

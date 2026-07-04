@@ -9,6 +9,8 @@ import ItemDescriptionInput from './components/ItemDescriptionInput';
 import PaymentTypeSection from './components/PaymentTypeSection';
 import { usePaymentTypes } from './utils/usePaymentTypes';
 import { getStoredPaymentType, setStoredPaymentType } from './utils/paymentTypeStorage';
+import { setStoredDocumentExtras, getStoredDocumentExtras } from './utils/documentExtrasStorage';
+import { validateStateAndCode } from './utils/indianStateCodes';
 
 const EMPTY_PARTY_FORM = {
   partyName: '',
@@ -60,6 +62,7 @@ const AddInvoice = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const editData = location.state?.editData;
+  const storedExtras = getStoredDocumentExtras(editData?._id, editData?.invoiceNumber);
 
   const [invoiceDate, setInvoiceDate] = useState(editData ? new Date(editData.date) : new Date());
   const [orderDate, setOrderDate] = useState(
@@ -81,6 +84,9 @@ const AddInvoice = () => {
     freight: editData ? (editData.freight || 0) : 0,
     reverseCharge: editData ? (editData.reverseCharge || 'No') : 'No',
     paymentType: editData?.paymentType || getStoredPaymentType(editData?._id, editData?.invoiceNumber) || '',
+    vehicleNo: editData?.vehicleNo || storedExtras?.vehicleNo || '',
+    state: editData?.state || storedExtras?.state || 'Rajasthan',
+    stateCode: editData?.stateCode || storedExtras?.stateCode || '08',
   });
 
   const [items, setItems] = useState(() => normalizeInvoiceItems(editData));
@@ -92,6 +98,7 @@ const AddInvoice = () => {
   const [partyForm, setPartyForm] = useState(EMPTY_PARTY_FORM);
   const [isSavingParty, setIsSavingParty] = useState(false);
   const [isSavingInvoice, setIsSavingInvoice] = useState(false);
+  const [stateFieldError, setStateFieldError] = useState('');
   const partyDropdownRef = useRef(null);
 
   const partySuggestions = useMemo(() => buildPartySuggestions(jobCards), [jobCards]);
@@ -131,11 +138,26 @@ const AddInvoice = () => {
   }, []);
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value: rawValue } = e.target;
+    const value = name === 'stateCode' ? rawValue.replace(/\D/g, '').slice(0, 2) : rawValue;
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (name === 'party') {
       setIsPartyDropdownOpen(true);
     }
+    if (name === 'state' || name === 'stateCode') {
+      setStateFieldError('');
+    }
+  };
+
+  const runStateValidation = () => {
+    const result = validateStateAndCode(formData.state, formData.stateCode);
+    if (!result.valid) {
+      setStateFieldError(result.message);
+      alert(result.message);
+      return false;
+    }
+    setStateFieldError('');
+    return true;
   };
 
   const applyPartySuggestion = (party) => {
@@ -289,6 +311,9 @@ const AddInvoice = () => {
     gstAmount,
     totalAmount: grandTotal,
     paymentType: formData.paymentType || '',
+    vehicleNo: formData.vehicleNo || '',
+    state: formData.state || 'Rajasthan',
+    stateCode: formData.stateCode || '08',
   });
 
   const saveInvoice = async () => {
@@ -312,7 +337,13 @@ const AddInvoice = () => {
     const saved = await response.json();
     const paymentType = saved.paymentType || formData.paymentType || '';
     setStoredPaymentType(saved._id, saved.invoiceNumber, paymentType);
-    return { ...saved, paymentType };
+    const extras = {
+      vehicleNo: saved.vehicleNo || formData.vehicleNo || '',
+      state: saved.state || formData.state || 'Rajasthan',
+      stateCode: saved.stateCode || formData.stateCode || '08',
+    };
+    setStoredDocumentExtras(saved._id, saved.invoiceNumber, extras);
+    return { ...saved, paymentType, ...extras };
   };
 
   const handleSubmit = async (e) => {
@@ -321,6 +352,7 @@ const AddInvoice = () => {
       alert('Party name is required');
       return;
     }
+    if (!runStateValidation()) return;
 
     setIsSavingInvoice(true);
     try {
@@ -339,6 +371,7 @@ const AddInvoice = () => {
       alert('Party name is required');
       return;
     }
+    if (!runStateValidation()) return;
 
     setIsSavingInvoice(true);
     try {
@@ -415,6 +448,56 @@ const AddInvoice = () => {
                 wrapperClassName="w-full"
                 className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
               />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Vehicle No.</label>
+              <input
+                type="text"
+                name="vehicleNo"
+                value={formData.vehicleNo}
+                onChange={handleInputChange}
+                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+                placeholder="Vehicle number"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">State</label>
+              <input
+                type="text"
+                name="state"
+                value={formData.state}
+                onChange={handleInputChange}
+                onBlur={() => {
+                  const result = validateStateAndCode(formData.state, formData.stateCode);
+                  setStateFieldError(result.valid ? '' : result.message);
+                }}
+                className={`w-full bg-gray-50 border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 transition-all text-sm ${
+                  stateFieldError ? 'border-red-400 focus:ring-red-400' : 'border-gray-200 focus:ring-blue-500'
+                }`}
+                placeholder="Rajasthan"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">State Code</label>
+              <input
+                type="text"
+                name="stateCode"
+                value={formData.stateCode}
+                onChange={handleInputChange}
+                onBlur={() => {
+                  const result = validateStateAndCode(formData.state, formData.stateCode);
+                  setStateFieldError(result.valid ? '' : result.message);
+                }}
+                inputMode="numeric"
+                maxLength={2}
+                className={`w-full bg-gray-50 border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 transition-all text-sm ${
+                  stateFieldError ? 'border-red-400 focus:ring-red-400' : 'border-gray-200 focus:ring-blue-500'
+                }`}
+                placeholder="08"
+              />
+              {stateFieldError && (
+                <p className="text-xs text-red-600 whitespace-pre-line">{stateFieldError}</p>
+              )}
             </div>
             <div className="space-y-1 relative z-20" ref={partyDropdownRef}>
               <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Party *</label>

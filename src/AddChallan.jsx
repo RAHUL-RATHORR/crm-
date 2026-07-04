@@ -9,6 +9,8 @@ import ItemDescriptionInput from './components/ItemDescriptionInput';
 import PaymentTypeSection from './components/PaymentTypeSection';
 import { usePaymentTypes } from './utils/usePaymentTypes';
 import { getStoredPaymentType, setStoredPaymentType } from './utils/paymentTypeStorage';
+import { setStoredDocumentExtras, getStoredDocumentExtras } from './utils/documentExtrasStorage';
+import { validateStateAndCode } from './utils/indianStateCodes';
 
 const EMPTY_PARTY_FORM = {
   partyName: '',
@@ -98,6 +100,7 @@ const AddChallan = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const editData = location.state?.editData;
+  const storedExtras = getStoredDocumentExtras(editData?._id, editData?.challanNo);
 
   const [jobCards, setJobCards] = useState([]);
   const [pickedJobIds, setPickedJobIds] = useState([]);
@@ -109,6 +112,7 @@ const AddChallan = () => {
   const [partyForm, setPartyForm] = useState(EMPTY_PARTY_FORM);
   const [isSavingParty, setIsSavingParty] = useState(false);
   const [isSavingChallan, setIsSavingChallan] = useState(false);
+  const [stateFieldError, setStateFieldError] = useState('');
   const partyDropdownRef = useRef(null);
   const [challanDate, setChallanDate] = useState(editData ? new Date(editData.date) : new Date());
   const [formData, setFormData] = useState({
@@ -128,6 +132,9 @@ const AddChallan = () => {
     reverseCharge: editData ? (editData.reverseCharge || 'No') : 'No',
     note: editData ? editData.note : '',
     paymentType: editData?.paymentType || getStoredPaymentType(editData?._id, editData?.challanNo) || '',
+    vehicleNo: editData?.vehicleNo || storedExtras?.vehicleNo || '',
+    state: editData?.state || storedExtras?.state || 'Rajasthan',
+    stateCode: editData?.stateCode || storedExtras?.stateCode || '08',
   });
 
   const { paymentTypes, loading: paymentTypesLoading } = usePaymentTypes();
@@ -190,7 +197,8 @@ const AddChallan = () => {
     && !partyNameExists(partySuggestions, formData.partyName);
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value: rawValue } = e.target;
+    const value = name === 'stateCode' ? rawValue.replace(/\D/g, '').slice(0, 2) : rawValue;
     if (name === 'jobCardId') {
       const selectedCard = jobCards.find((card) => card._id === value || card.id === parseInt(value, 10));
       setPickedJobIds([]);
@@ -208,7 +216,21 @@ const AddChallan = () => {
       setIsPartyDropdownOpen(true);
       return;
     }
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (name === 'state' || name === 'stateCode') {
+      setStateFieldError('');
+    }
+  };
+
+  const runStateValidation = () => {
+    const result = validateStateAndCode(formData.state, formData.stateCode);
+    if (!result.valid) {
+      setStateFieldError(result.message);
+      alert(result.message);
+      return false;
+    }
+    setStateFieldError('');
+    return true;
   };
 
   const applyPartySuggestion = (party) => {
@@ -392,6 +414,9 @@ const AddChallan = () => {
       rate: computedItems.length > 0 ? computedItems[0].rate : 0,
       paymentStatus: editData ? (editData.paymentStatus || 'Pending') : 'Pending',
       paymentType: formData.paymentType || '',
+      vehicleNo: formData.vehicleNo || '',
+      state: formData.state || 'Rajasthan',
+      stateCode: formData.stateCode || '08',
     };
   };
 
@@ -415,7 +440,13 @@ const AddChallan = () => {
     const saved = await response.json();
     const paymentType = saved.paymentType || formData.paymentType || '';
     setStoredPaymentType(saved._id, saved.challanNo, paymentType);
-    return { ...saved, paymentType };
+    const extras = {
+      vehicleNo: saved.vehicleNo || formData.vehicleNo || '',
+      state: saved.state || formData.state || 'Rajasthan',
+      stateCode: saved.stateCode || formData.stateCode || '08',
+    };
+    setStoredDocumentExtras(saved._id, saved.challanNo, extras);
+    return { ...saved, paymentType, ...extras };
   };
 
   const handleSubmit = async (e) => {
@@ -424,6 +455,7 @@ const AddChallan = () => {
       alert('Party name is required');
       return;
     }
+    if (!runStateValidation()) return;
 
     setIsSavingChallan(true);
     try {
@@ -442,6 +474,7 @@ const AddChallan = () => {
       alert('Party name is required');
       return;
     }
+    if (!runStateValidation()) return;
 
     setIsSavingChallan(true);
     try {
@@ -498,6 +531,56 @@ const AddChallan = () => {
                 wrapperClassName="w-full"
                 className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
               />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Vehicle No.</label>
+              <input
+                type="text"
+                name="vehicleNo"
+                value={formData.vehicleNo}
+                onChange={handleInputChange}
+                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+                placeholder="Vehicle number"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">State</label>
+              <input
+                type="text"
+                name="state"
+                value={formData.state}
+                onChange={handleInputChange}
+                onBlur={() => {
+                  const result = validateStateAndCode(formData.state, formData.stateCode);
+                  setStateFieldError(result.valid ? '' : result.message);
+                }}
+                className={`w-full bg-gray-50 border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 transition-all text-sm ${
+                  stateFieldError ? 'border-red-400 focus:ring-red-400' : 'border-gray-200 focus:ring-blue-500'
+                }`}
+                placeholder="Rajasthan"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">State Code</label>
+              <input
+                type="text"
+                name="stateCode"
+                value={formData.stateCode}
+                onChange={handleInputChange}
+                onBlur={() => {
+                  const result = validateStateAndCode(formData.state, formData.stateCode);
+                  setStateFieldError(result.valid ? '' : result.message);
+                }}
+                inputMode="numeric"
+                maxLength={2}
+                className={`w-full bg-gray-50 border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 transition-all text-sm ${
+                  stateFieldError ? 'border-red-400 focus:ring-red-400' : 'border-gray-200 focus:ring-blue-500'
+                }`}
+                placeholder="08"
+              />
+              {stateFieldError && (
+                <p className="text-xs text-red-600 whitespace-pre-line">{stateFieldError}</p>
+              )}
             </div>
             <div className="space-y-1 relative z-20" ref={partyDropdownRef}>
               <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Party *</label>

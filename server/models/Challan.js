@@ -33,6 +33,9 @@ const challanSchema = new mongoose.Schema({
   note: { type: String },
   paymentStatus: { type: String, default: 'Pending' },
   paymentType: { type: String, default: '' },
+  vehicleNo: { type: String, default: '' },
+  state: { type: String, default: 'Rajasthan' },
+  stateCode: { type: String, default: '08' },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 }, { timestamps: true });

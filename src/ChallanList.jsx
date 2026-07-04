@@ -4,11 +4,17 @@ import { Plus, Trash2, MoreHorizontal, Truck, Pencil, ChevronDown, Check, AlertC
 import { downloadAsPDF } from './utils/pdfExport';
 import { printElement } from './utils/printDocument';
 import { mergePaymentType, mergePaymentTypeList, removeStoredPaymentType } from './utils/paymentTypeStorage';
+import {
+  mergeDocumentForPrint,
+  mergeDocumentForPrintList,
+  mergePrintDoc,
+  removeStoredDocumentExtras,
+} from './utils/documentExtrasStorage';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
 import { getBillToDetails, getShipToDetails } from './utils/shipAddress';
 import { numberToWords } from './utils/numberToWords';
 import { getChallanLineItems, computeLineItemsTotals, buildMergedChallanMeta } from './utils/challanTotals';
-import { SELLER, fmtTaxDate, fmtAmt, getStateFromGst, formatStateWithCode, TaxFieldsTable, buildTaxItemLine, getEmptyProductRowCount, CompanyBrandName, TaxCopyBox, TaxCopyTypeControls, DEFAULT_TAX_COPY_SELECTION, getSelectedCopyIds, getPreviewHighlightCopy, TaxInvoiceColGroup, getTaxTableColCount, getTaxTableHalfColSpans, getTaxChargeSubRowCount, TaxClassicItemsBlock, buildTaxAnalysisGroups, TaxAnalysisSection, MIN_CHALLAN_PRODUCT_TABLE_ROWS } from './utils/taxDocumentPrint';
+import { SELLER, fmtTaxDate, fmtAmt, getStateFromGst, formatStateWithCode, TaxFieldsTable, SellerGstinMsmeLines, buildTaxItemLine, getEmptyProductRowCount, CompanyBrandName, TaxCopyBox, TaxCopyTypeControls, DEFAULT_TAX_COPY_SELECTION, getSelectedCopyIds, getPreviewHighlightCopy, TaxInvoiceColGroup, getTaxTableColCount, getTaxTableHalfColSpans, getTaxChargeSubRowCount, TaxClassicItemsBlock, buildTaxAnalysisGroups, TaxAnalysisSection, MIN_CHALLAN_PRODUCT_TABLE_ROWS } from './utils/taxDocumentPrint';
 
 const ChallanList = () => {
   const navigate = useNavigate();
@@ -98,10 +104,8 @@ const ChallanList = () => {
     if (!printId || !challans.length) return;
 
     const fromList = challans.find((item) => item._id === printId);
-    const ch = mergePaymentType(
-      fromList
-        ? { ...fromList, paymentType: fromList.paymentType || printDoc?.paymentType || '' }
-        : printDoc,
+    const ch = mergeDocumentForPrint(
+      mergePrintDoc(fromList, printDoc),
     );
     if (!ch) return;
 
@@ -121,7 +125,7 @@ const ChallanList = () => {
   const fetchChallans = () => {
     fetch('https://crm-qpw8.onrender.com/api/challan')
       .then(res => res.json())
-      .then((data) => setChallans(mergePaymentTypeList(data)))
+      .then((data) => setChallans(mergeDocumentForPrintList(mergePaymentTypeList(data))))
       .catch(err => console.error("Error fetching Challans:", err));
   };
 
@@ -139,6 +143,7 @@ const ChallanList = () => {
         if (response.ok) {
           const deleted = challans.find((ch) => ch._id === challanToDelete);
           removeStoredPaymentType(challanToDelete, deleted?.challanNo);
+          removeStoredDocumentExtras(challanToDelete, deleted?.challanNo);
           fetchChallans();
           setIsDeleteModalOpen(false);
           setChallanToDelete(null);
@@ -199,7 +204,7 @@ const ChallanList = () => {
   const clearSelection = () => setSelectedChallanIds([]);
 
   const openPreview = (ch) => {
-    const merged = mergePaymentType(ch);
+    const merged = mergeDocumentForPrint(ch);
     setPreviewChallans([merged]);
     setTempGstType(merged.gstType || 'CGST/SGST');
     setCopySelection({ ...DEFAULT_TAX_COPY_SELECTION });
@@ -207,7 +212,7 @@ const ChallanList = () => {
   };
 
   const openMergedPreview = () => {
-    const selected = challans.filter((ch) => selectedChallanIds.includes(ch._id)).map(mergePaymentType);
+    const selected = challans.filter((ch) => selectedChallanIds.includes(ch._id)).map(mergeDocumentForPrint);
     if (selected.length < 2) {
       alert('Combined print ke liye kam se kam 2 challan select karo.');
       return;
@@ -490,7 +495,7 @@ const ChallanList = () => {
                         <CompanyBrandName uppercase />
                         <p className="tax-header-line">{SELLER.address}</p>
                         <p className="tax-header-line">{SELLER.tel}, {SELLER.email}</p>
-                        <p className="tax-header-line"><span className="tax-field-label">GSTIN :</span> {SELLER.gstin}</p>
+                        <SellerGstinMsmeLines />
                       </td>
                     </tr>
 
@@ -509,13 +514,13 @@ const ChallanList = () => {
                           ['Reverse Charge', primaryChallan.reverseCharge || 'No'],
                           ['Challan No.', challanNoLabel],
                           ['Challan Date', fmtTaxDate(challanDate)],
-                          ['State', formatStateWithCode(SELLER.state, SELLER.stateCode)],
+                          ['State', formatStateWithCode(primaryChallan.state || SELLER.state, primaryChallan.stateCode || SELLER.stateCode)],
                         ]} />
                       </td>
                       <td colSpan={taxHalfColSpanRight} className="tax-cell align-top p-1">
                         <TaxFieldsTable rows={[
                           ['Transportation Mode', 'Road'],
-                          ['Vehicle No.', ''],
+                          ['Vehicle No.', primaryChallan.vehicleNo || '-'],
                           ['Date of Supply', fmtTaxDate(challanDate)],
                           ['Place of Supply', 'Jaipur'],
                           ['Payment Type', primaryChallan.paymentType || '-'],

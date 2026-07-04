@@ -523,6 +523,9 @@ export default function JobCardListing() {
                               <span className="tax-field-label">GSTIN :</span> {SELLER.gstin}
                               <span className="ml-4 tax-field-label">PAN :</span> {SELLER.pan}
                             </p>
+                            <p className="tax-header-line text-left">
+                              <span className="tax-field-label">MSME REGD NO :-</span> {SELLER.msmeRegNo}
+                            </p>
                           </div>
                           <div className="job-card-doc-badge bg-blue-600 text-white px-5 py-1.5 rounded-md text-[11px] font-black uppercase tracking-widest shrink-0">
                             JOB CARD

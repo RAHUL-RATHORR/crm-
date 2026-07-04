@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Search,
   RefreshCw,
@@ -27,6 +27,7 @@ const formatQuoteDate = (value) => {
 
 export default function Estimates() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [estimates, setEstimates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -59,6 +60,29 @@ export default function Estimates() {
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    const printId = location.state?.printEstimateId;
+    const printDoc = location.state?.printDoc;
+    if (!printId || !estimates.length) return;
+
+    const fromList = estimates.find((item) => item._id === printId);
+    const estimate = fromList || printDoc;
+    if (!estimate) return;
+
+    setSelectedEstimate(estimate);
+    setIsModalOpen(true);
+
+    const timer = setTimeout(() => {
+      window.scrollTo(0, 0);
+      const container = document.querySelector('.a4-page-container');
+      if (container) container.scrollTop = 0;
+      window.print();
+    }, 1000);
+
+    navigate('/estimates', { replace: true, state: {} });
+    return () => clearTimeout(timer);
+  }, [estimates, location.state?.printEstimateId, navigate]);
 
   const handlePriceChange = (id, value) => {
     setPrices((prev) => ({ ...prev, [id]: value }));

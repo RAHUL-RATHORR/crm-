@@ -4,10 +4,16 @@ import { Plus, Trash2, MoreHorizontal, Pencil, Printer, Eye, X, Download, Phone,
 import { downloadAsPDF } from './utils/pdfExport';
 import { printElement } from './utils/printDocument';
 import { mergePaymentType, mergePaymentTypeList, removeStoredPaymentType } from './utils/paymentTypeStorage';
+import {
+  mergeDocumentForPrint,
+  mergeDocumentForPrintList,
+  mergePrintDoc,
+  removeStoredDocumentExtras,
+} from './utils/documentExtrasStorage';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
 import { getBillToDetails, getShipToDetails } from './utils/shipAddress';
 import { numberToWords } from './utils/numberToWords';
-import { SELLER, fmtTaxDate, fmtAmt, getStateFromGst, formatStateWithCode, TaxFieldsTable, buildTaxItemLine, getEmptyProductRowCount, CompanyBrandName, TaxCopyBox, TaxCopyTypeControls, DEFAULT_TAX_COPY_SELECTION, getSelectedCopyIds, getPreviewHighlightCopy, TaxInvoiceColGroup, getTaxTableColCount, getTaxTableHalfColSpans, getTaxChargeSubRowCount, TaxClassicItemsBlock, buildTaxAnalysisGroups, TaxAnalysisSection, MIN_PRODUCT_TABLE_ROWS } from './utils/taxDocumentPrint';
+import { SELLER, fmtTaxDate, fmtAmt, getStateFromGst, formatStateWithCode, TaxFieldsTable, SellerGstinMsmeLines, buildTaxItemLine, getEmptyProductRowCount, CompanyBrandName, TaxCopyBox, TaxCopyTypeControls, DEFAULT_TAX_COPY_SELECTION, getSelectedCopyIds, getPreviewHighlightCopy, TaxInvoiceColGroup, getTaxTableColCount, getTaxTableHalfColSpans, getTaxChargeSubRowCount, TaxClassicItemsBlock, buildTaxAnalysisGroups, TaxAnalysisSection, MIN_PRODUCT_TABLE_ROWS } from './utils/taxDocumentPrint';
 
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'https://crm-qpw8.onrender.com'
@@ -88,10 +94,8 @@ const InvoiceList = () => {
     if (!printId || !invoices.length) return;
 
     const fromList = invoices.find((item) => item._id === printId);
-    const inv = mergePaymentType(
-      fromList
-        ? { ...fromList, paymentType: fromList.paymentType || printDoc?.paymentType || '' }
-        : printDoc,
+    const inv = mergeDocumentForPrint(
+      mergePrintDoc(fromList, printDoc),
     );
     if (!inv) return;
 
@@ -111,7 +115,7 @@ const InvoiceList = () => {
   const fetchInvoice = () => {
     fetch(`${API_BASE_URL}/api/invoice`)
       .then(res => res.json())
-      .then((data) => setInvoices(mergePaymentTypeList(data)))
+      .then((data) => setInvoices(mergeDocumentForPrintList(mergePaymentTypeList(data))))
       .catch(err => console.error("Error fetching Invoices:", err));
   };
 
@@ -129,6 +133,7 @@ const InvoiceList = () => {
         if (response.ok) {
           const deleted = invoices.find((inv) => inv._id === invoiceToDelete);
           removeStoredPaymentType(invoiceToDelete, deleted?.invoiceNumber);
+          removeStoredDocumentExtras(invoiceToDelete, deleted?.invoiceNumber);
           fetchInvoice();
           setIsDeleteModalOpen(false);
           setInvoiceToDelete(null);
@@ -164,7 +169,7 @@ const InvoiceList = () => {
   };
 
   const openPreview = (inv) => {
-    const merged = mergePaymentType(inv);
+    const merged = mergeDocumentForPrint(inv);
     setSelectedInvoice(merged);
     setTempGstType(merged.gstType || 'CGST/SGST');
     setCopySelection({ ...DEFAULT_TAX_COPY_SELECTION });
@@ -433,7 +438,7 @@ const InvoiceList = () => {
                         <CompanyBrandName uppercase />
                         <p className="tax-header-line">{SELLER.address}</p>
                         <p className="tax-header-line">{SELLER.tel}, {SELLER.email}</p>
-                        <p className="tax-header-line"><span className="tax-field-label">GSTIN :</span> {SELLER.gstin}</p>
+                        <SellerGstinMsmeLines />
                       </td>
                     </tr>
 
@@ -454,13 +459,15 @@ const InvoiceList = () => {
                           ['Reverse Charge', selectedInvoice.reverseCharge || 'No'],
                           ['Invoice No.', selectedInvoice.invoiceNumber],
                           ['Invoice Date', fmtTaxDate(selectedInvoice.date)],
-                          ['State', formatStateWithCode(SELLER.state, SELLER.stateCode)],
+                          ['Order No.', selectedInvoice.orderNo || selectedInvoice.jobCard || '-'],
+                          ['Order Date', fmtTaxDate(selectedInvoice.orderDate || selectedInvoice.date)],
+                          ['State', formatStateWithCode(selectedInvoice.state || SELLER.state, selectedInvoice.stateCode || SELLER.stateCode)],
                         ]} />
                       </td>
                       <td colSpan={taxHalfColSpanRight} className="tax-cell align-top p-1">
                         <TaxFieldsTable rows={[
                           ['Transportation Mode', 'Road'],
-                          ['Vehicle No.', ''],
+                          ['Vehicle No.', selectedInvoice.vehicleNo || '-'],
                           ['Date of Supply', fmtTaxDate(selectedInvoice.date)],
                           ['Place of Supply', 'Jaipur'],
                           ['Payment Type', selectedInvoice.paymentType || '-'],

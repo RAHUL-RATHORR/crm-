@@ -199,6 +199,9 @@
   display: flex;
   align-items: stretch;
   width: 100%;
+  background-color: #d9e9f7;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 
 .tax-invoice .tax-title-text {
@@ -212,6 +215,9 @@
   align-items: center;
   justify-content: center;
   color: #000;
+  background-color: #d9e9f7;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 
 .tax-invoice .tax-copy-box {
@@ -453,50 +459,57 @@
   background-color: #e2efda !important;
   font-weight: 900;
   font-size: 11px;
-  padding: 2px 4px;
+  padding: 3px 4px;
   text-align: center;
 }
 
 .tax-analysis-table .tax-analysis-header-row .tax-cell {
   background-color: #ffffff !important;
   font-weight: 800;
-  font-size: 9px;
+  font-size: 10px;
   text-align: center;
   vertical-align: middle;
-  padding: 1px 3px;
-  line-height: 1.15;
+  padding: 2px 4px;
+  line-height: 1.2;
+}
+
+.tax-analysis-table .tax-analysis-hsn {
+  background-color: #ffffff !important;
+  font-weight: 800;
+  font-size: 10px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.tax-analysis-table .tax-analysis-data-row .tax-analysis-hsn {
+  background-color: #f2f2f2 !important;
+  font-weight: 700;
 }
 
 .tax-analysis-table .tax-analysis-data-row .tax-cell {
   background-color: #f2f2f2 !important;
   font-weight: 700;
-  padding: 1px 4px;
+  padding: 2px 4px;
 }
 
 .tax-analysis-table .tax-analysis-total-row .tax-cell {
   background-color: #ffffff !important;
   font-weight: 900;
   border-top: 1px solid #000 !important;
-  padding: 1px 4px;
+  padding: 2px 4px;
+}
+
+.tax-analysis-table .tax-analysis-total-label {
+  font-weight: 900;
+  white-space: nowrap;
 }
 
 .tax-analysis-table .tax-analysis-words-row .tax-cell {
   background-color: #ececec !important;
   font-size: 10px;
-  padding: 2px 6px;
-  line-height: 1.2;
+  padding: 3px 6px;
+  line-height: 1.25;
   text-align: left;
-}
-
-.tax-analysis-table .tax-analysis-total-first {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 12px;
-}
-
-.tax-analysis-table .tax-analysis-total-label {
-  font-weight: 900;
 }
 
 .tax-analysis-table .tax-analysis-words-value {
@@ -978,12 +991,21 @@
   }
 
   .tax-invoice-print-page .tax-invoice,
-  .tax-invoice-print-page .tax-cell,
+  .tax-invoice-print-page .tax-cell:not(.tax-blue),
   .tax-invoice-print-page .job-card-section-body,
   .tax-invoice-print-page .job-card-meta-cell,
   .tax-invoice-print-page .job-card-work-instructions,
   .tax-invoice-print-page .job-card-top-header {
     background-color: #ffffff !important;
+  }
+
+  .tax-invoice-print-page .tax-cell.tax-blue,
+  .tax-invoice-print-page .tax-title-bar,
+  .tax-invoice-print-page .tax-title-text,
+  .tax-invoice-print-page .tax-copy-box {
+    background-color: #d9e9f7 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   body.is-printing #print-root-temp .tax-invoice-print-page {
@@ -1012,6 +1034,13 @@
 
   .tax-invoice-print-page .tax-blue,
   .tax-invoice-print-page .tax-copy-box {
+    background-color: #d9e9f7 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .tax-invoice-print-page .tax-title-bar,
+  .tax-invoice-print-page .tax-title-text {
     background-color: #d9e9f7 !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
