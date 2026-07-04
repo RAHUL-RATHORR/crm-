@@ -430,7 +430,7 @@ const InvoiceList = () => {
                     {/* Company header — full width */}
                     <tr>
                       <td colSpan={taxColCount} className="tax-cell text-center align-middle py-2">
-                        <CompanyBrandName />
+                        <CompanyBrandName uppercase />
                         <p className="tax-header-line">{SELLER.address}</p>
                         <p className="tax-header-line">{SELLER.tel}, {SELLER.email}</p>
                         <p className="tax-header-line"><span className="tax-field-label">GSTIN :</span> {SELLER.gstin}</p>

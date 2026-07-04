@@ -422,12 +422,16 @@ export const TaxAnalysisSection = ({ groups = [], isIGST = false, taxAmountInWor
   );
 };
 
-export const CompanyBrandName = ({ className = '', large = false }) => (
-  <p className={`tax-company-name company-brand-name ${large ? 'company-brand-name-lg' : ''} ${className}`.trim()}>
-    {SELLER.brandName}{' '}
-    <span className="company-brand-accent" style={{ color: '#000000' }}>{SELLER.brandSuffix}</span>
-  </p>
-);
+export const CompanyBrandName = ({ className = '', large = false, uppercase = false }) => {
+  const brandName = uppercase ? SELLER.brandName.toUpperCase() : SELLER.brandName;
+  const brandSuffix = uppercase ? SELLER.brandSuffix.toUpperCase() : SELLER.brandSuffix;
+  return (
+    <p className={`tax-company-name company-brand-name ${large ? 'company-brand-name-lg' : ''} ${className}`.trim()}>
+      {brandName}{' '}
+      <span className="company-brand-accent" style={{ color: '#000000' }}>{brandSuffix}</span>
+    </p>
+  );
+};
 
 export const TaxChargeSubRow = ({ label, amount, stripeClass = 'tax-items-stripe-row tax-stripe-grey', isTransport = false }) => (
   <tr className={`tax-item-sub-row ${stripeClass}${isTransport ? ' tax-item-sub-transport' : ''}`}>
