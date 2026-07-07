@@ -15,7 +15,9 @@ function buildTaxPrintContent(element, copyIds) {
   const pageClass = element.className || 'tax-invoice-print-page';
 
   if (!copyIds?.length) {
-    return element.innerHTML;
+    // Preserve the root wrapper classes in print iframe so
+    // print-only CSS selectors like `.financial-statement-print ...` apply.
+    return `<div class="${pageClass}">${element.innerHTML}</div>`;
   }
 
   if (copyIds.length === 1) {
@@ -600,13 +602,33 @@ export function printElement(elementId, options = {}) {
             font-weight: 900 !important;
           }
           .financial-statement-print .financial-statement-summary-grid {
+            display: grid !important;
+            width: 100% !important;
             grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
             gap: 2mm !important;
             margin-top: 2mm !important;
             padding-top: 2mm !important;
+            border-top: 1px solid #c7d2fe !important;
           }
-          .financial-statement-print .financial-statement-summary-grid > div {
-            padding: 2mm !important;
+          .financial-statement-print .financial-statement-summary-card {
+            background: #ffffff !important;
+            border: 1px solid #e5e7eb !important;
+            border-radius: 4px !important;
+            padding: 2mm 3mm !important;
+          }
+          .financial-statement-print .financial-statement-summary-label {
+            margin: 0 !important;
+            font-size: 8px !important;
+            font-weight: 900 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.08em !important;
+            color: #6b7280 !important;
+          }
+          .financial-statement-print .financial-statement-summary-value {
+            margin: 1mm 0 0 !important;
+            font-size: 10px !important;
+            font-weight: 900 !important;
+            color: #111827 !important;
           }
           .financial-statement-print svg,
           .financial-statement-print .lucide {
