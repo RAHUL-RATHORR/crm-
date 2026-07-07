@@ -503,7 +503,7 @@ export function printElement(elementId, options = {}) {
             overflow: visible !important;
           }
           .financial-statement-print {
-            padding: 2mm 3mm !important;
+            padding: 0 !important;
           }
           .financial-statement-print .overflow-x-auto,
           .financial-statement-print .financial-statement-table-wrap {
@@ -513,7 +513,7 @@ export function printElement(elementId, options = {}) {
           .financial-statement-print .financial-statement-header {
             background: #eef2ff !important;
             border-bottom: 1px solid #c7d2fe !important;
-            padding: 4mm 3mm !important;
+            padding: 2mm 2mm !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }

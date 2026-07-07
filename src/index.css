@@ -1663,9 +1663,47 @@ tr.tax-terms-bank-section {
 }
 
 .financial-statement-header {
-  padding: 1.25rem 1.5rem;
+  padding: 0.5rem 0.6rem;
   border-bottom: 1px solid #c7d2fe;
   background: linear-gradient(to right, #eef2ff, #ffffff);
+}
+
+.financial-statement-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #c7d2fe;
+}
+
+.financial-statement-summary-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 0.6rem 0.75rem;
+}
+
+.financial-statement-summary-label {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #9ca3af;
+}
+
+.financial-statement-summary-value {
+  margin: 0.25rem 0 0;
+  font-size: 0.9rem;
+  font-weight: 900;
+  color: #111827;
+}
+
+@media (max-width: 767px) {
+  .financial-statement-summary-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .financial-statement-header-grid {

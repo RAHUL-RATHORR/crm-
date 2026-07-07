@@ -503,18 +503,18 @@ const Statements = ({ defaultTab = 'transactions' }) => {
                 </div>
               </div>
 
-              <div className="financial-statement-summary-grid grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4 pt-4 border-t border-indigo-100">
-                <div className="bg-white rounded-xl border border-gray-100 px-4 py-3">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Statement Period</p>
-                  <p className="text-sm font-black text-gray-900 mt-1">{periodLabel}</p>
+              <div className="financial-statement-summary-grid">
+                <div className="financial-statement-summary-card">
+                  <p className="financial-statement-summary-label">Statement Period</p>
+                  <p className="financial-statement-summary-value">{periodLabel}</p>
                 </div>
-                <div className="bg-white rounded-xl border border-gray-100 px-4 py-3">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Opening Balance</p>
-                  <p className="text-sm font-black text-gray-900 mt-1">{fmtAmt(openingBalance)}</p>
+                <div className="financial-statement-summary-card">
+                  <p className="financial-statement-summary-label">Opening Balance</p>
+                  <p className="financial-statement-summary-value">{fmtAmt(openingBalance)}</p>
                 </div>
-                <div className="bg-white rounded-xl border border-gray-100 px-4 py-3">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Generated On</p>
-                  <p className="text-sm font-black text-gray-900 mt-1">{formatStatementDateTime(new Date())}</p>
+                <div className="financial-statement-summary-card">
+                  <p className="financial-statement-summary-label">Generated On</p>
+                  <p className="financial-statement-summary-value">{formatStatementDateTime(new Date())}</p>
                 </div>
               </div>
             </div>
