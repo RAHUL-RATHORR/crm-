@@ -479,13 +479,23 @@ const Statements = ({ defaultTab = 'transactions' }) => {
 
           <div id="printable-financial-statement" className="financial-statement-print bg-white">
             <div className="financial-statement-header">
-              <div className="financial-statement-header-grid">
-                <div className="financial-statement-doc-title-block">
+              <div
+                className="financial-statement-header-grid"
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr minmax(260px, 38%)',
+                  gridTemplateRows: 'auto auto',
+                  columnGap: '1.5rem',
+                  rowGap: '1rem',
+                  alignItems: 'start',
+                }}
+              >
+                <div className="financial-statement-doc-title-block" style={{ gridColumn: 2, gridRow: 1 }}>
                   <p className="financial-statement-doc-title-line">A C C O U N T</p>
                   <p className="financial-statement-doc-title-line financial-statement-doc-title-line-second">S T A T E M E N T</p>
                 </div>
 
-                <div className="financial-statement-company">
+                <div className="financial-statement-company" style={{ gridColumn: 1, gridRow: 2 }}>
                   <h3>{SELLER.name}</h3>
                   <p>{SELLER.address}</p>
                   <p>{SELLER.tel}, {SELLER.email}</p>
@@ -493,7 +503,7 @@ const Statements = ({ defaultTab = 'transactions' }) => {
                   <p><span className="financial-statement-label">GSTIN :</span> {SELLER.gstin}</p>
                 </div>
 
-                <div className="financial-statement-bank">
+                <div className="financial-statement-bank" style={{ gridColumn: 2, gridRow: 2, textAlign: 'right' }}>
                   <p className="financial-statement-bank-label">Bank Details</p>
                   <p><span className="financial-statement-muted">Account Holder:</span> <span className="financial-statement-strong">{SELLER.bank.holder}</span></p>
                   <p><span className="financial-statement-muted">Bank:</span> <span className="financial-statement-strong">{SELLER.bank.name}</span></p>
