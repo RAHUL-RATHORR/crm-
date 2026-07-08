@@ -6,6 +6,7 @@ import { printElement } from './utils/printDocument';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
 import { syncPlateUsageFromCards } from './utils/plateUsage';
 import { SELLER, TaxFieldsTable, fmtTaxDate, CompanyBrandName } from './utils/taxDocumentPrint';
+import { API_BASE_URL } from './utils/apiBase';
 
 const BINDING_OPTIONS = [
   { key: 'bindingCenterPin', label: 'Center Pin' },
@@ -22,10 +23,6 @@ const BINDING_OPTIONS = [
 
 const getBindingLabel = (card) =>
   BINDING_OPTIONS.filter((item) => card[item.key]).map((item) => item.label).join(', ') || '-';
-
-const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'https://crm-qpw8.onrender.com'
-  : 'https://crm-qpw8.onrender.com';
 
 export default function JobCardListing() {
   const navigate = useNavigate();

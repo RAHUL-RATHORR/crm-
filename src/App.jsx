@@ -43,6 +43,7 @@ import AddEstimate from './AddEstimate';
 import ItemListManagement from './ItemListManagement';
 import ContactSupport from './ContactSupport';
 import StaffTeamManagement from './StaffTeamManagement';
+import { API_BASE_URL } from './utils/apiBase';
 import { clearSession, saveSession, getLegacyAdminUser } from './utils/authSession';
 import { hasPermission, canAccessStaffTeam, canAccessDashboard, getDefaultRoute, isAdminUser } from './utils/permissions';
 import { STAFF_TEAM_ENABLED } from './utils/featureFlags';
@@ -569,7 +570,7 @@ export default function App() {
 
   const fetchNotifications = async () => {
     try {
-      const res = await fetch('https://crm-qpw8.onrender.com/api/notifications');
+      const res = await fetch(`${API_BASE_URL}/api/notifications`);
       const data = await res.json();
       setNotifications(data);
       setUnreadCount(data.filter(n => !n.isRead).length);
@@ -605,7 +606,7 @@ export default function App() {
 
   const markAllAsRead = async () => {
     try {
-      await fetch('https://crm-qpw8.onrender.com/api/notifications/read-all', { method: 'PUT' });
+      await fetch(`${API_BASE_URL}/api/notifications/read-all`, { method: 'PUT' });
       fetchNotifications();
     } catch (err) {
       console.error("Read Error:", err);

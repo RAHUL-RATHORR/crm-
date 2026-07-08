@@ -13,6 +13,7 @@ import { getStoredPaymentType, setStoredPaymentType } from './utils/paymentTypeS
 import { setStoredDocumentExtras, getStoredDocumentExtras } from './utils/documentExtrasStorage';
 import { setStoredItemNotes, mapLineItemsForSave } from './utils/itemNoteStorage';
 import { validateStateAndCode } from './utils/indianStateCodes';
+import { API_BASE_URL } from './utils/apiBase';
 
 const EMPTY_PARTY_FORM = {
   partyName: '',
@@ -21,10 +22,6 @@ const EMPTY_PARTY_FORM = {
   emailId: '',
   gstNo: '',
 };
-
-const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'https://crm-qpw8.onrender.com'
-  : 'https://crm-qpw8.onrender.com';
 
 const parseJobQty = (value) => {
   const match = String(value || '').match(/[\d.]+/);
