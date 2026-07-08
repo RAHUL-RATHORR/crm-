@@ -6,12 +6,11 @@
   "author": "Trickwrick",
   "repository": "https://github.com/RAHUL-RATHORR/crm-",
   "type": "module",
-  "main": "electron.js",
+  "main": "server/server.js",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "npm install --prefix server && vite build",
     "start": "node server/server.js",
-    "postinstall": "npm install --prefix server",
     "lint": "eslint .",
     "preview": "vite preview",
     "make-installer": "electron-builder --win"

@@ -126,7 +126,7 @@ app.get('/ping', (req, res) => {
     });
 });
 
-app.all("/api/*", (req, res) => {
+app.use('/api', (req, res) => {
   res.status(404).json({ error: "API route not found" });
 });
 
@@ -136,28 +136,28 @@ const distPath = path.join(__dirname, "..", "dist");
 // Serve static assets
 app.use(express.static(distPath));
 
+// SPA fallback (Express 4 + 5 compatible — avoids invalid "*" route on Express 5)
+app.use((req, res, next) => {
+  if (req.method !== 'GET' || req.path.startsWith('/api')) {
+    return next();
+  }
 
-// The "catchall" handler: for any request that doesn't
-// match one above (like /invoices, /challans), send back index.html.
-app.get("*", (req, res) => {
-    // If it's not an API call, serve the frontend
-    if (!req.path.startsWith('/api')) {
-        res.sendFile(path.join(distPath, "index.html"), (err) => {
-            if (err) {
-                res.status(500).send("Frontend build not found. Please run 'npm run build'.");
-            }
-        });
+  res.sendFile(path.join(distPath, "index.html"), (err) => {
+    if (err) {
+      res.status(500).send("Frontend build not found. Please run 'npm run build'.");
     }
+  });
 });
 
 /* ================= SERVER START ================= */
 const startServer = (port) => {
-    const server = app.listen(port, () => {
-        console.log(`🚀 Server running on port ${port}`);
+    const host = process.env.HOST || '0.0.0.0';
+    const server = app.listen(port, host, () => {
+        console.log(`🚀 Server running on ${host}:${port}`);
     });
 
     server.on("error", (err) => {
-        if (err.code === "EADDRINUSE") {
+        if (err.code === "EADDRINUSE" && process.env.NODE_ENV !== 'production') {
             console.warn(`⚠️ Port ${port} busy, trying ${port + 1}`);
             startServer(port + 1);
         } else {
