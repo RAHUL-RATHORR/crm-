@@ -1,10 +1,7 @@
 import express from 'express';
 import User from '../models/User.js';
 import Role from '../models/Role.js';
-
-const ADMIN_EMAIL = 'admin@gmail.com';
-
-const isAdminEmail = (email) => String(email || '').trim().toLowerCase() === ADMIN_EMAIL;
+import { DEFAULT_ADMIN_EMAIL, isAdminEmail } from '../utils/adminConfig.js';
 
 const router = express.Router();
 
@@ -137,7 +134,7 @@ router.delete('/:id', async (req, res) => {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ error: 'Staff member not found' });
 
-    if (user.email === 'admin@gmail.com') {
+    if (isAdminEmail(user.email)) {
       return res.status(400).json({ error: 'Default admin account cannot be deleted' });
     }
 

@@ -3,9 +3,8 @@ import { Pencil, Trash2, Users, UserPlus, Eye, EyeOff } from 'lucide-react';
 import { API_BASE_URL } from '../utils/apiBase';
 import { canManageStaff } from '../utils/permissions';
 import { preserveSession } from '../utils/authSession';
+import { isAdminEmail } from '../utils/adminConfig';
 import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
-
-const ADMIN_EMAIL = 'admin@gmail.com';
 
 const EMPTY_FORM = {
   name: '',
@@ -32,7 +31,7 @@ const StaffManage = () => {
   const canEdit = canManageStaff();
 
   const assignableRoles = useMemo(() => {
-    const editingAdmin = editingId && form.email.trim().toLowerCase() === ADMIN_EMAIL;
+    const editingAdmin = editingId && isAdminEmail(form.email);
     return roles.filter((role) => editingAdmin || role.name !== 'Admin');
   }, [roles, editingId, form.email]);
 
@@ -41,7 +40,7 @@ const StaffManage = () => {
     return Array.from(set).sort();
   }, [staff]);
 
-  const isEditingAdmin = editingId && form.email.trim().toLowerCase() === ADMIN_EMAIL;
+  const isEditingAdmin = editingId && isAdminEmail(form.email);
 
   const filteredStaff = staff.filter((member) => {
     const q = search.trim().toLowerCase();
@@ -388,7 +387,7 @@ const StaffManage = () => {
                             <button type="button" onClick={() => handleEdit(member)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg" title="Edit">
                               <Pencil size={16} />
                             </button>
-                            {member.email !== 'admin@gmail.com' && (
+                            {!isAdminEmail(member.email) && (
                               <button type="button" onClick={() => handleDelete(member._id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg" title="Deactivate">
                                 <Trash2 size={16} />
                               </button>

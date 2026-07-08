@@ -1,4 +1,5 @@
 import { fullPermissions, getCurrentUser } from './permissions';
+import { DEFAULT_ADMIN_AUTH, DEFAULT_ADMIN_EMAIL } from './adminConfig';
 
 export const saveSession = (user) => {
   localStorage.setItem('isLoggedIn', 'true');
@@ -21,7 +22,7 @@ export const clearSession = () => {
 export const getLegacyAdminUser = () => ({
   id: 'local-admin',
   name: 'Admin',
-  email: 'admin@gmail.com',
+  email: DEFAULT_ADMIN_EMAIL,
   roleName: 'Admin',
   team: 'Management',
   permissions: fullPermissions(),
@@ -29,7 +30,7 @@ export const getLegacyAdminUser = () => ({
 
 export const tryLegacyLogin = (email, password) => {
   const storedAdmin = JSON.parse(localStorage.getItem('adminAuth') || 'null');
-  const fallback = storedAdmin || { email: 'admin@gmail.com', password: '123456' };
+  const fallback = storedAdmin || DEFAULT_ADMIN_AUTH;
   if (email === fallback.email && password === fallback.password) {
     const user = getLegacyAdminUser();
     saveSession(user);

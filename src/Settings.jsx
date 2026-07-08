@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ShieldCheck, Lock, CheckCircle, AlertTriangle } from 'lucide-react';
 import { API_BASE_URL } from './utils/apiBase';
 import { getCurrentUser } from './utils/permissions';
+import { DEFAULT_ADMIN_AUTH } from './utils/adminConfig';
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -58,7 +59,7 @@ const Settings = () => {
       }
     }
 
-    const storedAdmin = JSON.parse(localStorage.getItem('adminAuth') || '{"email":"admin@gmail.com","password":"123456"}');
+    const storedAdmin = JSON.parse(localStorage.getItem('adminAuth') || JSON.stringify(DEFAULT_ADMIN_AUTH));
     if (formData.oldPassword !== storedAdmin.password) {
       setStatus({ type: 'error', message: 'Old password does not match our records.' });
       return;

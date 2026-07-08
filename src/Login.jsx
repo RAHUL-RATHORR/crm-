@@ -5,6 +5,7 @@ import { API_BASE_URL } from './utils/apiBase';
 import { saveSession, tryLegacyLogin, getLegacyAdminUser } from './utils/authSession';
 import { getDefaultRoute } from './utils/permissions';
 import { BRAND_LOGO_URL } from './utils/brandAssets';
+import { DEFAULT_ADMIN_AUTH } from './utils/adminConfig';
 import BrandTitle from './components/BrandTitle';
 
 const Login = () => {
@@ -18,10 +19,7 @@ const Login = () => {
   useEffect(() => {
     const admin = localStorage.getItem('adminAuth');
     if (!admin) {
-      localStorage.setItem('adminAuth', JSON.stringify({
-        email: 'admin@gmail.com',
-        password: '123456',
-      }));
+      localStorage.setItem('adminAuth', JSON.stringify(DEFAULT_ADMIN_AUTH));
     }
 
     const isLoggedIn = localStorage.getItem('isLoggedIn');
@@ -69,7 +67,7 @@ const Login = () => {
         window.location.reload();
         return;
       }
-      setError('Unable to connect to server. Try again or use admin@gmail.com / 123456');
+      setError('Unable to connect to server. Please try again.');
     } finally {
       setIsLoading(false);
     }
