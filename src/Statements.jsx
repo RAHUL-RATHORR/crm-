@@ -131,6 +131,12 @@ const Statements = ({ defaultTab = 'transactions' }) => {
   } = financialStatement;
 
   const periodLabel = getPeriodLabel(periodFilter, selectedMonth, statementDateRange);
+  const statusLabel =
+    invoiceStatusFilter === 'complete'
+      ? 'Complete'
+      : invoiceStatusFilter === 'pending'
+        ? 'Pending'
+        : 'All';
 
   const handlePrintStatement = () => {
     printElement('printable-financial-statement');
@@ -514,10 +520,22 @@ const Statements = ({ defaultTab = 'transactions' }) => {
                 </div>
               </div>
 
-              <div className="financial-statement-summary-grid">
+              <div
+                className="financial-statement-summary-grid"
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+                  gap: '0.75rem',
+                  alignItems: 'stretch',
+                }}
+              >
                 <div className="financial-statement-summary-card">
                   <p className="financial-statement-summary-label">Statement Period</p>
                   <p className="financial-statement-summary-value">{periodLabel}</p>
+                </div>
+                <div className="financial-statement-summary-card">
+                  <p className="financial-statement-summary-label">Status</p>
+                  <p className="financial-statement-summary-value">{statusLabel}</p>
                 </div>
                 <div className="financial-statement-summary-card">
                   <p className="financial-statement-summary-label">Opening Balance</p>
@@ -534,9 +552,8 @@ const Statements = ({ defaultTab = 'transactions' }) => {
               <table className="w-full text-left border-collapse financial-statement-table" style={{ tableLayout: 'fixed' }}>
                 <colgroup>
                   <col style={{ width: '9%' }} />
-                  <col className="financial-statement-col-value-date" style={{ width: '9%' }} />
-                  <col style={{ width: '28%' }} />
-                  <col style={{ width: '12%' }} />
+                  <col style={{ width: '33%' }} />
+                  <col style={{ width: '16%' }} />
                   <col style={{ width: '14%' }} />
                   <col style={{ width: '14%' }} />
                   <col style={{ width: '14%' }} />
@@ -544,9 +561,8 @@ const Statements = ({ defaultTab = 'transactions' }) => {
                 <thead>
                   <tr className="bg-indigo-600 text-white text-sm font-black uppercase tracking-wide">
                     <th className="px-4 py-3 border border-indigo-500">Txn Date</th>
-                    <th className="financial-statement-col-value-date px-4 py-3 border border-indigo-500">Value Date</th>
-                    <th className="financial-statement-col-particulars px-4 py-3 border border-indigo-500">Particulars</th>
-                    <th className="px-4 py-3 border border-indigo-500">Chq / Ref No.</th>
+                    <th className="px-4 py-3 border border-indigo-500">Party Name</th>
+                    <th className="px-4 py-3 border border-indigo-500">Invoice Number</th>
                     <th className="px-4 py-3 border border-indigo-500 text-right">Withdrawal (Dr)</th>
                     <th className="px-4 py-3 border border-indigo-500 text-right">Deposit (Cr)</th>
                     <th className="px-4 py-3 border border-indigo-500 text-right">Balance</th>
@@ -555,7 +571,7 @@ const Statements = ({ defaultTab = 'transactions' }) => {
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan="7" className="px-6 py-20 text-center text-gray-400 font-bold animate-pulse uppercase border border-gray-100">
+                      <td colSpan="6" className="px-6 py-20 text-center text-gray-400 font-bold animate-pulse uppercase border border-gray-100">
                         Loading Statement...
                       </td>
                     </tr>
@@ -563,7 +579,7 @@ const Statements = ({ defaultTab = 'transactions' }) => {
                     <>
                       {periodFilter !== 'all' && (
                         <tr className="bg-amber-50/70">
-                          <td className="px-4 py-3 border border-gray-200 text-base font-bold text-gray-700" colSpan="4">
+                          <td className="px-4 py-3 border border-gray-200 text-base font-bold text-gray-700" colSpan="3">
                             Opening Balance b/f
                           </td>
                           <td className="px-4 py-3 border border-gray-200 text-right text-base font-bold text-gray-400">—</td>
@@ -574,7 +590,7 @@ const Statements = ({ defaultTab = 'transactions' }) => {
 
                       {displayEntries.length === 0 ? (
                         <tr>
-                          <td colSpan="7" className="px-6 py-16 text-center text-gray-400 italic font-medium border border-gray-100">
+                          <td colSpan="6" className="px-6 py-16 text-center text-gray-400 italic font-medium border border-gray-100">
                             Is period / filter ke liye koi entry nahi mili.
                           </td>
                         </tr>
@@ -584,14 +600,11 @@ const Statements = ({ defaultTab = 'transactions' }) => {
                             <td className="px-4 py-3 border border-gray-200 text-base font-bold text-gray-800">
                               {formatStatementDate(entry.date)}
                             </td>
-                            <td className="financial-statement-col-value-date px-4 py-3 border border-gray-200 text-base font-semibold text-gray-600">
-                              {formatStatementDate(entry.date)}
-                            </td>
-                            <td className="financial-statement-col-particulars px-4 py-3 border border-gray-200 text-base font-semibold text-gray-800 break-words">
-                              {entry.particulars}
+                            <td className="px-4 py-3 border border-gray-200 text-base font-semibold text-gray-800 break-words">
+                              {entry.partyName || '—'}
                             </td>
                             <td className="px-4 py-3 border border-gray-200 text-base font-black text-indigo-700 break-all">
-                              {entry.refNo}
+                              {entry.invoiceNumber || entry.refNo || '—'}
                             </td>
                             <td className="px-4 py-3 border border-gray-200 text-right text-base font-black text-red-600">
                               {entry.withdrawal > 0 ? fmtAmt(entry.withdrawal) : '—'}

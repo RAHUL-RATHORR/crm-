@@ -604,7 +604,7 @@ export function printElement(elementId, options = {}) {
           .financial-statement-print .financial-statement-summary-grid {
             display: grid !important;
             width: 100% !important;
-            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
             gap: 2mm !important;
             margin-top: 2mm !important;
             padding-top: 2mm !important;
