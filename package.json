@@ -6,11 +6,12 @@
   "author": "Trickwrick",
   "repository": "https://github.com/RAHUL-RATHORR/crm-",
   "type": "module",
-  "main": "server/server.js",
+  "main": "app.js",
   "scripts": {
     "dev": "vite",
-    "build": "npm install --prefix server && vite build",
-    "start": "node server/server.js",
+    "build": "npm install --include=dev && npm install --prefix server && vite build",
+    "start": "node app.js",
+    "postinstall": "npm install --prefix server",
     "lint": "eslint .",
     "preview": "vite preview",
     "make-installer": "electron-builder --win"
@@ -19,6 +20,9 @@
     "asar": false,
     "appId": "com.trickwrick.crm",
     "productName": "Trickwrick CRM",
+    "extraMetadata": {
+      "main": "electron.js"
+    },
     "publish": [
       {
         "provider": "github"
