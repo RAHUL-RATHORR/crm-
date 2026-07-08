@@ -16,7 +16,6 @@ import {
   Calculator,
   Settings,
   ChevronRight,
-  Building,
   Menu as MenuIcon,
   X as CloseIcon,
   LogOut,
@@ -47,7 +46,8 @@ import { API_BASE_URL } from './utils/apiBase';
 import { clearSession, saveSession, getLegacyAdminUser } from './utils/authSession';
 import { hasPermission, canAccessStaffTeam, canAccessDashboard, getDefaultRoute, isAdminUser } from './utils/permissions';
 import { STAFF_TEAM_ENABLED } from './utils/featureFlags';
-import { BRAND_LOGO_URL, DEFAULT_SITE_SETTINGS, getSiteSettings } from './utils/brandAssets';
+import { BRAND_LOGO_URL, getSiteSettings, isDefaultBrandTitle } from './utils/brandAssets';
+import BrandTitle from './components/BrandTitle';
 
 const DropdownMenu = ({ title, icon: Icon, items, isActive }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -625,11 +625,8 @@ export default function App() {
               <img src={BRAND_LOGO_URL} alt="Site Logo" className="h-9 w-9 object-contain shrink-0" />
             )}
             <span className="truncate hidden sm:block">
-              {(!siteSettings.siteTitle || siteSettings.siteTitle === 'TRICKWRICK' || siteSettings.siteTitle === 'Harihar Printers') ? (
-                <>
-                  <span className="text-[#111827] font-black">Harihar</span>{' '}
-                  <span className="text-[#2563eb] font-black">Printers</span>
-                </>
+              {isDefaultBrandTitle(siteSettings.siteTitle) ? (
+                <BrandTitle size="sm" layout="inline" />
               ) : (
                 siteSettings.siteTitle
               )}

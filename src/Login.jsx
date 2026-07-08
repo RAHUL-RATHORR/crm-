@@ -5,6 +5,7 @@ import { API_BASE_URL } from './utils/apiBase';
 import { saveSession, tryLegacyLogin, getLegacyAdminUser } from './utils/authSession';
 import { getDefaultRoute } from './utils/permissions';
 import { BRAND_LOGO_URL } from './utils/brandAssets';
+import BrandTitle from './components/BrandTitle';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -75,26 +76,26 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-linear-to-br from-blue-600 via-indigo-700 to-purple-800 p-4 relative overflow-hidden font-sans">
+    <div className="min-h-screen w-full flex items-center justify-center bg-linear-to-br from-[#0B1F3A] via-[#0F2744] to-[#163B5C] p-4 relative overflow-hidden font-sans">
       <div className="absolute top-[-10%] right-[-5%] w-64 h-64 bg-white opacity-5 rounded-full blur-3xl animate-pulse"></div>
       <div className="absolute bottom-[-10%] left-[-5%] w-96 h-96 bg-white opacity-5 rounded-full blur-3xl animate-pulse delay-1000"></div>
 
       <div className="w-full max-w-112.5 space-y-8 z-10 animate-fade-in">
         <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-3 bg-white px-6 py-3 rounded-xl shadow-2xl">
+          <div className="inline-flex items-center gap-3 bg-white px-6 py-3 rounded-2xl shadow-2xl border border-[#2EC4B6]/20">
             <img src={BRAND_LOGO_URL} alt="Harihar Printers" className="h-12 w-12 object-contain" />
-            <div className="text-left leading-tight">
-              <div className="text-xl font-bold text-gray-900 tracking-tight">HARIHAR</div>
-              <div className="text-[10px] text-gray-400 font-medium uppercase tracking-widest">PRINTERS</div>
-            </div>
+            <BrandTitle size="md" />
           </div>
         </div>
 
         <div className="bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden transition-all duration-300 transform hover:scale-[1.01]">
           <div className="p-8 sm:p-10">
             <div className="text-center mb-10">
-              <h1 className="text-2xl font-bold text-blue-900 mb-2">Welcome Back !</h1>
-              <p className="text-gray-400 text-sm font-medium">Sign in to continue to Harihar Printers</p>
+              <h1 className="text-2xl font-bold text-[#0F2744] mb-2">Welcome Back !</h1>
+              <p className="text-gray-500 text-sm font-medium">
+                Sign in to continue to{' '}
+                <span className="font-bold text-[#F97316]">Harihar Printers</span>
+              </p>
             </div>
 
             {error && (
