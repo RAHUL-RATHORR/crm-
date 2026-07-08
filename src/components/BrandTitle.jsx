@@ -16,7 +16,7 @@ const SIZE_STYLES = {
   },
 };
 
-const FONT_STACK = '"Georgia", "Times New Roman", Times, serif';
+const FONT_STACK = 'var(--font-sans)';
 
 const BrandTitle = ({ size = 'md', layout = 'stacked', className = '' }) => {
   const styles = SIZE_STYLES[size] || SIZE_STYLES.md;
