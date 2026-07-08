@@ -626,7 +626,7 @@ export default function App() {
             )}
             <span className="truncate hidden sm:block">
               {isDefaultBrandTitle(siteSettings.siteTitle) ? (
-                <BrandTitle size="md" layout="inline" className="hidden sm:inline-block" />
+                <BrandTitle size="sm" layout="inline" className="hidden sm:inline-block" />
               ) : (
                 siteSettings.siteTitle
               )}

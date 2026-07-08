@@ -81,8 +81,8 @@ const Login = () => {
       <div className="w-full max-w-112.5 space-y-8 z-10 animate-fade-in">
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-4 bg-white px-7 py-4 rounded-2xl shadow-2xl border border-[#19C7BF]/25">
-            <img src={BRAND_LOGO_URL} alt="Harihar Printers" className="h-14 w-14 object-contain" />
-            <BrandTitle size="lg" />
+            <img src={BRAND_LOGO_URL} alt="Harihar Printers" className="h-12 w-12 object-contain" />
+            <BrandTitle size="md" />
           </div>
         </div>
 

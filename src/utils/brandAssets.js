@@ -1,7 +1,6 @@
 export const BRAND_COLORS = {
-  navy: '#0F2744',
-  orange: '#F97316',
-  teal: '#2EC4B6',
+  navy: '#1E2F5F', // Harihar
+  teal: '#19C7BF', // Printers
 };
 
 export const BRAND_LOGO_URL = '/logo.png';
