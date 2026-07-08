@@ -3,16 +3,16 @@ import { BRAND_COLORS } from '../utils/brandAssets';
 
 const SIZE_STYLES = {
   sm: {
-    main: 'text-sm',
-    sub: 'text-[8px] tracking-[0.24em]',
+    main: 'text-[15px] leading-none',
+    sub: 'text-[9px] tracking-[0.30em]',
   },
   md: {
-    main: 'text-xl',
-    sub: 'text-[10px] tracking-[0.28em]',
+    main: 'text-2xl leading-none',
+    sub: 'text-[11px] tracking-[0.34em]',
   },
   lg: {
-    main: 'text-2xl',
-    sub: 'text-xs tracking-[0.32em]',
+    main: 'text-3xl leading-none',
+    sub: 'text-[12px] tracking-[0.38em]',
   },
 };
 
@@ -21,9 +21,9 @@ const BrandTitle = ({ size = 'md', layout = 'stacked', className = '' }) => {
 
   if (layout === 'inline') {
     return (
-      <span className={`font-black tracking-tight ${styles.main} ${className}`}>
+      <span className={`font-black tracking-[-0.02em] ${styles.main} ${className}`}>
         <span style={{ color: BRAND_COLORS.navy }}>Harihar</span>{' '}
-        <span style={{ color: BRAND_COLORS.orange }}>Printers</span>
+        <span style={{ color: BRAND_COLORS.teal }}>Printers</span>
       </span>
     );
   }
@@ -38,7 +38,7 @@ const BrandTitle = ({ size = 'md', layout = 'stacked', className = '' }) => {
       </div>
       <div
         className={`${styles.sub} font-bold uppercase`}
-        style={{ color: BRAND_COLORS.orange }}
+        style={{ color: BRAND_COLORS.teal }}
       >
         PRINTERS
       </div>
