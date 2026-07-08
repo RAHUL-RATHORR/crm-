@@ -29,8 +29,9 @@ export const getLegacyAdminUser = () => ({
 });
 
 export const tryLegacyLogin = (email, password) => {
-  const storedAdmin = JSON.parse(localStorage.getItem('adminAuth') || 'null');
-  const fallback = storedAdmin || DEFAULT_ADMIN_AUTH;
+  // Legacy/offline login fallback: only accept the current default credentials.
+  // This prevents old localStorage values (like admin@gmail.com / 123456) from working.
+  const fallback = DEFAULT_ADMIN_AUTH;
   if (email === fallback.email && password === fallback.password) {
     const user = getLegacyAdminUser();
     saveSession(user);

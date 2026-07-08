@@ -17,10 +17,8 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const admin = localStorage.getItem('adminAuth');
-    if (!admin) {
-      localStorage.setItem('adminAuth', JSON.stringify(DEFAULT_ADMIN_AUTH));
-    }
+    // Always overwrite in case older adminAuth exists in localStorage.
+    localStorage.setItem('adminAuth', JSON.stringify(DEFAULT_ADMIN_AUTH));
 
     const isLoggedIn = localStorage.getItem('isLoggedIn');
     if (isLoggedIn === 'true') {
