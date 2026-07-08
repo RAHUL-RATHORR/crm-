@@ -16,7 +16,8 @@ dotenv.config({ path: path.join(__dirname, ".env") });
 
 // Debug
 console.log("------------------------------------------");
-console.log(`📡 ENV CHECK: ${process.env.MONGO_URI}`);
+console.log(`📡 ENV CHECK: ${process.env.MONGO_URI ? 'MONGO_URI set' : 'MONGO_URI missing'}`);
+console.log(`📡 PORT: ${process.env.PORT || '5011 (default)'}`);
 console.log("------------------------------------------");
 
 // Routes

@@ -21,7 +21,7 @@
     "appId": "com.trickwrick.crm",
     "productName": "Trickwrick CRM",
     "extraMetadata": {
-      "main": "electron.js"
+      "main": "electron-main.js"
     },
     "publish": [
       {
@@ -36,6 +36,7 @@
       "public/**/*",
       "server/**/*",
       "server/.env",
+      "electron-main.js",
       "electron.js",
       "package.json"
     ],
