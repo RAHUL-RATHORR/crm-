@@ -3,16 +3,16 @@ import { BRAND_COLORS } from '../utils/brandAssets';
 
 const SIZE_STYLES = {
   sm: {
-    main: 'text-[14px] leading-none',
-    sub: 'text-[8.5px] tracking-[0.32em]',
+    main: 'text-[18px] leading-none',
+    sub: 'text-[10.5px] tracking-[0.32em]',
   },
   md: {
-    main: 'text-[22px] leading-none',
-    sub: 'text-[10px] tracking-[0.36em]',
+    main: 'text-[28px] leading-none',
+    sub: 'text-[12px] tracking-[0.36em]',
   },
   lg: {
-    main: 'text-[26px] leading-none',
-    sub: 'text-[11px] tracking-[0.40em]',
+    main: 'text-[34px] leading-none',
+    sub: 'text-[13px] tracking-[0.40em]',
   },
 };
 
