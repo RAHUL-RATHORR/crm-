@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Building, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { API_BASE_URL } from './utils/apiBase';
 import { saveSession, tryLegacyLogin, getLegacyAdminUser } from './utils/authSession';
 import { getDefaultRoute } from './utils/permissions';
+import { BRAND_LOGO_URL } from './utils/brandAssets';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -81,9 +82,7 @@ const Login = () => {
       <div className="w-full max-w-112.5 space-y-8 z-10 animate-fade-in">
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-3 bg-white px-6 py-3 rounded-xl shadow-2xl">
-            <div className="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center text-white">
-              <Building size={24} />
-            </div>
+            <img src={BRAND_LOGO_URL} alt="Harihar Printers" className="h-12 w-12 object-contain" />
             <div className="text-left leading-tight">
               <div className="text-xl font-bold text-gray-900 tracking-tight">HARIHAR</div>
               <div className="text-[10px] text-gray-400 font-medium uppercase tracking-widest">PRINTERS</div>

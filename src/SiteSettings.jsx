@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Globe, Save, Upload, Plus, X, Phone, Mail, MapPin } from 'lucide-react';
+import { DEFAULT_SITE_SETTINGS } from './utils/brandAssets';
 
 const SiteSettings = () => {
   const [formData, setFormData] = useState({
@@ -34,9 +35,15 @@ const SiteSettings = () => {
         address: data.address || ''
       });
       setImages({
-        logo: data.logo || null,
+        logo: data.logo || DEFAULT_SITE_SETTINGS.logo,
         whiteLogo: data.whiteLogo || null,
-        favicon: data.favicon || null
+        favicon: data.favicon || DEFAULT_SITE_SETTINGS.favicon,
+      });
+    } else {
+      setImages({
+        logo: DEFAULT_SITE_SETTINGS.logo,
+        whiteLogo: null,
+        favicon: DEFAULT_SITE_SETTINGS.favicon,
       });
     }
   }, []);

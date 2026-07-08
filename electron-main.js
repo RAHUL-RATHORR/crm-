@@ -20,7 +20,7 @@ async function createWindow() {
       nodeIntegration: true,
       contextIsolation: false
     },
-    icon: path.join(__dirname, 'public/favicon.svg')
+    icon: path.join(__dirname, 'public/logo.png')
   });
 
   mainWindow.setMenuBarVisibility(false);

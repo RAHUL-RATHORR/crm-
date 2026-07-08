@@ -47,6 +47,7 @@ import { API_BASE_URL } from './utils/apiBase';
 import { clearSession, saveSession, getLegacyAdminUser } from './utils/authSession';
 import { hasPermission, canAccessStaffTeam, canAccessDashboard, getDefaultRoute, isAdminUser } from './utils/permissions';
 import { STAFF_TEAM_ENABLED } from './utils/featureFlags';
+import { BRAND_LOGO_URL, DEFAULT_SITE_SETTINGS, getSiteSettings } from './utils/brandAssets';
 
 const DropdownMenu = ({ title, icon: Icon, items, isActive }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -372,15 +373,7 @@ export default function App() {
   const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
 
   // Site Settings Integration
-  const [siteSettings, setSiteSettings] = useState(() => {
-    const saved = localStorage.getItem('siteSettings');
-    return saved ? JSON.parse(saved) : {
-      siteTitle: 'Harihar Printers',
-      logo: null,
-      whiteLogo: null,
-      favicon: null
-    };
-  });
+  const [siteSettings, setSiteSettings] = useState(() => getSiteSettings());
 
   useEffect(() => {
     if (localStorage.getItem('isLoggedIn') === 'true' && !localStorage.getItem('currentUser')) {
@@ -407,8 +400,7 @@ export default function App() {
 
     // Listen for manual updates from the settings page
     const handleSettingsUpdate = () => {
-      const saved = localStorage.getItem('siteSettings');
-      if (saved) setSiteSettings(JSON.parse(saved));
+      setSiteSettings(getSiteSettings());
     };
 
     window.addEventListener('siteSettingsUpdated', handleSettingsUpdate);
@@ -628,11 +620,9 @@ export default function App() {
 
           <div className="flex items-center gap-2 text-xl font-bold text-gray-900 tracking-tight">
             {siteSettings.logo ? (
-              <img src={siteSettings.logo} alt="Site Logo" className="h-8 w-auto object-contain" />
+              <img src={siteSettings.logo} alt="Site Logo" className="h-9 w-9 object-contain shrink-0" />
             ) : (
-              <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-white shrink-0">
-                <Building size={20} />
-              </div>
+              <img src={BRAND_LOGO_URL} alt="Site Logo" className="h-9 w-9 object-contain shrink-0" />
             )}
             <span className="truncate hidden sm:block">
               {(!siteSettings.siteTitle || siteSettings.siteTitle === 'TRICKWRICK' || siteSettings.siteTitle === 'Harihar Printers') ? (
