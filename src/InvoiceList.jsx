@@ -218,7 +218,7 @@ const InvoiceList = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100">
           <div className="p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 border-b border-gray-50">
             <h2 className="text-lg font-bold text-gray-800">Invoice Listings</h2>
             <button
@@ -229,7 +229,7 @@ const InvoiceList = () => {
             </button>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className={`overflow-x-auto overflow-y-visible min-h-100 ${openDropdownId ? 'pb-44' : 'pb-40'}`}>
             <table className="w-full text-left whitespace-nowrap min-w-175">
               <thead>
                 <tr className="bg-gray-50 text-gray-600 uppercase text-[10px] sm:text-xs font-bold tracking-wider">
@@ -270,7 +270,7 @@ const InvoiceList = () => {
                           </button>
 
                           {openDropdownId === inv._id && (
-                            <div className="absolute top-full left-0 mt-2 w-32 bg-white border border-gray-100 rounded-xl shadow-xl z-50 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                            <div className="absolute top-full left-0 mt-2 w-36 bg-white border border-gray-100 rounded-xl shadow-xl z-[120] py-1 animate-in fade-in slide-in-from-top-2 duration-200">
                               {inv.paymentStatus === 'Completed' ? (
                                 <button
                                   onClick={() => handleStatusUpdate(inv._id, 'Pending')}
