@@ -47,15 +47,6 @@ import { STAFF_TEAM_ENABLED } from './utils/featureFlags';
 import { BRAND_LOGO_URL, getSiteSettings, isDefaultBrandTitle } from './utils/brandAssets';
 import BrandTitle from './components/BrandTitle';
 
-const DeprecationBanner = () => (
-  <div className="bg-red-600 text-white text-center py-2 px-4 text-sm font-semibold shadow-md z-100 relative w-full flex justify-center items-center gap-1 flex-wrap">
-    This software is no longer active. Please use the new version at{' '}
-    <a href="https://hariharprinters.printosync.com/" className="underline hover:text-red-100 transition-colors font-bold whitespace-nowrap" target="_blank" rel="noopener noreferrer">
-      hariharprinters.printosync.com
-    </a>
-  </div>
-);
-
 const DropdownMenu = ({ title, icon: Icon, items, isActive }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeSubMenu, setActiveSubMenu] = useState(null);
@@ -420,14 +411,9 @@ export default function App() {
   // If not logged in, only show Login page
   if (!isLoggedIn) {
     return (
-      <div className="flex flex-col min-h-screen w-full">
-        <DeprecationBanner />
-        <div className="flex-1 flex flex-col relative">
-          <Routes>
-            <Route path="*" element={<Login />} />
-          </Routes>
-        </div>
-      </div>
+      <Routes>
+        <Route path="*" element={<Login />} />
+      </Routes>
     );
   }
 
@@ -610,8 +596,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f4f7fa] font-sans pb-10 text-gray-800 flex flex-col">
-      <DeprecationBanner />
+    <div className="min-h-screen bg-[#f4f7fa] font-sans pb-10 text-gray-800">
       {/* Top Navbar */}
       <nav className="bg-white border-b border-gray-200 px-3 sm:px-5 py-2.5 flex items-center gap-2 sm:gap-3 sticky top-0 z-50 max-w-full">
         <div className="flex items-center gap-2 sm:gap-3 shrink-0 min-w-0">
