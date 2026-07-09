@@ -597,8 +597,20 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#f4f7fa] font-sans pb-10 text-gray-800">
+      {/* Deprecation Banner */}
+      <div className="w-full bg-red-600 text-white text-center py-2 px-4 text-sm font-semibold z-[9999] sticky top-0">
+        ⚠️ This software is no longer active. Please use the new version at{' '}
+        <a
+          href="https://hariharprinters.printosync.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline font-bold hover:text-red-100"
+        >
+          hariharprinters.printosync.com
+        </a>
+      </div>
       {/* Top Navbar */}
-      <nav className="bg-white border-b border-gray-200 px-3 sm:px-5 py-2.5 flex items-center gap-2 sm:gap-3 sticky top-0 z-50 max-w-full">
+      <nav className="bg-white border-b border-gray-200 px-3 sm:px-5 py-2.5 flex items-center gap-2 sm:gap-3 sticky top-10 z-50 max-w-full">
         <div className="flex items-center gap-2 sm:gap-3 shrink-0 min-w-0">
           {/* Mobile Menu Button */}
           <button
