@@ -3,7 +3,7 @@ import { Phone, Mail } from 'lucide-react';
 
 const TRICKWRICK = {
   website: 'https://www.trickwrick.com/',
-  email: 'info@trickwrick.com',
+  email: 'info@printosync.com',
 };
 
 const MAINTENANCE_POINTS = [
@@ -48,7 +48,7 @@ const ContactSupport = () => (
         <p className="text-sm text-gray-500 leading-relaxed">
         This software is designed and developed by Trickwrick Infotech Private Limited.
         <br></br> 
-        © Copyright {new Date().getFullYear()} Trickwrick. All Right Reserved
+        © Copyright {new Date().getFullYear()} printosync. All Right Reserved
         </p>
       </div>
     </div>
@@ -56,17 +56,17 @@ const ContactSupport = () => (
       <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-5">
         Software Information
       </h2>
-      <div className="space-y-3 max-w-3xl">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-gray-50 p-4 rounded-xl border border-gray-100">
-          <span className="text-sm font-semibold text-gray-600">Software Activated/Purchased On:</span>
-          <span className="text-sm font-bold text-gray-900">01 July 2026</span>
+      <div className="inline-flex flex-col gap-2 w-fit max-w-full">
+        <div className="flex flex-row items-center gap-3 bg-gray-50 px-4 py-2.5 rounded-xl border border-gray-100">
+          <span className="text-sm font-semibold text-gray-600 whitespace-nowrap">Software Activated/Purchased On:</span>
+          <span className="text-sm font-bold text-gray-900 whitespace-nowrap shrink-0">01 July 2026</span>
         </div>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-gray-50 p-4 rounded-xl border border-gray-100">
-          <span className="text-sm font-semibold text-gray-600">Subscription Type:</span>
-          <span className="text-sm font-bold text-gray-900">Annual</span>
+        <div className="flex flex-row items-center gap-3 bg-gray-50 px-4 py-2.5 rounded-xl border border-gray-100">
+          <span className="text-sm font-semibold text-gray-600 whitespace-nowrap">Subscription Type:</span>
+          <span className="text-sm font-bold text-gray-900 whitespace-nowrap shrink-0">Annual</span>
         </div>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-gray-50 p-4 rounded-xl border border-gray-100">
-          <span className="text-sm font-semibold text-gray-600">Status:</span>
+        <div className="flex flex-row items-center gap-3 bg-gray-50 px-4 py-2.5 rounded-xl border border-gray-100">
+          <span className="text-sm font-semibold text-gray-600 whitespace-nowrap">Status:</span>
           <span className="text-sm font-bold text-green-700 bg-green-100 px-3 py-1 rounded-full flex items-center gap-2 w-fit"><span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>Active</span>
         </div>
       </div>

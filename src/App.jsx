@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation, Navigate, Link } from 'react-router-dom';
 import {
   Bell,
   UserCircle,
@@ -31,8 +31,6 @@ import AddChallan from './AddChallan';
 import ChallanList from './ChallanList';
 import Login from './Login';
 import SettingsPage from './Settings';
-import SiteSettings from './SiteSettings';
-import SocialSettings from './SocialSettings';
 import PaymentTypeManagement from './PaymentTypeManagement';
 import PaperStockManagement from './PaperStockManagement';
 import Statements from './Statements';
@@ -48,6 +46,15 @@ import { hasPermission, canAccessStaffTeam, canAccessDashboard, getDefaultRoute,
 import { STAFF_TEAM_ENABLED } from './utils/featureFlags';
 import { BRAND_LOGO_URL, getSiteSettings, isDefaultBrandTitle } from './utils/brandAssets';
 import BrandTitle from './components/BrandTitle';
+
+const DeprecationBanner = () => (
+  <div className="bg-red-600 text-white text-center py-2 px-4 text-sm font-semibold shadow-md z-100 relative w-full flex justify-center items-center gap-1 flex-wrap">
+    This software is no longer active. Please use the new version at{' '}
+    <a href="https://hariharprinters.printosync.com/" className="underline hover:text-red-100 transition-colors font-bold whitespace-nowrap" target="_blank" rel="noopener noreferrer">
+      hariharprinters.printosync.com
+    </a>
+  </div>
+);
 
 const DropdownMenu = ({ title, icon: Icon, items, isActive }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -80,21 +87,21 @@ const DropdownMenu = ({ title, icon: Icon, items, isActive }) => {
           : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
           }`}
       >
-        <Icon size={16} className="flex-shrink-0" />
+        <Icon size={16} className="shrink-0" />
         <span className="leading-none whitespace-nowrap">{title}</span>
         <ChevronDown
           size={14}
-          className={`flex-shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180 text-blue-600' : 'text-gray-400'}`}
+          className={`shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180 text-blue-600' : 'text-gray-400'}`}
         />
       </button>
 
       <div
-        className={`absolute top-full left-0 w-max transition-all duration-200 ease-out z-[100] ${isOpen ? 'opacity-100 translate-y-0 visible' : 'opacity-0 translate-y-2 invisible pointer-events-none'}`}
+        className={`absolute top-full left-0 w-max transition-all duration-200 ease-out z-100 ${isOpen ? 'opacity-100 translate-y-0 visible' : 'opacity-0 translate-y-2 invisible pointer-events-none'}`}
       >
         {/* Transparent bridge to prevent flickering */}
         <div className="h-2 w-full" />
 
-        <div className="min-w-[220px] bg-white border border-gray-100 rounded-xl shadow-[0_10px_40px_-4px_rgba(0,0,0,0.15)] p-2 space-y-1">
+        <div className="min-w-55 bg-white border border-gray-100 rounded-xl shadow-[0_10px_40px_-4px_rgba(0,0,0,0.15)] p-2 space-y-1">
           {items.map((item, idx) => (
             <div
               key={idx}
@@ -127,7 +134,7 @@ const DropdownMenu = ({ title, icon: Icon, items, isActive }) => {
 
               {/* Submenu rendering */}
               {item.isSubDropdown && (activeSubMenu === idx) && (
-                <div className="absolute lg:right-[calc(100%-8px)] lg:left-auto lg:top-0 left-0 top-full mt-1 min-w-[180px] bg-white border border-gray-100 rounded-xl shadow-[0_10px_40px_-4px_rgba(0,0,0,0.15)] p-2 space-y-1 z-[60] animate-in fade-in slide-in-from-right-2 duration-200">
+                <div className="absolute lg:right-[calc(100%-8px)] lg:left-auto lg:top-0 left-0 top-full mt-1 min-w-45 bg-white border border-gray-100 rounded-xl shadow-[0_10px_40px_-4px_rgba(0,0,0,0.15)] p-2 space-y-1 z-60 animate-in fade-in slide-in-from-right-2 duration-200">
                   {item.subItems.map((sub, sidx) => (
                     <button
                       key={sidx}
@@ -151,7 +158,7 @@ const DropdownMenu = ({ title, icon: Icon, items, isActive }) => {
   );
 };
 
-const ProfileMenu = ({ settingsItems, staffTeamItems, showStaffTeam, location, onContactSupport, onLogout }) => {
+const ProfileMenu = ({ settingsItems, staffTeamItems, showStaffTeam, location, onLogout }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isStaffOpen, setIsStaffOpen] = useState(false);
@@ -205,6 +212,10 @@ const ProfileMenu = ({ settingsItems, staffTeamItems, showStaffTeam, location, o
     };
   }, []);
 
+  useEffect(() => {
+    closeAll();
+  }, [location.pathname]);
+
   const renderFlyout = (config) => {
     const {
       isSubOpen,
@@ -249,7 +260,7 @@ const ProfileMenu = ({ settingsItems, staffTeamItems, showStaffTeam, location, o
           <>
             <div className="absolute right-full top-0 w-3 h-full" aria-hidden />
             <div
-              className="absolute right-[calc(100%+10px)] top-0 min-w-[210px] bg-white border border-gray-100 rounded-xl shadow-[0_10px_40px_-4px_rgba(0,0,0,0.15)] p-2 space-y-1 z-[70]"
+              className="absolute right-[calc(100%+10px)] top-0 min-w-52.5 bg-white border border-gray-100 rounded-xl shadow-[0_10px_40px_-4px_rgba(0,0,0,0.15)] p-2 space-y-1 z-70"
               onMouseEnter={() => {
                 clearCloseTimer();
                 openMenu();
@@ -257,13 +268,10 @@ const ProfileMenu = ({ settingsItems, staffTeamItems, showStaffTeam, location, o
               }}
             >
               {items.map((item) => (
-                <button
+                <Link
                   key={item.label}
-                  type="button"
-                  onClick={() => {
-                    item.onClick();
-                    closeAll();
-                  }}
+                  to={item.path}
+                  onClick={closeAll}
                   className={`flex items-center w-full px-3 py-2 text-xs font-semibold rounded-lg transition-colors ${
                     location.pathname === item.path
                       ? 'bg-blue-50 text-blue-700'
@@ -271,7 +279,7 @@ const ProfileMenu = ({ settingsItems, staffTeamItems, showStaffTeam, location, o
                   }`}
                 >
                   {item.label}
-                </button>
+                </Link>
               ))}
             </div>
           </>
@@ -303,7 +311,7 @@ const ProfileMenu = ({ settingsItems, staffTeamItems, showStaffTeam, location, o
       </button>
 
       <div
-        className={`absolute top-full right-0 w-[220px] z-[60] transition-opacity duration-150 ${
+        className={`absolute top-full right-0 w-55 z-60 transition-opacity duration-150 ${
           isOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'
         }`}
         onMouseEnter={openMenu}
@@ -331,12 +339,9 @@ const ProfileMenu = ({ settingsItems, staffTeamItems, showStaffTeam, location, o
               items: staffTeamItems,
             })}
 
-            <button
-              type="button"
-              onClick={() => {
-                onContactSupport();
-                closeAll();
-              }}
+            <Link
+              to="/contact-support"
+              onClick={closeAll}
               className={`flex items-center gap-3 w-full px-3 py-2.5 text-sm rounded-lg transition-colors ${
                 location.pathname === '/contact-support'
                   ? 'bg-blue-50 text-blue-700'
@@ -345,7 +350,7 @@ const ProfileMenu = ({ settingsItems, staffTeamItems, showStaffTeam, location, o
             >
               <Headphones size={16} className={location.pathname === '/contact-support' ? 'text-blue-600' : 'text-gray-400'} />
               <span className="font-semibold">Contact &amp; Support</span>
-            </button>
+            </Link>
 
             <div className="border-t border-gray-100 my-1" />
 
@@ -415,9 +420,14 @@ export default function App() {
   // If not logged in, only show Login page
   if (!isLoggedIn) {
     return (
-      <Routes>
-        <Route path="*" element={<Login />} />
-      </Routes>
+      <div className="flex flex-col min-h-screen w-full">
+        <DeprecationBanner />
+        <div className="flex-1 flex flex-col relative">
+          <Routes>
+            <Route path="*" element={<Login />} />
+          </Routes>
+        </div>
+      </div>
     );
   }
 
@@ -532,13 +542,7 @@ export default function App() {
       });
 
   const profileSettingsItems = [
-    ...(hasPermission('settings', 'edit')
-      ? [
-          { label: 'Site Setting', path: '/settings/site', onClick: () => navigate('/settings/site') },
-          { label: 'Social Setting', path: '/settings/social', onClick: () => navigate('/settings/social') },
-        ]
-      : []),
-    { label: 'Change Password', path: '/settings/password', onClick: () => navigate('/settings/password') },
+    { label: 'Change Password', path: '/settings/password' },
   ];
 
   const staffTeamItems = [
@@ -606,7 +610,8 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f4f7fa] font-sans pb-10 text-gray-800">
+    <div className="min-h-screen bg-[#f4f7fa] font-sans pb-10 text-gray-800 flex flex-col">
+      <DeprecationBanner />
       {/* Top Navbar */}
       <nav className="bg-white border-b border-gray-200 px-3 sm:px-5 py-2.5 flex items-center gap-2 sm:gap-3 sticky top-0 z-50 max-w-full">
         <div className="flex items-center gap-2 sm:gap-3 shrink-0 min-w-0">
@@ -671,7 +676,7 @@ export default function App() {
                   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   }`}
               >
-                <item.icon size={16} className="flex-shrink-0" />
+                <item.icon size={16} className="shrink-0" />
                 <span className="leading-none whitespace-nowrap">{item.name}</span>
               </button>
             );
@@ -686,14 +691,14 @@ export default function App() {
             >
               <Bell size={22} />
               {unreadCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] h-4 min-w-[16px] flex items-center justify-center font-bold px-1 rounded-full border-2 border-white z-10 shadow-sm">
+                <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] h-4 min-w-4 flex items-center justify-center font-bold px-1 rounded-full border-2 border-white z-10 shadow-sm">
                   {unreadCount}
                 </span>
               )}
             </button>
 
             {isNotifOpen && (
-              <div className="absolute top-full right-0 mt-3 w-80 bg-white border border-gray-100 rounded-2xl shadow-2xl z-[60] overflow-hidden transform animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="absolute top-full right-0 mt-3 w-80 bg-white border border-gray-100 rounded-2xl shadow-2xl z-60 overflow-hidden transform animate-in fade-in slide-in-from-top-2 duration-200">
                 <div className="p-4 border-b border-gray-50 flex items-center justify-between">
                   <h3 className="font-bold text-gray-900">Notifications</h3>
                   <button
@@ -734,7 +739,6 @@ export default function App() {
             staffTeamItems={staffTeamItems}
             showStaffTeam={showStaffTeamMenu}
             location={location}
-            onContactSupport={() => navigate('/contact-support')}
             onLogout={handleLogout}
           />
         </div>
@@ -742,7 +746,7 @@ export default function App() {
 
       {/* Mobile Navigation Drawer */}
       <div
-        className={`fixed inset-0 bg-black/50 z-[55] transition-opacity duration-300 xl:hidden ${isMobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
+        className={`fixed inset-0 bg-black/50 z-55 transition-opacity duration-300 xl:hidden ${isMobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
           }`}
         onClick={() => setIsMobileMenuOpen(false)}
       >
@@ -848,7 +852,7 @@ export default function App() {
                 <button
                   key={item.label}
                   onClick={() => {
-                    item.onClick();
+                    navigate(item.path);
                     setIsMobileMenuOpen(false);
                     setIsMobileSettingsOpen(false);
                   }}
@@ -924,8 +928,6 @@ export default function App() {
           <Route path="/challan/list" element={<ChallanList />} />
           <Route path="/contact-support" element={<ContactSupport />} />
           <Route path="/settings/password" element={<SettingsPage />} />
-          <Route path="/settings/site" element={<SiteSettings />} />
-          <Route path="/settings/social" element={<SocialSettings />} />
           {STAFF_TEAM_ENABLED && (
             <>
           <Route path="/staff-team" element={<Navigate to="/staff-team/manage" replace />} />
