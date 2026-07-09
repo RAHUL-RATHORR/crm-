@@ -14,7 +14,7 @@ const MAINTENANCE_POINTS = [
 const ContactSupport = () => (
   <div className="mx-auto mt-8 pb-12 max-w-7xl w-full px-4 sm:px-6 space-y-6">
     <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden w-full">
-      <div className="h-1.5 bg-gradient-to-r from-[#0c3d6e] via-[#1a5a9e] to-[#5ec6e8]" />
+      <div className="h-1.5 bg-linear-to-r from-[#0c3d6e] via-[#1a5a9e] to-[#5ec6e8]" />
 
       <div className="px-8 sm:px-12 lg:px-16 py-8 sm:py-10">
         <h1 className="text-2xl sm:text-[26px] font-bold text-[#0c3d6e] mb-8">
@@ -50,6 +50,25 @@ const ContactSupport = () => (
         <br></br> 
         © Copyright {new Date().getFullYear()} Trickwrick. All Right Reserved
         </p>
+      </div>
+    </div>
+    <div className="bg-white rounded-lg shadow-sm border border-gray-100 w-full px-8 sm:px-12 lg:px-16 py-8 sm:py-10">
+      <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-5">
+        Software Information
+      </h2>
+      <div className="space-y-3 max-w-3xl">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-gray-50 p-4 rounded-xl border border-gray-100">
+          <span className="text-sm font-semibold text-gray-600">Software Activated/Purchased On:</span>
+          <span className="text-sm font-bold text-gray-900">01 July 2026</span>
+        </div>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-gray-50 p-4 rounded-xl border border-gray-100">
+          <span className="text-sm font-semibold text-gray-600">Subscription Type:</span>
+          <span className="text-sm font-bold text-gray-900">Annual</span>
+        </div>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-gray-50 p-4 rounded-xl border border-gray-100">
+          <span className="text-sm font-semibold text-gray-600">Status:</span>
+          <span className="text-sm font-bold text-green-700 bg-green-100 px-3 py-1 rounded-full flex items-center gap-2 w-fit"><span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>Active</span>
+        </div>
       </div>
     </div>
 
