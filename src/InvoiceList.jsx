@@ -375,21 +375,8 @@ const InvoiceList = () => {
                   <span className="text-gray-500 font-medium shrink-0">GST Mode:</span>
                   <select
                     value={tempGstType}
-                    onChange={async (e) => {
-                      const newType = e.target.value;
-                      setTempGstType(newType);
-                      setInvoices(prev => prev.map(inv => inv._id === selectedInvoice._id ? { ...inv, gstType: newType } : inv));
-                      try {
-                        await fetch(`${API_BASE_URL}/api/invoice/${selectedInvoice._id}`, {
-                          method: 'PUT',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ gstType: newType })
-                        });
-                      } catch (err) {
-                        console.error("Error updating GST Type on server:", err);
-                      }
-                    }}
-                    className="bg-transparent text-blue-700 outline-none cursor-pointer font-bold w-full sm:w-auto"
+                    disabled
+                    className="bg-transparent text-gray-400 outline-none cursor-not-allowed font-bold w-full sm:w-auto"
                   >
                     <option value="CGST/SGST">CGST + SGST</option>
                     <option value="IGST">IGST</option>

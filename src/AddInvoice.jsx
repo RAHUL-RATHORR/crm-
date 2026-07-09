@@ -142,7 +142,20 @@ const AddInvoice = () => {
   const handleInputChange = (e) => {
     const { name, value: rawValue } = e.target;
     const value = name === 'stateCode' ? rawValue.replace(/\D/g, '').slice(0, 2) : rawValue;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => {
+      let updatedValue = value;
+      let newGstType = prev.gstType;
+
+      if (name === 'state') {
+        if (value.trim().toLowerCase() === 'rajasthan') {
+          newGstType = 'CGST/SGST';
+        } else if (value.trim().toLowerCase() !== '') {
+          newGstType = 'IGST';
+        }
+      }
+
+      return { ...prev, [name]: updatedValue, gstType: newGstType };
+    });
     if (name === 'party') {
       setIsPartyDropdownOpen(true);
     }
@@ -765,7 +778,8 @@ const AddInvoice = () => {
               name="gstType"
               value={formData.gstType}
               onChange={handleInputChange}
-              className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-base sm:text-lg font-semibold text-gray-800 outline-none cursor-pointer"
+              disabled
+              className="w-full bg-gray-100 border border-gray-200 text-gray-500 rounded-lg px-4 py-2.5 outline-none cursor-not-allowed transition-all text-base sm:text-lg font-semibold"
             >
               <option value="CGST/SGST">CGST + SGST</option>
               <option value="IGST">IGST</option>
