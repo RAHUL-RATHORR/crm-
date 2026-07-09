@@ -14,6 +14,7 @@ import { setStoredDocumentExtras, getStoredDocumentExtras } from './utils/docume
 import { setStoredItemNotes, mapLineItemsForSave } from './utils/itemNoteStorage';
 import { validateStateAndCode } from './utils/indianStateCodes';
 import { API_BASE_URL } from './utils/apiBase';
+import GSTInput from './components/GSTInput';
 
 const EMPTY_PARTY_FORM = {
   partyName: '',
@@ -862,13 +863,11 @@ const AddInvoice = () => {
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-gray-700 uppercase tracking-wider">GST No</label>
-                  <input
-                    type="text"
+                  <GSTInput
                     name="gstNo"
                     value={partyForm.gstNo}
                     onChange={handlePartyFormChange}
                     placeholder="URP if unregistered"
-                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               </div>

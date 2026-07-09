@@ -6,6 +6,7 @@ import { ChevronDown, Layers, Search, FileText } from 'lucide-react';
 import { rememberPlateUsage, resolvePlateUseCount } from './utils/plateUsage';
 import { mergePaperSizes } from './utils/paperStockSizes';
 import { API_BASE_URL } from './utils/apiBase';
+import GSTInput from './components/GSTInput';
 
 const buildPartySuggestions = (jobCards = []) => {
   const map = new Map();
@@ -382,7 +383,7 @@ export default function JobCardForm() {
             </div>
             <div className="flex flex-col">
               <label className="text-sm font-medium text-gray-700 mb-1">GST No.</label>
-              <input type="text" name="gstNo" value={gstNo} onChange={(e) => setGstNo(e.target.value)} className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" placeholder="Enter GST number" />
+              <GSTInput name="gstNo" value={gstNo} onChange={(e) => setGstNo(e.target.value)} placeholder="Enter GST number" />
             </div>
             <div className="flex flex-col">
               <label className="text-sm font-medium text-gray-700 mb-1">Date</label>
@@ -469,12 +470,10 @@ export default function JobCardForm() {
                 </div>
                 <div className="flex flex-col">
                   <label className="text-sm font-medium text-gray-700 mb-1">GST No.</label>
-                  <input
-                    type="text"
+                  <GSTInput
                     name="shipGstNo"
                     value={shipGstNo}
                     onChange={(e) => setShipGstNo(e.target.value)}
-                    className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     placeholder="Enter ship GST number"
                   />
                 </div>
