@@ -598,7 +598,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#f4f7fa] font-sans pb-10 text-gray-800">
       {/* Deprecation Banner */}
-      <div className="w-full bg-red-600 text-white text-center py-2 px-4 text-sm font-semibold z-[9999] sticky top-0">
+      <div className="w-full bg-red-600 text-white text-center py-2 px-4 text-sm font-semibold z-9999 sticky top-0">
         ⚠️ This software is no longer active. Please use the new version at{' '}
         <a
           href="https://hariharprinters.printosync.com"
