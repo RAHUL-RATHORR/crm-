@@ -779,7 +779,7 @@ const AddInvoice = () => {
               value={formData.gstType}
               onChange={handleInputChange}
               disabled
-              className="w-full bg-gray-100 border border-gray-200 text-gray-500 rounded-lg px-4 py-2.5 outline-none cursor-not-allowed transition-all text-base sm:text-lg font-semibold"
+              className="w-full bg-gray-100 border border-gray-200 text-gray-500 rounded-lg px-4 py-2.5 outline-none cursor-not-allowed transition-all text-base sm:text-lg font-semibold pointer-events-none"
             >
               <option value="CGST/SGST">CGST + SGST</option>
               <option value="IGST">IGST</option>
