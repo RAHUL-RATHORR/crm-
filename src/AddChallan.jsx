@@ -228,7 +228,20 @@ const AddChallan = () => {
       setIsPartyDropdownOpen(true);
       return;
     }
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => {
+      let updatedValue = value;
+      let newGstType = prev.gstType;
+
+      if (name === 'state') {
+        if (value.trim().toLowerCase() === 'rajasthan') {
+          newGstType = 'CGST/SGST';
+        } else if (value.trim().toLowerCase() !== '') {
+          newGstType = 'IGST';
+        }
+      }
+
+      return { ...prev, [name]: updatedValue, gstType: newGstType };
+    });
     if (name === 'state' || name === 'stateCode') {
       setStateFieldError('');
     }
