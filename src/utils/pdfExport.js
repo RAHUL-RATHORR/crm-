@@ -112,9 +112,9 @@ const addCanvasToPdf = (pdf, canvas, imgData, { fitSinglePage = false } = {}) =>
   }
 };
 
-export const downloadAsPDF = async (elementId, filename, onProgressChange = () => {}) => {
+export const downloadAsPDF = async (elementId, filename, onProgressChange = () => {}, options = {}) => {
   if (elementId === 'printable-invoice' || elementId === 'printable-challan') {
-    return downloadTaxDocumentAsPdf(elementId, filename, onProgressChange);
+    return downloadTaxDocumentAsPdf(elementId, filename, onProgressChange, options);
   }
 
   let iframe = null;

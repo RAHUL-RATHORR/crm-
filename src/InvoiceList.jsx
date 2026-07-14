@@ -196,10 +196,16 @@ const InvoiceList = () => {
   };
 
   const handleDownloadPDF = async () => {
+    const selected = getSelectedCopyIds(copySelection);
+    if (!selected.length) {
+      alert('Please select at least one copy type');
+      return;
+    }
     await downloadAsPDF(
       'printable-invoice',
       `Invoice_${selectedInvoice.invoiceNumber}`,
-      setIsGenerating
+      setIsGenerating,
+      { copyIds: selected }
     );
   };
 

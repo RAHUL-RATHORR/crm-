@@ -247,10 +247,15 @@ const ChallanList = () => {
   };
 
   const handleDownloadPDF = async () => {
+    const selected = getSelectedCopyIds(copySelection);
+    if (!selected.length) {
+      alert('Please select at least one copy type');
+      return;
+    }
     const label = isMergedPrint
       ? `Challan_Combined_${primaryChallan?.partyName || 'party'}`
       : `Challan_${primaryChallan?.challanNo}`;
-    await downloadAsPDF('printable-challan', label, setIsGenerating);
+    await downloadAsPDF('printable-challan', label, setIsGenerating, { copyIds: selected });
   };
 
   return (
