@@ -2,6 +2,9 @@
  * Print helper — same isolation approach as pdfExport (full-size iframe + inlined styles).
  */
 
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
+
 export function applyTaxCopyHighlight(root, highlightCopy) {
   if (!root) return;
   root.querySelectorAll('[data-copy-id]').forEach((row) => {
@@ -63,13 +66,10 @@ const getSanitizedSystemStyles = () => {
   }
 };
 
-export function printElement(elementId, options = {}) {
-  const { copyIds } = options;
+export function mountPrintIframeForExport(elementId, options = {}) {
+  const { copyIds, forPdf = false } = options;
   const element = document.getElementById(elementId);
-  if (!element) {
-    window.print();
-    return;
-  }
+  if (!element) return null;
 
   const isJobCard = elementId === 'printable-inner';
   const isEstimate = elementId === 'printable-estimate' || element.classList.contains('estimate-print-page');
@@ -80,9 +80,9 @@ export function printElement(elementId, options = {}) {
   const pageMargin = isFinancialStatement ? '4mm' : isFullWidth ? '5mm' : '12mm';
   const contentPadding = isFinancialStatement ? '2mm 3mm' : isFullWidth ? '2mm 3mm' : '6mm 8mm';
   const wrapperStyle = isFullWidth
-    ? 'width:100%;max-width:100%;margin:0;padding:0;background:#ffffff;box-sizing:border-box;min-height:100vh;'
+    ? `width:100%;max-width:100%;margin:0;padding:0;background:#ffffff;box-sizing:border-box;${forPdf ? '' : 'min-height:100vh;'}`
     : 'width:210mm;max-width:210mm;margin:0 auto;padding:0;background:white;box-sizing:border-box;';
-  const iframeWidth = isFinancialStatement ? '297mm' : '210mm';
+  const iframeWidth = forPdf ? '794px' : (isFinancialStatement ? '297mm' : '210mm');
 
   document.getElementById('print-root-temp')?.remove();
   document.body.classList.remove('is-printing');
@@ -696,6 +696,16 @@ export function printElement(elementId, options = {}) {
   `);
   iframeDoc.close();
 
+  return iframe;
+}
+
+export function printElement(elementId, options = {}) {
+  const iframe = mountPrintIframeForExport(elementId, options);
+  if (!iframe) {
+    window.print();
+    return;
+  }
+
   const runPrint = () => {
     try {
       const win = iframe.contentWindow;
@@ -712,4 +722,159 @@ export function printElement(elementId, options = {}) {
   };
 
   setTimeout(runPrint, 1200);
+}
+
+const PDF_CAPTURE_CSS = `
+  html, body, body > div {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+  }
+  .tax-invoice-print-page {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+  }
+  .tax-invoice-print-page .tax-invoice {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+  }
+  .tax-invoice-print-page .tax-analysis-table {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+  }
+  .tax-invoice-print-page .tax-invoice .tax-cell,
+  .tax-invoice-print-page .tax-invoice td,
+  .tax-invoice-print-page .tax-invoice th {
+    padding-top: 6px !important;
+    padding-bottom: 6px !important;
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+    line-height: 1.5 !important;
+    vertical-align: middle !important;
+    border: 1px solid #000 !important;
+    box-sizing: border-box !important;
+  }
+  .tax-invoice-print-page .tax-analysis-table .tax-cell {
+    padding-top: 5px !important;
+    padding-bottom: 5px !important;
+    line-height: 1.45 !important;
+  }
+  .tax-invoice-print-page .tax-item-main-row .tax-cell,
+  .tax-invoice-print-page .tax-item-sub-row .tax-cell,
+  .tax-invoice-print-page tr.tax-item-header-row .tax-cell {
+    padding-top: 5px !important;
+    padding-bottom: 5px !important;
+    line-height: 1.4 !important;
+  }
+  .tax-invoice-print-page .tax-items-stripe-row .tax-cell,
+  .tax-invoice-print-page .tax-item-grand-total-row .tax-cell,
+  .tax-invoice-print-page .tax-items-empty-band .tax-item-empty-cell {
+    border-top: none !important;
+    border-bottom: none !important;
+    border-left: 1px solid #000 !important;
+    border-right: 1px solid #000 !important;
+  }
+  .tax-invoice-print-page .tax-item-grand-total-row .tax-cell {
+    border-top: 2px solid #000 !important;
+    border-bottom: 1px solid #000 !important;
+  }
+  .tax-invoice-print-page .tax-item-empty-row .tax-item-empty-cell {
+    height: auto !important;
+    min-height: 14px !important;
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+  }
+  .tax-invoice-print-page .tax-amount-words-row .tax-cell,
+  .tax-invoice-print-page .tax-amount-words-cell {
+    padding-top: 7px !important;
+    padding-bottom: 7px !important;
+    line-height: 1.45 !important;
+  }
+  .tax-invoice-print-page tr.tax-signature-section .tax-cell,
+  .tax-invoice-print-page tr.tax-terms-bank-section .tax-cell {
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+  }
+  .tax-invoice-print-page .tax-fields-inner td {
+    padding-top: 1px !important;
+    padding-bottom: 4px !important;
+    line-height: 1.4 !important;
+    border: none !important;
+  }
+  .tax-invoice-print-page .tax-sign-space {
+    height: 28px !important;
+  }
+`;
+
+const injectPdfCaptureStyles = (doc) => {
+  const style = doc.createElement('style');
+  style.setAttribute('data-pdf-capture', 'true');
+  style.textContent = PDF_CAPTURE_CSS;
+  doc.head.appendChild(style);
+};
+
+export async function downloadTaxDocumentAsPdf(elementId, filename, onProgressChange = () => {}) {
+  let iframe = null;
+  try {
+    onProgressChange(true);
+    iframe = mountPrintIframeForExport(elementId, { forPdf: true });
+    if (!iframe) throw new Error(`Element with ID "${elementId}" not found`);
+
+    await new Promise((resolve) => setTimeout(resolve, 1200));
+
+    const iframeDoc = iframe.contentWindow.document;
+    injectPdfCaptureStyles(iframeDoc);
+    await new Promise((resolve) => setTimeout(resolve, 200));
+
+    const captureEl = iframeDoc.querySelector('.tax-invoice-print-page') || iframeDoc.body;
+
+    const canvas = await html2canvas(captureEl, {
+      scale: 2,
+      useCORS: true,
+      letterRendering: false,
+      logging: false,
+      backgroundColor: '#ffffff',
+      width: captureEl.scrollWidth,
+      height: captureEl.scrollHeight,
+      windowWidth: captureEl.scrollWidth,
+      windowHeight: captureEl.scrollHeight,
+      onclone: (clonedDoc) => {
+        injectPdfCaptureStyles(clonedDoc);
+      },
+    });
+
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const imgWidth = pageWidth;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+    let renderWidth = imgWidth;
+    let renderHeight = imgHeight;
+
+    if (imgHeight > pageHeight) {
+      const scale = pageHeight / imgHeight;
+      renderWidth = imgWidth * scale;
+      renderHeight = pageHeight;
+    }
+
+    const offsetX = (pageWidth - renderWidth) / 2;
+    pdf.addImage(imgData, 'PNG', offsetX, 0, renderWidth, renderHeight);
+
+    pdf.save(filename.endsWith('.pdf') ? filename : `${filename}.pdf`);
+  } catch (error) {
+    console.error('Tax PDF export failed:', error);
+    alert(`PDF Error: ${error.message}`);
+  } finally {
+    if (iframe && document.body.contains(iframe)) {
+      document.body.removeChild(iframe);
+    }
+    onProgressChange(false);
+  }
 }

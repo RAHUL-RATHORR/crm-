@@ -1,5 +1,6 @@
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
+import { downloadTaxDocumentAsPdf } from './printDocument';
 
 /**
  * NUCLEAR STYLE SHIELD V3 - The Ultimate Solution for PDF Fidelity.
@@ -72,7 +73,50 @@ const sanitizeDOMInIframe = (doc) => {
   });
 };
 
+const addCanvasToPdf = (pdf, canvas, imgData, { fitSinglePage = false } = {}) => {
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+  const imgWidth = pageWidth;
+  const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+  if (fitSinglePage) {
+    if (imgHeight <= pageHeight) {
+      pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
+      return;
+    }
+
+    const scale = pageHeight / imgHeight;
+    const renderWidth = imgWidth * scale;
+    const renderHeight = pageHeight;
+    const offsetX = (pageWidth - renderWidth) / 2;
+    pdf.addImage(imgData, 'JPEG', offsetX, 0, renderWidth, renderHeight);
+    return;
+  }
+
+  if (imgHeight <= pageHeight) {
+    pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
+    return;
+  }
+
+  let heightLeft = imgHeight;
+  let position = 0;
+
+  pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+  heightLeft -= pageHeight;
+
+  while (heightLeft > 0) {
+    position -= pageHeight;
+    pdf.addPage();
+    pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+  }
+};
+
 export const downloadAsPDF = async (elementId, filename, onProgressChange = () => {}) => {
+  if (elementId === 'printable-invoice' || elementId === 'printable-challan') {
+    return downloadTaxDocumentAsPdf(elementId, filename, onProgressChange);
+  }
+
   let iframe = null;
   try {
     onProgressChange(true);
@@ -81,18 +125,26 @@ export const downloadAsPDF = async (elementId, filename, onProgressChange = () =
     const element = document.getElementById(elementId);
     if (!element) throw new Error(`Element with ID "${elementId}" not found`);
 
+    const clone = element.cloneNode(true);
+    clone.removeAttribute('id');
+    clone.classList.add('pdf-export-root');
+    if (elementId === 'printable-invoice' || elementId === 'printable-challan') {
+      clone.classList.add('tax-print-compact');
+    }
+
     const isJobCard = elementId === 'printable-inner';
     const isEstimate = elementId === 'printable-estimate' || element.classList.contains('estimate-print-page');
     const isTaxInvoice = elementId === 'printable-invoice' || elementId === 'printable-challan' || elementId === 'printable-inner' || elementId === 'printable-estimate' || element.classList.contains('tax-invoice-print-page') || element.classList.contains('estimate-print-page');
     const isChallan = elementId === 'printable-challan' || element.classList.contains('challan-print-page');
+    const isInvoiceOrChallan = elementId === 'printable-invoice' || elementId === 'printable-challan';
     const isFullWidth = isJobCard || isTaxInvoice || isChallan || isEstimate;
     const pageMargin = isFullWidth ? '5mm' : '12mm';
     const contentWidth = isFullWidth ? '100%' : '186mm';
     const contentMaxWidth = isFullWidth ? '100%' : '186mm';
-    const contentPadding = isFullWidth ? '2mm 3mm' : '6mm 8mm';
+    const contentPadding = isInvoiceOrChallan ? '1mm 2mm' : isFullWidth ? '2mm 3mm' : '6mm 8mm';
     const bodyAlign = isFullWidth ? 'stretch' : 'center';
     const wrapperStyle = isFullWidth
-      ? 'width:100%;max-width:100%;margin:0;padding:0;background:#ffffff;box-sizing:border-box;min-height:100vh;'
+      ? 'width:100%;max-width:100%;margin:0;padding:0;background:#ffffff;box-sizing:border-box;'
       : 'width:186mm;max-width:186mm;margin:0 auto;padding:0 4mm;background:white;box-sizing:border-box;';
 
     // 1. Prepare Styles
@@ -275,6 +327,106 @@ export const downloadAsPDF = async (elementId, filename, onProgressChange = () =
               border: none !important;
             }
 
+            ${isTaxInvoice ? `
+            table { display: table !important; width: 100% !important; table-layout: fixed !important; border-collapse: collapse !important; }
+            thead { display: table-header-group !important; }
+            tbody { display: table-row-group !important; }
+            tr { display: table-row !important; }
+            td, th { display: table-cell !important; }
+            .tax-invoice-print-page,
+            .tax-invoice-print-page * {
+              overflow: visible !important;
+              max-height: none !important;
+            }
+            .tax-invoice-print-page {
+              width: 100% !important;
+              max-width: none !important;
+              min-height: 0 !important;
+              height: auto !important;
+              max-height: none !important;
+              padding: ${contentPadding} !important;
+              margin: 0 !important;
+              background: #ffffff !important;
+              display: block !important;
+              overflow: visible !important;
+              position: static !important;
+              border: none !important;
+              box-shadow: none !important;
+            }
+            .tax-invoice-print-page .tax-invoice {
+              width: 100% !important;
+              table-layout: fixed !important;
+              border-collapse: collapse !important;
+            }
+            .tax-invoice-print-page .tax-title-bar {
+              display: flex !important;
+              align-items: stretch !important;
+              width: 100% !important;
+            }
+            .tax-invoice-print-page .tax-title-text {
+              flex: 1 !important;
+              display: flex !important;
+              align-items: center !important;
+              justify-content: center !important;
+            }
+            .tax-invoice-print-page .tax-copy-box {
+              width: 118px !important;
+              flex-shrink: 0 !important;
+            }
+            .tax-invoice-print-page .tax-items-stripe-row .tax-cell,
+            .tax-invoice-print-page .tax-item-grand-total-row .tax-cell,
+            .tax-invoice-print-page .tax-items-empty-band .tax-item-empty-cell {
+              border-top: none !important;
+              border-bottom: none !important;
+              border-left: 1px solid #000 !important;
+              border-right: 1px solid #000 !important;
+            }
+            .tax-invoice-print-page .tax-item-grand-total-row .tax-cell {
+              border-top: 2px solid #000 !important;
+              border-bottom: 1px solid #000 !important;
+            }
+            .tax-invoice-print-page .tax-stripe-white .tax-cell {
+              background-color: #ffffff !important;
+            }
+            .tax-invoice-print-page .tax-stripe-grey .tax-cell {
+              background-color: #ececec !important;
+            }
+            .tax-invoice-print-page.tax-print-compact .tax-item-main-row .tax-cell,
+            .tax-invoice-print-page.tax-print-compact .tax-item-sub-row .tax-cell {
+              padding-top: 1px !important;
+              padding-bottom: 1px !important;
+              font-size: 10px !important;
+              line-height: 1.15 !important;
+            }
+            .tax-invoice-print-page.tax-print-compact .tax-sign-space {
+              height: 22px !important;
+            }
+            .tax-invoice-print-page.tax-print-compact .tax-terms-list {
+              font-size: 9px !important;
+              line-height: 1.2 !important;
+            }
+            .tax-invoice-print-page.tax-print-compact .tax-analysis-table .tax-cell {
+              padding-top: 1px !important;
+              padding-bottom: 1px !important;
+              font-size: 9px !important;
+            }
+            .tax-invoice-print-page.tax-print-compact .tax-item-empty-row .tax-item-empty-cell {
+              height: calc(14px * var(--empty-rows, 1)) !important;
+            }
+            .tax-invoice-print-page .tax-cell,
+            .tax-invoice-print-page td,
+            .tax-invoice-print-page th,
+            .tax-invoice-print-page .tax-field-value,
+            .tax-invoice-print-page .tax-item-name {
+              word-wrap: break-word !important;
+              overflow-wrap: break-word !important;
+              white-space: normal !important;
+            }
+            .tax-invoice-print-page .tax-field-label {
+              white-space: nowrap !important;
+            }
+            ` : ''}
+
             /* GLOBAL CENTERING FOR ANY COMPONENT */
             .a4-page:not(.job-card-print-page):not(.tax-invoice-print-page):not(.challan-print-page), .invoice-container, .challan-container, [style*="width: 210mm"] {
               width: ${contentWidth} !important;
@@ -288,7 +440,7 @@ export const downloadAsPDF = async (elementId, filename, onProgressChange = () =
         </head>
         <body class="bg-white">
           <div style="${wrapperStyle}">
-            ${element.innerHTML}
+            ${clone.outerHTML}
           </div>
         </body>
       </html>
@@ -311,21 +463,24 @@ export const downloadAsPDF = async (elementId, filename, onProgressChange = () =
       } catch (e) {}
     });
 
+    const captureRoot = iframeDoc.querySelector('.pdf-export-root') || iframeDoc.body;
+
     // 5. Capture with Extreme Resolution
-    const canvas = await html2canvas(iframeDoc.body, {
+    const canvas = await html2canvas(captureRoot, {
       scale: 3.5,
       useCORS: true,
       logging: false,
-      backgroundColor: '#ffffff'
+      backgroundColor: '#ffffff',
+      width: captureRoot.scrollWidth,
+      height: captureRoot.scrollHeight,
+      windowWidth: captureRoot.scrollWidth,
+      windowHeight: captureRoot.scrollHeight,
     });
 
     // 6. Save as PDF
     const imgData = canvas.toDataURL('image/jpeg', 0.95);
     const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-    
-    pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+    addCanvasToPdf(pdf, canvas, imgData, { fitSinglePage: isInvoiceOrChallan });
     pdf.save(filename.endsWith('.pdf') ? filename : `${filename}.pdf`);
     
   } catch (error) {
