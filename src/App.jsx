@@ -159,6 +159,16 @@ const ProfileMenu = ({ settingsItems, staffTeamItems, showStaffTeam, location, o
   const isSettingsActive = location.pathname.startsWith('/settings');
   const isStaffActive = location.pathname.startsWith('/staff-team');
 
+  const canUseHoverMenu = () =>
+    typeof window !== 'undefined' && window.matchMedia('(hover: hover) and (min-width: 768px)').matches;
+
+  const subLinkClass = (path) =>
+    `flex items-center w-full px-3 py-2.5 md:py-2 text-sm md:text-xs font-semibold rounded-lg transition-colors ${
+      location.pathname === path
+        ? 'bg-blue-50 text-blue-700'
+        : 'text-gray-600 hover:bg-blue-50 hover:text-blue-700'
+    }`;
+
   const closeSubmenus = () => {
     setIsSettingsOpen(false);
     setIsStaffOpen(false);
@@ -249,10 +259,11 @@ const ProfileMenu = ({ settingsItems, staffTeamItems, showStaffTeam, location, o
 
         {isSubOpen && (
           <>
-            <div className="absolute right-full top-0 w-3 h-full" aria-hidden />
+            <div className="hidden md:block absolute right-full top-0 w-3 h-full" aria-hidden />
             <div
-              className="absolute right-[calc(100%+10px)] top-0 min-w-52.5 bg-white border border-gray-100 rounded-xl shadow-[0_10px_40px_-4px_rgba(0,0,0,0.15)] p-2 space-y-1 z-70"
+              className="hidden md:block absolute right-[calc(100%+10px)] top-0 min-w-52.5 bg-white border border-gray-100 rounded-xl shadow-[0_10px_40px_-4px_rgba(0,0,0,0.15)] p-2 space-y-1 z-70"
               onMouseEnter={() => {
+                if (!canUseHoverMenu()) return;
                 clearCloseTimer();
                 openMenu();
                 setSubOpen(true);
@@ -263,11 +274,20 @@ const ProfileMenu = ({ settingsItems, staffTeamItems, showStaffTeam, location, o
                   key={item.label}
                   to={item.path}
                   onClick={closeAll}
-                  className={`flex items-center w-full px-3 py-2 text-xs font-semibold rounded-lg transition-colors ${
-                    location.pathname === item.path
-                      ? 'bg-blue-50 text-blue-700'
-                      : 'text-gray-600 hover:bg-blue-50 hover:text-blue-700'
-                  }`}
+                  className={subLinkClass(item.path)}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+
+            <div className="md:hidden mt-1 ml-1 pl-3 border-l-2 border-blue-100 space-y-1">
+              {items.map((item) => (
+                <Link
+                  key={item.label}
+                  to={item.path}
+                  onClick={closeAll}
+                  className={subLinkClass(item.path)}
                 >
                   {item.label}
                 </Link>
@@ -283,8 +303,8 @@ const ProfileMenu = ({ settingsItems, staffTeamItems, showStaffTeam, location, o
     <div
       ref={menuRef}
       className="flex items-center gap-2 bg-gray-50 pl-2 pr-3 py-1.5 rounded-full border border-gray-200 cursor-pointer hover:bg-gray-100 transition relative"
-      onMouseEnter={openMenu}
-      onMouseLeave={scheduleClose}
+      onMouseEnter={() => { if (canUseHoverMenu()) openMenu(); }}
+      onMouseLeave={() => { if (canUseHoverMenu()) scheduleClose(); }}
     >
       <button
         type="button"
@@ -302,14 +322,14 @@ const ProfileMenu = ({ settingsItems, staffTeamItems, showStaffTeam, location, o
       </button>
 
       <div
-        className={`absolute top-full right-0 w-55 z-60 transition-opacity duration-150 ${
+        className={`absolute top-full right-0 w-56 z-60 transition-opacity duration-150 max-md:fixed max-md:right-3 max-md:top-[3.25rem] max-md:w-[min(calc(100vw-1.5rem),280px)] ${
           isOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'
         }`}
-        onMouseEnter={openMenu}
-        onMouseLeave={scheduleClose}
+        onMouseEnter={() => { if (canUseHoverMenu()) openMenu(); }}
+        onMouseLeave={() => { if (canUseHoverMenu()) scheduleClose(); }}
       >
-        <div className="pt-2">
-          <div className="bg-white border border-gray-100 rounded-xl shadow-2xl p-2 space-y-1">
+        <div className="pt-2 max-md:pt-0">
+          <div className="bg-white border border-gray-100 rounded-xl shadow-2xl p-2 space-y-1 max-md:shadow-[0_12px_40px_rgba(0,0,0,0.18)]">
             {renderFlyout({
               isSubOpen: isSettingsOpen,
               setSubOpen: setIsSettingsOpen,
