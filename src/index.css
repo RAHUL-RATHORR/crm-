@@ -1628,6 +1628,20 @@ tr.tax-terms-bank-section {
     min-width: 720px;
   }
 
+  .job-card-list-table-wrap th,
+  .job-card-list-table-wrap td {
+    line-height: 1.5 !important;
+  }
+
+  .job-card-list-mobile article {
+    line-height: 1.5;
+  }
+
+  .job-card-list-mobile article button[aria-label] {
+    min-width: 40px;
+    min-height: 40px;
+  }
+
   .crm-items-table th,
   .crm-items-table td {
     padding-left: 0.75rem !important;
