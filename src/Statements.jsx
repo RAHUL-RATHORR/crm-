@@ -27,6 +27,14 @@ import { API_BASE_URL } from './utils/apiBase';
 
 const fmtAmt = (value) => `₹${Number(value || 0).toLocaleString('en-IN')}`;
 
+const fmtAmtShort = (value) => {
+  const n = Number(value || 0);
+  if (n >= 10000000) return `₹${(n / 10000000).toFixed(2)} Cr`;
+  if (n >= 100000) return `₹${(n / 100000).toFixed(2)} L`;
+  if (n >= 1000) return `₹${(n / 1000).toFixed(1)} K`;
+  return fmtAmt(n);
+};
+
 const Statements = ({ defaultTab = 'transactions' }) => {
   const [statements, setStatements] = useState([]);
   const [invoices, setInvoices] = useState([]);
@@ -142,6 +150,63 @@ const Statements = ({ defaultTab = 'transactions' }) => {
     printElement('printable-financial-statement');
   };
 
+  const renderMobileStatementEntries = () => {
+    if (loading) {
+      return (
+        <div className="py-14 text-center text-gray-400 font-bold animate-pulse uppercase text-sm">
+          Loading Statement...
+        </div>
+      );
+    }
+
+    if (displayEntries.length === 0 && periodFilter === 'all') {
+      return (
+        <div className="py-14 px-4 text-center text-gray-400 italic font-medium text-sm">
+          Is period / filter ke liye koi entry nahi mili.
+        </div>
+      );
+    }
+
+    return (
+      <div className="financial-statement-mobile-list md:hidden divide-y divide-gray-100">
+        {periodFilter !== 'all' && (
+          <article className="p-3.5 bg-amber-50/80">
+            <p className="text-[10px] font-black uppercase tracking-wider text-amber-700">Opening Balance b/f</p>
+            <p className="text-lg font-black text-gray-900 mt-1">{fmtAmt(openingBalance)}</p>
+          </article>
+        )}
+
+        {displayEntries.length === 0 ? (
+          <div className="py-14 px-4 text-center text-gray-400 italic font-medium text-sm">
+            Is period / filter ke liye koi entry nahi mili.
+          </div>
+        ) : (
+          displayEntries.map((entry) => (
+            <article key={entry.id} className="p-3.5">
+              <div className="flex items-start justify-between gap-3 mb-2">
+                <span className="text-xs font-bold text-gray-500">{formatStatementDate(entry.date)}</span>
+                {entry.withdrawal > 0 ? (
+                  <span className="text-sm font-black text-red-600 shrink-0">Dr {fmtAmt(entry.withdrawal)}</span>
+                ) : entry.deposit > 0 ? (
+                  <span className="text-sm font-black text-emerald-600 shrink-0">Cr {fmtAmt(entry.deposit)}</span>
+                ) : (
+                  <span className="text-xs font-bold text-gray-400 shrink-0">—</span>
+                )}
+              </div>
+              <p className="text-sm font-bold text-gray-900 leading-snug break-words">{entry.partyName || '—'}</p>
+              <p className="text-xs font-black text-indigo-700 mt-1 break-all">
+                {entry.invoiceNumber || entry.refNo || '—'}
+              </p>
+              <p className="text-xs text-gray-500 mt-2">
+                Balance: <span className="font-black text-gray-900">{fmtAmt(entry.balanceAfter)}</span>
+              </p>
+            </article>
+          ))
+        )}
+      </div>
+    );
+  };
+
   // Summary stats
   const totalInvoiced = invoices.reduce((acc, inv) => acc + (inv.totalAmount || 0), 0);
   const totalCollected = invoices.reduce((acc, inv) => acc + (inv.paidAmount || 0), 0);
@@ -150,13 +215,13 @@ const Statements = ({ defaultTab = 'transactions' }) => {
   return (
     <div className="w-full px-4 mt-8 pb-12 text-gray-800 animate-in fade-in duration-500">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 md:mb-8">
         <div>
-          <h1 className="text-2xl font-black text-gray-900 flex items-center gap-3 tracking-tight">
-            <div className="bg-emerald-600 w-2 h-8 rounded-full" />
+          <h1 className="text-xl md:text-2xl font-black text-gray-900 flex items-center gap-2 md:gap-3 tracking-tight">
+            <div className="bg-emerald-600 w-1.5 md:w-2 h-6 md:h-8 rounded-full" />
             Financial Statements
           </h1>
-          <p className="text-sm text-gray-500 mt-1 font-medium italic">
+          <p className="text-xs md:text-sm text-gray-500 mt-1 font-medium italic hidden sm:block">
             {defaultTab === 'invoices'
               ? 'View all invoice records, balances, and payment status.'
               : 'Track payment records, invoice balances, and revenue logs.'}
@@ -164,33 +229,51 @@ const Statements = ({ defaultTab = 'transactions' }) => {
         </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      {/* Mobile — compact summary strip */}
+      <div className="md:hidden bg-white rounded-2xl border border-gray-100 shadow-sm mb-4 overflow-hidden">
+        <div className="grid grid-cols-3 divide-x divide-gray-100">
+          <div className="p-3 text-center">
+            <p className="text-[9px] font-black text-gray-400 uppercase tracking-wide leading-tight">Invoiced</p>
+            <p className="text-sm font-black text-gray-900 mt-1 leading-tight">{fmtAmtShort(totalInvoiced)}</p>
+          </div>
+          <div className="p-3 text-center">
+            <p className="text-[9px] font-black text-gray-400 uppercase tracking-wide leading-tight">Collected</p>
+            <p className="text-sm font-black text-emerald-600 mt-1 leading-tight">{fmtAmtShort(totalCollected)}</p>
+          </div>
+          <div className="p-3 text-center">
+            <p className="text-[9px] font-black text-gray-400 uppercase tracking-wide leading-tight">Pending</p>
+            <p className="text-sm font-black text-red-600 mt-1 leading-tight">{fmtAmtShort(totalPending)}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Desktop — summary cards */}
+      <div className="hidden md:grid md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-5 group hover:shadow-md transition-all">
           <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-all">
             <TrendingUp size={26} />
           </div>
-          <div>
+          <div className="min-w-0">
             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Invoiced</p>
-            <h3 className="text-2xl font-black text-gray-900 tracking-tight">₹{totalInvoiced.toLocaleString()}</h3>
+            <h3 className="text-2xl font-black text-gray-900 tracking-tight truncate">₹{totalInvoiced.toLocaleString()}</h3>
           </div>
         </div>
         <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-5 group hover:shadow-md transition-all">
           <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all">
             <CreditCard size={26} />
           </div>
-          <div>
+          <div className="min-w-0">
             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Collected</p>
-            <h3 className="text-2xl font-black text-gray-900 tracking-tight">₹{totalCollected.toLocaleString()}</h3>
+            <h3 className="text-2xl font-black text-gray-900 tracking-tight truncate">₹{totalCollected.toLocaleString()}</h3>
           </div>
         </div>
         <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-5 group hover:shadow-md transition-all">
           <div className="w-14 h-14 bg-red-50 rounded-2xl flex items-center justify-center text-red-500 group-hover:bg-red-500 group-hover:text-white transition-all">
             <Clock size={26} />
           </div>
-          <div>
+          <div className="min-w-0">
             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Balance Pending</p>
-            <h3 className="text-2xl font-black text-gray-900 tracking-tight">₹{totalPending.toLocaleString()}</h3>
+            <h3 className="text-2xl font-black text-gray-900 tracking-tight truncate">₹{totalPending.toLocaleString()}</h3>
           </div>
         </div>
       </div>
@@ -367,9 +450,8 @@ const Statements = ({ defaultTab = 'transactions' }) => {
       {/* INVOICE STATEMENTS TAB — Bank Statement Style */}
       {(!showTabs || activeTab === 'invoices') && (
         <>
-          <div className="flex flex-col gap-3 mb-6">
-            <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-3">
-              <div className="flex bg-white p-2 rounded-2xl shadow-sm gap-2 w-fit">
+          <div className="flex flex-col gap-2 mb-4 md:mb-6">
+            <div className="grid grid-cols-2 gap-2 bg-white p-1.5 rounded-2xl shadow-sm border border-gray-100">
                 {[
                   { id: 'complete', label: 'Complete', count: completeCount },
                   { id: 'pending', label: 'Pending', count: pendingCount },
@@ -378,7 +460,7 @@ const Statements = ({ defaultTab = 'transactions' }) => {
                     key={filter.id}
                     type="button"
                     onClick={() => setInvoiceStatusFilter((prev) => (prev === filter.id ? 'all' : filter.id))}
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all ${
+                    className={`flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl font-bold text-[11px] uppercase tracking-wide transition-all ${
                       invoiceStatusFilter === filter.id
                         ? filter.id === 'complete'
                           ? 'bg-emerald-600 text-white'
@@ -387,34 +469,35 @@ const Statements = ({ defaultTab = 'transactions' }) => {
                     }`}
                   >
                     {filter.label}
-                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                    <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full ${
                       invoiceStatusFilter === filter.id ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'
                     }`}>
                       {filter.count}
                     </span>
                   </button>
                 ))}
-              </div>
+            </div>
 
-              <div className="flex flex-col lg:flex-row flex-wrap gap-3 xl:ml-auto">
-                <div className="flex flex-wrap bg-white p-2 rounded-2xl shadow-sm gap-2">
+            <div className="grid grid-cols-3 gap-2 bg-white p-1.5 rounded-2xl shadow-sm border border-gray-100">
                   {[
-                    { id: 'all', label: 'All Statements' },
-                    { id: 'month', label: 'By Month' },
-                    { id: 'range', label: 'By Date' },
+                    { id: 'all', label: 'All' },
+                    { id: 'month', label: 'Month' },
+                    { id: 'range', label: 'Date' },
                   ].map((filter) => (
                     <button
                       key={filter.id}
                       type="button"
                       onClick={() => setPeriodFilter(filter.id)}
-                      className={`px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all ${
+                      className={`px-2 py-2.5 rounded-xl font-bold text-[11px] uppercase tracking-wide transition-all ${
                         periodFilter === filter.id ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:bg-gray-50'
                       }`}
                     >
                       {filter.label}
                     </button>
                   ))}
-                </div>
+            </div>
+
+              <div className="flex flex-col lg:flex-row flex-wrap gap-2 md:gap-3">
 
                 {periodFilter === 'month' && (
                   <div className="flex items-center gap-2 bg-white p-2 rounded-2xl shadow-sm border border-gray-100">
@@ -450,11 +533,10 @@ const Statements = ({ defaultTab = 'transactions' }) => {
                   </div>
                 )}
               </div>
-            </div>
           </div>
 
         <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="p-6 border-b border-gray-50 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 no-print">
+          <div className="p-4 md:p-6 border-b border-gray-50 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 no-print">
             <div>
               <h2 className="text-lg font-bold text-gray-900">Account Statement</h2>
               <p className="text-xs text-gray-500 mt-0.5">
@@ -486,23 +568,14 @@ const Statements = ({ defaultTab = 'transactions' }) => {
 
           <div id="printable-financial-statement" className="financial-statement-print bg-white">
             <div className="financial-statement-header">
-              <div
-                className="financial-statement-header-grid"
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr minmax(260px, 38%)',
-                  gridTemplateRows: 'auto auto',
-                  columnGap: '1.5rem',
-                  rowGap: '1rem',
-                  alignItems: 'start',
-                }}
-              >
-                <div className="financial-statement-doc-title-block" style={{ gridColumn: 2, gridRow: 1 }}>
-                  <p className="financial-statement-doc-title-line">A C C O U N T</p>
-                  <p className="financial-statement-doc-title-line financial-statement-doc-title-line-second">S T A T E M E N T</p>
+              <div className="financial-statement-header-grid">
+                <div className="financial-statement-doc-title-block">
+                  <p className="financial-statement-doc-title-line financial-statement-doc-title-compact md:hidden">Account Statement</p>
+                  <p className="financial-statement-doc-title-line financial-statement-doc-title-desktop hidden md:block">A C C O U N T</p>
+                  <p className="financial-statement-doc-title-line financial-statement-doc-title-line-second financial-statement-doc-title-desktop hidden md:block">S T A T E M E N T</p>
                 </div>
 
-                <div className="financial-statement-company" style={{ gridColumn: 1, gridRow: 2 }}>
+                <div className="financial-statement-company">
                   <h3>{SELLER.name}</h3>
                   <p>{SELLER.address}</p>
                   <p>{SELLER.tel}, {SELLER.email}</p>
@@ -510,7 +583,7 @@ const Statements = ({ defaultTab = 'transactions' }) => {
                   <p><span className="financial-statement-label">GSTIN :</span> {SELLER.gstin}</p>
                 </div>
 
-                <div className="financial-statement-bank" style={{ gridColumn: 2, gridRow: 2, textAlign: 'right' }}>
+                <div className="financial-statement-bank">
                   <p className="financial-statement-bank-label">Bank Details</p>
                   <p><span className="financial-statement-muted">Account Holder:</span> <span className="financial-statement-strong">{SELLER.bank.holder}</span></p>
                   <p><span className="financial-statement-muted">Bank:</span> <span className="financial-statement-strong">{SELLER.bank.name}</span></p>
@@ -520,15 +593,7 @@ const Statements = ({ defaultTab = 'transactions' }) => {
                 </div>
               </div>
 
-              <div
-                className="financial-statement-summary-grid"
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
-                  gap: '0.75rem',
-                  alignItems: 'stretch',
-                }}
-              >
+              <div className="financial-statement-summary-grid">
                 <div className="financial-statement-summary-card">
                   <p className="financial-statement-summary-label">Statement Period</p>
                   <p className="financial-statement-summary-value">{periodLabel}</p>
@@ -548,9 +613,15 @@ const Statements = ({ defaultTab = 'transactions' }) => {
               </div>
             </div>
 
-            <div className="overflow-x-auto min-h-[300px] financial-statement-table-wrap">
-              <table className="w-full text-left border-collapse financial-statement-table" style={{ tableLayout: 'fixed' }}>
-                <colgroup>
+            <p className="text-[11px] font-semibold text-indigo-600 px-3 pt-3 md:hidden no-print">
+              {displayEntries.length} entries • Tap Print for full statement
+            </p>
+
+            {renderMobileStatementEntries()}
+
+            <div className="hidden md:block overflow-x-auto min-h-[300px] financial-statement-table-wrap">
+              <table className="w-full text-left border-collapse financial-statement-table">
+                <colgroup className="hidden md:contents">
                   <col style={{ width: '9%' }} />
                   <col style={{ width: '33%' }} />
                   <col style={{ width: '16%' }} />
@@ -625,7 +696,7 @@ const Statements = ({ defaultTab = 'transactions' }) => {
             </div>
 
             {!loading && displayEntries.length > 0 && (
-              <div className="financial-statement-totals px-6 py-4 bg-gray-50 border-t border-gray-200 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+              <div className="financial-statement-totals px-4 md:px-6 py-4 bg-gray-50 border-t border-gray-200 grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 text-sm">
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Total Withdrawal (Dr)</p>
                   <p className="font-black text-red-600 mt-1">{fmtAmt(totalWithdrawal)}</p>
