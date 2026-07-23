@@ -29,7 +29,7 @@ router.get('/', async (req, res) => {
 // POST /api/paper-stock - Add new stock item
 router.post('/', async (req, res) => {
   try {
-    const { name, coverPartyName, coverName, innerPartyName, innerName, gsm, quantity, coverGSM, coverQuantity, coverPaperSize, innerGSM, innerQuantity, innerPaperSize, unit, description, lowStockThreshold, paperSource } = req.body;
+    const { name, coverPartyName, coverName, innerPartyName, innerName, gsm, quantity, coverGSM, coverQuantity, coverPaperSize, innerGSM, innerQuantity, innerPaperSize, unit, description, lowStockThreshold, paperSource, challanNo, invoiceNo, entryDate } = req.body;
     
     const resolvedCoverName = (coverName || '').trim();
     const resolvedInnerName = (innerName || '').trim();
@@ -60,7 +60,10 @@ router.post('/', async (req, res) => {
       unit,
       description,
       lowStockThreshold,
-      paperSource: paperSource || 'Company paper'
+      paperSource: paperSource || 'Company paper',
+      challanNo: (challanNo || '').trim(),
+      invoiceNo: (invoiceNo || '').trim(),
+      entryDate: entryDate ? new Date(entryDate) : undefined
     });
 
     await newItem.save();
@@ -102,7 +105,7 @@ router.post('/', async (req, res) => {
 // PUT /api/paper-stock/:id - Update stock item
 router.put('/:id', async (req, res) => {
   try {
-    const { name, coverPartyName, coverName, innerPartyName, innerName, gsm, quantity, coverGSM, coverQuantity, coverPaperSize, innerGSM, innerQuantity, innerPaperSize, unit, description, lowStockThreshold, paperSource } = req.body;
+    const { name, coverPartyName, coverName, innerPartyName, innerName, gsm, quantity, coverGSM, coverQuantity, coverPaperSize, innerGSM, innerQuantity, innerPaperSize, unit, description, lowStockThreshold, paperSource, challanNo, invoiceNo, entryDate } = req.body;
     const resolvedCoverName = (coverName || '').trim();
     const resolvedInnerName = (innerName || '').trim();
     const resolvedName = name?.trim()
@@ -120,7 +123,11 @@ router.put('/:id', async (req, res) => {
         coverName: resolvedCoverName || resolvedName,
         innerPartyName: (innerPartyName || '').trim(),
         innerName: resolvedInnerName || resolvedName,
-        gsm, quantity, coverGSM, coverQuantity, coverPaperSize, innerGSM, innerQuantity, innerPaperSize, unit, description, lowStockThreshold, paperSource, updatedAt: Date.now()
+        gsm, quantity, coverGSM, coverQuantity, coverPaperSize, innerGSM, innerQuantity, innerPaperSize, unit, description, lowStockThreshold, paperSource,
+        challanNo: (challanNo || '').trim(),
+        invoiceNo: (invoiceNo || '').trim(),
+        entryDate: entryDate ? new Date(entryDate) : undefined,
+        updatedAt: Date.now()
       },
       { new: true }
     );

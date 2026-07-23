@@ -31,7 +31,10 @@ const PaperStockManagement = () => {
     innerPaperSize: '',
     description: '',
     lowStockThreshold: 100,
-    paperSource: 'Company paper'
+    paperSource: 'Company paper',
+    challanNo: '',
+    invoiceNo: '',
+    entryDate: new Date().toISOString().slice(0, 10)
   });
 
   const [activeTab, setActiveTab] = useState('Company paper');
@@ -118,7 +121,10 @@ const PaperStockManagement = () => {
           innerPaperSize: '',
           description: '', 
           lowStockThreshold: 100, 
-          paperSource: 'Company paper' 
+          paperSource: 'Company paper',
+          challanNo: '',
+          invoiceNo: '',
+          entryDate: new Date().toISOString().slice(0, 10)
         });
         setIsAdding(false);
         setEditingId(null);
@@ -154,7 +160,12 @@ const PaperStockManagement = () => {
       innerPaperSize: item.innerPaperSize || '',
       description: item.description || '',
       lowStockThreshold: item.lowStockThreshold || 100,
-      paperSource: item.paperSource || 'Company paper'
+      paperSource: item.paperSource || 'Company paper',
+      challanNo: item.challanNo || '',
+      invoiceNo: item.invoiceNo || '',
+      entryDate: item.entryDate
+        ? new Date(item.entryDate).toISOString().slice(0, 10)
+        : new Date().toISOString().slice(0, 10)
     });
     setEditingId(item._id);
     setIsAdding(true);
@@ -236,6 +247,37 @@ const PaperStockManagement = () => {
                   >
                     🎉 Party Paper
                   </button>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 pl-1 tracking-widest">Challan No.</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. CH-1024"
+                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-semibold"
+                    value={formData.challanNo}
+                    onChange={(e) => setFormData({ ...formData, challanNo: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 pl-1 tracking-widest">Invoice No.</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. INV-5589"
+                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-semibold"
+                    value={formData.invoiceNo}
+                    onChange={(e) => setFormData({ ...formData, invoiceNo: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 pl-1 tracking-widest">Date</label>
+                  <input
+                    type="date"
+                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-semibold"
+                    value={formData.entryDate}
+                    onChange={(e) => setFormData({ ...formData, entryDate: e.target.value })}
+                  />
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -68,6 +68,17 @@ const paperStockSchema = new mongoose.Schema({
     enum: ['Company paper', 'Party paper'],
     default: 'Company paper'
   },
+  challanNo: {
+    type: String,
+    trim: true
+  },
+  invoiceNo: {
+    type: String,
+    trim: true
+  },
+  entryDate: {
+    type: Date
+  },
   createdAt: { 
     type: Date, 
     default: Date.now 

@@ -137,14 +137,14 @@ const ItemListManagement = () => {
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 group flex items-center gap-3">
             <div className="bg-blue-600 w-1.5 h-6 rounded-full" />
-            Manage Item List
+            Listed Items
           </h1>
           <p className="text-sm sm:text-base text-gray-500 mt-1 font-medium italic">
-            Save items once — use in invoice &amp; challan
+            Edit HSN, GST %, rate &amp; other saved item details here
           </p>
         </div>
         <div className="text-sm text-gray-500 font-medium">
-          More &gt; <span className="text-blue-600">Item List</span>
+          Settings &gt; <span className="text-blue-600">Listed Items</span>
         </div>
       </div>
 

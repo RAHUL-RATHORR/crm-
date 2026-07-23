@@ -4,7 +4,7 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { X, Printer, UserPlus, Plus, Trash2 } from 'lucide-react';
 import { buildPartySuggestions, partyNameExists } from './utils/partySuggestions';
-import { masterItemToLineFields } from './utils/itemSuggestions';
+import { masterItemToLineFields, isListedMasterItem, listedItemInputClass, LISTED_ITEM_FIELD_HINT } from './utils/itemSuggestions';
 import ItemDescriptionInput from './components/ItemDescriptionInput';
 import { useMasterItemsAutoSave } from './hooks/useMasterItemsAutoSave';
 import PaymentTypeSection from './components/PaymentTypeSection';
@@ -343,6 +343,10 @@ const AddChallan = () => {
   };
 
   const handleItemChange = (index, field, value) => {
+    const currentItem = formData.items[index];
+    if (currentItem && isListedMasterItem(masterItems, currentItem.description) && ['per', 'gstPercent'].includes(field)) {
+      return;
+    }
     const updatedItems = [...formData.items];
     updatedItems[index][field] = value;
     setFormData(prev => ({ ...prev, items: updatedItems }));
@@ -791,7 +795,9 @@ const AddChallan = () => {
                 </tr>
               </thead>
               <tbody>
-                {totals.items.map((item, index) => (
+                {totals.items.map((item, index) => {
+                  const isListedItem = isListedMasterItem(masterItems, item.description);
+                  return (
                   <tr key={index} className="border-t border-gray-100 group">
                     <td className="px-6 py-4">
                       <ItemDescriptionInput
@@ -837,7 +843,12 @@ const AddChallan = () => {
                           value={item.per ?? ''}
                           onChange={(e) => handleItemChange(index, 'per', e.target.value)}
                           placeholder="PCS"
-                          className="w-16 bg-white border border-gray-200 rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm text-center uppercase"
+                          readOnly={isListedItem}
+                          title={isListedItem ? LISTED_ITEM_FIELD_HINT : undefined}
+                          className={listedItemInputClass(
+                            isListedItem,
+                            'w-16 bg-white border border-gray-200 rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm text-center uppercase',
+                          )}
                         />
                       </div>
                     </td>
@@ -849,7 +860,12 @@ const AddChallan = () => {
                           onChange={(e) => handleItemChange(index, 'gstPercent', e.target.value)}
                           min="0"
                           step="any"
-                          className="w-20 bg-white border border-gray-200 rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm text-center"
+                          readOnly={isListedItem}
+                          title={isListedItem ? LISTED_ITEM_FIELD_HINT : undefined}
+                          className={listedItemInputClass(
+                            isListedItem,
+                            'w-20 bg-white border border-gray-200 rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm text-center',
+                          )}
                         />
                       </div>
                     </td>
@@ -874,7 +890,8 @@ const AddChallan = () => {
                       </button>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>

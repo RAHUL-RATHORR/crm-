@@ -156,7 +156,7 @@ const ProfileMenu = ({ settingsItems, staffTeamItems, showStaffTeam, location, o
   const menuRef = useRef(null);
   const closeTimerRef = useRef(null);
 
-  const isSettingsActive = location.pathname.startsWith('/settings');
+  const isSettingsActive = location.pathname.startsWith('/settings') || location.pathname === '/item-list';
   const isStaffActive = location.pathname.startsWith('/staff-team');
 
   const canUseHoverMenu = () =>
@@ -549,6 +549,7 @@ export default function App() {
 
   const profileSettingsItems = [
     { label: 'Change Password', path: '/settings/password' },
+    ...(hasPermission('itemList', 'view') ? [{ label: 'Listed Items', path: '/item-list' }] : []),
   ];
 
   const staffTeamItems = [
@@ -837,7 +838,7 @@ export default function App() {
                 type="button"
                 onClick={() => setIsMobileSettingsOpen((prev) => !prev)}
                 className={`flex items-center justify-between w-full px-4 py-2.5 text-sm rounded-xl transition ${
-                  isMobileSettingsOpen || location.pathname.startsWith('/settings')
+                  isMobileSettingsOpen || location.pathname.startsWith('/settings') || location.pathname === '/item-list'
                     ? 'bg-blue-50 text-blue-700'
                     : 'text-gray-700 hover:bg-gray-50'
                 }`}

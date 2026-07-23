@@ -4,7 +4,7 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { Plus, Trash2, X, Printer, UserPlus } from 'lucide-react';
 import { buildPartySuggestions, partyNameExists } from './utils/partySuggestions';
-import { masterItemToLineFields } from './utils/itemSuggestions';
+import { masterItemToLineFields, isListedMasterItem, listedItemInputClass, LISTED_ITEM_FIELD_HINT } from './utils/itemSuggestions';
 import ItemDescriptionInput from './components/ItemDescriptionInput';
 import { useMasterItemsAutoSave } from './hooks/useMasterItemsAutoSave';
 import PaymentTypeSection from './components/PaymentTypeSection';
@@ -235,6 +235,9 @@ const AddInvoice = () => {
     setItems((prevItems) =>
       prevItems.map((item) => {
         if (item.id !== id) return item;
+        if (isListedMasterItem(masterItems, item.description) && ['hsn', 'per', 'gstPercent'].includes(field)) {
+          return item;
+        }
         return calcInvoiceItem({ ...item, [field]: value });
       })
     );
@@ -634,7 +637,9 @@ const AddInvoice = () => {
                 </tr>
               </thead>
               <tbody>
-                {computedItems.map((item) => (
+                {computedItems.map((item) => {
+                  const isListedItem = isListedMasterItem(masterItems, item.description);
+                  return (
                   <tr key={item.id} className="border-t border-gray-100 group">
                     <td className="px-6 py-4">
                       <ItemDescriptionInput
@@ -653,7 +658,12 @@ const AddInvoice = () => {
                         value={item.hsn || ''}
                         onChange={(e) => handleItemChange(item.id, 'hsn', e.target.value)}
                         placeholder="HSN/SAC"
-                        className="w-full bg-white border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+                        readOnly={isListedItem}
+                        title={isListedItem ? LISTED_ITEM_FIELD_HINT : undefined}
+                        className={listedItemInputClass(
+                          isListedItem,
+                          'w-full bg-white border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm',
+                        )}
                       />
                     </td>
                     <td className="px-2 py-4 text-center">
@@ -685,7 +695,12 @@ const AddInvoice = () => {
                           value={item.per ?? ''}
                           onChange={(e) => handleItemChange(item.id, 'per', e.target.value)}
                           placeholder="PCS"
-                          className="w-16 bg-white border border-gray-200 rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm text-center uppercase"
+                          readOnly={isListedItem}
+                          title={isListedItem ? LISTED_ITEM_FIELD_HINT : undefined}
+                          className={listedItemInputClass(
+                            isListedItem,
+                            'w-16 bg-white border border-gray-200 rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm text-center uppercase',
+                          )}
                         />
                       </div>
                     </td>
@@ -697,7 +712,12 @@ const AddInvoice = () => {
                           onChange={(e) => handleItemChange(item.id, 'gstPercent', e.target.value)}
                           min="0"
                           step="any"
-                          className="w-20 bg-white border border-gray-200 rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm text-center"
+                          readOnly={isListedItem}
+                          title={isListedItem ? LISTED_ITEM_FIELD_HINT : undefined}
+                          className={listedItemInputClass(
+                            isListedItem,
+                            'w-20 bg-white border border-gray-200 rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm text-center',
+                          )}
                         />
                       </div>
                     </td>
@@ -722,7 +742,8 @@ const AddInvoice = () => {
                       </button>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>

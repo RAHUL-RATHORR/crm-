@@ -13,6 +13,18 @@ export function findExactMasterItem(masterItems = [], description = '') {
   return masterItems.find((item) => item.name?.trim().toLowerCase() === q) || null;
 }
 
+export function isListedMasterItem(masterItems = [], description = '') {
+  return !!findExactMasterItem(masterItems, description);
+}
+
+export const LISTED_ITEM_FIELD_HINT = 'Edit from Settings → Listed Items';
+
+export function listedItemInputClass(isLocked, baseClass = '') {
+  return isLocked
+    ? `${baseClass} bg-gray-50 border-gray-200 text-gray-700 cursor-not-allowed`
+    : baseClass;
+}
+
 export function masterItemToLineFields(masterItem, { includeHsn = true, currentQty = 0, existingNote = '' } = {}) {
   const qty = Number(currentQty) > 0 ? Number(currentQty) : 1;
   const fields = {
