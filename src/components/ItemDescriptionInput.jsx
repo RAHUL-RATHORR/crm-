@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useRef, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Pencil, X } from 'lucide-react';
-import { filterMasterItems, findExactMasterItem } from '../utils/itemSuggestions';
+import { filterMasterItems } from '../utils/itemSuggestions';
 
 const ItemDescriptionInput = ({
   value,
@@ -148,9 +148,6 @@ const ItemDescriptionInput = ({
         }}
         onBlur={() => {
           window.setTimeout(() => {
-            const currentValue = inputRef.current?.value ?? value;
-            const match = findExactMasterItem(masterItems, currentValue);
-            if (match) onSelectMaster(match);
             setIsOpen(false);
           }, 150);
         }}

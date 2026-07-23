@@ -4,7 +4,7 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { X, Printer, UserPlus, Plus, Trash2 } from 'lucide-react';
 import { buildPartySuggestions, partyNameExists } from './utils/partySuggestions';
-import { masterItemToLineFields, isListedMasterItem, listedItemInputClass, LISTED_ITEM_FIELD_HINT } from './utils/itemSuggestions';
+import { masterItemToLineFields, listedItemInputClass, LISTED_ITEM_FIELD_HINT } from './utils/itemSuggestions';
 import ItemDescriptionInput from './components/ItemDescriptionInput';
 import { useMasterItemsAutoSave } from './hooks/useMasterItemsAutoSave';
 import PaymentTypeSection from './components/PaymentTypeSection';
@@ -50,6 +50,7 @@ const defaultItem = () => ({
   gstPercent: 18,
   total: 0,
   gstAmount: 0,
+  lockedFromMaster: false,
 });
 
 const backfillItemForEdit = (item, editData) => {
@@ -70,6 +71,7 @@ const backfillItemForEdit = (item, editData) => {
     total,
     gstAmount: item.gstAmount || 0,
     jobNumber: item.jobNumber || '',
+    lockedFromMaster: false,
   };
 };
 
@@ -344,11 +346,15 @@ const AddChallan = () => {
 
   const handleItemChange = (index, field, value) => {
     const currentItem = formData.items[index];
-    if (currentItem && isListedMasterItem(masterItems, currentItem.description) && ['per', 'gstPercent'].includes(field)) {
+    if (currentItem?.lockedFromMaster && ['per', 'gstPercent'].includes(field)) {
       return;
     }
     const updatedItems = [...formData.items];
-    updatedItems[index][field] = value;
+    if (field === 'description') {
+      updatedItems[index] = { ...updatedItems[index], description: value, lockedFromMaster: false };
+    } else {
+      updatedItems[index] = { ...updatedItems[index], [field]: value };
+    }
     setFormData(prev => ({ ...prev, items: updatedItems }));
   };
 
@@ -361,6 +367,7 @@ const AddChallan = () => {
         currentQty: updatedItems[index].qty,
         existingNote: updatedItems[index].descriptionNote,
       }),
+      lockedFromMaster: true,
     });
     setFormData((prev) => ({ ...prev, items: updatedItems }));
   };
@@ -796,7 +803,7 @@ const AddChallan = () => {
               </thead>
               <tbody>
                 {totals.items.map((item, index) => {
-                  const isListedItem = isListedMasterItem(masterItems, item.description);
+                  const isListedItem = formData.items[index]?.lockedFromMaster;
                   return (
                   <tr key={index} className="border-t border-gray-100 group">
                     <td className="px-6 py-4">

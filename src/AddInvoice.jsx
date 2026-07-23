@@ -4,7 +4,7 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { Plus, Trash2, X, Printer, UserPlus } from 'lucide-react';
 import { buildPartySuggestions, partyNameExists } from './utils/partySuggestions';
-import { masterItemToLineFields, isListedMasterItem, listedItemInputClass, LISTED_ITEM_FIELD_HINT } from './utils/itemSuggestions';
+import { masterItemToLineFields, listedItemInputClass, LISTED_ITEM_FIELD_HINT } from './utils/itemSuggestions';
 import ItemDescriptionInput from './components/ItemDescriptionInput';
 import { useMasterItemsAutoSave } from './hooks/useMasterItemsAutoSave';
 import PaymentTypeSection from './components/PaymentTypeSection';
@@ -35,6 +35,7 @@ const defaultInvoiceItem = () => ({
   gstPercent: 18,
   total: 0,
   gstAmount: 0,
+  lockedFromMaster: false,
 });
 
 const calcInvoiceItem = (item, fallbackGst = 18) => {
@@ -55,6 +56,7 @@ const normalizeInvoiceItems = (editData) => {
       hsn: item.hsn || '',
       per: item.per ?? 'PCS',
       gstPercent: item.gstPercent ?? editData.gstPercent ?? 18,
+      lockedFromMaster: false,
     }, editData.gstPercent ?? 18));
   }
   return [defaultInvoiceItem()];
@@ -235,10 +237,14 @@ const AddInvoice = () => {
     setItems((prevItems) =>
       prevItems.map((item) => {
         if (item.id !== id) return item;
-        if (isListedMasterItem(masterItems, item.description) && ['hsn', 'per', 'gstPercent'].includes(field)) {
+        if (item.lockedFromMaster && ['hsn', 'per', 'gstPercent'].includes(field)) {
           return item;
         }
-        return calcInvoiceItem({ ...item, [field]: value });
+        const updates = { [field]: value };
+        if (field === 'description') {
+          updates.lockedFromMaster = false;
+        }
+        return calcInvoiceItem({ ...item, ...updates });
       })
     );
   };
@@ -254,6 +260,7 @@ const AddInvoice = () => {
             currentQty: item.qty,
             existingNote: item.descriptionNote,
           }),
+          lockedFromMaster: true,
         });
       })
     );
@@ -638,7 +645,7 @@ const AddInvoice = () => {
               </thead>
               <tbody>
                 {computedItems.map((item) => {
-                  const isListedItem = isListedMasterItem(masterItems, item.description);
+                  const isListedItem = item.lockedFromMaster;
                   return (
                   <tr key={item.id} className="border-t border-gray-100 group">
                     <td className="px-6 py-4">
