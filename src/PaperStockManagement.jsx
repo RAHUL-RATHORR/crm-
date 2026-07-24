@@ -29,87 +29,6 @@ const formatHistoryTime = (value) => {
   return new Date(value).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
 };
 
-const PAPER_STOCK_ADD_META_KEY = 'paperStockAddMeta';
-
-const loadStockAddMeta = () => {
-  try {
-    return JSON.parse(localStorage.getItem(PAPER_STOCK_ADD_META_KEY) || '[]');
-  } catch {
-    return [];
-  }
-};
-
-const saveStockAddMeta = (entries) => {
-  localStorage.setItem(PAPER_STOCK_ADD_META_KEY, JSON.stringify(entries.slice(0, 400)));
-};
-
-const rememberStockAddMeta = (stockId, { coverAdd, innerAdd, challanNo, invoiceNo, entryDate }) => {
-  const addedAt = new Date().toISOString();
-  const entryDay = entryDate || addedAt.slice(0, 10);
-  const list = loadStockAddMeta();
-
-  if (coverAdd > 0) {
-    list.unshift({
-      id: `${stockId}-cover-${addedAt}`,
-      stockId,
-      paperType: 'cover',
-      quantity: coverAdd,
-      challanNo: (challanNo || '').trim(),
-      invoiceNo: (invoiceNo || '').trim(),
-      entryDate: entryDay,
-      addedAt,
-    });
-  }
-  if (innerAdd > 0) {
-    list.unshift({
-      id: `${stockId}-inner-${addedAt}`,
-      stockId,
-      paperType: 'inner',
-      quantity: innerAdd,
-      challanNo: (challanNo || '').trim(),
-      invoiceNo: (invoiceNo || '').trim(),
-      entryDate: entryDay,
-      addedAt,
-    });
-  }
-
-  saveStockAddMeta(list);
-};
-
-const mergeStockAddMeta = (stockId, rows) => {
-  const metaList = loadStockAddMeta().filter((m) => m.stockId === stockId);
-  const usedIds = new Set();
-
-  return rows.map((row) => {
-    const hasChallan = Boolean((row.challanNo || '').trim());
-    const hasInvoice = Boolean((row.invoiceNo || '').trim());
-    const hasEntryDate = Boolean(row.entryDate);
-
-    if (hasChallan && hasInvoice && hasEntryDate) return row;
-
-    const meta = metaList.find((m) => {
-      if (usedIds.has(m.id)) return false;
-      if (m.paperType !== row.paperType) return false;
-      if (Number(m.quantity) !== Number(row.quantity)) return false;
-      if (!m.addedAt || !row.createdAt) return false;
-      return Math.abs(new Date(m.addedAt) - new Date(row.createdAt)) < 120000;
-    });
-    if (!meta) return row;
-
-    usedIds.add(meta.id);
-
-    const metaChallan = (meta.challanNo || '').trim();
-    const metaInvoice = (meta.invoiceNo || '').trim();
-
-    return {
-      ...row,
-      challanNo: hasChallan ? row.challanNo : metaChallan,
-      invoiceNo: hasInvoice ? row.invoiceNo : metaInvoice,
-      entryDate: hasEntryDate ? row.entryDate : meta.entryDate,
-    };
-  });
-};
-
 const sortHistoryRows = (rows) =>
   [...rows].sort((a, b) => {
     const aTime = new Date(a.createdAt || a.entryDate || 0).getTime();
@@ -156,6 +75,10 @@ const PaperStockManagement = () => {
     invoiceNo: '',
     entryDate: new Date().toISOString().slice(0, 10),
   });
+  const [addFieldsEdited, setAddFieldsEdited] = useState({
+    challanNo: false,
+    invoiceNo: false,
+  });
 
   const emptyAddForm = () => ({
     coverQuantity: '',
@@ -164,6 +87,11 @@ const PaperStockManagement = () => {
     invoiceNo: '',
     entryDate: new Date().toISOString().slice(0, 10),
   });
+
+  const resetAddModalState = () => {
+    setAddForm(emptyAddForm());
+    setAddFieldsEdited({ challanNo: false, invoiceNo: false });
+  };
 
   const gsmGuide = [
     { type: 'Visiting Card', gsm: '300–350 GSM', paper: 'Art Card', icon: '📇' },
@@ -297,13 +225,13 @@ const PaperStockManagement = () => {
   };
 
   const handleAddStock = (item) => {
-    setAddForm(emptyAddForm());
+    resetAddModalState();
     setAddModal({ open: true, item, saving: false });
   };
 
   const closeAddModal = () => {
     setAddModal({ open: false, item: null, saving: false });
-    setAddForm(emptyAddForm());
+    resetAddModalState();
   };
 
   const submitAddStock = async (e) => {
@@ -341,8 +269,8 @@ const PaperStockManagement = () => {
       description: item.description || '',
       lowStockThreshold: item.lowStockThreshold || 100,
       paperSource: item.paperSource || 'Company paper',
-      challanNo: (addForm.challanNo || '').trim(),
-      invoiceNo: (addForm.invoiceNo || '').trim(),
+      challanNo: addFieldsEdited.challanNo ? (addForm.challanNo || '').trim() : '',
+      invoiceNo: addFieldsEdited.invoiceNo ? (addForm.invoiceNo || '').trim() : '',
       entryDate: addForm.entryDate,
       quantity: finalCoverQty + finalInnerQty,
     };
@@ -358,13 +286,6 @@ const PaperStockManagement = () => {
       const data = await res.json();
 
       if (res.ok) {
-        rememberStockAddMeta(item._id, {
-          coverAdd,
-          innerAdd,
-          challanNo: addForm.challanNo,
-          invoiceNo: addForm.invoiceNo,
-          entryDate: addForm.entryDate,
-        });
         setMessage({ type: 'success', text: 'Stock added successfully!' });
         closeAddModal();
         fetchStock();
@@ -384,7 +305,6 @@ const PaperStockManagement = () => {
     if (!window.confirm("Are you sure you want to delete this paper stock?")) return;
     try {
       await fetch(`${API_BASE_URL}/api/paper-stock/${id}`, { method: 'DELETE' });
-      saveStockAddMeta(loadStockAddMeta().filter((entry) => entry.stockId !== id));
       fetchStock();
     } catch (err) {
       console.error("Delete error:", err);
@@ -401,7 +321,7 @@ const PaperStockManagement = () => {
         rows = Array.isArray(data) ? data : [];
       }
 
-      rows = sortHistoryRows(mergeStockAddMeta(item._id, rows));
+      rows = sortHistoryRows(rows);
       setHistoryModal({ open: true, item, rows, loading: false });
     } catch (err) {
       console.error('History fetch error:', err);
@@ -1050,20 +970,34 @@ const PaperStockManagement = () => {
                   <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 tracking-widest">Challan No.</label>
                   <input
                     type="text"
+                    name="stock-add-challan-no"
+                    autoComplete="off"
+                    readOnly
+                    onFocus={(e) => e.target.removeAttribute('readonly')}
                     placeholder="Optional"
                     className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg outline-none focus:border-blue-500 text-sm font-semibold"
                     value={addForm.challanNo}
-                    onChange={(e) => setAddForm({ ...addForm, challanNo: e.target.value })}
+                    onChange={(e) => {
+                      setAddFieldsEdited((prev) => ({ ...prev, challanNo: true }));
+                      setAddForm({ ...addForm, challanNo: e.target.value });
+                    }}
                   />
                 </div>
                 <div>
                   <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 tracking-widest">Invoice No.</label>
                   <input
                     type="text"
+                    name="stock-add-invoice-no"
+                    autoComplete="off"
+                    readOnly
+                    onFocus={(e) => e.target.removeAttribute('readonly')}
                     placeholder="Optional"
                     className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg outline-none focus:border-blue-500 text-sm font-semibold"
                     value={addForm.invoiceNo}
-                    onChange={(e) => setAddForm({ ...addForm, invoiceNo: e.target.value })}
+                    onChange={(e) => {
+                      setAddFieldsEdited((prev) => ({ ...prev, invoiceNo: true }));
+                      setAddForm({ ...addForm, invoiceNo: e.target.value });
+                    }}
                   />
                 </div>
                 <div>
