@@ -19,6 +19,8 @@ export function buildStockAddHistoryFallback(stock) {
       quantity: Number(quantity) || 0,
       partyName: (partyName || '').trim(),
       paperSource: stock.paperSource || 'Company paper',
+      challanNo: (stock.challanNo || '').trim(),
+      invoiceNo: (stock.invoiceNo || '').trim(),
       createdAt: when,
       note: 'From stock record',
     });
@@ -77,6 +79,8 @@ export async function ensureStockAddTransactions(stock) {
       balanceAfter: coverQty,
       note: 'Opening stock (imported)',
       createdAt: when,
+      challanNo: (stock.challanNo || '').trim(),
+      invoiceNo: (stock.invoiceNo || '').trim(),
     });
   }
 
@@ -93,6 +97,8 @@ export async function ensureStockAddTransactions(stock) {
       balanceAfter: innerQty,
       note: 'Opening stock (imported)',
       createdAt: when,
+      challanNo: (stock.challanNo || '').trim(),
+      invoiceNo: (stock.invoiceNo || '').trim(),
     });
   }
 
@@ -109,6 +115,8 @@ export async function ensureStockAddTransactions(stock) {
       balanceAfter: legacyQty,
       note: 'Opening stock (imported)',
       createdAt: when,
+      challanNo: (stock.challanNo || '').trim(),
+      invoiceNo: (stock.invoiceNo || '').trim(),
     });
   }
 }

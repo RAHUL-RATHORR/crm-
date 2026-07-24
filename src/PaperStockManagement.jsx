@@ -38,6 +38,8 @@ const buildStockAddHistoryFallback = (item) => {
       quantity: Number(quantity) || 0,
       partyName: (partyName || '').trim(),
       paperSource: item.paperSource || 'Company paper',
+      challanNo: (item.challanNo || '').trim(),
+      invoiceNo: (item.invoiceNo || '').trim(),
       createdAt: when,
     });
   };
@@ -75,6 +77,7 @@ const filterAddHistoryForItem = (transactions, item) => {
   return (Array.isArray(transactions) ? transactions : [])
     .filter((tx) => {
       if (tx.transactionType !== 'add') return false;
+      if (/Restored from job card/i.test(tx.note || '')) return false;
       if (tx.paperStockId && String(tx.paperStockId) === itemId) return true;
       return !tx.paperStockId && (tx.stockName || '').trim().toLowerCase() === itemName;
     })
@@ -112,6 +115,22 @@ const PaperStockManagement = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [message, setMessage] = useState({ type: '', text: '' });
   const [historyModal, setHistoryModal] = useState({ open: false, item: null, rows: [], loading: false });
+  const [addModal, setAddModal] = useState({ open: false, item: null, saving: false });
+  const [addForm, setAddForm] = useState({
+    coverQuantity: '',
+    innerQuantity: '',
+    challanNo: '',
+    invoiceNo: '',
+    entryDate: new Date().toISOString().slice(0, 10),
+  });
+
+  const emptyAddForm = () => ({
+    coverQuantity: '',
+    innerQuantity: '',
+    challanNo: '',
+    invoiceNo: '',
+    entryDate: new Date().toISOString().slice(0, 10),
+  });
 
   const gsmGuide = [
     { type: 'Visiting Card', gsm: '300–350 GSM', paper: 'Art Card', icon: '📇' },
@@ -242,6 +261,83 @@ const PaperStockManagement = () => {
     setEditingId(item._id);
     setIsAdding(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleAddStock = (item) => {
+    setAddForm(emptyAddForm());
+    setAddModal({ open: true, item, saving: false });
+  };
+
+  const closeAddModal = () => {
+    setAddModal({ open: false, item: null, saving: false });
+    setAddForm(emptyAddForm());
+  };
+
+  const submitAddStock = async (e) => {
+    e.preventDefault();
+    const item = addModal.item;
+    if (!item) return;
+
+    const coverAdd = Number(addForm.coverQuantity) || 0;
+    const innerAdd = Number(addForm.innerQuantity) || 0;
+
+    if (coverAdd <= 0 && innerAdd <= 0) {
+      setMessage({ type: 'error', text: 'Enter cover or inner sheets to add.' });
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+      return;
+    }
+
+    const currentCover = item.coverQuantity !== undefined ? Number(item.coverQuantity) : Number(item.quantity || 0);
+    const currentInner = Number(item.innerQuantity || 0);
+    const finalCoverQty = currentCover + coverAdd;
+    const finalInnerQty = currentInner + innerAdd;
+
+    const submissionData = {
+      coverPartyName: item.coverPartyName || '',
+      coverName: item.coverName || item.name || '',
+      innerPartyName: item.innerPartyName || '',
+      innerName: item.innerName || item.name || '',
+      name: item.name,
+      gsm: item.gsm || item.coverGSM || item.innerGSM || 0,
+      coverGSM: item.coverGSM !== undefined && item.coverGSM !== null ? item.coverGSM : (item.gsm || ''),
+      coverQuantity: finalCoverQty,
+      coverPaperSize: item.coverPaperSize || '',
+      innerGSM: item.innerGSM || '',
+      innerQuantity: finalInnerQty,
+      innerPaperSize: item.innerPaperSize || '',
+      description: item.description || '',
+      lowStockThreshold: item.lowStockThreshold || 100,
+      paperSource: item.paperSource || 'Company paper',
+      challanNo: (addForm.challanNo || '').trim(),
+      invoiceNo: (addForm.invoiceNo || '').trim(),
+      entryDate: addForm.entryDate,
+      quantity: finalCoverQty + finalInnerQty,
+    };
+
+    setAddModal((prev) => ({ ...prev, saving: true }));
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/paper-stock/${item._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(submissionData),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        setMessage({ type: 'success', text: 'Stock added successfully!' });
+        closeAddModal();
+        fetchStock();
+      } else {
+        setMessage({ type: 'error', text: data.error || 'Could not add stock.' });
+      }
+    } catch (err) {
+      setMessage({ type: 'error', text: 'Server error' });
+    } finally {
+      setAddModal((prev) => ({ ...prev, saving: false }));
+    }
+
+    setTimeout(() => setMessage({ type: '', text: '' }), 3000);
   };
 
   const handleDelete = async (id) => {
@@ -754,9 +850,18 @@ const PaperStockManagement = () => {
                                 >
                                   <Eye size={16} />
                                 </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleAddStock(item)}
+                                  className="p-2 text-sky-600 hover:bg-sky-50 rounded-lg transition-all"
+                                  title="Add stock"
+                                >
+                                  <Plus size={16} />
+                                </button>
                                 <button 
                                   onClick={() => handleEdit(item)}
                                   className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                  title="Edit stock"
                                 >
                                   <Edit2 size={16} />
                                 </button>
@@ -779,13 +884,177 @@ const PaperStockManagement = () => {
         </div>
       )}
 
+      {addModal.open && addModal.item && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
+          onClick={closeAddModal}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-sky-50/80">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Add Stock</h3>
+                <p className="text-sm text-gray-500 mt-0.5">{addModal.item.name}</p>
+              </div>
+              <button
+                type="button"
+                onClick={closeAddModal}
+                className="p-2 rounded-lg hover:bg-gray-200 text-gray-500 transition-colors"
+                aria-label="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="px-6 py-4 bg-gray-50/60 border-b border-gray-100 space-y-3">
+              <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Paper Name & GSM</p>
+              {(addModal.item.coverGSM !== undefined && addModal.item.coverGSM !== null) || addModal.item.gsm ? (
+                <div className="flex items-start justify-between gap-3 text-sm">
+                  <span className="font-bold text-sky-700 shrink-0">Cover</span>
+                  <span className="text-gray-800 text-right">
+                    {addModal.item.coverPartyName ? `${addModal.item.coverPartyName} · ` : ''}
+                    {addModal.item.coverName || addModal.item.name || '—'}
+                    {' · '}
+                    {addModal.item.coverGSM !== undefined && addModal.item.coverGSM !== null ? addModal.item.coverGSM : addModal.item.gsm} GSM
+                    {addModal.item.coverPaperSize ? ` · ${addModal.item.coverPaperSize}` : ''}
+                  </span>
+                </div>
+              ) : null}
+              {addModal.item.innerGSM ? (
+                <div className="flex items-start justify-between gap-3 text-sm">
+                  <span className="font-bold text-indigo-700 shrink-0">Inner</span>
+                  <span className="text-gray-800 text-right">
+                    {addModal.item.innerPartyName ? `${addModal.item.innerPartyName} · ` : ''}
+                    {addModal.item.innerName || addModal.item.name || '—'}
+                    {' · '}
+                    {addModal.item.innerGSM} GSM
+                    {addModal.item.innerPaperSize ? ` · ${addModal.item.innerPaperSize}` : ''}
+                  </span>
+                </div>
+              ) : null}
+              <div className="pt-2 border-t border-gray-200/80 grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <p className="text-[10px] font-black uppercase text-gray-400 mb-1">Remaining Stock</p>
+                  {(addModal.item.coverGSM !== undefined && addModal.item.coverGSM !== null) || addModal.item.gsm ? (
+                    <p className="font-bold text-gray-900">
+                      Cover: {(addModal.item.coverQuantity !== undefined ? addModal.item.coverQuantity : addModal.item.quantity || 0).toLocaleString()} Sheets
+                    </p>
+                  ) : null}
+                  {addModal.item.innerGSM ? (
+                    <p className="font-bold text-gray-900">
+                      Inner: {(addModal.item.innerQuantity || 0).toLocaleString()} Sheets
+                    </p>
+                  ) : null}
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase text-gray-400 mb-1">Last Updated</p>
+                  <p className="font-bold text-gray-600">
+                    {new Date(addModal.item.updatedAt).toLocaleDateString('en-IN')}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <form onSubmit={submitAddStock} className="p-6 space-y-4">
+              {((addModal.item.coverGSM !== undefined && addModal.item.coverGSM !== null) || addModal.item.gsm) && (
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 tracking-widest">
+                    Add Cover Sheets
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="e.g. 5000"
+                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none font-semibold"
+                    value={addForm.coverQuantity}
+                    onChange={(e) => setAddForm({ ...addForm, coverQuantity: e.target.value })}
+                  />
+                  {addForm.coverQuantity ? (
+                    <p className="text-xs font-bold text-emerald-700 mt-1.5">
+                      New cover total: {(
+                        (addModal.item.coverQuantity !== undefined ? Number(addModal.item.coverQuantity) : Number(addModal.item.quantity || 0))
+                        + Number(addForm.coverQuantity || 0)
+                      ).toLocaleString()} sheets
+                    </p>
+                  ) : null}
+                </div>
+              )}
+
+              {addModal.item.innerGSM ? (
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 tracking-widest">
+                    Add Inner Sheets
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="e.g. 10000"
+                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none font-semibold"
+                    value={addForm.innerQuantity}
+                    onChange={(e) => setAddForm({ ...addForm, innerQuantity: e.target.value })}
+                  />
+                  {addForm.innerQuantity ? (
+                    <p className="text-xs font-bold text-emerald-700 mt-1.5">
+                      New inner total: {(Number(addModal.item.innerQuantity || 0) + Number(addForm.innerQuantity || 0)).toLocaleString()} sheets
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 tracking-widest">Challan No.</label>
+                  <input
+                    type="text"
+                    placeholder="Optional"
+                    className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg outline-none focus:border-blue-500 text-sm font-semibold"
+                    value={addForm.challanNo}
+                    onChange={(e) => setAddForm({ ...addForm, challanNo: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 tracking-widest">Invoice No.</label>
+                  <input
+                    type="text"
+                    placeholder="Optional"
+                    className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg outline-none focus:border-blue-500 text-sm font-semibold"
+                    value={addForm.invoiceNo}
+                    onChange={(e) => setAddForm({ ...addForm, invoiceNo: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 tracking-widest">Date</label>
+                  <input
+                    type="date"
+                    className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg outline-none focus:border-blue-500 text-sm font-semibold"
+                    value={addForm.entryDate}
+                    onChange={(e) => setAddForm({ ...addForm, entryDate: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={addModal.saving}
+                className="w-full bg-sky-600 text-white py-3.5 rounded-xl font-black uppercase tracking-widest hover:bg-sky-700 transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 disabled:opacity-60"
+              >
+                <Plus size={18} />
+                {addModal.saving ? 'Adding...' : 'Add to Stock'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
       {historyModal.open && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
           onClick={closeStockHistory}
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] overflow-hidden"
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[85vh] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/80">
@@ -819,6 +1088,8 @@ const PaperStockManagement = () => {
                       <th className="px-4 py-3">Type</th>
                       <th className="px-4 py-3">Party Name</th>
                       <th className="px-4 py-3">Paper Name</th>
+                      <th className="px-4 py-3">Challan No.</th>
+                      <th className="px-4 py-3">Invoice No.</th>
                       <th className="px-4 py-3 text-right">Qty Added</th>
                     </tr>
                   </thead>
@@ -845,6 +1116,12 @@ const PaperStockManagement = () => {
                         </td>
                         <td className="px-4 py-3 text-sm text-gray-700">
                           {row.paperName || row.stockName || '—'}
+                        </td>
+                        <td className="px-4 py-3 text-sm font-medium text-gray-800">
+                          {row.challanNo || '—'}
+                        </td>
+                        <td className="px-4 py-3 text-sm font-medium text-gray-800">
+                          {row.invoiceNo || '—'}
                         </td>
                         <td className="px-4 py-3 text-sm font-black text-emerald-700 text-right">
                           +{Number(row.quantity || 0).toLocaleString()} Sheets

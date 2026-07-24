@@ -30,7 +30,21 @@ router.get('/:id/transactions', async (req, res) => {
     let transactions = await PaperStockTransaction.find({
       paperStockId: stock._id,
       transactionType: 'add',
+      note: { $not: /Restored from job card/i },
     }).sort({ createdAt: -1 });
+
+    transactions = transactions.map((tx) => {
+      const doc = tx.toObject();
+      const note = String(doc.note || '').toLowerCase();
+      const isStockAdd = note.includes('stock added') || note.includes('opening stock');
+      if (!doc.challanNo && isStockAdd && stock.challanNo) {
+        doc.challanNo = stock.challanNo;
+      }
+      if (!doc.invoiceNo && isStockAdd && stock.invoiceNo) {
+        doc.invoiceNo = stock.invoiceNo;
+      }
+      return doc;
+    });
 
     if (transactions.length === 0) {
       transactions = buildStockAddHistoryFallback(stock);
@@ -103,6 +117,8 @@ router.post('/', async (req, res) => {
         balanceAfter: Number(coverQuantity),
         note: 'Initial cover stock added',
         createdAt: entryTimestamp,
+        challanNo: (challanNo || '').trim(),
+        invoiceNo: (invoiceNo || '').trim(),
       });
     }
 
@@ -119,6 +135,8 @@ router.post('/', async (req, res) => {
         balanceAfter: Number(innerQuantity),
         note: 'Initial inner stock added',
         createdAt: entryTimestamp,
+        challanNo: (challanNo || '').trim(),
+        invoiceNo: (invoiceNo || '').trim(),
       });
     }
 
@@ -141,6 +159,9 @@ router.put('/:id', async (req, res) => {
     const existing = await PaperStock.findById(req.params.id);
     if (!existing) return res.status(404).json({ error: "Item not found" });
 
+    const txnChallanNo = (challanNo || '').trim();
+    const txnInvoiceNo = (invoiceNo || '').trim();
+
     const updated = await PaperStock.findByIdAndUpdate(
       req.params.id,
       {
@@ -150,8 +171,8 @@ router.put('/:id', async (req, res) => {
         innerPartyName: (innerPartyName || '').trim(),
         innerName: resolvedInnerName || resolvedName,
         gsm, quantity, coverGSM, coverQuantity, coverPaperSize, innerGSM, innerQuantity, innerPaperSize, unit, description, lowStockThreshold, paperSource,
-        challanNo: (challanNo || '').trim(),
-        invoiceNo: (invoiceNo || '').trim(),
+        challanNo: txnChallanNo || existing.challanNo || '',
+        invoiceNo: txnInvoiceNo || existing.invoiceNo || '',
         entryDate: entryDate ? new Date(entryDate) : undefined,
         updatedAt: Date.now()
       },
@@ -175,6 +196,8 @@ router.put('/:id', async (req, res) => {
         balanceAfter: Number(updated.coverQuantity || 0),
         note: 'Cover stock added',
         createdAt: entryTimestamp,
+        challanNo: txnChallanNo,
+        invoiceNo: txnInvoiceNo,
       });
     }
 
@@ -191,6 +214,8 @@ router.put('/:id', async (req, res) => {
         balanceAfter: Number(updated.innerQuantity || 0),
         note: 'Inner stock added',
         createdAt: entryTimestamp,
+        challanNo: txnChallanNo,
+        invoiceNo: txnInvoiceNo,
       });
     }
 
