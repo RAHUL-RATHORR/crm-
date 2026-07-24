@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Layers, Plus, Search, AlertTriangle, Edit2, Trash2, CheckCircle2, Info, ArrowUpRight } from 'lucide-react';
+import { Layers, Plus, Search, AlertTriangle, Edit2, Trash2, CheckCircle2, Info, ArrowUpRight, Eye, X } from 'lucide-react';
 import { mergePaperSizes, rememberPaperSizes } from './utils/paperStockSizes';
 import { API_BASE_URL } from './utils/apiBase';
 
@@ -8,6 +8,77 @@ const buildStockName = (coverName, innerName) => {
   const inner = (innerName || '').trim();
   if (cover && inner && cover !== inner) return `${cover} / ${inner}`;
   return cover || inner || '';
+};
+
+const formatHistoryDate = (value) => {
+  if (!value) return '—';
+  return new Date(value).toLocaleDateString('en-IN');
+};
+
+const formatHistoryTime = (value) => {
+  if (!value) return '—';
+  return new Date(value).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+};
+
+const buildStockAddHistoryFallback = (item) => {
+  if (!item) return [];
+
+  const when = item.entryDate || item.createdAt || item.updatedAt || new Date();
+  const stockName = item.name || 'Unnamed Paper';
+  const rows = [];
+
+  const pushRow = (paperType, paperName, partyName, quantity, suffix) => {
+    rows.push({
+      _id: `${item._id}-${suffix}`,
+      paperStockId: item._id,
+      stockName,
+      paperName: paperName || stockName,
+      paperType,
+      transactionType: 'add',
+      quantity: Number(quantity) || 0,
+      partyName: (partyName || '').trim(),
+      paperSource: item.paperSource || 'Company paper',
+      createdAt: when,
+    });
+  };
+
+  const coverQty = Number(item.coverQuantity) || 0;
+  const innerQty = Number(item.innerQuantity) || 0;
+  const legacyQty = Number(item.quantity) || 0;
+
+  if (coverQty > 0 || item.coverGSM || item.coverName) {
+    pushRow('cover', item.coverName || stockName, item.coverPartyName, coverQty, 'cover-fallback');
+  }
+  if (innerQty > 0 || item.innerGSM || item.innerName) {
+    pushRow('inner', item.innerName || stockName, item.innerPartyName, innerQty, 'inner-fallback');
+  }
+  if (rows.length === 0 && legacyQty > 0) {
+    pushRow('cover', stockName, item.coverPartyName || item.innerPartyName, legacyQty, 'legacy-fallback');
+  }
+  if (rows.length === 0) {
+    pushRow(
+      item.innerGSM ? 'inner' : 'cover',
+      item.coverName || item.innerName || stockName,
+      item.coverPartyName || item.innerPartyName,
+      0,
+      'registered-fallback',
+    );
+  }
+
+  return rows.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+};
+
+const filterAddHistoryForItem = (transactions, item) => {
+  const itemId = String(item._id);
+  const itemName = (item.name || '').trim().toLowerCase();
+
+  return (Array.isArray(transactions) ? transactions : [])
+    .filter((tx) => {
+      if (tx.transactionType !== 'add') return false;
+      if (tx.paperStockId && String(tx.paperStockId) === itemId) return true;
+      return !tx.paperStockId && (tx.stockName || '').trim().toLowerCase() === itemName;
+    })
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 };
 
 const PaperStockManagement = () => {
@@ -40,6 +111,7 @@ const PaperStockManagement = () => {
   const [activeTab, setActiveTab] = useState('Company paper');
   const [searchQuery, setSearchQuery] = useState('');
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [historyModal, setHistoryModal] = useState({ open: false, item: null, rows: [], loading: false });
 
   const gsmGuide = [
     { type: 'Visiting Card', gsm: '300–350 GSM', paper: 'Art Card', icon: '📇' },
@@ -180,6 +252,45 @@ const PaperStockManagement = () => {
     } catch (err) {
       console.error("Delete error:", err);
     }
+  };
+
+  const openStockHistory = async (item) => {
+    setHistoryModal({ open: true, item, rows: [], loading: true });
+    try {
+      let rows = [];
+
+      const res = await fetch(`${API_BASE_URL}/api/paper-stock/${item._id}/transactions`);
+      if (res.ok) {
+        const data = await res.json();
+        rows = Array.isArray(data) ? data : [];
+      }
+
+      if (rows.length === 0) {
+        const allRes = await fetch(`${API_BASE_URL}/api/paper-stock/transactions`);
+        if (allRes.ok) {
+          const allData = await allRes.json();
+          rows = filterAddHistoryForItem(allData, item);
+        }
+      }
+
+      if (rows.length === 0) {
+        rows = buildStockAddHistoryFallback(item);
+      }
+
+      setHistoryModal({ open: true, item, rows, loading: false });
+    } catch (err) {
+      console.error('History fetch error:', err);
+      setHistoryModal({
+        open: true,
+        item,
+        rows: buildStockAddHistoryFallback(item),
+        loading: false,
+      });
+    }
+  };
+
+  const closeStockHistory = () => {
+    setHistoryModal({ open: false, item: null, rows: [], loading: false });
   };
 
   return (
@@ -635,6 +746,14 @@ const PaperStockManagement = () => {
                           </td>
                           <td className="px-6 py-5">
                              <div className="flex justify-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => openStockHistory(item)}
+                                  className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
+                                  title="View stock add history"
+                                >
+                                  <Eye size={16} />
+                                </button>
                                 <button 
                                   onClick={() => handleEdit(item)}
                                   className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
@@ -655,6 +774,86 @@ const PaperStockManagement = () => {
                   )}
                 </tbody>
               </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {historyModal.open && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
+          onClick={closeStockHistory}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/80">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Stock Add History</h3>
+                <p className="text-sm text-gray-500 mt-0.5">
+                  {historyModal.item?.name || 'Paper stock'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={closeStockHistory}
+                className="p-2 rounded-lg hover:bg-gray-200 text-gray-500 transition-colors"
+                aria-label="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="overflow-auto max-h-[calc(85vh-5rem)]">
+              {historyModal.loading ? (
+                <p className="px-6 py-16 text-center text-gray-400 font-semibold animate-pulse">Loading history...</p>
+              ) : historyModal.rows.length === 0 ? (
+                <p className="px-6 py-16 text-center text-gray-400 italic">No stock add history found.</p>
+              ) : (
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="bg-gray-50 text-[10px] font-black uppercase text-gray-500 tracking-wider">
+                      <th className="px-4 py-3">Date</th>
+                      <th className="px-4 py-3">Time</th>
+                      <th className="px-4 py-3">Type</th>
+                      <th className="px-4 py-3">Party Name</th>
+                      <th className="px-4 py-3">Paper Name</th>
+                      <th className="px-4 py-3 text-right">Qty Added</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {historyModal.rows.map((row) => (
+                      <tr key={row._id} className="hover:bg-gray-50/60">
+                        <td className="px-4 py-3 text-sm font-semibold text-gray-800">
+                          {formatHistoryDate(row.createdAt)}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-600">
+                          {formatHistoryTime(row.createdAt)}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`text-[10px] font-black uppercase px-2 py-1 rounded ${
+                            row.paperType === 'cover'
+                              ? 'bg-sky-50 text-sky-700'
+                              : 'bg-indigo-50 text-indigo-700'
+                          }`}>
+                            {row.paperType || '—'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-sm font-medium text-gray-800">
+                          {row.partyName || '—'}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-700">
+                          {row.paperName || row.stockName || '—'}
+                        </td>
+                        <td className="px-4 py-3 text-sm font-black text-emerald-700 text-right">
+                          +{Number(row.quantity || 0).toLocaleString()} Sheets
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
           </div>
         </div>

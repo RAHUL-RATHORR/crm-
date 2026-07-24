@@ -4,12 +4,38 @@ import PaperStock from '../models/PaperStock.js';
 import PaperStockTransaction from '../models/PaperStockTransaction.js';
 import { logPaperStockTransaction } from '../utils/paperStockTransactions.js';
 import { backfillPaperStockTransactionsIfEmpty } from '../utils/backfillPaperStockTransactions.js';
+import { buildStockAddHistoryFallback, ensureStockAddTransactions } from '../utils/paperStockHistory.js';
 
 // GET /api/paper-stock/transactions - Stock add/deduct history
 router.get('/transactions', async (req, res) => {
   try {
     await backfillPaperStockTransactionsIfEmpty();
     const transactions = await PaperStockTransaction.find().sort({ createdAt: -1 });
+    res.json(transactions);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/paper-stock/:id/transactions - Add history for one stock item
+router.get('/:id/transactions', async (req, res) => {
+  try {
+    await backfillPaperStockTransactionsIfEmpty();
+
+    const stock = await PaperStock.findById(req.params.id);
+    if (!stock) return res.status(404).json({ error: 'Item not found' });
+
+    await ensureStockAddTransactions(stock);
+
+    let transactions = await PaperStockTransaction.find({
+      paperStockId: stock._id,
+      transactionType: 'add',
+    }).sort({ createdAt: -1 });
+
+    if (transactions.length === 0) {
+      transactions = buildStockAddHistoryFallback(stock);
+    }
+
     res.json(transactions);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -62,6 +88,8 @@ router.post('/', async (req, res) => {
 
     await newItem.save();
 
+    const entryTimestamp = entryDate ? new Date(entryDate) : undefined;
+
     if (Number(coverQuantity) > 0) {
       await logPaperStockTransaction({
         paperStockId: newItem._id,
@@ -70,9 +98,11 @@ router.post('/', async (req, res) => {
         paperType: 'cover',
         transactionType: 'add',
         quantity: Number(coverQuantity),
+        partyName: (coverPartyName || '').trim(),
         paperSource: paperSource || 'Company paper',
         balanceAfter: Number(coverQuantity),
         note: 'Initial cover stock added',
+        createdAt: entryTimestamp,
       });
     }
 
@@ -84,9 +114,11 @@ router.post('/', async (req, res) => {
         paperType: 'inner',
         transactionType: 'add',
         quantity: Number(innerQuantity),
+        partyName: (innerPartyName || '').trim(),
         paperSource: paperSource || 'Company paper',
         balanceAfter: Number(innerQuantity),
         note: 'Initial inner stock added',
+        createdAt: entryTimestamp,
       });
     }
 
@@ -128,6 +160,7 @@ router.put('/:id', async (req, res) => {
 
     const coverAdded = Number(coverQuantity) - Number(existing.coverQuantity || 0);
     const innerAdded = Number(innerQuantity) - Number(existing.innerQuantity || 0);
+    const entryTimestamp = entryDate ? new Date(entryDate) : undefined;
 
     if (coverAdded > 0) {
       await logPaperStockTransaction({
@@ -137,9 +170,11 @@ router.put('/:id', async (req, res) => {
         paperType: 'cover',
         transactionType: 'add',
         quantity: coverAdded,
+        partyName: (coverPartyName || '').trim(),
         paperSource: paperSource || existing.paperSource || 'Company paper',
         balanceAfter: Number(updated.coverQuantity || 0),
         note: 'Cover stock added',
+        createdAt: entryTimestamp,
       });
     }
 
@@ -151,9 +186,11 @@ router.put('/:id', async (req, res) => {
         paperType: 'inner',
         transactionType: 'add',
         quantity: innerAdded,
+        partyName: (innerPartyName || '').trim(),
         paperSource: paperSource || existing.paperSource || 'Company paper',
         balanceAfter: Number(updated.innerQuantity || 0),
         note: 'Inner stock added',
+        createdAt: entryTimestamp,
       });
     }
 
