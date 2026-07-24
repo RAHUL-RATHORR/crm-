@@ -87,22 +87,25 @@ const mergeStockAddMeta = (stockId, rows) => {
 
     if (hasChallan && hasInvoice && hasEntryDate) return row;
 
-    const meta = metaList.find(
-      (m) =>
-        !usedIds.has(m.id) &&
-        m.paperType === row.paperType &&
-        Number(m.quantity) === Number(row.quantity),
-    );
+    const meta = metaList.find((m) => {
+      if (usedIds.has(m.id)) return false;
+      if (m.paperType !== row.paperType) return false;
+      if (Number(m.quantity) !== Number(row.quantity)) return false;
+      if (!m.addedAt || !row.createdAt) return false;
+      return Math.abs(new Date(m.addedAt) - new Date(row.createdAt)) < 120000;
+    });
     if (!meta) return row;
 
     usedIds.add(meta.id);
 
+    const metaChallan = (meta.challanNo || '').trim();
+    const metaInvoice = (meta.invoiceNo || '').trim();
+
     return {
       ...row,
-      challanNo: hasChallan ? row.challanNo : meta.challanNo,
-      invoiceNo: hasInvoice ? row.invoiceNo : meta.invoiceNo,
+      challanNo: hasChallan ? row.challanNo : metaChallan,
+      invoiceNo: hasInvoice ? row.invoiceNo : metaInvoice,
       entryDate: hasEntryDate ? row.entryDate : meta.entryDate,
-      createdAt: meta.addedAt || row.createdAt,
     };
   });
 };

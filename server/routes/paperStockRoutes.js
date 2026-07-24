@@ -36,20 +36,7 @@ router.get('/:id/transactions', async (req, res) => {
       note: { $not: /Restored from job card/i },
     }).sort({ createdAt: -1 });
 
-    transactions = transactions.map((tx) => {
-      const doc = tx.toObject();
-      const note = String(doc.note || '').toLowerCase();
-      const isStockAdd = note.includes('stock added') || note.includes('opening stock');
-      if (!doc.challanNo && isStockAdd && stock.challanNo) {
-        doc.challanNo = stock.challanNo;
-      }
-      if (!doc.invoiceNo && isStockAdd && stock.invoiceNo) {
-        doc.invoiceNo = stock.invoiceNo;
-      }
-      return doc;
-    });
-
-    res.json(transactions);
+    res.json(transactions.map((tx) => tx.toObject()));
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -173,8 +160,8 @@ router.put('/:id', async (req, res) => {
         innerPartyName: (innerPartyName || '').trim(),
         innerName: resolvedInnerName || resolvedName,
         gsm, quantity, coverGSM, coverQuantity, coverPaperSize, innerGSM, innerQuantity, innerPaperSize, unit, description, lowStockThreshold, paperSource,
-        challanNo: txnChallanNo || existing.challanNo || '',
-        invoiceNo: txnInvoiceNo || existing.invoiceNo || '',
+        ...(txnChallanNo ? { challanNo: txnChallanNo } : {}),
+        ...(txnInvoiceNo ? { invoiceNo: txnInvoiceNo } : {}),
         entryDate: entryDate ? new Date(entryDate) : undefined,
         updatedAt: Date.now()
       },
