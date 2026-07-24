@@ -30,7 +30,7 @@ const PaperStockStatements = () => {
       clearTimeout(timeoutId);
 
       if (!txRes.ok) {
-        throw new Error('Transaction history load nahi ho payi.');
+        throw new Error('Could not load transaction history.');
       }
 
       const txData = await txRes.json();
@@ -40,9 +40,9 @@ const PaperStockStatements = () => {
       console.error('Fetch error:', err);
       setTransactions([]);
       if (err.name === 'AbortError') {
-        setError('Server response nahi aa raha. Thodi der baad dubara try karein.');
+        setError('Server is not responding. Please try again in a moment.');
       } else {
-        setError(err.message || 'Transaction history load nahi ho payi.');
+        setError(err.message || 'Could not load transaction history.');
       }
     } finally {
       setLoading(false);
@@ -94,7 +94,7 @@ const PaperStockStatements = () => {
             Paper Stock Statements
           </h1>
           <p className="text-sm text-gray-500 mt-1 font-medium italic">
-            Stock add aur deduct ki poori history — date, time, quantity aur party ke saath.
+            Complete history of stock additions and deductions — with date, time, quantity, and party.
           </p>
         </div>
       </div>
@@ -194,14 +194,14 @@ const PaperStockStatements = () => {
                       onClick={loadTransactions}
                       className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700"
                     >
-                      Dubara try karein
+                      Try again
                     </button>
                   </td>
                 </tr>
               ) : filteredTransactions.length === 0 ? (
                 <tr>
                   <td colSpan="8" className="px-6 py-20 text-center text-gray-400 italic">
-                    Abhi koi transaction nahi hai. Naya stock add karo ya Job Card se paper use karo — history yahan dikhegi.
+                    No transactions yet. Add new stock or use paper from a Job Card — history will appear here.
                   </td>
                 </tr>
               ) : (
