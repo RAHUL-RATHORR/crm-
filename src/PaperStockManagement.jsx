@@ -752,8 +752,8 @@ const PaperStockManagement = () => {
               <table className="w-full text-left whitespace-nowrap">
                 <thead>
                   <tr className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 tracking-widest">
-                    <th className="px-6 py-4">Paper Name & GSM</th>
                     <th className="px-6 py-4">Party Name</th>
+                    <th className="px-6 py-4">Paper Name & GSM</th>
                     <th className="px-6 py-4">Remaining Stock</th>
                     <th className="px-6 py-4">Status</th>
                     <th className="px-6 py-4">Last Updated</th>
@@ -797,6 +797,22 @@ const PaperStockManagement = () => {
                       return (
                         <tr key={item._id} className="hover:bg-blue-50/10 transition-colors group">
                           <td className="px-6 py-5">
+                            {partyNames.split ? (
+                              <div className="space-y-1.5 text-sm">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[10px] font-black text-gray-400 uppercase w-12">Cover:</span>
+                                  <span className="font-bold text-gray-800">{partyNames.cover}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[10px] font-black text-gray-400 uppercase w-12">Inner:</span>
+                                  <span className="font-bold text-gray-800">{partyNames.inner}</span>
+                                </div>
+                              </div>
+                            ) : (
+                              <span className="text-sm font-bold text-gray-800">{partyNames.name}</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-5">
                              <div className="flex items-center gap-3">
                                 <div className="p-2.5 bg-gray-100 rounded-xl text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all">
                                    <Layers size={18} />
@@ -825,22 +841,6 @@ const PaperStockManagement = () => {
                                    </div>
                                 </div>
                              </div>
-                          </td>
-                          <td className="px-6 py-5">
-                            {partyNames.split ? (
-                              <div className="space-y-1.5 text-sm">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-[10px] font-black text-gray-400 uppercase w-12">Cover:</span>
-                                  <span className="font-bold text-gray-800">{partyNames.cover}</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-[10px] font-black text-gray-400 uppercase w-12">Inner:</span>
-                                  <span className="font-bold text-gray-800">{partyNames.inner}</span>
-                                </div>
-                              </div>
-                            ) : (
-                              <span className="text-sm font-bold text-gray-800">{partyNames.name}</span>
-                            )}
                           </td>
                           <td className="px-6 py-5">
                              <div className="space-y-1.5">
