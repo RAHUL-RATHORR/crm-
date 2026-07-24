@@ -10,6 +10,15 @@ const buildStockName = (coverName, innerName) => {
   return cover || inner || '';
 };
 
+const getPartyNameDisplay = (item) => {
+  const cover = (item.coverPartyName || '').trim();
+  const inner = (item.innerPartyName || '').trim();
+  if (cover && inner && cover !== inner) {
+    return { split: true, cover, inner };
+  }
+  return { split: false, name: cover || inner || '—' };
+};
+
 const formatHistoryDate = (value) => {
   if (!value) return '—';
   return new Date(value).toLocaleDateString('en-IN');
@@ -436,6 +445,7 @@ const PaperStockManagement = () => {
     if (!window.confirm("Are you sure you want to delete this paper stock?")) return;
     try {
       await fetch(`${API_BASE_URL}/api/paper-stock/${id}`, { method: 'DELETE' });
+      saveStockAddMeta(loadStockAddMeta().filter((entry) => entry.stockId !== id));
       fetchStock();
     } catch (err) {
       console.error("Delete error:", err);
@@ -828,6 +838,7 @@ const PaperStockManagement = () => {
                 <thead>
                   <tr className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 tracking-widest">
                     <th className="px-6 py-4">Paper Name & GSM</th>
+                    <th className="px-6 py-4">Party Name</th>
                     <th className="px-6 py-4">Remaining Stock</th>
                     <th className="px-6 py-4">Status</th>
                     <th className="px-6 py-4">Last Updated</th>
@@ -836,7 +847,7 @@ const PaperStockManagement = () => {
                 </thead>
                 <tbody className="divide-y divide-gray-50">
                   {loading ? (
-                    <tr><td colSpan="5" className="px-6 py-20 text-center text-gray-400 font-bold animate-pulse uppercase tracking-[0.2em]">Loading Inventory...</td></tr>
+                    <tr><td colSpan="6" className="px-6 py-20 text-center text-gray-400 font-bold animate-pulse uppercase tracking-[0.2em]">Loading Inventory...</td></tr>
                   ) : stock.filter(item => {
                     const matchesTab = (item.paperSource || 'Company paper') === activeTab;
                     const matchesSearch = (item.coverName || item.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -850,7 +861,7 @@ const PaperStockManagement = () => {
                                             (item.innerPaperSize && item.innerPaperSize.toLowerCase().includes(searchQuery.toLowerCase()));
                     return matchesTab && matchesSearch;
                   }).length === 0 ? (
-                    <tr><td colSpan="5" className="px-6 py-20 text-center text-gray-400 italic">No inventory records found for {activeTab === 'Company paper' ? 'Company Paper' : 'Party Paper'}.</td></tr>
+                    <tr><td colSpan="6" className="px-6 py-20 text-center text-gray-400 italic">No inventory records found for {activeTab === 'Company paper' ? 'Company Paper' : 'Party Paper'}.</td></tr>
                   ) : (
                     stock.filter(item => {
                       const matchesTab = (item.paperSource || 'Company paper') === activeTab;
@@ -867,6 +878,7 @@ const PaperStockManagement = () => {
                     }).map((item) => {
                       const isLow = ((item.coverQuantity !== undefined ? item.coverQuantity : item.quantity) <= item.lowStockThreshold || 
                                      (item.innerGSM && (item.innerQuantity || 0) <= item.lowStockThreshold));
+                      const partyNames = getPartyNameDisplay(item);
                       return (
                         <tr key={item._id} className="hover:bg-blue-50/10 transition-colors group">
                           <td className="px-6 py-5">
@@ -883,14 +895,14 @@ const PaperStockManagement = () => {
                                    <div className="flex items-center gap-2 mt-1.5 text-[10px] font-bold">
                                      {(item.coverGSM !== undefined || item.gsm) ? (
                                        <span className="bg-sky-50 text-sky-700 px-2 py-0.5 rounded border border-sky-100">
-                                         Cover: {item.coverPartyName ? `${item.coverPartyName} · ` : ''}{item.coverName || item.name || '--'} · {item.coverGSM !== undefined ? item.coverGSM : item.gsm} GSM{item.coverPaperSize ? ` · ${item.coverPaperSize}` : ''}
+                                         Cover: {item.coverName || item.name || '--'} · {item.coverGSM !== undefined ? item.coverGSM : item.gsm} GSM{item.coverPaperSize ? ` · ${item.coverPaperSize}` : ''}
                                        </span>
                                      ) : (
                                        <span className="bg-gray-50 text-gray-400 px-2 py-0.5 rounded border border-gray-200">Cover: --</span>
                                      )}
                                      {item.innerGSM ? (
                                        <span className="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded border border-indigo-100">
-                                         Inner: {item.innerPartyName ? `${item.innerPartyName} · ` : ''}{item.innerName || item.name || '--'} · {item.innerGSM} GSM{item.innerPaperSize ? ` · ${item.innerPaperSize}` : ''}
+                                         Inner: {item.innerName || item.name || '--'} · {item.innerGSM} GSM{item.innerPaperSize ? ` · ${item.innerPaperSize}` : ''}
                                        </span>
                                      ) : (
                                        <span className="bg-gray-50 text-gray-400 px-2 py-0.5 rounded border border-gray-200">Inner: --</span>
@@ -898,6 +910,22 @@ const PaperStockManagement = () => {
                                    </div>
                                 </div>
                              </div>
+                          </td>
+                          <td className="px-6 py-5">
+                            {partyNames.split ? (
+                              <div className="space-y-1.5 text-sm">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[10px] font-black text-gray-400 uppercase w-12">Cover:</span>
+                                  <span className="font-bold text-gray-800">{partyNames.cover}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[10px] font-black text-gray-400 uppercase w-12">Inner:</span>
+                                  <span className="font-bold text-gray-800">{partyNames.inner}</span>
+                                </div>
+                              </div>
+                            ) : (
+                              <span className="text-sm font-bold text-gray-800">{partyNames.name}</span>
+                            )}
                           </td>
                           <td className="px-6 py-5">
                              <div className="space-y-1.5">

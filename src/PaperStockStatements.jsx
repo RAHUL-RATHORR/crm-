@@ -190,21 +190,22 @@ const PaperStockStatements = () => {
           <table className="w-full text-left whitespace-nowrap">
             <thead>
               <tr className="bg-gray-50/50 text-[11px] font-black uppercase text-gray-900 tracking-[0.12em] border-b border-gray-100">
+                <th className="px-6 py-4">Party Name</th>
                 <th className="px-6 py-4">Date & Time</th>
                 <th className="px-6 py-4">Stock Name</th>
                 <th className="px-6 py-4">Paper Type</th>
                 <th className="px-6 py-4 text-center">Action</th>
                 <th className="px-6 py-4 text-right">Quantity</th>
-                <th className="px-6 py-4">Party / Job</th>
+                <th className="px-6 py-4">Job No.</th>
                 <th className="px-6 py-4 text-right">Balance After</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {loading ? (
-                <tr><td colSpan="7" className="px-6 py-20 text-center text-gray-400 font-bold animate-pulse uppercase">Loading...</td></tr>
+                <tr><td colSpan="8" className="px-6 py-20 text-center text-gray-400 font-bold animate-pulse uppercase">Loading...</td></tr>
               ) : error ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-20 text-center">
+                  <td colSpan="8" className="px-6 py-20 text-center">
                     <p className="text-red-500 font-bold mb-3">{error}</p>
                     <button
                       type="button"
@@ -217,13 +218,19 @@ const PaperStockStatements = () => {
                 </tr>
               ) : filteredTransactions.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-20 text-center text-gray-400 italic">
+                  <td colSpan="8" className="px-6 py-20 text-center text-gray-400 italic">
                     Abhi koi transaction nahi hai. Naya stock add karo ya Job Card se paper use karo — history yahan dikhegi.
                   </td>
                 </tr>
               ) : (
                 filteredTransactions.map((item) => (
                   <tr key={item._id} className="hover:bg-gray-50/60 transition-colors">
+                    <td className="px-6 py-5">
+                      <div className="flex items-center gap-1.5 text-sm font-bold text-gray-800">
+                        <User size={13} className="text-gray-400 shrink-0" />
+                        {item.partyName || '—'}
+                      </div>
+                    </td>
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-2 text-sm font-bold text-gray-700">
                         <Calendar size={14} className="text-indigo-500" />
@@ -267,23 +274,13 @@ const PaperStockStatements = () => {
                       </p>
                     </td>
                     <td className="px-6 py-5">
-                      {item.transactionType === 'deduct' && item.partyName ? (
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-1.5 text-sm font-bold text-gray-800">
-                            <User size={13} className="text-gray-400" />
-                            {item.partyName}
-                          </div>
-                          {item.jobNumber && (
-                            <div className="flex items-center gap-1.5 text-[11px] font-bold text-indigo-600">
-                              <Hash size={12} />
-                              {item.jobNumber}
-                            </div>
-                          )}
+                      {item.jobNumber ? (
+                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-indigo-600">
+                          <Hash size={12} />
+                          {item.jobNumber}
                         </div>
                       ) : (
-                        <span className="text-xs font-semibold text-gray-400 italic">
-                          {item.note || 'Stock feed'}
-                        </span>
+                        <span className="text-xs font-semibold text-gray-400 italic">—</span>
                       )}
                     </td>
                     <td className="px-6 py-5 text-right">

@@ -236,6 +236,7 @@ router.delete('/:id', async (req, res) => {
   try {
     const deleted = await PaperStock.findByIdAndDelete(req.params.id);
     if (!deleted) return res.status(404).json({ error: "Item not found" });
+    await PaperStockTransaction.deleteMany({ paperStockId: deleted._id });
     res.json({ message: "Item deleted successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
