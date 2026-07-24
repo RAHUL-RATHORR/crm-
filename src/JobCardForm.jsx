@@ -266,6 +266,7 @@ export default function JobCardForm() {
     const jobCard = {
       ...Object.fromEntries(fd.entries()),
       jobDate: jobDate.toISOString(),
+      paperSource: fd.get('paperSource') || paperSource,
       companyName: fd.get('partyName'), // alias for backward compatibility
       useShipAddress,
       shipPartyName: useShipAddress ? (fd.get('shipPartyName') || '') : '',

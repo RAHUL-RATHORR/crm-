@@ -6,7 +6,7 @@ import { logPaperStockTransaction } from './paperStockTransactions.js';
 const normalize = (value) => String(value || '').trim().toLowerCase();
 
 const getCoverUsage = (job) => {
-  if (!job || (job.paperSource || 'Company paper') !== 'Company paper' || !job.paper || !job.paperGSM) {
+  if (!job || !job.paper || !job.paperGSM) {
     return null;
   }
   const qty = Number(job.coverPaperCount) > 0 ? Number(job.coverPaperCount) : Number(job.jobQty) || 0;
@@ -15,13 +15,16 @@ const getCoverUsage = (job) => {
 };
 
 const getInnerUsage = (job) => {
-  if (!job || (job.paperSource || 'Company paper') !== 'Company paper' || !job.innerPaper || !job.innerPaperGSM) {
+  if (!job || !job.innerPaper || !job.innerPaperGSM) {
     return null;
   }
-  const qty = Number(job.innerPaperCount) || 0;
+  const qty = Number(job.innerPaperCount) > 0 ? Number(job.innerPaperCount) : Number(job.jobQty) || 0;
   if (qty <= 0) return null;
   return { paper: job.innerPaper, paperGSM: String(job.innerPaperGSM), qty };
 };
+
+const matchesPaperSource = (job, stock) =>
+  (job.paperSource || 'Company paper') === (stock.paperSource || 'Company paper');
 
 const matchesPaperName = (stock, paperName, paperType) => {
   const target = normalize(paperName);
@@ -35,12 +38,14 @@ const matchesPaperName = (stock, paperName, paperType) => {
 };
 
 const sumCoverDeductions = (jobs, stock) => jobs.reduce((sum, job) => {
+  if (!matchesPaperSource(job, stock)) return sum;
   const usage = getCoverUsage(job);
   if (!usage || !matchesPaperName(stock, usage.paper, 'cover')) return sum;
   return sum + usage.qty;
 }, 0);
 
 const sumInnerDeductions = (jobs, stock) => jobs.reduce((sum, job) => {
+  if (!matchesPaperSource(job, stock)) return sum;
   const usage = getInnerUsage(job);
   if (!usage || !matchesPaperName(stock, usage.paper, 'inner')) return sum;
   return sum + usage.qty;
@@ -113,7 +118,7 @@ export const backfillPaperStockTransactionsIfEmpty = async () => {
   }
 
   for (const job of jobs) {
-    if ((job.paperSource || 'Company paper') !== 'Company paper') continue;
+    const jobPaperSource = job.paperSource || 'Company paper';
 
     const cover = getCoverUsage(job);
     if (cover) {
@@ -126,7 +131,7 @@ export const backfillPaperStockTransactionsIfEmpty = async () => {
         partyName: job.partyName || job.companyName || '',
         jobNumber: job.jobNumber || '',
         jobCardId: job._id,
-        paperSource: 'Company paper',
+        paperSource: jobPaperSource,
         balanceAfter: 0,
         note: 'Job card usage (imported)',
         createdAt: job.createdAt || job.updatedAt || new Date(),
@@ -144,7 +149,7 @@ export const backfillPaperStockTransactionsIfEmpty = async () => {
         partyName: job.partyName || job.companyName || '',
         jobNumber: job.jobNumber || '',
         jobCardId: job._id,
-        paperSource: 'Company paper',
+        paperSource: jobPaperSource,
         balanceAfter: 0,
         note: 'Job card usage (imported)',
         createdAt: job.createdAt || job.updatedAt || new Date(),

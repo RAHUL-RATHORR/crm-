@@ -22,61 +22,82 @@ const computePlateUseCount = async (plateSize, editingId) => {
 const escapeRegex = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const getCoverUsage = (job) => {
-  if (!job || job.paperSource !== 'Company paper' || !job.paper || !job.paperGSM) return null;
+  if (!job || !job.paper || job.paper === 'Custom' || !job.paperGSM) return null;
   const qty = Number(job.coverPaperCount) > 0 ? Number(job.coverPaperCount) : Number(job.jobQty) || 0;
   if (qty <= 0) return null;
-  return { paper: job.paper, paperGSM: String(job.paperGSM), qty };
+  return {
+    paper: job.paper,
+    paperGSM: String(job.paperGSM),
+    qty,
+    paperSource: job.paperSource || 'Company paper',
+  };
 };
 
 const getInnerUsage = (job) => {
-  if (!job || job.paperSource !== 'Company paper' || !job.innerPaper || !job.innerPaperGSM) return null;
-  const qty = Number(job.innerPaperCount) || 0;
+  if (!job || !job.innerPaper || job.innerPaper === 'Custom' || !job.innerPaperGSM) return null;
+  const qty = Number(job.innerPaperCount) > 0 ? Number(job.innerPaperCount) : Number(job.jobQty) || 0;
   if (qty <= 0) return null;
-  return { paper: job.innerPaper, paperGSM: String(job.innerPaperGSM), qty };
+  return {
+    paper: job.innerPaper,
+    paperGSM: String(job.innerPaperGSM),
+    qty,
+    paperSource: job.paperSource || 'Company paper',
+  };
 };
 
-const findCoverStock = async (paper) => {
-  if (!paper) return null;
+const findCoverStock = async (paper, paperSource = 'Company paper') => {
+  if (!paper || paper === 'Custom') return null;
+  const escaped = escapeRegex(paper);
   return PaperStock.findOne({
     $or: [
-      { coverName: { $regex: new RegExp(`^${escapeRegex(paper)}$`, 'i') } },
-      { name: { $regex: new RegExp(`^${escapeRegex(paper)}$`, 'i') } }
+      { coverName: { $regex: new RegExp(`^${escaped}$`, 'i') } },
+      { name: { $regex: new RegExp(`^${escaped}$`, 'i') } },
+      { name: { $regex: new RegExp(`^${escaped}\\s*/`, 'i') } },
     ],
-    paperSource: 'Company paper'
+    paperSource,
   });
 };
 
-const findInnerStock = async (paper) => {
-  if (!paper) return null;
+const findInnerStock = async (paper, paperSource = 'Company paper') => {
+  if (!paper || paper === 'Custom') return null;
+  const escaped = escapeRegex(paper);
   return PaperStock.findOne({
     $or: [
-      { innerName: { $regex: new RegExp(`^${escapeRegex(paper)}$`, 'i') } },
-      { name: { $regex: new RegExp(`^${escapeRegex(paper)}$`, 'i') } }
+      { innerName: { $regex: new RegExp(`^${escaped}$`, 'i') } },
+      { name: { $regex: new RegExp(`^${escaped}$`, 'i') } },
+      { name: { $regex: new RegExp(`/\\s*${escaped}$`, 'i') } },
     ],
-    paperSource: 'Company paper'
+    paperSource,
   });
 };
 
 const applyCoverDelta = async (paper, paperGSM, delta, meta = {}) => {
   if (!paper || !paperGSM || !delta) return;
-  const stockItem = await findCoverStock(paper);
-  if (!stockItem) return;
+  const paperSource = meta.paperSource || 'Company paper';
+  const stockItem = await findCoverStock(paper, paperSource);
+  if (!stockItem) {
+    console.warn(`⚠️ Cover stock not found: paper="${paper}", source=${paperSource}`);
+    return;
+  }
 
   const gsm = Number(paperGSM);
+  const coverGsm = Number(stockItem.coverGSM);
+  const legacyGsm = Number(stockItem.gsm);
   let balanceAfter = 0;
 
-  if (stockItem.coverGSM === gsm) {
+  if (coverGsm === gsm) {
     stockItem.coverQuantity = Math.max(0, (stockItem.coverQuantity || 0) - delta);
     stockItem.quantity = Math.max(0, (stockItem.quantity || 0) - delta);
     balanceAfter = stockItem.coverQuantity;
     await stockItem.save();
     console.log(`📦 Cover stock adjusted: ${paper} (${paperGSM} GSM) delta ${delta}, remaining ${stockItem.coverQuantity}`);
-  } else if (stockItem.gsm === gsm) {
+  } else if (legacyGsm === gsm) {
     stockItem.quantity = Math.max(0, (stockItem.quantity || 0) - delta);
     balanceAfter = stockItem.quantity;
     await stockItem.save();
     console.log(`📦 Cover stock adjusted (legacy): ${paper} (${paperGSM} GSM) delta ${delta}, remaining ${stockItem.quantity}`);
   } else {
+    console.warn(`⚠️ Cover stock GSM mismatch: job=${paperGSM}, stock cover=${stockItem.coverGSM}, legacy=${stockItem.gsm}, paper=${paper}, source=${paperSource}`);
     return;
   }
 
@@ -98,23 +119,30 @@ const applyCoverDelta = async (paper, paperGSM, delta, meta = {}) => {
 
 const applyInnerDelta = async (paper, paperGSM, delta, meta = {}) => {
   if (!paper || !paperGSM || !delta) return;
-  const stockItem = await findInnerStock(paper);
-  if (!stockItem) return;
+  const paperSource = meta.paperSource || 'Company paper';
+  const stockItem = await findInnerStock(paper, paperSource);
+  if (!stockItem) {
+    console.warn(`⚠️ Inner stock not found: paper="${paper}", source=${paperSource}`);
+    return;
+  }
 
   const gsm = Number(paperGSM);
+  const innerGsm = Number(stockItem.innerGSM);
+  const legacyGsm = Number(stockItem.gsm);
   let balanceAfter = 0;
 
-  if (stockItem.innerGSM === gsm) {
+  if (innerGsm === gsm) {
     stockItem.innerQuantity = Math.max(0, (stockItem.innerQuantity || 0) - delta);
     balanceAfter = stockItem.innerQuantity;
     await stockItem.save();
     console.log(`📦 Inner stock adjusted: ${paper} (${paperGSM} GSM) delta ${delta}, remaining ${stockItem.innerQuantity}`);
-  } else if (stockItem.gsm === gsm) {
+  } else if (legacyGsm === gsm) {
     stockItem.quantity = Math.max(0, (stockItem.quantity || 0) - delta);
     balanceAfter = stockItem.quantity;
     await stockItem.save();
     console.log(`📦 Inner stock adjusted (legacy): ${paper} (${paperGSM} GSM) delta ${delta}, remaining ${stockItem.quantity}`);
   } else {
+    console.warn(`⚠️ Inner stock GSM mismatch: job=${paperGSM}, stock inner=${stockItem.innerGSM}, legacy=${stockItem.gsm}, paper=${paper}, source=${paperSource}`);
     return;
   }
 
@@ -135,16 +163,14 @@ const applyInnerDelta = async (paper, paperGSM, delta, meta = {}) => {
 };
 
 const syncStockFromJobChange = async (previousJob, newBody) => {
-  const paperSource = newBody.paperSource || 'Company paper';
-  if (paperSource !== 'Company paper') return;
-
   const oldCover = getCoverUsage(previousJob);
-  const newCover = getCoverUsage({ ...newBody, paperSource });
+  const newCover = getCoverUsage(newBody);
   const oldInner = getInnerUsage(previousJob);
-  const newInner = getInnerUsage({ ...newBody, paperSource });
+  const newInner = getInnerUsage(newBody);
 
   if (oldCover) {
     await applyCoverDelta(oldCover.paper, oldCover.paperGSM, -oldCover.qty, {
+      paperSource: oldCover.paperSource,
       partyName: previousJob?.partyName || previousJob?.companyName || '',
       jobNumber: previousJob?.jobNumber || '',
       jobCardId: previousJob?._id,
@@ -153,6 +179,7 @@ const syncStockFromJobChange = async (previousJob, newBody) => {
   }
   if (oldInner) {
     await applyInnerDelta(oldInner.paper, oldInner.paperGSM, -oldInner.qty, {
+      paperSource: oldInner.paperSource,
       partyName: previousJob?.partyName || previousJob?.companyName || '',
       jobNumber: previousJob?.jobNumber || '',
       jobCardId: previousJob?._id,
@@ -161,6 +188,7 @@ const syncStockFromJobChange = async (previousJob, newBody) => {
   }
   if (newCover) {
     await applyCoverDelta(newCover.paper, newCover.paperGSM, newCover.qty, {
+      paperSource: newCover.paperSource,
       partyName: newBody.partyName || newBody.companyName || '',
       jobNumber: newBody.jobNumber || '',
       jobCardId: newBody._id,
@@ -169,6 +197,7 @@ const syncStockFromJobChange = async (previousJob, newBody) => {
   }
   if (newInner) {
     await applyInnerDelta(newInner.paper, newInner.paperGSM, newInner.qty, {
+      paperSource: newInner.paperSource,
       partyName: newBody.partyName || newBody.companyName || '',
       jobNumber: newBody.jobNumber || '',
       jobCardId: newBody._id,
