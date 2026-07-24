@@ -37,12 +37,6 @@ router.post('/', async (req, res) => {
       || [resolvedCoverName, resolvedInnerName].filter((value, index, arr) => value && arr.indexOf(value) === index).join(' / ')
       || 'Unnamed Paper';
 
-    // Check if item with same name and paperSource already exists
-    const existing = await PaperStock.findOne({ name: resolvedName, paperSource: paperSource || 'Company paper' });
-    if (existing) {
-      return res.status(400).json({ error: "Paper with this name and Source already exists. Please update the existing entry." });
-    }
-
     const newItem = new PaperStock({
       name: resolvedName,
       coverPartyName: (coverPartyName || '').trim(),
