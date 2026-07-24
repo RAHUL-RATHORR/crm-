@@ -8,7 +8,6 @@ import {
   Hash,
   Layers,
 } from 'lucide-react';
-import { buildPaperStockHistory } from './utils/buildPaperStockHistory.js';
 import { API_BASE_URL } from './utils/apiBase';
 
 const PaperStockStatements = () => {
@@ -27,32 +26,15 @@ const PaperStockStatements = () => {
     const fetchOptions = { signal: controller.signal };
 
     try {
-      const [txRes, stockRes, jobRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/paper-stock/transactions`, fetchOptions),
-        fetch(`${API_BASE_URL}/api/paper-stock`, fetchOptions),
-        fetch(`${API_BASE_URL}/api/jobcard`, fetchOptions),
-      ]);
+      const txRes = await fetch(`${API_BASE_URL}/api/paper-stock/transactions`, fetchOptions);
       clearTimeout(timeoutId);
 
-      if (!stockRes.ok || !jobRes.ok) {
-        throw new Error('Stock ya job card data load nahi ho payi.');
+      if (!txRes.ok) {
+        throw new Error('Transaction history load nahi ho payi.');
       }
 
-      let data = [];
-      if (txRes.ok) {
-        const txData = await txRes.json();
-        data = Array.isArray(txData) ? txData : [];
-      }
-
-      if (data.length === 0) {
-        const [stocks, jobs] = await Promise.all([stockRes.json(), jobRes.json()]);
-        data = buildPaperStockHistory(
-          Array.isArray(stocks) ? stocks : [],
-          Array.isArray(jobs) ? jobs : [],
-        );
-      }
-
-      setTransactions(data);
+      const txData = await txRes.json();
+      setTransactions(Array.isArray(txData) ? txData : []);
     } catch (err) {
       clearTimeout(timeoutId);
       console.error('Fetch error:', err);

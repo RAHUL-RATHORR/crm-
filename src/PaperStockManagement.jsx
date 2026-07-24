@@ -114,70 +114,6 @@ const sortHistoryRows = (rows) =>
     return bTime - aTime;
   });
 
-const buildStockAddHistoryFallback = (item) => {
-  if (!item) return [];
-
-  const when = item.updatedAt || item.createdAt || new Date();
-  const stockName = item.name || 'Unnamed Paper';
-  const rows = [];
-
-  const pushRow = (paperType, paperName, partyName, quantity, suffix) => {
-    rows.push({
-      _id: `${item._id}-${suffix}`,
-      paperStockId: item._id,
-      stockName,
-      paperName: paperName || stockName,
-      paperType,
-      transactionType: 'add',
-      quantity: Number(quantity) || 0,
-      partyName: (partyName || '').trim(),
-      paperSource: item.paperSource || 'Company paper',
-      challanNo: (item.challanNo || '').trim(),
-      invoiceNo: (item.invoiceNo || '').trim(),
-      createdAt: when,
-    });
-  };
-
-  const coverQty = Number(item.coverQuantity) || 0;
-  const innerQty = Number(item.innerQuantity) || 0;
-  const legacyQty = Number(item.quantity) || 0;
-
-  if (coverQty > 0 || item.coverGSM || item.coverName) {
-    pushRow('cover', item.coverName || stockName, item.coverPartyName, coverQty, 'cover-fallback');
-  }
-  if (innerQty > 0 || item.innerGSM || item.innerName) {
-    pushRow('inner', item.innerName || stockName, item.innerPartyName, innerQty, 'inner-fallback');
-  }
-  if (rows.length === 0 && legacyQty > 0) {
-    pushRow('cover', stockName, item.coverPartyName || item.innerPartyName, legacyQty, 'legacy-fallback');
-  }
-  if (rows.length === 0) {
-    pushRow(
-      item.innerGSM ? 'inner' : 'cover',
-      item.coverName || item.innerName || stockName,
-      item.coverPartyName || item.innerPartyName,
-      0,
-      'registered-fallback',
-    );
-  }
-
-  return rows.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-};
-
-const filterAddHistoryForItem = (transactions, item) => {
-  const itemId = String(item._id);
-  const itemName = (item.name || '').trim().toLowerCase();
-
-  return (Array.isArray(transactions) ? transactions : [])
-    .filter((tx) => {
-      if (tx.transactionType !== 'add') return false;
-      if (/Restored from job card/i.test(tx.note || '')) return false;
-      if (tx.paperStockId && String(tx.paperStockId) === itemId) return true;
-      return !tx.paperStockId && (tx.stockName || '').trim().toLowerCase() === itemName;
-    })
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-};
-
 const PaperStockManagement = () => {
   const [stock, setStock] = useState([]);
   const [isAdding, setIsAdding] = useState(false);
@@ -455,39 +391,18 @@ const PaperStockManagement = () => {
   const openStockHistory = async (item) => {
     setHistoryModal({ open: true, item, rows: [], loading: true });
     try {
-      let rows = [];
-
       const res = await fetch(`${API_BASE_URL}/api/paper-stock/${item._id}/transactions`);
+      let rows = [];
       if (res.ok) {
         const data = await res.json();
         rows = Array.isArray(data) ? data : [];
       }
 
-      if (rows.length === 0) {
-        const allRes = await fetch(`${API_BASE_URL}/api/paper-stock/transactions`);
-        if (allRes.ok) {
-          const allData = await allRes.json();
-          rows = filterAddHistoryForItem(allData, item);
-        }
-      }
-
-      if (rows.length === 0) {
-        rows = buildStockAddHistoryFallback(item);
-      }
-
-      rows = mergeStockAddMeta(item._id, rows);
-      rows = sortHistoryRows(rows);
-
+      rows = sortHistoryRows(mergeStockAddMeta(item._id, rows));
       setHistoryModal({ open: true, item, rows, loading: false });
     } catch (err) {
       console.error('History fetch error:', err);
-      const fallbackRows = sortHistoryRows(mergeStockAddMeta(item._id, buildStockAddHistoryFallback(item)));
-      setHistoryModal({
-        open: true,
-        item,
-        rows: fallbackRows,
-        loading: false,
-      });
+      setHistoryModal({ open: true, item, rows: [], loading: false });
     }
   };
 

@@ -3,15 +3,22 @@ const router = express.Router();
 import PaperStock from '../models/PaperStock.js';
 import PaperStockTransaction from '../models/PaperStockTransaction.js';
 import { logPaperStockTransaction } from '../utils/paperStockTransactions.js';
-import { backfillPaperStockTransactionsIfEmpty } from '../utils/backfillPaperStockTransactions.js';
-import { buildStockAddHistoryFallback, ensureStockAddTransactions } from '../utils/paperStockHistory.js';
 
 // GET /api/paper-stock/transactions - Stock add/deduct history
 router.get('/transactions', async (req, res) => {
   try {
-    await backfillPaperStockTransactionsIfEmpty();
     const transactions = await PaperStockTransaction.find().sort({ createdAt: -1 });
     res.json(transactions);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE /api/paper-stock/transactions - Clear all transaction history
+router.delete('/transactions', async (req, res) => {
+  try {
+    const result = await PaperStockTransaction.deleteMany({});
+    res.json({ message: 'All transaction history cleared', deletedCount: result.deletedCount });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -20,12 +27,8 @@ router.get('/transactions', async (req, res) => {
 // GET /api/paper-stock/:id/transactions - Add history for one stock item
 router.get('/:id/transactions', async (req, res) => {
   try {
-    await backfillPaperStockTransactionsIfEmpty();
-
     const stock = await PaperStock.findById(req.params.id);
     if (!stock) return res.status(404).json({ error: 'Item not found' });
-
-    await ensureStockAddTransactions(stock);
 
     let transactions = await PaperStockTransaction.find({
       paperStockId: stock._id,
@@ -45,10 +48,6 @@ router.get('/:id/transactions', async (req, res) => {
       }
       return doc;
     });
-
-    if (transactions.length === 0) {
-      transactions = buildStockAddHistoryFallback(stock);
-    }
 
     res.json(transactions);
   } catch (err) {
