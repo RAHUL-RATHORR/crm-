@@ -13,6 +13,7 @@ const paperStockTransactionSchema = new mongoose.Schema({
   paperSource: { type: String, default: 'Company paper' },
   challanNo: { type: String, trim: true, default: '' },
   invoiceNo: { type: String, trim: true, default: '' },
+  entryDate: { type: Date },
   balanceAfter: { type: Number, default: 0 },
   note: { type: String, trim: true, default: '' },
   createdAt: { type: Date, default: Date.now },

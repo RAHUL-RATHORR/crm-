@@ -102,7 +102,8 @@ router.post('/', async (req, res) => {
 
     await newItem.save();
 
-    const entryTimestamp = entryDate ? new Date(entryDate) : undefined;
+    const now = new Date();
+    const entryDay = entryDate ? new Date(entryDate) : now;
 
     if (Number(coverQuantity) > 0) {
       await logPaperStockTransaction({
@@ -116,7 +117,8 @@ router.post('/', async (req, res) => {
         paperSource: paperSource || 'Company paper',
         balanceAfter: Number(coverQuantity),
         note: 'Initial cover stock added',
-        createdAt: entryTimestamp,
+        createdAt: now,
+        entryDate: entryDay,
         challanNo: (challanNo || '').trim(),
         invoiceNo: (invoiceNo || '').trim(),
       });
@@ -134,7 +136,8 @@ router.post('/', async (req, res) => {
         paperSource: paperSource || 'Company paper',
         balanceAfter: Number(innerQuantity),
         note: 'Initial inner stock added',
-        createdAt: entryTimestamp,
+        createdAt: now,
+        entryDate: entryDay,
         challanNo: (challanNo || '').trim(),
         invoiceNo: (invoiceNo || '').trim(),
       });
@@ -181,7 +184,8 @@ router.put('/:id', async (req, res) => {
 
     const coverAdded = Number(coverQuantity) - Number(existing.coverQuantity || 0);
     const innerAdded = Number(innerQuantity) - Number(existing.innerQuantity || 0);
-    const entryTimestamp = entryDate ? new Date(entryDate) : undefined;
+    const now = new Date();
+    const entryDay = entryDate ? new Date(entryDate) : now;
 
     if (coverAdded > 0) {
       await logPaperStockTransaction({
@@ -195,7 +199,8 @@ router.put('/:id', async (req, res) => {
         paperSource: paperSource || existing.paperSource || 'Company paper',
         balanceAfter: Number(updated.coverQuantity || 0),
         note: 'Cover stock added',
-        createdAt: entryTimestamp,
+        createdAt: now,
+        entryDate: entryDay,
         challanNo: txnChallanNo,
         invoiceNo: txnInvoiceNo,
       });
@@ -213,7 +218,8 @@ router.put('/:id', async (req, res) => {
         paperSource: paperSource || existing.paperSource || 'Company paper',
         balanceAfter: Number(updated.innerQuantity || 0),
         note: 'Inner stock added',
-        createdAt: entryTimestamp,
+        createdAt: now,
+        entryDate: entryDay,
         challanNo: txnChallanNo,
         invoiceNo: txnInvoiceNo,
       });

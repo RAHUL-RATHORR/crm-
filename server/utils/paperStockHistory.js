@@ -65,6 +65,8 @@ export async function ensureStockAddTransactions(stock) {
   const coverQty = Number(stock.coverQuantity) || 0;
   const innerQty = Number(stock.innerQuantity) || 0;
   const legacyQty = Number(stock.quantity) || 0;
+  const now = new Date();
+  const entryDay = stock.entryDate || now;
 
   if (coverQty > 0) {
     await logPaperStockTransaction({
@@ -78,7 +80,8 @@ export async function ensureStockAddTransactions(stock) {
       paperSource: stock.paperSource || 'Company paper',
       balanceAfter: coverQty,
       note: 'Opening stock (imported)',
-      createdAt: when,
+      createdAt: now,
+      entryDate: entryDay,
       challanNo: (stock.challanNo || '').trim(),
       invoiceNo: (stock.invoiceNo || '').trim(),
     });
@@ -96,7 +99,8 @@ export async function ensureStockAddTransactions(stock) {
       paperSource: stock.paperSource || 'Company paper',
       balanceAfter: innerQty,
       note: 'Opening stock (imported)',
-      createdAt: when,
+      createdAt: now,
+      entryDate: entryDay,
       challanNo: (stock.challanNo || '').trim(),
       invoiceNo: (stock.invoiceNo || '').trim(),
     });
@@ -114,7 +118,8 @@ export async function ensureStockAddTransactions(stock) {
       paperSource: stock.paperSource || 'Company paper',
       balanceAfter: legacyQty,
       note: 'Opening stock (imported)',
-      createdAt: when,
+      createdAt: now,
+      entryDate: entryDay,
       challanNo: (stock.challanNo || '').trim(),
       invoiceNo: (stock.invoiceNo || '').trim(),
     });

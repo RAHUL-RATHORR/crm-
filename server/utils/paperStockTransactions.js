@@ -13,12 +13,16 @@ export const logPaperStockTransaction = async ({
   paperSource = 'Company paper',
   challanNo = '',
   invoiceNo = '',
+  entryDate,
   balanceAfter = 0,
   note = '',
   createdAt,
 }) => {
   const qty = Number(quantity) || 0;
   if (!qty) return;
+
+  const now = new Date();
+  const entryDay = entryDate ? new Date(entryDate) : null;
 
   await PaperStockTransaction.create({
     paperStockId,
@@ -33,8 +37,9 @@ export const logPaperStockTransaction = async ({
     paperSource,
     challanNo: (challanNo || '').trim(),
     invoiceNo: (invoiceNo || '').trim(),
+    entryDate: entryDay,
     balanceAfter,
     note,
-    createdAt: createdAt || Date.now(),
+    createdAt: createdAt || now,
   });
 };

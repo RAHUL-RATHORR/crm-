@@ -20,10 +20,95 @@ const formatHistoryTime = (value) => {
   return new Date(value).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
 };
 
+const PAPER_STOCK_ADD_META_KEY = 'paperStockAddMeta';
+
+const loadStockAddMeta = () => {
+  try {
+    return JSON.parse(localStorage.getItem(PAPER_STOCK_ADD_META_KEY) || '[]');
+  } catch {
+    return [];
+  }
+};
+
+const saveStockAddMeta = (entries) => {
+  localStorage.setItem(PAPER_STOCK_ADD_META_KEY, JSON.stringify(entries.slice(0, 400)));
+};
+
+const rememberStockAddMeta = (stockId, { coverAdd, innerAdd, challanNo, invoiceNo, entryDate }) => {
+  const addedAt = new Date().toISOString();
+  const entryDay = entryDate || addedAt.slice(0, 10);
+  const list = loadStockAddMeta();
+
+  if (coverAdd > 0) {
+    list.unshift({
+      id: `${stockId}-cover-${addedAt}`,
+      stockId,
+      paperType: 'cover',
+      quantity: coverAdd,
+      challanNo: (challanNo || '').trim(),
+      invoiceNo: (invoiceNo || '').trim(),
+      entryDate: entryDay,
+      addedAt,
+    });
+  }
+  if (innerAdd > 0) {
+    list.unshift({
+      id: `${stockId}-inner-${addedAt}`,
+      stockId,
+      paperType: 'inner',
+      quantity: innerAdd,
+      challanNo: (challanNo || '').trim(),
+      invoiceNo: (invoiceNo || '').trim(),
+      entryDate: entryDay,
+      addedAt,
+    });
+  }
+
+  saveStockAddMeta(list);
+};
+
+const mergeStockAddMeta = (stockId, rows) => {
+  const metaList = loadStockAddMeta().filter((m) => m.stockId === stockId);
+  const usedIds = new Set();
+
+  return rows.map((row) => {
+    const hasChallan = Boolean((row.challanNo || '').trim());
+    const hasInvoice = Boolean((row.invoiceNo || '').trim());
+    const hasEntryDate = Boolean(row.entryDate);
+
+    if (hasChallan && hasInvoice && hasEntryDate) return row;
+
+    const meta = metaList.find(
+      (m) =>
+        !usedIds.has(m.id) &&
+        m.paperType === row.paperType &&
+        Number(m.quantity) === Number(row.quantity),
+    );
+    if (!meta) return row;
+
+    usedIds.add(meta.id);
+
+    return {
+      ...row,
+      challanNo: hasChallan ? row.challanNo : meta.challanNo,
+      invoiceNo: hasInvoice ? row.invoiceNo : meta.invoiceNo,
+      entryDate: hasEntryDate ? row.entryDate : meta.entryDate,
+      createdAt: meta.addedAt || row.createdAt,
+    };
+  });
+};
+
+const sortHistoryRows = (rows) =>
+  [...rows].sort((a, b) => {
+    const aTime = new Date(a.createdAt || a.entryDate || 0).getTime();
+    const bTime = new Date(b.createdAt || b.entryDate || 0).getTime();
+    return bTime - aTime;
+  });
+
 const buildStockAddHistoryFallback = (item) => {
   if (!item) return [];
 
-  const when = item.entryDate || item.createdAt || item.updatedAt || new Date();
+  const when = item.updatedAt || item.createdAt || new Date();
   const stockName = item.name || 'Unnamed Paper';
   const rows = [];
 
@@ -325,6 +410,13 @@ const PaperStockManagement = () => {
       const data = await res.json();
 
       if (res.ok) {
+        rememberStockAddMeta(item._id, {
+          coverAdd,
+          innerAdd,
+          challanNo: addForm.challanNo,
+          invoiceNo: addForm.invoiceNo,
+          entryDate: addForm.entryDate,
+        });
         setMessage({ type: 'success', text: 'Stock added successfully!' });
         closeAddModal();
         fetchStock();
@@ -373,13 +465,17 @@ const PaperStockManagement = () => {
         rows = buildStockAddHistoryFallback(item);
       }
 
+      rows = mergeStockAddMeta(item._id, rows);
+      rows = sortHistoryRows(rows);
+
       setHistoryModal({ open: true, item, rows, loading: false });
     } catch (err) {
       console.error('History fetch error:', err);
+      const fallbackRows = sortHistoryRows(mergeStockAddMeta(item._id, buildStockAddHistoryFallback(item)));
       setHistoryModal({
         open: true,
         item,
-        rows: buildStockAddHistoryFallback(item),
+        rows: fallbackRows,
         loading: false,
       });
     }
@@ -1097,7 +1193,7 @@ const PaperStockManagement = () => {
                     {historyModal.rows.map((row) => (
                       <tr key={row._id} className="hover:bg-gray-50/60">
                         <td className="px-4 py-3 text-sm font-semibold text-gray-800">
-                          {formatHistoryDate(row.createdAt)}
+                          {formatHistoryDate(row.entryDate || row.createdAt)}
                         </td>
                         <td className="px-4 py-3 text-sm text-gray-600">
                           {formatHistoryTime(row.createdAt)}
