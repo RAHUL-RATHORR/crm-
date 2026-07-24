@@ -35,6 +35,7 @@ import itemRoutes from "./routes/itemRoutes.js";
 import staffRoutes from "./routes/staffRoutes.js";
 import roleRoutes from "./routes/roleRoutes.js";
 import { seedStaffAndRoles } from "./utils/seedStaff.js";
+import { reconcilePaperStockFromJobs } from "./utils/paperStockDeduction.js";
 
 const app = express();
 app.use(cors());
@@ -91,6 +92,10 @@ const connectDB = async () => {
         console.log("✅ MongoDB Connected Successfully");
         await seedStaffAndRoles();
         console.log("✅ Staff roles seeded");
+        const reconciled = await reconcilePaperStockFromJobs();
+        if (reconciled > 0) {
+            console.log(`🔁 Reconciled ${reconciled} paper stock record(s) from job cards`);
+        }
     } catch (error) {
         console.error("❌ MongoDB Error:", error.message);
     }
