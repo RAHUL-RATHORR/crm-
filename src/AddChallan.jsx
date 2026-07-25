@@ -13,6 +13,7 @@ import { getStoredPaymentType, setStoredPaymentType } from './utils/paymentTypeS
 import { setStoredDocumentExtras, getStoredDocumentExtras } from './utils/documentExtrasStorage';
 import { setStoredItemNotes, mapLineItemsForSave } from './utils/itemNoteStorage';
 import { validateStateAndCode } from './utils/indianStateCodes';
+import GSTInput from './components/GSTInput';
 import { API_BASE_URL } from './utils/apiBase';
 
 const parseJobQty = (value) => {
@@ -708,6 +709,16 @@ const AddChallan = () => {
                 value={formData.partyContact}
                 onChange={handleInputChange}
                 placeholder="Mobile number"
+                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">GST No.</label>
+              <GSTInput
+                name="partyGst"
+                value={formData.partyGst}
+                onChange={handleInputChange}
+                placeholder="GST number or URP"
                 className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
               />
             </div>
