@@ -4,19 +4,25 @@ export const getChallanLineItems = (challan) => {
   if (challan.items?.length) {
     return challan.items.map((item) => ({
       description: item.description || challan.jobName || '',
+      descriptionNote: item.descriptionNote || '',
+      hsn: item.hsn || '',
       qty: item.qty,
       rate: item.rate,
+      per: String(item.per ?? '').trim() || 'PCS',
       total: Number(item.total) || Number(item.qty || 0) * Number(item.rate || 0),
       gstPercent: item.gstPercent ?? challan.gstPercent ?? 18,
-      jobNumber: challan.jobNumber || '',
+      jobNumber: item.jobNumber || challan.jobNumber || '',
       challanNo: challan.challanNo || '',
     }));
   }
 
   return [{
     description: challan.description || challan.jobName || '',
+    descriptionNote: '',
+    hsn: '',
     qty: challan.qty,
     rate: challan.rate,
+    per: 'PCS',
     total: Number(challan.total) || Number(challan.qty || 0) * Number(challan.rate || 0),
     gstPercent: challan.gstPercent ?? 18,
     jobNumber: challan.jobNumber || '',

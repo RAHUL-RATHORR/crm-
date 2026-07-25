@@ -22,13 +22,13 @@ function docKeys(docId, docNo) {
 
 export function setStoredItemNotes(docId, docNo, items = []) {
   const map = readMap();
-  const notes = (items || [])
-    .map((item, index) => ({
-      index,
-      description: (item.description || '').trim(),
-      note: (item.descriptionNote || '').trim(),
-    }))
-    .filter((entry) => entry.note);
+  const notes = (items || []).map((item, index) => ({
+    index,
+    description: (item.description || '').trim(),
+    note: (item.descriptionNote || '').trim(),
+    per: (item.per || '').trim(),
+    hsn: (item.hsn || '').trim(),
+  }));
 
   docKeys(docId, docNo).forEach((key) => {
     map[key] = notes;
@@ -67,7 +67,15 @@ export function mergeItemNotes(doc) {
         (entry) => entry.description?.toLowerCase() === (item.description || '').trim().toLowerCase(),
       );
       const note = byIndex?.note || byDesc?.note || '';
-      return note ? { ...item, descriptionNote: note } : item;
+      const per = byIndex?.per || byDesc?.per || '';
+      const hsn = byIndex?.hsn || byDesc?.hsn || '';
+      if (!note && !per && !hsn) return item;
+      return {
+        ...item,
+        ...(note ? { descriptionNote: note } : {}),
+        ...(per ? { per } : {}),
+        ...(hsn ? { hsn } : {}),
+      };
     }),
   };
 }

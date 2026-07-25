@@ -81,7 +81,9 @@ export function mergePrintDoc(base, printDoc) {
     const printItem = printDoc.items?.[index];
     return {
       ...item,
-      descriptionNote: item.descriptionNote || printItem?.descriptionNote || '',
+      descriptionNote: printItem?.descriptionNote || item.descriptionNote || '',
+      hsn: printItem?.hsn || item.hsn || '',
+      per: printItem?.per || item.per || '',
     };
   });
 

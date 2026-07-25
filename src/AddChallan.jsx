@@ -35,6 +35,7 @@ const itemFromJobCard = (card) => ({
 const defaultItem = () => ({
   description: '',
   descriptionNote: '',
+  hsn: '',
   qty: 0,
   rate: 0,
   per: 'PCS',
@@ -55,6 +56,7 @@ const backfillItemForEdit = (item, editData) => {
   return {
     description: item.description || '',
     descriptionNote: item.descriptionNote || '',
+    hsn: item.hsn || '',
     qty,
     rate,
     per: item.per ?? 'PCS',
@@ -292,7 +294,7 @@ const AddChallan = () => {
 
   const handleItemChange = (index, field, value) => {
     const currentItem = formData.items[index];
-    if (currentItem?.lockedFromMaster && ['per', 'gstPercent'].includes(field)) {
+    if (currentItem?.lockedFromMaster && ['gstPercent', 'hsn'].includes(field)) {
       return;
     }
     const updatedItems = [...formData.items];
@@ -309,7 +311,7 @@ const AddChallan = () => {
     updatedItems[index] = calcItemTotals({
       ...updatedItems[index],
       ...masterItemToLineFields(masterItem, {
-        includeHsn: false,
+        includeHsn: true,
         currentQty: updatedItems[index].qty,
         existingNote: updatedItems[index].descriptionNote,
       }),
@@ -750,10 +752,11 @@ const AddChallan = () => {
             Item Details
           </div>
           <div className="overflow-x-auto overflow-y-visible -mx-1 px-1">
-            <table className="crm-items-table w-full text-left border-collapse min-w-220">
+            <table className="crm-items-table w-full text-left border-collapse min-w-245">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider w-56">Description *</th>
+                  <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider w-40">HSN/SAC</th>
                   <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider text-center w-24">Qty *</th>
                   <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider text-center w-28">Rate *</th>
                   <th className="px-6 py-3 text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider text-center w-20">per</th>
@@ -776,6 +779,20 @@ const AddChallan = () => {
                         onSelectMaster={(masterItem) => applyMasterItemToRow(index, masterItem)}
                         masterItems={masterItems}
                         required
+                      />
+                    </td>
+                    <td className="px-6 py-4">
+                      <input
+                        type="text"
+                        value={formData.items[index]?.hsn || ''}
+                        onChange={(e) => handleItemChange(index, 'hsn', e.target.value)}
+                        placeholder="HSN/SAC"
+                        readOnly={isListedItem}
+                        title={isListedItem ? LISTED_ITEM_FIELD_HINT : undefined}
+                        className={listedItemInputClass(
+                          isListedItem,
+                          'w-full bg-white border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm',
+                        )}
                       />
                     </td>
                     <td className="px-2 py-4 text-center">
@@ -811,12 +828,7 @@ const AddChallan = () => {
                           value={item.per ?? ''}
                           onChange={(e) => handleItemChange(index, 'per', e.target.value)}
                           placeholder="PCS"
-                          readOnly={isListedItem}
-                          title={isListedItem ? LISTED_ITEM_FIELD_HINT : undefined}
-                          className={listedItemInputClass(
-                            isListedItem,
-                            'w-16 bg-white border border-gray-200 rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm text-center uppercase',
-                          )}
+                          className="w-16 bg-white border border-gray-200 rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm text-center"
                         />
                       </div>
                     </td>
