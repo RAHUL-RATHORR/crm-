@@ -399,11 +399,11 @@
   color: #000;
 }
 
-.tax-invoice .tax-item-print-desc .tax-item-print-note {
+.tax-invoice .tax-item-print-desc .tax-item-print-note,
+.tax-invoice .tax-item-print-note {
   font-weight: 600;
   font-size: 9px;
-  color: #000;
-  margin-top: 2px;
+  color: #111;
   line-height: 1.25;
 }
 
@@ -1324,7 +1324,7 @@ tr.tax-terms-bank-section {
   .tax-invoice-print-page .tax-item-print-note {
     font-weight: 600 !important;
     font-size: 9px !important;
-    color: #000 !important;
+    color: #111 !important;
   }
 
   .tax-invoice-print-page .tax-footer-col {
