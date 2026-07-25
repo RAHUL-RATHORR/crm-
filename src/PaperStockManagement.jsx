@@ -67,6 +67,7 @@ const PaperStockManagement = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [message, setMessage] = useState({ type: '', text: '' });
   const [historyModal, setHistoryModal] = useState({ open: false, item: null, rows: [], loading: false });
+  const [deletingHistoryId, setDeletingHistoryId] = useState(null);
   const [addModal, setAddModal] = useState({ open: false, item: null, saving: false });
   const [addForm, setAddForm] = useState({
     coverQuantity: '',
@@ -331,6 +332,37 @@ const PaperStockManagement = () => {
 
   const closeStockHistory = () => {
     setHistoryModal({ open: false, item: null, rows: [], loading: false });
+    setDeletingHistoryId(null);
+  };
+
+  const deleteHistoryEntry = async (row) => {
+    if (!window.confirm('Delete this entry? Remaining stock will be adjusted.')) return;
+
+    setDeletingHistoryId(row._id);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/paper-stock/transactions/${row._id}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        setHistoryModal((prev) => ({
+          ...prev,
+          rows: prev.rows.filter((entry) => entry._id !== row._id),
+        }));
+        fetchStock();
+        setMessage({ type: 'success', text: 'History entry deleted.' });
+      } else {
+        setMessage({ type: 'error', text: data.error || 'Could not delete entry.' });
+      }
+    } catch (err) {
+      console.error('Delete history error:', err);
+      setMessage({ type: 'error', text: 'Server error' });
+    } finally {
+      setDeletingHistoryId(null);
+    }
+
+    setTimeout(() => setMessage({ type: '', text: '' }), 3000);
   };
 
   return (
@@ -1067,6 +1099,7 @@ const PaperStockManagement = () => {
                       <th className="px-4 py-3">Challan No.</th>
                       <th className="px-4 py-3">Invoice No.</th>
                       <th className="px-4 py-3 text-right">Qty Added</th>
+                      <th className="px-4 py-3 text-center">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
@@ -1101,6 +1134,17 @@ const PaperStockManagement = () => {
                         </td>
                         <td className="px-4 py-3 text-sm font-black text-emerald-700 text-right">
                           +{Number(row.quantity || 0).toLocaleString()} Sheets
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <button
+                            type="button"
+                            onClick={() => deleteHistoryEntry(row)}
+                            disabled={deletingHistoryId === row._id}
+                            className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-all disabled:opacity-50"
+                            title="Delete entry"
+                          >
+                            <Trash2 size={16} />
+                          </button>
                         </td>
                       </tr>
                     ))}

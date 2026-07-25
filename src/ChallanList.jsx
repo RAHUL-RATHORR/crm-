@@ -51,7 +51,15 @@ const ChallanList = () => {
     ? jobCards.find((card) => card.jobNumber === primaryChallan.jobNumber)
     : null;
 
-  const challanPartyFallback = primaryChallan ? { partyName: primaryChallan.partyName } : {};
+  const challanPartyFallback = primaryChallan
+    ? {
+        partyName: primaryChallan.partyName,
+        partyAddress: primaryChallan.partyAddress,
+        partyContact: primaryChallan.partyContact,
+        partyEmail: primaryChallan.partyEmail,
+        partyGst: primaryChallan.partyGst,
+      }
+    : {};
   const billTo = getBillToDetails(linkedJobCard, challanPartyFallback);
   const shipTo = getShipToDetails(linkedJobCard, challanPartyFallback);
   const billToState = getStateFromGst(billTo.gstNo);

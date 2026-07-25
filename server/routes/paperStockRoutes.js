@@ -3,6 +3,7 @@ const router = express.Router();
 import PaperStock from '../models/PaperStock.js';
 import PaperStockTransaction from '../models/PaperStockTransaction.js';
 import { logPaperStockTransaction } from '../utils/paperStockTransactions.js';
+import { syncTotalQuantity } from '../utils/paperStockDeduction.js';
 
 // GET /api/paper-stock/transactions - Stock add/deduct history
 router.get('/transactions', async (req, res) => {
@@ -19,6 +20,41 @@ router.delete('/transactions', async (req, res) => {
   try {
     const result = await PaperStockTransaction.deleteMany({});
     res.json({ message: 'All transaction history cleared', deletedCount: result.deletedCount });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE /api/paper-stock/transactions/:transactionId - Delete one history entry
+router.delete('/transactions/:transactionId', async (req, res) => {
+  try {
+    const txn = await PaperStockTransaction.findById(req.params.transactionId);
+    if (!txn) return res.status(404).json({ error: 'Transaction not found' });
+
+    const stock = txn.paperStockId ? await PaperStock.findById(txn.paperStockId) : null;
+    const qty = Number(txn.quantity) || 0;
+
+    if (stock && qty > 0) {
+      if (txn.transactionType === 'add') {
+        if (txn.paperType === 'cover') {
+          stock.coverQuantity = Math.max(0, (Number(stock.coverQuantity) || 0) - qty);
+        } else {
+          stock.innerQuantity = Math.max(0, (Number(stock.innerQuantity) || 0) - qty);
+        }
+      } else if (txn.transactionType === 'deduct') {
+        if (txn.paperType === 'cover') {
+          stock.coverQuantity = (Number(stock.coverQuantity) || 0) + qty;
+        } else {
+          stock.innerQuantity = (Number(stock.innerQuantity) || 0) + qty;
+        }
+      }
+      syncTotalQuantity(stock);
+      stock.updatedAt = Date.now();
+      await stock.save();
+    }
+
+    await txn.deleteOne();
+    res.json({ message: 'Transaction deleted', stock });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

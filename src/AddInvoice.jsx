@@ -621,6 +621,39 @@ const AddInvoice = () => {
                 />
               </div>
             )}
+            <div className="space-y-1 sm:col-span-2">
+              <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Address</label>
+              <input
+                type="text"
+                name="partyAddress"
+                value={formData.partyAddress}
+                onChange={handleInputChange}
+                placeholder="Party address"
+                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">E-MAIL</label>
+              <input
+                type="email"
+                name="partyEmail"
+                value={formData.partyEmail}
+                onChange={handleInputChange}
+                placeholder="Email address"
+                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">MOBILE</label>
+              <input
+                type="text"
+                name="partyContact"
+                value={formData.partyContact}
+                onChange={handleInputChange}
+                placeholder="Mobile number"
+                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+              />
+            </div>
           </div>
         </div>
 
