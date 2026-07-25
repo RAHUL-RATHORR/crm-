@@ -350,12 +350,7 @@ export const ItemPrintDescription = ({ item }) => {
   const description = getItemPrintDescription(item);
   const note = getItemPrintNote(item);
   if (!note) return description;
-  return (
-    <div className="tax-item-print-desc">
-      <div>{description}</div>
-      <div className="tax-item-print-note">{note}</div>
-    </div>
-  );
+  return `${description} (${note})`;
 };
 
 export const ClassicTaxItemRow = ({ row, isIGST = false, children, stripeClass = 'tax-items-stripe-row tax-stripe-white' }) => {
