@@ -125,6 +125,14 @@ const AddChallan = () => {
     partyContact: editData?.partyContact || '',
     partyEmail: editData?.partyEmail || '',
     partyGst: editData?.partyGst || '',
+    useShipAddress: !!(editData?.useShipAddress || storedExtras?.useShipAddress || editData?.shipAddress || editData?.shipPartyName || storedExtras?.shipAddress || storedExtras?.shipPartyName),
+    shipPartyName: editData?.shipPartyName || storedExtras?.shipPartyName || '',
+    shipAddress: editData?.shipAddress || storedExtras?.shipAddress || '',
+    shipContactNo: editData?.shipContactNo || storedExtras?.shipContactNo || '',
+    shipEmailId: editData?.shipEmailId || storedExtras?.shipEmailId || '',
+    shipGstNo: editData?.shipGstNo || storedExtras?.shipGstNo || '',
+    shipState: editData?.shipState || storedExtras?.shipState || '',
+    shipStateCode: editData?.shipStateCode || storedExtras?.shipStateCode || '',
     items: normalizeItems(editData),
     total: editData ? editData.total : 0,
     gstAmount: editData ? (editData.gstAmount || 0) : 0,
@@ -200,7 +208,9 @@ const AddChallan = () => {
 
   const handleInputChange = (e) => {
     const { name, value: rawValue } = e.target;
-    const value = name === 'stateCode' ? rawValue.replace(/\D/g, '').slice(0, 2) : rawValue;
+    const value = (name === 'stateCode' || name === 'shipStateCode')
+      ? rawValue.replace(/\D/g, '').slice(0, 2)
+      : rawValue;
     if (name === 'jobCardId') {
       const selectedCard = jobCards.find((card) => card._id === value || card.id === parseInt(value, 10));
       setPickedJobIds([]);
@@ -212,6 +222,12 @@ const AddChallan = () => {
         partyContact: selectedCard?.contactNo || prev.partyContact,
         partyEmail: selectedCard?.emailId || prev.partyEmail,
         partyGst: selectedCard?.gstNo || prev.partyGst,
+        useShipAddress: !!(selectedCard?.useShipAddress || selectedCard?.shipAddress || selectedCard?.shipPartyName),
+        shipPartyName: selectedCard?.shipPartyName || prev.shipPartyName,
+        shipAddress: selectedCard?.shipAddress || prev.shipAddress,
+        shipContactNo: selectedCard?.shipContactNo || prev.shipContactNo,
+        shipEmailId: selectedCard?.shipEmailId || prev.shipEmailId,
+        shipGstNo: selectedCard?.shipGstNo || prev.shipGstNo,
         items: selectedCard ? [itemFromJobCard(selectedCard)] : prev.items,
       }));
       return;
@@ -385,6 +401,14 @@ const AddChallan = () => {
       partyContact: formData.partyContact,
       partyEmail: formData.partyEmail,
       partyGst: formData.partyGst,
+      useShipAddress: !!formData.useShipAddress,
+      shipPartyName: formData.useShipAddress ? (formData.shipPartyName || '') : '',
+      shipAddress: formData.useShipAddress ? (formData.shipAddress || '') : '',
+      shipContactNo: formData.useShipAddress ? (formData.shipContactNo || '') : '',
+      shipEmailId: formData.useShipAddress ? (formData.shipEmailId || '') : '',
+      shipGstNo: formData.useShipAddress ? (formData.shipGstNo || '') : '',
+      shipState: formData.useShipAddress ? (formData.shipState || '') : '',
+      shipStateCode: formData.useShipAddress ? (formData.shipStateCode || '') : '',
       items: mapLineItemsForSave(computedItems),
       total: totals.subTotal,
       freight: totals.freight,
@@ -425,11 +449,22 @@ const AddChallan = () => {
     const saved = await response.json();
     const paymentType = saved.paymentType || formData.paymentType || '';
     setStoredPaymentType(saved._id, saved.challanNo, paymentType);
+    const shipDetails = {
+      useShipAddress: !!formData.useShipAddress,
+      shipPartyName: formData.useShipAddress ? (formData.shipPartyName || '') : '',
+      shipAddress: formData.useShipAddress ? (formData.shipAddress || '') : '',
+      shipContactNo: formData.useShipAddress ? (formData.shipContactNo || '') : '',
+      shipEmailId: formData.useShipAddress ? (formData.shipEmailId || '') : '',
+      shipGstNo: formData.useShipAddress ? (formData.shipGstNo || '') : '',
+      shipState: formData.useShipAddress ? (formData.shipState || '') : '',
+      shipStateCode: formData.useShipAddress ? (formData.shipStateCode || '') : '',
+    };
     const extras = {
       vehicleNo: saved.vehicleNo || formData.vehicleNo || '',
       state: saved.state || formData.state || 'Rajasthan',
       stateCode: saved.stateCode || formData.stateCode || '08',
       freight: Number(saved.freight) || Number(formData.freight) || 0,
+      ...shipDetails,
     };
     setStoredDocumentExtras(saved._id, saved.challanNo, extras);
     const savedItems = mapLineItemsForSave(formData.items.map(calcItemTotals)).map((item, index) => ({
@@ -677,6 +712,105 @@ const AddChallan = () => {
               />
             </div>
           </div>
+
+          <div className="px-4 sm:px-6 pb-4">
+            <label className="inline-flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={!!formData.useShipAddress}
+                onChange={(e) => setFormData((prev) => ({ ...prev, useShipAddress: e.target.checked }))}
+                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-sm font-semibold text-gray-800">Select Ship Address</span>
+            </label>
+          </div>
+
+          {formData.useShipAddress && (
+            <div className="px-4 sm:px-6 pb-6 border-t border-gray-100 pt-4">
+              <p className="text-xs font-bold text-blue-700 uppercase tracking-wider mb-4">Ship Address Details</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                <div className="space-y-1">
+                  <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Party Name</label>
+                  <input
+                    type="text"
+                    name="shipPartyName"
+                    value={formData.shipPartyName}
+                    onChange={handleInputChange}
+                    placeholder="Ship party name"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+                  />
+                </div>
+                <div className="space-y-1 sm:col-span-2">
+                  <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Address</label>
+                  <input
+                    type="text"
+                    name="shipAddress"
+                    value={formData.shipAddress}
+                    onChange={handleInputChange}
+                    placeholder="Ship address"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">MOBILE</label>
+                  <input
+                    type="text"
+                    name="shipContactNo"
+                    value={formData.shipContactNo}
+                    onChange={handleInputChange}
+                    placeholder="Ship mobile"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">E-MAIL</label>
+                  <input
+                    type="email"
+                    name="shipEmailId"
+                    value={formData.shipEmailId}
+                    onChange={handleInputChange}
+                    placeholder="Ship email"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">GST No.</label>
+                  <input
+                    type="text"
+                    name="shipGstNo"
+                    value={formData.shipGstNo}
+                    onChange={handleInputChange}
+                    placeholder="Ship GST number"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">State</label>
+                  <input
+                    type="text"
+                    name="shipState"
+                    value={formData.shipState}
+                    onChange={handleInputChange}
+                    placeholder="Rajasthan"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">State Code</label>
+                  <input
+                    type="text"
+                    name="shipStateCode"
+                    value={formData.shipStateCode}
+                    onChange={handleInputChange}
+                    inputMode="numeric"
+                    maxLength={2}
+                    placeholder="08"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="px-4 sm:px-6 pb-2">
             <div className="space-y-1 max-w-xl">

@@ -38,6 +38,14 @@ export function setStoredDocumentExtras(id, docNo, extras = {}) {
     state: extras.state != null ? String(extras.state) : '',
     stateCode: extras.stateCode != null ? String(extras.stateCode) : '',
     freight: extras.freight != null ? Number(extras.freight) || 0 : 0,
+    useShipAddress: !!extras.useShipAddress,
+    shipPartyName: extras.shipPartyName != null ? String(extras.shipPartyName) : '',
+    shipAddress: extras.shipAddress != null ? String(extras.shipAddress) : '',
+    shipContactNo: extras.shipContactNo != null ? String(extras.shipContactNo) : '',
+    shipEmailId: extras.shipEmailId != null ? String(extras.shipEmailId) : '',
+    shipGstNo: extras.shipGstNo != null ? String(extras.shipGstNo) : '',
+    shipState: extras.shipState != null ? String(extras.shipState) : '',
+    shipStateCode: extras.shipStateCode != null ? String(extras.shipStateCode) : '',
   };
   storageKeys(id, docNo).forEach((key) => {
     map[key] = value;
@@ -66,6 +74,21 @@ export function mergeDocumentExtras(doc) {
     state: doc.state || stored.state || '',
     stateCode: doc.stateCode || stored.stateCode || '',
     freight: Number(doc.freight) > 0 ? Number(doc.freight) : (Number(stored.freight) || Number(doc.freight) || 0),
+    useShipAddress: !!(
+      doc.useShipAddress
+      || stored.useShipAddress
+      || doc.shipPartyName
+      || stored.shipPartyName
+      || doc.shipAddress
+      || stored.shipAddress
+    ),
+    shipPartyName: doc.shipPartyName || stored.shipPartyName || '',
+    shipAddress: doc.shipAddress || stored.shipAddress || '',
+    shipContactNo: doc.shipContactNo || stored.shipContactNo || '',
+    shipEmailId: doc.shipEmailId || stored.shipEmailId || '',
+    shipGstNo: doc.shipGstNo || stored.shipGstNo || '',
+    shipState: doc.shipState || stored.shipState || '',
+    shipStateCode: doc.shipStateCode || stored.shipStateCode || '',
   };
 }
 
@@ -94,6 +117,21 @@ export function mergePrintDoc(base, printDoc) {
     state: base.state || printDoc.state || '',
     stateCode: base.stateCode || printDoc.stateCode || '',
     freight: Number(base.freight) > 0 ? Number(base.freight) : (Number(printDoc.freight) || Number(base.freight) || 0),
+    useShipAddress: !!(
+      printDoc.useShipAddress
+      || base.useShipAddress
+      || printDoc.shipPartyName
+      || base.shipPartyName
+      || printDoc.shipAddress
+      || base.shipAddress
+    ),
+    shipPartyName: printDoc.shipPartyName || base.shipPartyName || '',
+    shipAddress: printDoc.shipAddress || base.shipAddress || '',
+    shipContactNo: printDoc.shipContactNo || base.shipContactNo || '',
+    shipEmailId: printDoc.shipEmailId || base.shipEmailId || '',
+    shipGstNo: printDoc.shipGstNo || base.shipGstNo || '',
+    shipState: printDoc.shipState || base.shipState || '',
+    shipStateCode: printDoc.shipStateCode || base.shipStateCode || '',
     items: mergedItems.length ? mergedItems : (base.items || printDoc.items),
   };
 }

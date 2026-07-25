@@ -58,12 +58,24 @@ const ChallanList = () => {
         partyContact: primaryChallan.partyContact,
         partyEmail: primaryChallan.partyEmail,
         partyGst: primaryChallan.partyGst,
+        state: primaryChallan.state || '',
+        stateCode: primaryChallan.stateCode || '',
+        useShipAddress: !!primaryChallan.useShipAddress,
+        shipPartyName: primaryChallan.shipPartyName || '',
+        shipAddress: primaryChallan.shipAddress || '',
+        shipContactNo: primaryChallan.shipContactNo || '',
+        shipEmailId: primaryChallan.shipEmailId || '',
+        shipGstNo: primaryChallan.shipGstNo || '',
+        shipState: primaryChallan.shipState || '',
+        shipStateCode: primaryChallan.shipStateCode || '',
       }
     : {};
   const billTo = getBillToDetails(linkedJobCard, challanPartyFallback);
   const shipTo = getShipToDetails(linkedJobCard, challanPartyFallback);
   const billToState = getStateFromGst(billTo.gstNo);
-  const shipToState = getStateFromGst(shipTo.gstNo);
+  const shipToState = (shipTo.state || shipTo.stateCode)
+    ? { state: shipTo.state || '', code: shipTo.stateCode || '' }
+    : getStateFromGst(shipTo.gstNo);
 
   const challanFallbackGst = primaryChallan?.gstPercent ?? 18;
   const freightGstPercent = challanItems[0]?.gstPercent ?? challanFallbackGst;

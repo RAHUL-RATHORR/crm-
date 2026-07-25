@@ -9,6 +9,22 @@ export const getBillToDetails = (jobCard, partyFallback = {}) => ({
 export const getShipToDetails = (jobCard, partyFallback = {}) => {
   const billTo = getBillToDetails(jobCard, partyFallback);
 
+  // Challan/invoice saved ship choice — when off, Shipped to matches Billed to.
+  if ('useShipAddress' in partyFallback) {
+    if (!partyFallback.useShipAddress) {
+      return billTo;
+    }
+    return {
+      partyName: (partyFallback.shipPartyName || '').trim() || billTo.partyName,
+      address: (partyFallback.shipAddress || '').trim() || billTo.address,
+      contactNo: (partyFallback.shipContactNo || '').trim() || billTo.contactNo,
+      gstNo: (partyFallback.shipGstNo || '').trim() || billTo.gstNo,
+      emailId: (partyFallback.shipEmailId || '').trim() || billTo.emailId,
+      state: (partyFallback.shipState || '').trim() || (partyFallback.state || '').trim(),
+      stateCode: (partyFallback.shipStateCode || '').trim() || (partyFallback.stateCode || '').trim(),
+    };
+  }
+
   if (!jobCard?.useShipAddress) {
     return billTo;
   }
