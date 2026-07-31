@@ -30,6 +30,7 @@ const invoiceSchema = new mongoose.Schema({
   gstPercent: { type: Number, default: 0 },
   gstType: { type: String, default: 'CGST/SGST' },
   gstAmount: { type: Number, default: 0 },
+  roundOff: { type: Number, default: 0 },
   totalAmount: { type: Number, default: 0 },
   paidAmount: { type: Number, default: 0 },
   paymentStatus: { type: String, default: 'Pending' },

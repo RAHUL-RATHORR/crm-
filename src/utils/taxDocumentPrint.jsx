@@ -407,6 +407,7 @@ export const TaxClassicItemsBlock = ({
   emptyProductRows = 2,
   amountWithTax = 0,
   amountInWords = '',
+  roundOff = 0,
   renderItemDescription,
 }) => {
   let stripeIndex = 0;
@@ -435,6 +436,7 @@ export const TaxClassicItemsBlock = ({
         totalSgst={totalSgst}
         totalIgst={totalIgst}
         isIGST={isIGST}
+        roundOff={roundOff}
         getStripeClass={getStripeClass}
       />
       {emptyProductRows > 0 && <TaxItemEmptyRow rowCount={emptyProductRows} />}
@@ -674,12 +676,12 @@ export const TaxChargeSubRow = ({ label, amount, stripeClass = 'tax-items-stripe
   </tr>
 );
 
-export function getTaxChargeSubRowCount(freight = 0, isIGST = false) {
+export function getTaxChargeSubRowCount(freight = 0, isIGST = false, roundOff = 0) {
   const gstRows = isIGST ? 1 : 2;
-  return gstRows + (freight > 0 ? 1 : 0);
+  return gstRows + (freight > 0 ? 1 : 0) + (roundOff ? 1 : 0);
 }
 
-export const TaxItemGstChargeRows = ({ freight = 0, totalCgst = 0, totalSgst = 0, totalIgst = 0, isIGST = false, getStripeClass }) => {
+export const TaxItemGstChargeRows = ({ freight = 0, totalCgst = 0, totalSgst = 0, totalIgst = 0, isIGST = false, roundOff = 0, getStripeClass }) => {
   const stripe = () => (getStripeClass ? getStripeClass() : 'tax-items-stripe-row tax-stripe-grey');
   return (
     <>
@@ -694,6 +696,9 @@ export const TaxItemGstChargeRows = ({ freight = 0, totalCgst = 0, totalSgst = 0
           <TaxChargeSubRow label="CGST Central Gst" amount={totalCgst} stripeClass={stripe()} />
         </>
       )}
+      {roundOff ? (
+        <TaxChargeSubRow label="Round Off" amount={roundOff} stripeClass={stripe()} />
+      ) : null}
     </>
   );
 };

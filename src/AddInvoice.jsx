@@ -30,12 +30,26 @@ const defaultInvoiceItem = () => ({
   lockedFromMaster: false,
 });
 
+const roundMoney = (value) => Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+
+const formatRupee = (value) =>
+  `₹ ${Number(value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+const formatRoundOff = (value) => {
+  const amount = roundMoney(value);
+  if (Math.abs(amount) < 0.005) return formatRupee(0);
+  const sign = amount > 0 ? '+' : '-';
+  return `${sign}${formatRupee(Math.abs(amount))}`;
+};
+
 const calcInvoiceItem = (item, fallbackGst = 18) => {
   const qty = parseFloat(item.qty || 0);
   const rate = parseFloat(item.rate || 0);
   const gstPercent = parseFloat(item.gstPercent ?? fallbackGst);
-  const total = qty * rate;
-  const gstAmount = (total * gstPercent) / 100;
+  const total = item.manualTotal
+    ? roundMoney(item.total)
+    : roundMoney(qty * rate);
+  const gstAmount = roundMoney((total * gstPercent) / 100);
   return { ...item, qty, rate, gstPercent, total, gstAmount };
 };
 
@@ -92,7 +106,15 @@ const AddInvoice = () => {
   const [isPartyDropdownOpen, setIsPartyDropdownOpen] = useState(false);
   const [isSavingInvoice, setIsSavingInvoice] = useState(false);
   const [stateFieldError, setStateFieldError] = useState('');
+  const [grandTotalOverride, setGrandTotalOverride] = useState(() => {
+    if (editData?.totalAmount != null && editData.totalAmount !== '') {
+      return String(editData.totalAmount);
+    }
+    return null;
+  });
   const partyDropdownRef = useRef(null);
+
+  const resetGrandTotalOverride = () => setGrandTotalOverride(null);
 
   const partySuggestions = useMemo(() => buildPartySuggestions(jobCards), [jobCards]);
 
@@ -145,6 +167,9 @@ const AddInvoice = () => {
 
       return { ...prev, [name]: updatedValue, gstType: newGstType };
     });
+    if (name === 'freight') {
+      resetGrandTotalOverride();
+    }
     if (name === 'party') {
       setIsPartyDropdownOpen(true);
     }
@@ -177,6 +202,7 @@ const AddInvoice = () => {
   };
 
   const handleItemChange = (id, field, value) => {
+    resetGrandTotalOverride();
     setItems((prevItems) =>
       prevItems.map((item) => {
         if (item.id !== id) return item;
@@ -187,12 +213,20 @@ const AddInvoice = () => {
         if (field === 'description') {
           updates.lockedFromMaster = false;
         }
-        return calcInvoiceItem({ ...item, ...updates });
+        if (field === 'total') {
+          updates.manualTotal = true;
+          updates.total = roundMoney(parseFloat(value) || 0);
+        }
+        if (['qty', 'rate', 'gstPercent'].includes(field)) {
+          updates.manualTotal = false;
+        }
+        return { ...item, ...updates };
       })
     );
   };
 
   const applyMasterItemToRow = (id, masterItem) => {
+    resetGrandTotalOverride();
     setItems((prevItems) =>
       prevItems.map((item) => {
         if (item.id !== id) return item;
@@ -210,11 +244,13 @@ const AddInvoice = () => {
   };
 
   const addRow = () => {
+    resetGrandTotalOverride();
     setItems((prev) => [...prev, defaultInvoiceItem()]);
   };
 
   const removeRow = (id) => {
     if (items.length > 1) {
+      resetGrandTotalOverride();
       setItems(items.filter(item => item.id !== id));
     }
   };
@@ -223,13 +259,43 @@ const AddInvoice = () => {
 
   useMasterItemsAutoSave(computedItems, masterItems, setMasterItems, API_BASE_URL);
 
-  const subTotal = computedItems.reduce((sum, item) => sum + (item.total || 0), 0);
-  const itemsGstAmount = computedItems.reduce((sum, item) => sum + (item.gstAmount || 0), 0);
-  const freight = Number(formData.freight) || 0;
-  const freightGstPercent = computedItems[0]?.gstPercent ?? 18;
-  const freightGstAmount = (freight * freightGstPercent) / 100;
-  const gstAmount = itemsGstAmount + freightGstAmount;
-  const grandTotal = subTotal + freight + gstAmount;
+  const {
+    subTotal,
+    freight,
+    gstAmount,
+    grandTotal,
+    roundOff,
+  } = useMemo(() => {
+    const itemSubTotal = roundMoney(computedItems.reduce((sum, item) => sum + (item.total || 0), 0));
+    const itemsGstAmount = roundMoney(computedItems.reduce((sum, item) => sum + (item.gstAmount || 0), 0));
+    const freightValue = roundMoney(Number(formData.freight) || 0);
+    const freightGstPercent = computedItems[0]?.gstPercent ?? 18;
+    const freightGstAmount = roundMoney((freightValue * freightGstPercent) / 100);
+    const gstTotal = roundMoney(itemsGstAmount + freightGstAmount);
+    const rawGrandTotal = roundMoney(itemSubTotal + freightValue + gstTotal);
+    const autoGrandTotal = Math.round(rawGrandTotal);
+    const autoRoundOff = roundMoney(autoGrandTotal - rawGrandTotal);
+
+    if (grandTotalOverride != null && grandTotalOverride !== '') {
+      const manualGrandTotal = roundMoney(parseFloat(grandTotalOverride) || 0);
+      return {
+        subTotal: itemSubTotal,
+        freight: freightValue,
+        gstAmount: gstTotal,
+        grandTotal: manualGrandTotal,
+        roundOff: roundMoney(manualGrandTotal - rawGrandTotal),
+      };
+    }
+
+    return {
+      subTotal: itemSubTotal,
+      freight: freightValue,
+      gstAmount: gstTotal,
+      grandTotal: autoGrandTotal,
+      roundOff: autoRoundOff,
+    };
+  }, [computedItems, formData.freight, grandTotalOverride]);
+
   const invoiceGstPercent = computedItems.length
     ? Math.round(computedItems.reduce((sum, item) => sum + item.gstPercent, 0) / computedItems.length)
     : 18;
@@ -280,6 +346,7 @@ const AddInvoice = () => {
     gstPercent: invoiceGstPercent,
     gstType: formData.gstType,
     gstAmount,
+    roundOff,
     totalAmount: grandTotal,
     paymentType: formData.paymentType || '',
     vehicleNo: formData.vehicleNo || '',
@@ -648,6 +715,8 @@ const AddInvoice = () => {
                           value={item.qty}
                           onChange={(e) => handleItemChange(item.id, 'qty', e.target.value)}
                           required
+                          min="0"
+                          step="0.01"
                           className="w-20 bg-white border border-gray-200 rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm text-center"
                         />
                       </div>
@@ -659,6 +728,8 @@ const AddInvoice = () => {
                           value={item.rate}
                           onChange={(e) => handleItemChange(item.id, 'rate', e.target.value)}
                           required
+                          min="0"
+                          step="0.01"
                           className="w-24 bg-white border border-gray-200 rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm text-center"
                         />
                       </div>
@@ -699,10 +770,12 @@ const AddInvoice = () => {
                     <td className="px-2 py-4 text-center">
                       <div className="flex justify-center">
                         <input
-                          type="text"
-                          value={Number(item.total || 0).toFixed(2)}
-                          readOnly
-                          className="w-28 bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 focus:outline-none text-sm text-center font-semibold text-blue-700"
+                          type="number"
+                          value={roundMoney(item.total || 0).toFixed(2)}
+                          onChange={(e) => handleItemChange(item.id, 'total', e.target.value)}
+                          min="0"
+                          step="0.01"
+                          className="w-28 bg-white border border-gray-200 rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm text-center font-semibold text-blue-700"
                         />
                       </div>
                     </td>
@@ -742,11 +815,11 @@ const AddInvoice = () => {
         />
 
         {/* Calculations */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 space-y-2">
             <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Sub Total *</label>
             <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-base sm:text-lg font-semibold text-gray-800">
-              ₹ {subTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+              {formatRupee(subTotal)}
             </div>
           </div>
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 space-y-2">
@@ -765,7 +838,13 @@ const AddInvoice = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 space-y-2">
             <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">GST Amount</label>
             <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-base sm:text-lg font-semibold text-gray-800">
-              ₹ {gstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+              {formatRupee(gstAmount)}
+            </div>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 space-y-2">
+            <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Round Off</label>
+            <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-base sm:text-lg font-semibold text-gray-800">
+              {formatRoundOff(roundOff)}
             </div>
           </div>
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 space-y-2">
@@ -795,9 +874,23 @@ const AddInvoice = () => {
           </div>
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 space-y-2 sm:col-span-2 lg:col-span-1">
             <label className="text-[10px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">Grand Total</label>
-            <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-base sm:text-lg font-bold text-blue-600">
-              ₹ {grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-            </div>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={grandTotalOverride != null ? grandTotalOverride : grandTotal}
+              onChange={(e) => setGrandTotalOverride(e.target.value)}
+              onBlur={(e) => {
+                const value = e.target.value.trim();
+                if (value === '') {
+                  setGrandTotalOverride(null);
+                  return;
+                }
+                setGrandTotalOverride(String(roundMoney(parseFloat(value) || 0)));
+              }}
+              className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-base sm:text-lg font-bold text-blue-600"
+              placeholder="0.00"
+            />
           </div>
         </div>
 

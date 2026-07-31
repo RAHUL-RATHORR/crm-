@@ -73,7 +73,8 @@ const InvoiceList = () => {
   const totalIgst = itemLines.reduce((sum, row) => sum + row.igstAmt, 0) + freightIgstAmt;
   const amountBeforeTax = totalTaxable;
   const amountWithTax = selectedInvoice?.totalAmount || 0;
-  const productRowCount = itemLines.length + getTaxChargeSubRowCount(freight, isIGST);
+  const roundOff = Number(selectedInvoice?.roundOff) || 0;
+  const productRowCount = itemLines.length + getTaxChargeSubRowCount(freight, isIGST, roundOff);
   const emptyProductRows = selectedInvoice
     ? getEmptyProductRowCount(productRowCount, { itemLineCount: itemLines.length })
     : 0;
@@ -509,6 +510,7 @@ const InvoiceList = () => {
                       emptyProductRows={emptyProductRows}
                       amountWithTax={amountWithTax}
                       amountInWords={numberToWords(amountWithTax)}
+                      roundOff={roundOff}
                     />
 
                     <TaxAnalysisSection

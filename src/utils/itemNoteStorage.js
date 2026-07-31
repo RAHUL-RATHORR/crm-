@@ -84,6 +84,8 @@ export function mergeItemNotesList(docs) {
   return Array.isArray(docs) ? docs.map(mergeItemNotes) : [];
 }
 
+const roundMoney = (value) => Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+
 export function mapLineItemsForSave(items = []) {
   return items.map((item) => ({
     description: item.description || '',
@@ -92,9 +94,9 @@ export function mapLineItemsForSave(items = []) {
     qty: Number(item.qty) || 0,
     rate: Number(item.rate) || 0,
     per: String(item.per ?? '').trim() || 'PCS',
-    total: Number(item.total) || 0,
+    total: roundMoney(Number(item.total) || 0),
     gstPercent: Number(item.gstPercent) || 18,
-    gstAmount: Number(item.gstAmount) || 0,
+    gstAmount: roundMoney(Number(item.gstAmount) || 0),
     ...(item.jobNumber ? { jobNumber: item.jobNumber } : {}),
     ...(item.jobCardId ? { jobCardId: item.jobCardId } : {}),
   }));
