@@ -68,6 +68,31 @@ const normalizeInvoiceItems = (editData) => {
   return [defaultInvoiceItem()];
 };
 
+const computeInvoiceTotals = (computedItems, freightValue = 0) => {
+  const itemSubTotal = roundMoney(computedItems.reduce((sum, item) => sum + (item.total || 0), 0));
+  const itemsGstAmount = roundMoney(computedItems.reduce((sum, item) => sum + (item.gstAmount || 0), 0));
+  const freight = roundMoney(Number(freightValue) || 0);
+  const freightGstPercent = computedItems[0]?.gstPercent ?? 18;
+  const freightGstAmount = roundMoney((freight * freightGstPercent) / 100);
+  const gstAmount = roundMoney(itemsGstAmount + freightGstAmount);
+  const rawGrandTotal = roundMoney(itemSubTotal + freight + gstAmount);
+  const autoGrandTotal = Math.round(rawGrandTotal);
+  const autoRoundOff = roundMoney(autoGrandTotal - rawGrandTotal);
+  return { subTotal: itemSubTotal, freight, gstAmount, rawGrandTotal, autoGrandTotal, autoRoundOff };
+};
+
+const resolveInitialGrandTotalOverride = (editData, initialItems, freightValue = 0) => {
+  if (editData?.totalAmount == null || editData.totalAmount === '') return null;
+
+  const totals = computeInvoiceTotals(initialItems, freightValue);
+  const savedTotal = roundMoney(Number(editData.totalAmount));
+
+  if (Math.abs(savedTotal - totals.autoGrandTotal) < 0.005) return null;
+  if (Math.abs(savedTotal - totals.rawGrandTotal) < 0.005) return null;
+
+  return String(savedTotal);
+};
+
 const AddInvoice = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -106,12 +131,13 @@ const AddInvoice = () => {
   const [isPartyDropdownOpen, setIsPartyDropdownOpen] = useState(false);
   const [isSavingInvoice, setIsSavingInvoice] = useState(false);
   const [stateFieldError, setStateFieldError] = useState('');
-  const [grandTotalOverride, setGrandTotalOverride] = useState(() => {
-    if (editData?.totalAmount != null && editData.totalAmount !== '') {
-      return String(editData.totalAmount);
-    }
-    return null;
-  });
+  const [grandTotalOverride, setGrandTotalOverride] = useState(() =>
+    resolveInitialGrandTotalOverride(
+      editData,
+      normalizeInvoiceItems(editData),
+      editData ? (editData.freight ?? storedExtras?.freight ?? 0) : 0,
+    )
+  );
   const partyDropdownRef = useRef(null);
 
   const resetGrandTotalOverride = () => setGrandTotalOverride(null);
@@ -265,34 +291,29 @@ const AddInvoice = () => {
     gstAmount,
     grandTotal,
     roundOff,
+    autoGrandTotal,
   } = useMemo(() => {
-    const itemSubTotal = roundMoney(computedItems.reduce((sum, item) => sum + (item.total || 0), 0));
-    const itemsGstAmount = roundMoney(computedItems.reduce((sum, item) => sum + (item.gstAmount || 0), 0));
-    const freightValue = roundMoney(Number(formData.freight) || 0);
-    const freightGstPercent = computedItems[0]?.gstPercent ?? 18;
-    const freightGstAmount = roundMoney((freightValue * freightGstPercent) / 100);
-    const gstTotal = roundMoney(itemsGstAmount + freightGstAmount);
-    const rawGrandTotal = roundMoney(itemSubTotal + freightValue + gstTotal);
-    const autoGrandTotal = Math.round(rawGrandTotal);
-    const autoRoundOff = roundMoney(autoGrandTotal - rawGrandTotal);
+    const totals = computeInvoiceTotals(computedItems, formData.freight);
 
     if (grandTotalOverride != null && grandTotalOverride !== '') {
       const manualGrandTotal = roundMoney(parseFloat(grandTotalOverride) || 0);
       return {
-        subTotal: itemSubTotal,
-        freight: freightValue,
-        gstAmount: gstTotal,
+        subTotal: totals.subTotal,
+        freight: totals.freight,
+        gstAmount: totals.gstAmount,
         grandTotal: manualGrandTotal,
-        roundOff: roundMoney(manualGrandTotal - rawGrandTotal),
+        roundOff: roundMoney(manualGrandTotal - totals.rawGrandTotal),
+        autoGrandTotal: totals.autoGrandTotal,
       };
     }
 
     return {
-      subTotal: itemSubTotal,
-      freight: freightValue,
-      gstAmount: gstTotal,
-      grandTotal: autoGrandTotal,
-      roundOff: autoRoundOff,
+      subTotal: totals.subTotal,
+      freight: totals.freight,
+      gstAmount: totals.gstAmount,
+      grandTotal: totals.autoGrandTotal,
+      roundOff: totals.autoRoundOff,
+      autoGrandTotal: totals.autoGrandTotal,
     };
   }, [computedItems, formData.freight, grandTotalOverride]);
 
@@ -886,7 +907,12 @@ const AddInvoice = () => {
                   setGrandTotalOverride(null);
                   return;
                 }
-                setGrandTotalOverride(String(roundMoney(parseFloat(value) || 0)));
+                const parsed = roundMoney(parseFloat(value) || 0);
+                if (Math.abs(parsed - autoGrandTotal) < 0.005) {
+                  setGrandTotalOverride(null);
+                  return;
+                }
+                setGrandTotalOverride(String(parsed));
               }}
               className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-base sm:text-lg font-bold text-blue-600"
               placeholder="0.00"

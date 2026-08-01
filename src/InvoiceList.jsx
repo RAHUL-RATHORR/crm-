@@ -14,7 +14,7 @@ import { mergeItemNotes, mergeItemNotesList, removeStoredItemNotes } from './uti
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
 import { getBillToDetails, getShipToDetails } from './utils/shipAddress';
 import { numberToWords } from './utils/numberToWords';
-import { SELLER, fmtTaxDate, fmtAmt, getStateFromGst, formatStateWithCode, TaxFieldsTable, SellerGstinMsmeLines, TaxDocumentSignaturesRow, TaxTermsAndReceiverSignature, TaxBankAndAuthorisedSignature, buildTaxItemLine, getEmptyProductRowCount, CompanyBrandName, TaxCopyBox, TaxCopyTypeControls, DEFAULT_TAX_COPY_SELECTION, getSelectedCopyIds, getPreviewHighlightCopy, TaxInvoiceColGroup, getTaxTableColCount, getTaxTableHalfColSpans, getTaxChargeSubRowCount, TaxClassicItemsBlock, buildTaxAnalysisGroups, TaxAnalysisSection } from './utils/taxDocumentPrint';
+import { SELLER, fmtTaxDate, fmtAmt, getStateFromGst, formatStateWithCode, TaxFieldsTable, SellerGstinMsmeLines, TaxDocumentSignaturesRow, TaxTermsAndReceiverSignature, TaxBankAndAuthorisedSignature, buildTaxItemLine, getEmptyProductRowCount, CompanyBrandName, TaxCopyBox, TaxCopyTypeControls, DEFAULT_TAX_COPY_SELECTION, getSelectedCopyIds, getPreviewHighlightCopy, TaxInvoiceColGroup, getTaxTableColCount, getTaxTableHalfColSpans, getTaxChargeSubRowCount, TaxClassicItemsBlock, buildTaxAnalysisGroups, TaxAnalysisSection, resolveInvoicePrintTotals } from './utils/taxDocumentPrint';
 import { API_BASE_URL } from './utils/apiBase';
 
 const InvoiceList = () => {
@@ -66,15 +66,19 @@ const InvoiceList = () => {
         buildTaxItemLine(item, idx, selectedInvoice.gstPercent ?? 18, isIGST)
       )
     : [];
+  const totalQty = itemLines.reduce((sum, row) => sum + (Number(row.item.qty) || 0), 0);
 
   const totalTaxable = itemsSubTotal + freight;
   const totalCgst = itemLines.reduce((sum, row) => sum + row.cgstAmt, 0) + freightCgstAmt;
   const totalSgst = itemLines.reduce((sum, row) => sum + row.sgstAmt, 0) + freightSgstAmt;
   const totalIgst = itemLines.reduce((sum, row) => sum + row.igstAmt, 0) + freightIgstAmt;
-  const amountBeforeTax = totalTaxable;
-  const amountWithTax = selectedInvoice?.totalAmount || 0;
-  const roundOff = Number(selectedInvoice?.roundOff) || 0;
-  const productRowCount = itemLines.length + getTaxChargeSubRowCount(freight, isIGST, roundOff);
+  const rawTotalWithTax = itemsSubTotal + freight + totalCgst + totalSgst + totalIgst;
+  const { grandTotal: amountWithTax, roundOff } = resolveInvoicePrintTotals({
+    rawTotalWithTax,
+    savedTotalAmount: selectedInvoice?.totalAmount,
+    savedRoundOff: selectedInvoice?.roundOff,
+  });
+  const productRowCount = itemLines.length + getTaxChargeSubRowCount(freight, isIGST);
   const emptyProductRows = selectedInvoice
     ? getEmptyProductRowCount(productRowCount, { itemLineCount: itemLines.length })
     : 0;
@@ -511,6 +515,7 @@ const InvoiceList = () => {
                       amountWithTax={amountWithTax}
                       amountInWords={numberToWords(amountWithTax)}
                       roundOff={roundOff}
+                      totalQty={totalQty}
                     />
 
                     <TaxAnalysisSection

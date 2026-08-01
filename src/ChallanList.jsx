@@ -43,7 +43,7 @@ const ChallanList = () => {
   const primaryChallan = previewChallans[0] || null;
 
   const challanItems = previewChallans.flatMap(getChallanLineItems);
-  const { subTotal: totalAmount, freight: totalFreight, gstAmount: totalGstAmount, grandTotal } =
+  const { subTotal: totalAmount, freight: totalFreight, gstAmount: totalGstAmount, grandTotal, roundOff } =
     computeLineItemsTotals(challanItems, primaryChallan?.gstPercent ?? 18, previewChallans);
   const mergedMeta = buildMergedChallanMeta(previewChallans);
 
@@ -84,6 +84,7 @@ const ChallanList = () => {
   const freightIgstAmt = isIGST ? (totalFreight * freightGstPercent) / 100 : 0;
 
   const itemLines = challanItems.map((item, idx) => buildTaxItemLine(item, idx, challanFallbackGst, isIGST));
+  const totalQty = itemLines.reduce((sum, row) => sum + (Number(row.item.qty) || 0), 0);
   const totalTaxable = totalAmount + totalFreight;
   const totalCgst = itemLines.reduce((sum, row) => sum + row.cgstAmt, 0) + freightCgstAmt;
   const totalSgst = itemLines.reduce((sum, row) => sum + row.sgstAmt, 0) + freightSgstAmt;
@@ -598,6 +599,8 @@ const ChallanList = () => {
                       emptyProductRows={emptyProductRows}
                       amountWithTax={amountWithTax}
                       amountInWords={numberToWords(amountWithTax)}
+                      totalQty={totalQty}
+                      roundOff={roundOff}
                       renderItemDescription={(row) => (
                         <>
                           <ItemPrintDescription item={row.item} />

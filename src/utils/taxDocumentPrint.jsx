@@ -37,6 +37,53 @@ export const fmtTaxDate = (value) => {
 export const fmtAmt = (value) =>
   Number(value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+export const fmtQty = (value) => {
+  const n = Number(value || 0);
+  if (!n) return '0';
+  if (Number.isInteger(n)) return String(n);
+  return parseFloat(n.toFixed(2)).toString();
+};
+
+export const fmtRoundOff = (value) => {
+  const amount = Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+  if (Math.abs(amount) < 0.005) {
+    return `₹ ${fmtAmt(0)}`;
+  }
+  const sign = amount > 0 ? '+' : '-';
+  return `${sign}₹ ${fmtAmt(Math.abs(amount))}`;
+};
+
+export const roundMoney = (value) => Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+
+export function resolveInvoicePrintTotals({ rawTotalWithTax, savedTotalAmount, savedRoundOff }) {
+  const raw = roundMoney(rawTotalWithTax);
+  const autoGrandTotal = Math.round(raw);
+  const autoRoundOff = roundMoney(autoGrandTotal - raw);
+
+  if (savedTotalAmount == null || savedTotalAmount === '') {
+    return { grandTotal: autoGrandTotal, roundOff: autoRoundOff, totalBeforeRoundOff: raw };
+  }
+
+  const savedTotal = roundMoney(Number(savedTotalAmount));
+
+  if (Math.abs(savedTotal - autoGrandTotal) < 0.005) {
+    const roundOff = savedRoundOff != null && Math.abs(Number(savedRoundOff)) >= 0.005
+      ? roundMoney(Number(savedRoundOff))
+      : autoRoundOff;
+    return { grandTotal: autoGrandTotal, roundOff, totalBeforeRoundOff: raw };
+  }
+
+  if (Math.abs(savedTotal - raw) < 0.005) {
+    return { grandTotal: autoGrandTotal, roundOff: autoRoundOff, totalBeforeRoundOff: raw };
+  }
+
+  return {
+    grandTotal: savedTotal,
+    roundOff: roundMoney(savedTotal - raw),
+    totalBeforeRoundOff: raw,
+  };
+}
+
 export const fmtTaxRate = (rate) => {
   const n = Number(rate || 0);
   if (!n) return '';
@@ -202,7 +249,7 @@ export function getEmptyProductRowCount(usedRows = 0, options = {}) {
   return Math.max(0, Math.min(maxEmpty, minRows - usedRows));
 }
 
-export const getTaxTableColCount = () => 7;
+export const getTaxTableColCount = () => 8;
 
 export const getTaxTableHalfColSpans = () => {
   const total = getTaxTableColCount();
@@ -213,12 +260,13 @@ export const getTaxTableHalfColSpans = () => {
 export const TaxInvoiceColGroup = () => (
   <colgroup>
     <col style={{ width: '5%' }} />
-    <col style={{ width: '32%' }} />
+    <col style={{ width: '28%' }} />
+    <col style={{ width: '9%' }} />
+    <col style={{ width: '7%' }} />
+    <col style={{ width: '9%' }} />
     <col style={{ width: '10%' }} />
-    <col style={{ width: '10%' }} />
-    <col style={{ width: '12%' }} />
     <col style={{ width: '6%' }} />
-    <col style={{ width: '25%' }} />
+    <col style={{ width: '26%' }} />
   </colgroup>
 );
 
@@ -236,9 +284,10 @@ export const ClassicTaxItemsHeader = () => (
     <td className="tax-cell">Sl No.</td>
     <td className="tax-cell text-left">Description of Goods</td>
     <td className="tax-cell">HSN/SAC</td>
+    <td className="tax-cell">Qty</td>
     <td className="tax-cell">GST Rate</td>
     <td className="tax-cell">Rate</td>
-    <td className="tax-cell">per</td>
+    <td className="tax-cell">PER</td>
     <td className="tax-cell">Amount</td>
   </tr>
 );
@@ -266,7 +315,7 @@ export const EstimateItemsHeader = () => (
     <td className="tax-cell text-left">Description of Goods</td>
     <td className="tax-cell">HSN/SAC</td>
     <td className="tax-cell">Qty</td>
-    <td className="tax-cell">per</td>
+    <td className="tax-cell">PER</td>
     <td className="tax-cell">Rate</td>
     <td className="tax-cell">GST Rate</td>
     <td className="tax-cell">Amount</td>
@@ -367,6 +416,7 @@ export const ClassicTaxItemRow = ({ row, isIGST = false, children, stripeClass =
         {children || <ItemPrintDescription item={row.item} />}
       </td>
       <td className="tax-cell text-center align-top tax-item-value">{row.item.hsn || ''}</td>
+      <td className="tax-cell text-center align-top tax-item-value">{fmtQty(row.item.qty)}</td>
       <td className="tax-cell text-center align-top tax-item-value">{gstPercent} %</td>
       <td className="tax-cell text-right align-top tax-item-value">{fmtAmt(row.item.rate)}</td>
       <td className="tax-cell text-center align-top tax-item-value">{(row.item.per || 'PCS').trim() || 'PCS'}</td>
@@ -375,15 +425,42 @@ export const ClassicTaxItemRow = ({ row, isIGST = false, children, stripeClass =
   );
 };
 
-export const ClassicTaxItemsTotalRow = ({ amountWithTax }) => (
+export const ClassicTaxItemsTotalRow = ({ totalBeforeRoundOff, totalQty }) => (
   <tr className="tax-item-grand-total-row font-bold">
     <td className="tax-cell">&nbsp;</td>
     <td className="tax-cell text-right tax-item-grand-label">Total</td>
     <td className="tax-cell">&nbsp;</td>
+    <td className="tax-cell text-right">{totalQty != null ? fmtQty(totalQty) : ''}</td>
     <td className="tax-cell">&nbsp;</td>
     <td className="tax-cell">&nbsp;</td>
     <td className="tax-cell">&nbsp;</td>
-    <td className="tax-cell text-right tax-item-grand-amount">{fmtAmt(amountWithTax)} ₹</td>
+    <td className="tax-cell text-right tax-item-grand-amount">{fmtAmt(totalBeforeRoundOff)} ₹</td>
+  </tr>
+);
+
+export const ClassicTaxRoundOffRow = ({ roundOff = 0 }) => (
+  <tr className="tax-item-sub-row tax-items-stripe-row tax-stripe-grey">
+    <td className="tax-cell">&nbsp;</td>
+    <td className="tax-cell text-right tax-item-sub-label">Round Off</td>
+    <td className="tax-cell">&nbsp;</td>
+    <td className="tax-cell">&nbsp;</td>
+    <td className="tax-cell">&nbsp;</td>
+    <td className="tax-cell">&nbsp;</td>
+    <td className="tax-cell">&nbsp;</td>
+    <td className="tax-cell text-right tax-item-sub-amount">{fmtRoundOff(roundOff)}</td>
+  </tr>
+);
+
+export const ClassicTaxGrandTotalRow = ({ grandTotal }) => (
+  <tr className="tax-item-grand-total-row font-bold">
+    <td className="tax-cell">&nbsp;</td>
+    <td className="tax-cell text-right tax-item-grand-label">Grand Total</td>
+    <td className="tax-cell">&nbsp;</td>
+    <td className="tax-cell">&nbsp;</td>
+    <td className="tax-cell">&nbsp;</td>
+    <td className="tax-cell">&nbsp;</td>
+    <td className="tax-cell">&nbsp;</td>
+    <td className="tax-cell text-right tax-item-grand-amount">{fmtAmt(grandTotal)} ₹</td>
   </tr>
 );
 
@@ -408,6 +485,7 @@ export const TaxClassicItemsBlock = ({
   amountWithTax = 0,
   amountInWords = '',
   roundOff = 0,
+  totalQty = 0,
   renderItemDescription,
 }) => {
   let stripeIndex = 0;
@@ -416,6 +494,9 @@ export const TaxClassicItemsBlock = ({
     stripeIndex += 1;
     return stripeClass;
   };
+
+  const grandTotal = amountWithTax;
+  const totalBeforeRoundOff = grandTotal - roundOff;
 
   return (
     <>
@@ -436,11 +517,12 @@ export const TaxClassicItemsBlock = ({
         totalSgst={totalSgst}
         totalIgst={totalIgst}
         isIGST={isIGST}
-        roundOff={roundOff}
         getStripeClass={getStripeClass}
       />
       {emptyProductRows > 0 && <TaxItemEmptyRow rowCount={emptyProductRows} />}
-      <ClassicTaxItemsTotalRow amountWithTax={amountWithTax} />
+      <ClassicTaxItemsTotalRow totalBeforeRoundOff={totalBeforeRoundOff} totalQty={totalQty} />
+      <ClassicTaxRoundOffRow roundOff={roundOff} />
+      <ClassicTaxGrandTotalRow grandTotal={grandTotal} />
       {amountInWords && <ClassicAmountInWordsRow words={amountInWords} />}
     </>
   );
@@ -672,16 +754,17 @@ export const TaxChargeSubRow = ({ label, amount, stripeClass = 'tax-items-stripe
     <td className="tax-cell tax-item-sub-pad">&nbsp;</td>
     <td className="tax-cell tax-item-sub-pad">&nbsp;</td>
     <td className="tax-cell tax-item-sub-pad">&nbsp;</td>
+    <td className="tax-cell tax-item-sub-pad">&nbsp;</td>
     <td className="tax-cell text-right tax-item-sub-amount">{fmtAmt(amount)}</td>
   </tr>
 );
 
-export function getTaxChargeSubRowCount(freight = 0, isIGST = false, roundOff = 0) {
+export function getTaxChargeSubRowCount(freight = 0, isIGST = false) {
   const gstRows = isIGST ? 1 : 2;
-  return gstRows + (freight > 0 ? 1 : 0) + (roundOff ? 1 : 0);
+  return gstRows + (freight > 0 ? 1 : 0);
 }
 
-export const TaxItemGstChargeRows = ({ freight = 0, totalCgst = 0, totalSgst = 0, totalIgst = 0, isIGST = false, roundOff = 0, getStripeClass }) => {
+export const TaxItemGstChargeRows = ({ freight = 0, totalCgst = 0, totalSgst = 0, totalIgst = 0, isIGST = false, getStripeClass }) => {
   const stripe = () => (getStripeClass ? getStripeClass() : 'tax-items-stripe-row tax-stripe-grey');
   return (
     <>
@@ -689,16 +772,13 @@ export const TaxItemGstChargeRows = ({ freight = 0, totalCgst = 0, totalSgst = 0
         <TaxChargeSubRow label="Freight" amount={freight} stripeClass={stripe()} isTransport />
       )}
       {isIGST ? (
-        <TaxChargeSubRow label="IGST Integrated Gst" amount={totalIgst} stripeClass={stripe()} />
+        <TaxChargeSubRow label="IGST Integrated GST" amount={totalIgst} stripeClass={stripe()} />
       ) : (
         <>
-          <TaxChargeSubRow label="SGST State Gst" amount={totalSgst} stripeClass={stripe()} />
-          <TaxChargeSubRow label="CGST Central Gst" amount={totalCgst} stripeClass={stripe()} />
+          <TaxChargeSubRow label="SGST State GST" amount={totalSgst} stripeClass={stripe()} />
+          <TaxChargeSubRow label="CGST Central GST" amount={totalCgst} stripeClass={stripe()} />
         </>
       )}
-      {roundOff ? (
-        <TaxChargeSubRow label="Round Off" amount={roundOff} stripeClass={stripe()} />
-      ) : null}
     </>
   );
 };
