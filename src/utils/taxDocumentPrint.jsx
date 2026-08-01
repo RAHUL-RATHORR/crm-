@@ -331,7 +331,7 @@ export const EstimateItemRow = ({ row, stripeClass = 'tax-items-stripe-row tax-s
     <td className="tax-cell text-center align-top tax-item-value">{row.hsn || ''}</td>
     <td className="tax-cell text-center align-top tax-item-value">{row.qty}</td>
     <td className="tax-cell text-center align-top tax-item-value">{(row.per || 'PCS').trim() || 'PCS'}</td>
-    <td className="tax-cell text-right align-top tax-item-value">{fmtAmt(row.rate)}</td>
+    <td className="tax-cell text-center align-top tax-item-value">{fmtAmt(row.rate)}</td>
     <td className="tax-cell text-center align-top tax-item-value">{row.gstPercent} %</td>
     <td className="tax-cell text-right align-top tax-item-total">{fmtAmt(row.total)}</td>
   </tr>
@@ -418,7 +418,7 @@ export const ClassicTaxItemRow = ({ row, isIGST = false, children, stripeClass =
       <td className="tax-cell text-center align-top tax-item-value">{row.item.hsn || ''}</td>
       <td className="tax-cell text-center align-top tax-item-value">{fmtQty(row.item.qty)}</td>
       <td className="tax-cell text-center align-top tax-item-value">{gstPercent} %</td>
-      <td className="tax-cell text-right align-top tax-item-value">{fmtAmt(row.item.rate)}</td>
+      <td className="tax-cell text-center align-top tax-item-value">{fmtAmt(row.item.rate)}</td>
       <td className="tax-cell text-center align-top tax-item-value">{(row.item.per || 'PCS').trim() || 'PCS'}</td>
       <td className="tax-cell text-right align-top tax-item-total">{fmtAmt(row.taxable)}</td>
     </tr>
