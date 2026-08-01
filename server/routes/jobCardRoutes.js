@@ -4,16 +4,31 @@ import JobCard from '../models/JobCard.js';
 import Notification from '../models/Notification.js';
 import { syncStockFromJobChange } from '../utils/paperStockDeduction.js';
 
+const parsePlateSizes = (value) => {
+  if (!value) return [];
+  return String(value).split(',').map((item) => item.trim()).filter(Boolean);
+};
+
+const escapeRegex = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const plateSizeQuery = (normalizedSize) => ({
+  $or: [
+    { plateSize: normalizedSize },
+    { plateSize: new RegExp(`(^|,\\s*)${escapeRegex(normalizedSize)}(,\\s*|$)`) },
+  ],
+});
+
 const computePlateUseCount = async (plateSize, editingId) => {
   if (!plateSize) return undefined;
 
   const normalizedSize = String(plateSize).trim();
-  const existingCount = await JobCard.countDocuments({ plateSize: normalizedSize });
+  const existingCount = await JobCard.countDocuments(plateSizeQuery(normalizedSize));
 
   if (!editingId) return existingCount + 1;
 
   const editingCard = await JobCard.findById(editingId).select('plateSize');
-  if (String(editingCard?.plateSize || '').trim() === normalizedSize) return existingCount;
+  const editingSizes = parsePlateSizes(editingCard?.plateSize);
+  if (editingSizes.includes(normalizedSize)) return existingCount;
 
   return existingCount + 1;
 };
@@ -40,8 +55,15 @@ router.post('/', async (req, res) => {
     }
 
     if (req.body.plateSize) {
-      req.body.plateSize = String(req.body.plateSize).trim();
-      req.body.plateUseCount = await computePlateUseCount(req.body.plateSize, _id);
+      const sizes = parsePlateSizes(req.body.plateSize);
+      if (sizes.length) {
+        req.body.plateSize = sizes.join(', ');
+        const counts = await Promise.all(sizes.map((size) => computePlateUseCount(size, _id)));
+        req.body.plateUseCount = counts.join(', ');
+      } else {
+        delete req.body.plateSize;
+        delete req.body.plateUseCount;
+      }
     }
 
     if (_id) {

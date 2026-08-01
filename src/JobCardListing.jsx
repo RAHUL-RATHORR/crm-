@@ -4,7 +4,8 @@ import { PlusSquare, Trash2, Printer, X, Download, Pencil, RefreshCw, Filter, Se
 import { downloadAsPDF } from './utils/pdfExport';
 import { printElement } from './utils/printDocument';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
-import { syncPlateUsageFromCards } from './utils/plateUsage';
+import { syncPlateUsageFromCards, formatPlateSizes, formatPlateUseCounts } from './utils/plateUsage';
+import { formatPaperLinesForPrint } from './utils/jobPaperLines';
 import { SELLER, TaxFieldsTable, fmtTaxDate, CompanyBrandName } from './utils/taxDocumentPrint';
 import { API_BASE_URL } from './utils/apiBase';
 
@@ -672,8 +673,8 @@ export default function JobCardListing() {
                         <div className="job-card-section-body p-1.5">
                           <TaxFieldsTable rows={[
                             ['Plate Type', selectedCard.plateType || 'New'],
-                            ['Plate Size', selectedCard.plateSize || '-'],
-                            ['Plate Number', selectedCard.plateUseCount || '-'],
+                            ['Plate Size', formatPlateSizes(selectedCard.plateSize) || '-'],
+                            ['Plate Number', formatPlateUseCounts(selectedCard.plateUseCount) || '-'],
                             ['Plate Qty', selectedCard.plateQty ?? 0],
                             ['Lamination', selectedCard.lamination || '-'],
                             ['Printing Qty', selectedCard.printingQty || 0],
@@ -687,8 +688,18 @@ export default function JobCardListing() {
                         <div className="tax-blue job-card-section-title text-center py-1 px-2">Paper &amp; Stock</div>
                         <div className="job-card-section-body p-1.5">
                           <TaxFieldsTable rows={[
-                            ['Cover Count / GSM', `${selectedCard.coverPaperCount || 0} (${selectedCard.paperGSM || '-'})`],
-                            ['Inner Count / GSM', `${selectedCard.innerPaperCount || 0} (${selectedCard.innerPaperGSM || '-'})`],
+                            ['Cover Count / GSM', formatPaperLinesForPrint(selectedCard.coverPaperLines?.length ? selectedCard.coverPaperLines : [{
+                              paper: selectedCard.paper,
+                              paperGSM: selectedCard.paperGSM,
+                              count: selectedCard.coverPaperCount,
+                              details: selectedCard.coverPaperDetails,
+                            }])],
+                            ['Inner Count / GSM', formatPaperLinesForPrint(selectedCard.innerPaperLines?.length ? selectedCard.innerPaperLines : [{
+                              paper: selectedCard.innerPaper,
+                              paperGSM: selectedCard.innerPaperGSM,
+                              count: selectedCard.innerPaperCount,
+                              details: selectedCard.innerPaperDetails,
+                            }])],
                             ['Cover Details', selectedCard.coverPaperDetails || '-'],
                             ['Inner Details', selectedCard.innerPaperDetails || '-'],
                           ]} />

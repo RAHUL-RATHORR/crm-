@@ -18,27 +18,71 @@ export const syncTotalQuantity = (stockItem) => {
 };
 
 export const getCoverUsage = (job) => {
-  if (!job || !job.paper || job.paper === 'Custom' || !job.paperGSM) return null;
-  const qty = Number(job.coverPaperCount) > 0 ? Number(job.coverPaperCount) : Number(job.jobQty) || 0;
-  if (qty <= 0) return null;
-  return {
-    paper: job.paper,
-    paperGSM: String(job.paperGSM),
-    qty,
-    paperSource: job.paperSource || 'Company paper',
-  };
+  const usages = getCoverUsages(job);
+  return usages[0] || null;
 };
 
 export const getInnerUsage = (job) => {
-  if (!job || !job.innerPaper || job.innerPaper === 'Custom' || !job.innerPaperGSM) return null;
-  const qty = Number(job.innerPaperCount) > 0 ? Number(job.innerPaperCount) : Number(job.jobQty) || 0;
-  if (qty <= 0) return null;
-  return {
+  const usages = getInnerUsages(job);
+  return usages[0] || null;
+};
+
+export const getCoverUsages = (job) => {
+  if (!job) return [];
+
+  const paperSource = job.paperSource || 'Company paper';
+  const fallbackQty = Number(job.jobQty) || 0;
+
+  if (Array.isArray(job.coverPaperLines) && job.coverPaperLines.length) {
+    return job.coverPaperLines
+      .filter((line) => line?.paper && line.paper !== 'Custom' && line.paperGSM)
+      .map((line) => ({
+        paper: line.paper,
+        paperGSM: String(line.paperGSM),
+        qty: Number(line.count) > 0 ? Number(line.count) : fallbackQty,
+        paperSource,
+      }))
+      .filter((usage) => usage.qty > 0);
+  }
+
+  if (!job.paper || job.paper === 'Custom' || !job.paperGSM) return [];
+  const qty = Number(job.coverPaperCount) > 0 ? Number(job.coverPaperCount) : fallbackQty;
+  if (qty <= 0) return [];
+  return [{
+    paper: job.paper,
+    paperGSM: String(job.paperGSM),
+    qty,
+    paperSource,
+  }];
+};
+
+export const getInnerUsages = (job) => {
+  if (!job) return [];
+
+  const paperSource = job.paperSource || 'Company paper';
+  const fallbackQty = Number(job.jobQty) || 0;
+
+  if (Array.isArray(job.innerPaperLines) && job.innerPaperLines.length) {
+    return job.innerPaperLines
+      .filter((line) => line?.paper && line.paper !== 'Custom' && line.paperGSM)
+      .map((line) => ({
+        paper: line.paper,
+        paperGSM: String(line.paperGSM),
+        qty: Number(line.count) > 0 ? Number(line.count) : fallbackQty,
+        paperSource,
+      }))
+      .filter((usage) => usage.qty > 0);
+  }
+
+  if (!job.innerPaper || job.innerPaper === 'Custom' || !job.innerPaperGSM) return [];
+  const qty = Number(job.innerPaperCount) > 0 ? Number(job.innerPaperCount) : fallbackQty;
+  if (qty <= 0) return [];
+  return [{
     paper: job.innerPaper,
     paperGSM: String(job.innerPaperGSM),
     qty,
-    paperSource: job.paperSource || 'Company paper',
-  };
+    paperSource,
+  }];
 };
 
 export const findCoverStock = async (paper, paperSource = 'Company paper') => {
@@ -173,42 +217,45 @@ export const applyInnerDelta = async (paper, paperGSM, delta, meta = {}) => {
 };
 
 export const syncStockFromJobChange = async (previousJob, newBody) => {
-  const oldCover = getCoverUsage(previousJob);
-  const newCover = getCoverUsage(newBody);
-  const oldInner = getInnerUsage(previousJob);
-  const newInner = getInnerUsage(newBody);
+  const oldCoverUsages = getCoverUsages(previousJob);
+  const newCoverUsages = getCoverUsages(newBody);
+  const oldInnerUsages = getInnerUsages(previousJob);
+  const newInnerUsages = getInnerUsages(newBody);
   const shouldRestore = previousJob?._id && await jobHadStockDeduction(previousJob._id);
 
-  if (shouldRestore && oldCover) {
-    await applyCoverDelta(oldCover.paper, oldCover.paperGSM, -oldCover.qty, {
-      paperSource: oldCover.paperSource,
-      partyName: previousJob?.partyName || previousJob?.companyName || '',
-      jobNumber: previousJob?.jobNumber || '',
-      jobCardId: previousJob?._id,
-      note: 'Restored from job card update',
-    });
+  if (shouldRestore) {
+    for (const usage of oldCoverUsages) {
+      await applyCoverDelta(usage.paper, usage.paperGSM, -usage.qty, {
+        paperSource: usage.paperSource,
+        partyName: previousJob?.partyName || previousJob?.companyName || '',
+        jobNumber: previousJob?.jobNumber || '',
+        jobCardId: previousJob?._id,
+        note: 'Restored from job card update',
+      });
+    }
+    for (const usage of oldInnerUsages) {
+      await applyInnerDelta(usage.paper, usage.paperGSM, -usage.qty, {
+        paperSource: usage.paperSource,
+        partyName: previousJob?.partyName || previousJob?.companyName || '',
+        jobNumber: previousJob?.jobNumber || '',
+        jobCardId: previousJob?._id,
+        note: 'Restored from job card update',
+      });
+    }
   }
-  if (shouldRestore && oldInner) {
-    await applyInnerDelta(oldInner.paper, oldInner.paperGSM, -oldInner.qty, {
-      paperSource: oldInner.paperSource,
-      partyName: previousJob?.partyName || previousJob?.companyName || '',
-      jobNumber: previousJob?.jobNumber || '',
-      jobCardId: previousJob?._id,
-      note: 'Restored from job card update',
-    });
-  }
-  if (newCover) {
-    await applyCoverDelta(newCover.paper, newCover.paperGSM, newCover.qty, {
-      paperSource: newCover.paperSource,
+
+  for (const usage of newCoverUsages) {
+    await applyCoverDelta(usage.paper, usage.paperGSM, usage.qty, {
+      paperSource: usage.paperSource,
       partyName: newBody.partyName || newBody.companyName || '',
       jobNumber: newBody.jobNumber || '',
       jobCardId: newBody._id,
       note: 'Deducted for job card',
     });
   }
-  if (newInner) {
-    await applyInnerDelta(newInner.paper, newInner.paperGSM, newInner.qty, {
-      paperSource: newInner.paperSource,
+  for (const usage of newInnerUsages) {
+    await applyInnerDelta(usage.paper, usage.paperGSM, usage.qty, {
+      paperSource: usage.paperSource,
       partyName: newBody.partyName || newBody.companyName || '',
       jobNumber: newBody.jobNumber || '',
       jobCardId: newBody._id,
@@ -265,14 +312,18 @@ export const reconcilePaperStockFromJobs = async () => {
     for (const job of jobs) {
       if ((job.paperSource || 'Company paper') !== stockSource) continue;
 
-      const cover = getCoverUsage(job);
-      if (cover && matchesPaperName(stock, cover.paper, 'cover') && gsmMatchesCover(stock, cover.paperGSM)) {
-        coverUsed += cover.qty;
+      const coverUsages = getCoverUsages(job);
+      for (const cover of coverUsages) {
+        if (matchesPaperName(stock, cover.paper, 'cover') && gsmMatchesCover(stock, cover.paperGSM)) {
+          coverUsed += cover.qty;
+        }
       }
 
-      const inner = getInnerUsage(job);
-      if (inner && matchesPaperName(stock, inner.paper, 'inner') && gsmMatchesInner(stock, inner.paperGSM)) {
-        innerUsed += inner.qty;
+      const innerUsages = getInnerUsages(job);
+      for (const inner of innerUsages) {
+        if (matchesPaperName(stock, inner.paper, 'inner') && gsmMatchesInner(stock, inner.paperGSM)) {
+          innerUsed += inner.qty;
+        }
       }
     }
 

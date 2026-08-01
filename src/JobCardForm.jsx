@@ -2,9 +2,17 @@ import React, { useState, useEffect, useRef } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ChevronDown, Layers, Search, FileText } from 'lucide-react';
-import { rememberPlateUsage, resolvePlateUseCount } from './utils/plateUsage';
+import { ChevronDown } from 'lucide-react';
+import { rememberPlateUsage, resolvePlateUseCounts, parsePlateSizes, parsePlateUseCounts, PLATE_SIZE_OPTIONS } from './utils/plateUsage';
 import { mergePaperSizes } from './utils/paperStockSizes';
+import {
+  normalizeCoverPaperLines,
+  normalizeInnerPaperLines,
+  serializePaperLines,
+  buildLegacyPaperFields,
+  emptyPaperLine,
+} from './utils/jobPaperLines';
+import JobPaperLinesEditor from './components/JobPaperLinesEditor';
 import { API_BASE_URL } from './utils/apiBase';
 import GSTInput from './components/GSTInput';
 
@@ -48,28 +56,19 @@ export default function JobCardForm() {
 
   const [jobDate, setJobDate] = useState(editData ? new Date(editData.jobDate) : new Date());
   const [paperStocks, setPaperStocks] = useState([]);
-  const [selectedPaper, setSelectedPaper] = useState(editData?.paper || '');
-  const [selectedPaperLabel, setSelectedPaperLabel] = useState(editData?.paper || '');
-  const [paperGSM, setPaperGSM] = useState(editData?.paperGSM || '');
-  const [paperSearchTerm, setPaperSearchTerm] = useState('');
-  const [isPaperDropdownOpen, setIsPaperDropdownOpen] = useState(false);
-  const [selectedInnerPaper, setSelectedInnerPaper] = useState(editData?.innerPaper || '');
-  const [selectedInnerPaperLabel, setSelectedInnerPaperLabel] = useState(editData?.innerPaper || '');
-  const [innerPaperSearchTerm, setInnerPaperSearchTerm] = useState('');
-  const [isInnerPaperDropdownOpen, setIsInnerPaperDropdownOpen] = useState(false);
+  const [coverPaperLines, setCoverPaperLines] = useState(() => normalizeCoverPaperLines(editData));
+  const [innerPaperLines, setInnerPaperLines] = useState(() => normalizeInnerPaperLines(editData));
   const [compose, setCompose] = useState(editData?.compose || 'No');
   const [design, setDesign] = useState(editData?.design || 'No');
-  const [coverPaperCount, setCoverPaperCount] = useState(editData?.coverPaperCount || 0);
-  const [coverPaperDetails, setCoverPaperDetails] = useState(editData?.coverPaperDetails || '');
-  const [innerPaperGSM, setInnerPaperGSM] = useState(editData?.innerPaperGSM || '');
-  const [innerPaperCount, setInnerPaperCount] = useState(editData?.innerPaperCount || 0);
-  const [innerPaperDetails, setInnerPaperDetails] = useState(editData?.innerPaperDetails || '');
   const [paperSource, setPaperSource] = useState(editData?.paperSource || 'Company paper');
   const [useShipAddress, setUseShipAddress] = useState(
     editData?.useShipAddress || !!(editData?.shipAddress || editData?.shipPartyName)
   );
-  const [plateSize, setPlateSize] = useState(editData?.plateSize || '');
-  const [plateUseCount, setPlateUseCount] = useState(editData?.plateUseCount || '');
+  const [plateSizes, setPlateSizes] = useState(() => parsePlateSizes(editData?.plateSize));
+  const [plateUseCount, setPlateUseCount] = useState(() => {
+    const counts = parsePlateUseCounts(editData?.plateUseCount);
+    return counts.length ? counts.join(', ') : '';
+  });
   const [jobCards, setJobCards] = useState([]);
   const [partySuggestions, setPartySuggestions] = useState([]);
   const [isPartyDropdownOpen, setIsPartyDropdownOpen] = useState(false);
@@ -84,8 +83,6 @@ export default function JobCardForm() {
   const [shipContactNo, setShipContactNo] = useState(editData?.shipContactNo || '');
   const [shipEmailId, setShipEmailId] = useState(editData?.shipEmailId || '');
   const [shipGstNo, setShipGstNo] = useState(editData?.shipGstNo || '');
-  const paperDropdownRef = useRef(null);
-  const innerPaperDropdownRef = useRef(null);
   const partyDropdownRef = useRef(null);
 
   const filteredPartySuggestions = partySuggestions.filter((party) => {
@@ -121,12 +118,12 @@ export default function JobCardForm() {
     setIsPartyDropdownOpen(false);
   };
 
-  const refreshPlateUseCount = (size, cards = []) => {
-    if (!size) {
+  const refreshPlateUseCounts = (sizes, cards = []) => {
+    if (!sizes.length) {
       setPlateUseCount('');
       return;
     }
-    setPlateUseCount(resolvePlateUseCount(size, cards, editData));
+    setPlateUseCount(resolvePlateUseCounts(sizes, cards, editData));
   };
 
   const filteredStocks = paperStocks.filter(stock => {
@@ -155,32 +152,11 @@ export default function JobCardForm() {
     return `${name}${gsmText}${sizeText}`;
   };
 
-  const matchesCoverSearch = (stock, term) => {
-    const query = term.toLowerCase();
-    return (
-      getCoverPaperLabel(stock).toLowerCase().includes(query) ||
-      String(stock.coverGSM || stock.gsm || '').includes(query) ||
-      (stock.coverPaperSize || '').toLowerCase().includes(query)
-    );
-  };
-
-  const matchesInnerSearch = (stock, term) => {
-    const query = term.toLowerCase();
-    return (
-      getInnerPaperLabel(stock).toLowerCase().includes(query) ||
-      String(stock.innerGSM || stock.gsm || '').includes(query) ||
-      (stock.innerPaperSize || '').toLowerCase().includes(query)
-    );
-  };
+  const coverStocks = filteredStocks.filter((stock) => getCoverPaperLabel(stock));
+  const innerStocks = filteredStocks.filter((stock) => getInnerPaperLabel(stock));
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (paperDropdownRef.current && !paperDropdownRef.current.contains(event.target)) {
-        setIsPaperDropdownOpen(false);
-      }
-      if (innerPaperDropdownRef.current && !innerPaperDropdownRef.current.contains(event.target)) {
-        setIsInnerPaperDropdownOpen(false);
-      }
       if (partyDropdownRef.current && !partyDropdownRef.current.contains(event.target)) {
         setIsPartyDropdownOpen(false);
       }
@@ -206,18 +182,6 @@ export default function JobCardForm() {
   }, []);
 
   useEffect(() => {
-    if (!isPaperDropdownOpen) {
-      setPaperSearchTerm('');
-    }
-  }, [isPaperDropdownOpen]);
-
-  useEffect(() => {
-    if (!isInnerPaperDropdownOpen) {
-      setInnerPaperSearchTerm('');
-    }
-  }, [isInnerPaperDropdownOpen]);
-
-  useEffect(() => {
     const fetchStocks = async () => {
       try {
         const res = await fetch(`${API_BASE_URL}/api/paper-stock`);
@@ -231,40 +195,27 @@ export default function JobCardForm() {
   }, []);
 
   useEffect(() => {
-    if (!paperStocks.length) return;
+    refreshPlateUseCounts(plateSizes, jobCards);
+  }, [plateSizes, jobCards, editData?._id]);
 
-    if (editData?.paper) {
-      const coverMatch = paperStocks.find(
-        (stock) => getCoverPaperLabel(stock).toLowerCase() === editData.paper.toLowerCase()
-      );
-      if (coverMatch) {
-        setSelectedPaperLabel(formatCoverPaperOption(coverMatch));
+  const togglePlateSize = (size) => {
+    setPlateSizes((prev) => {
+      if (prev.includes(size)) {
+        return prev.filter((entry) => entry !== size);
       }
-    }
-
-    if (editData?.innerPaper) {
-      const innerMatch = paperStocks.find(
-        (stock) => getInnerPaperLabel(stock).toLowerCase() === editData.innerPaper.toLowerCase()
-      );
-      if (innerMatch) {
-        setSelectedInnerPaperLabel(formatInnerPaperOption(innerMatch));
-      }
-    }
-  }, [paperStocks, editData?.paper, editData?.innerPaper]);
-
-  useEffect(() => {
-    refreshPlateUseCount(plateSize, jobCards);
-  }, [plateSize, jobCards, editData?._id]);
-
-  const handlePlateSizeChange = (e) => {
-    setPlateSize(e.target.value);
+      return PLATE_SIZE_OPTIONS.filter((entry) => prev.includes(entry) || entry === size);
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
+    const legacyPaperFields = buildLegacyPaperFields(coverPaperLines, innerPaperLines);
     const jobCard = {
       ...Object.fromEntries(fd.entries()),
+      ...legacyPaperFields,
+      coverPaperLines: serializePaperLines(coverPaperLines),
+      innerPaperLines: serializePaperLines(innerPaperLines),
       jobDate: jobDate.toISOString(),
       paperSource: fd.get('paperSource') || paperSource,
       companyName: fd.get('partyName'), // alias for backward compatibility
@@ -274,8 +225,8 @@ export default function JobCardForm() {
       shipContactNo: useShipAddress ? (fd.get('shipContactNo') || '') : '',
       shipEmailId: useShipAddress ? (fd.get('shipEmailId') || '') : '',
       shipGstNo: useShipAddress ? (fd.get('shipGstNo') || '') : '',
-      plateSize: plateSize || undefined,
-      plateUseCount: plateUseCount ? Number(plateUseCount) : undefined,
+      plateSize: plateSizes.length ? plateSizes.join(', ') : undefined,
+      plateUseCount: plateUseCount || undefined,
       // Boolean conversion for binding checkboxes
       bindingCenterPin: fd.get('bindingCenterPin') === 'on',
       bindingSilai: fd.get('bindingSilai') === 'on',
@@ -299,7 +250,7 @@ export default function JobCardForm() {
       });
       if (response.ok) {
         const saved = await response.json();
-        rememberPlateUsage(saved.plateSize || plateSize, saved.plateUseCount || plateUseCount);
+        rememberPlateUsage(saved.plateSize || plateSizes.join(', '), saved.plateUseCount || plateUseCount);
         window.dispatchEvent(new Event('fetchNotifications'));
         navigate('/job-card-list');
       } else {
@@ -593,12 +544,8 @@ export default function JobCardForm() {
                   checked={paperSource === 'Party paper'}
                   onChange={() => {
                     setPaperSource('Party paper');
-                    setSelectedPaper('');
-                    setSelectedPaperLabel('');
-                    setPaperGSM('');
-                    setSelectedInnerPaper('');
-                    setSelectedInnerPaperLabel('');
-                    setInnerPaperGSM('');
+                    setCoverPaperLines([emptyPaperLine()]);
+                    setInnerPaperLines([emptyPaperLine()]);
                   }}
                   className="w-4 h-4 text-sky-600 border-gray-300 focus:ring-sky-500"
                 />
@@ -612,12 +559,8 @@ export default function JobCardForm() {
                   checked={paperSource === 'Company paper'}
                   onChange={() => {
                     setPaperSource('Company paper');
-                    setSelectedPaper('');
-                    setSelectedPaperLabel('');
-                    setPaperGSM('');
-                    setSelectedInnerPaper('');
-                    setSelectedInnerPaperLabel('');
-                    setInnerPaperGSM('');
+                    setCoverPaperLines([emptyPaperLine()]);
+                    setInnerPaperLines([emptyPaperLine()]);
                   }}
                   className="w-4 h-4 text-sky-600 border-gray-300 focus:ring-sky-500"
                 />
@@ -626,272 +569,30 @@ export default function JobCardForm() {
             </div>
           </div>
 
-          {/* Cover Paper Section */}
           <div className="mb-6 pb-6 border-b border-gray-100">
-            <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4 pl-1">Cover Paper Details</h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-              <div className="flex flex-col relative" ref={paperDropdownRef}>
-                <label className="text-xs font-bold text-gray-500 mb-1">Select Paper (From Stock)</label>
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setIsPaperDropdownOpen(!isPaperDropdownOpen)}
-                    className={`w-full h-10 border rounded-lg px-4 bg-white flex items-center justify-between transition-all duration-200 ${isPaperDropdownOpen ? 'ring-2 ring-sky-500 border-transparent' : 'border-gray-200 hover:border-gray-300'}`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Layers size={16} className={selectedPaper ? 'text-sky-500' : 'text-gray-400'} />
-                      <span className={`text-sm truncate ${selectedPaper ? 'text-gray-900 font-bold' : 'text-gray-400'}`}>
-                        {selectedPaperLabel || selectedPaper || 'Choose Paper'}
-                      </span>
-                    </div>
-                    <ChevronDown size={18} className={`text-gray-400 transition-transform duration-200 ${isPaperDropdownOpen ? 'rotate-180' : ''}`} />
-                  </button>
-
-                  {isPaperDropdownOpen && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-xl shadow-xl z-50 py-2 max-h-64 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200">
-                      <div className="px-3 pb-2 mb-2 border-b border-gray-50">
-                        <div className="relative">
-                          <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" size={12} />
-                          <input
-                            type="text"
-                            placeholder="Search paper..."
-                            value={paperSearchTerm}
-                            className="w-full bg-gray-50 border-none rounded-md py-1 pl-8 pr-3 text-xs focus:ring-1 focus:ring-sky-500"
-                            onClick={(e) => e.stopPropagation()}
-                            onChange={(e) => setPaperSearchTerm(e.target.value)}
-                          />
-                        </div>
-                      </div>
-
-                      {filteredStocks.filter((s) => matchesCoverSearch(s, paperSearchTerm)).length > 0 ? (
-                        filteredStocks
-                          .filter((s) => matchesCoverSearch(s, paperSearchTerm))
-                          .map(stock => (
-                            <button
-                              key={stock._id}
-                              type="button"
-                              onClick={() => {
-                                setSelectedPaper(getCoverPaperLabel(stock));
-                                setSelectedPaperLabel(formatCoverPaperOption(stock));
-                                setPaperGSM(stock.coverGSM || stock.gsm || '');
-                                if (stock.coverPaperSize) {
-                                  setCoverPaperDetails(stock.coverPaperSize);
-                                }
-                                setIsPaperDropdownOpen(false);
-                              }}
-                              className={`w-full px-4 py-2.5 text-left text-sm flex items-center justify-between hover:bg-sky-50 transition-colors ${selectedPaper === getCoverPaperLabel(stock) ? 'bg-sky-50/50 text-sky-700 font-bold' : 'text-gray-700'}`}
-                            >
-                              <div className="flex items-center gap-3 min-w-0">
-                                <FileText size={14} className={selectedPaper === getCoverPaperLabel(stock) ? 'text-sky-500' : 'text-gray-300'} />
-                                <span className="truncate">
-                                  {getCoverPaperLabel(stock)}{' '}
-                                  <span className="text-[10px] text-gray-500">
-                                    ({stock.coverGSM || stock.gsm} GSM)
-                                  </span>
-                                  {stock.coverPaperSize && (
-                                    <span className="text-[10px] font-bold text-sky-600 ml-1">
-                                      · {stock.coverPaperSize}
-                                    </span>
-                                  )}
-                                </span>
-                              </div>
-                              {selectedPaper === getCoverPaperLabel(stock) && <div className="w-1.5 h-1.5 rounded-full bg-sky-500 shrink-0" />}
-                            </button>
-                          ))
-                      ) : (
-                        <div className="px-4 py-2 text-xs text-gray-400 italic">No paper stocks found</div>
-                      )}
-
-                      <div className="border-t border-gray-50 mt-2 pt-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedPaper('Custom');
-                            setSelectedPaperLabel('Custom');
-                            setIsPaperDropdownOpen(false);
-                          }}
-                          className={`w-full px-4 py-2 text-left text-xs font-black uppercase tracking-widest transition-colors ${selectedPaper === 'Custom' ? 'text-purple-600 bg-purple-50' : 'text-gray-400 hover:text-purple-600 hover:bg-purple-50'}`}
-                        >
-                          + Use Custom Paper
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                  <input type="hidden" name="paper" value={selectedPaper} />
-                </div>
-              </div>
-
-              <div className="flex flex-col">
-                <label className="text-xs font-bold text-gray-500 mb-1">Cover paper gsm</label>
-                <input
-                  type="text"
-                  name="paperGSM"
-                  value={paperGSM}
-                  onChange={(e) => setPaperGSM(e.target.value)}
-                  className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
-                  placeholder="e.g. 350, 250"
-                />
-              </div>
-
-              <div className="flex flex-col">
-                <label className="text-xs font-bold text-gray-500 mb-1">Cover paper count</label>
-                <input
-                  type="number"
-                  name="coverPaperCount"
-                  value={coverPaperCount}
-                  onChange={(e) => setCoverPaperCount(e.target.value)}
-                  min="0"
-                  className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
-                  placeholder="0"
-                />
-              </div>
-
-              <div className="flex flex-col">
-                <label className="text-xs font-bold text-gray-500 mb-1">Cover paper Details</label>
-                <input
-                  type="text"
-                  name="coverPaperDetails"
-                  value={coverPaperDetails}
-                  onChange={(e) => setCoverPaperDetails(e.target.value)}
-                  className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
-                  placeholder="e.g. Size, Type"
-                />
-              </div>
-            </div>
+            <JobPaperLinesEditor
+              title="Cover Paper Details"
+              lines={coverPaperLines}
+              onChange={setCoverPaperLines}
+              stocks={coverStocks}
+              getPaperLabel={getCoverPaperLabel}
+              getPaperGsm={(stock) => stock.coverGSM || stock.gsm || ''}
+              getPaperDetails={(stock) => stock.coverPaperSize || ''}
+              formatOption={formatCoverPaperOption}
+            />
           </div>
 
-          {/* Inner Paper Section */}
           <div>
-            <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4 pl-1">Inner Paper Details</h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-              <div className="flex flex-col relative" ref={innerPaperDropdownRef}>
-                <label className="text-xs font-bold text-gray-500 mb-1">Select Paper (From Stock)</label>
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setIsInnerPaperDropdownOpen(!isInnerPaperDropdownOpen)}
-                    className={`w-full h-10 border rounded-lg px-4 bg-white flex items-center justify-between transition-all duration-200 ${isInnerPaperDropdownOpen ? 'ring-2 ring-sky-500 border-transparent' : 'border-gray-200 hover:border-gray-300'}`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Layers size={16} className={selectedInnerPaper ? 'text-sky-500' : 'text-gray-400'} />
-                      <span className={`text-sm truncate ${selectedInnerPaper ? 'text-gray-900 font-bold' : 'text-gray-400'}`}>
-                        {selectedInnerPaperLabel || selectedInnerPaper || 'Choose Paper'}
-                      </span>
-                    </div>
-                    <ChevronDown size={18} className={`text-gray-400 transition-transform duration-200 ${isInnerPaperDropdownOpen ? 'rotate-180' : ''}`} />
-                  </button>
-
-                  {isInnerPaperDropdownOpen && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-xl shadow-xl z-50 py-2 max-h-64 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200">
-                      <div className="px-3 pb-2 mb-2 border-b border-gray-50">
-                        <div className="relative">
-                          <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" size={12} />
-                          <input
-                            type="text"
-                            placeholder="Search paper..."
-                            value={innerPaperSearchTerm}
-                            className="w-full bg-gray-50 border-none rounded-md py-1 pl-8 pr-3 text-xs focus:ring-1 focus:ring-sky-500"
-                            onClick={(e) => e.stopPropagation()}
-                            onChange={(e) => setInnerPaperSearchTerm(e.target.value)}
-                          />
-                        </div>
-                      </div>
-
-                      {filteredStocks.filter((s) => matchesInnerSearch(s, innerPaperSearchTerm)).length > 0 ? (
-                        filteredStocks
-                          .filter((s) => matchesInnerSearch(s, innerPaperSearchTerm))
-                          .map(stock => (
-                            <button
-                              key={stock._id}
-                              type="button"
-                              onClick={() => {
-                                setSelectedInnerPaper(getInnerPaperLabel(stock));
-                                setSelectedInnerPaperLabel(formatInnerPaperOption(stock));
-                                setInnerPaperGSM(stock.innerGSM || stock.gsm || '');
-                                if (stock.innerPaperSize) {
-                                  setInnerPaperDetails(stock.innerPaperSize);
-                                }
-                                setIsInnerPaperDropdownOpen(false);
-                              }}
-                              className={`w-full px-4 py-2.5 text-left text-sm flex items-center justify-between hover:bg-sky-50 transition-colors ${selectedInnerPaper === getInnerPaperLabel(stock) ? 'bg-sky-50/50 text-sky-700 font-bold' : 'text-gray-700'}`}
-                            >
-                              <div className="flex items-center gap-3 min-w-0">
-                                <FileText size={14} className={selectedInnerPaper === getInnerPaperLabel(stock) ? 'text-sky-500' : 'text-gray-300'} />
-                                <span className="truncate">
-                                  {getInnerPaperLabel(stock)}{' '}
-                                  <span className="text-[10px] text-gray-500">
-                                    ({stock.innerGSM || stock.gsm} GSM)
-                                  </span>
-                                  {stock.innerPaperSize && (
-                                    <span className="text-[10px] font-bold text-indigo-600 ml-1">
-                                      · {stock.innerPaperSize}
-                                    </span>
-                                  )}
-                                </span>
-                              </div>
-                              {selectedInnerPaper === getInnerPaperLabel(stock) && <div className="w-1.5 h-1.5 rounded-full bg-sky-500 shrink-0" />}
-                            </button>
-                          ))
-                      ) : (
-                        <div className="px-4 py-2 text-xs text-gray-400 italic">No paper stocks found</div>
-                      )}
-
-                      <div className="border-t border-gray-50 mt-2 pt-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedInnerPaper('Custom');
-                            setSelectedInnerPaperLabel('Custom');
-                            setIsInnerPaperDropdownOpen(false);
-                          }}
-                          className={`w-full px-4 py-2 text-left text-xs font-black uppercase tracking-widest transition-colors ${selectedInnerPaper === 'Custom' ? 'text-purple-600 bg-purple-50' : 'text-gray-400 hover:text-purple-600 hover:bg-purple-50'}`}
-                        >
-                          + Use Custom Paper
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                  <input type="hidden" name="innerPaper" value={selectedInnerPaper} />
-                </div>
-              </div>
-
-              <div className="flex flex-col">
-                <label className="text-xs font-bold text-gray-500 mb-1">Inner paper gsm</label>
-                <input
-                  type="text"
-                  name="innerPaperGSM"
-                  value={innerPaperGSM}
-                  onChange={(e) => setInnerPaperGSM(e.target.value)}
-                  className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
-                  placeholder="e.g. 80, 100"
-                />
-              </div>
-
-              <div className="flex flex-col">
-                <label className="text-xs font-bold text-gray-500 mb-1">Inner paper count</label>
-                <input
-                  type="number"
-                  name="innerPaperCount"
-                  value={innerPaperCount}
-                  onChange={(e) => setInnerPaperCount(e.target.value)}
-                  min="0"
-                  className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
-                  placeholder="0"
-                />
-              </div>
-
-              <div className="flex flex-col">
-                <label className="text-xs font-bold text-gray-500 mb-1">Inner paper Details</label>
-                <input
-                  type="text"
-                  name="innerPaperDetails"
-                  value={innerPaperDetails}
-                  onChange={(e) => setInnerPaperDetails(e.target.value)}
-                  className="h-10 border border-gray-200 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
-                  placeholder="e.g. Extra info"
-                />
-              </div>
-            </div>
+            <JobPaperLinesEditor
+              title="Inner Paper Details"
+              lines={innerPaperLines}
+              onChange={setInnerPaperLines}
+              stocks={innerStocks}
+              getPaperLabel={getInnerPaperLabel}
+              getPaperGsm={(stock) => stock.innerGSM || stock.gsm || ''}
+              getPaperDetails={(stock) => stock.innerPaperSize || ''}
+              formatOption={formatInnerPaperOption}
+            />
           </div>
         </div>
 
@@ -902,29 +603,28 @@ export default function JobCardForm() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            <div className="flex flex-col">
+            <div className="flex flex-col sm:col-span-2">
               <label className="text-sm font-medium text-gray-700 mb-1">Plate Size</label>
-              <select
-                name="plateSize"
-                value={plateSize}
-                onChange={handlePlateSizeChange}
-                className="h-10 border border-gray-200 rounded-lg px-4 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-              >
-                <option value="">Select Plate Size</option>
-                <option value="560*670">560*670</option>
-                <option value="800*1030">800*1030</option>
-                <option value="820*1030">820*1030</option>
-                <option value="540*780">540*780</option>
-                <option value="608*890">608*890</option>
-                <option value="715*915">715*915</option>
-              </select>
+              <div className="border border-gray-200 rounded-lg p-3 bg-white grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {PLATE_SIZE_OPTIONS.map((size) => (
+                  <label key={size} className="inline-flex items-center gap-2 text-sm text-gray-800 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={plateSizes.includes(size)}
+                      onChange={() => togglePlateSize(size)}
+                      className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                    />
+                    <span>{size}</span>
+                  </label>
+                ))}
+              </div>
             </div>
             <div className="flex flex-col">
               <label className="text-sm font-medium text-gray-700 mb-1">Plate Number</label>
               <input
                 type="text"
                 readOnly
-                value={plateSize ? plateUseCount : ''}
+                value={plateSizes.length ? plateUseCount : ''}
                 placeholder="Auto"
                 className="h-10 border border-gray-200 rounded-lg px-4 bg-gray-50 text-gray-800 font-semibold focus:outline-none cursor-default"
               />

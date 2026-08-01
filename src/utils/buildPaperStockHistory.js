@@ -1,21 +1,41 @@
 const normalize = (value) => String(value || '').trim().toLowerCase();
 
-const getCoverUsage = (job) => {
-  if (!job || !job.paper || !job.paperGSM) {
-    return null;
+const getCoverUsages = (job) => {
+  if (!job) return [];
+
+  if (Array.isArray(job.coverPaperLines) && job.coverPaperLines.length) {
+    return job.coverPaperLines
+      .filter((line) => line?.paper && line.paperGSM)
+      .map((line) => ({
+        paper: line.paper,
+        qty: Number(line.count) > 0 ? Number(line.count) : Number(job.jobQty) || 0,
+      }))
+      .filter((usage) => usage.qty > 0);
   }
+
+  if (!job.paper || !job.paperGSM) return [];
   const qty = Number(job.coverPaperCount) > 0 ? Number(job.coverPaperCount) : Number(job.jobQty) || 0;
-  if (qty <= 0) return null;
-  return { paper: job.paper, qty };
+  if (qty <= 0) return [];
+  return [{ paper: job.paper, qty }];
 };
 
-const getInnerUsage = (job) => {
-  if (!job || !job.innerPaper || !job.innerPaperGSM) {
-    return null;
+const getInnerUsages = (job) => {
+  if (!job) return [];
+
+  if (Array.isArray(job.innerPaperLines) && job.innerPaperLines.length) {
+    return job.innerPaperLines
+      .filter((line) => line?.paper && line.paperGSM)
+      .map((line) => ({
+        paper: line.paper,
+        qty: Number(line.count) > 0 ? Number(line.count) : Number(job.jobQty) || 0,
+      }))
+      .filter((usage) => usage.qty > 0);
   }
+
+  if (!job.innerPaper || !job.innerPaperGSM) return [];
   const qty = Number(job.innerPaperCount) > 0 ? Number(job.innerPaperCount) : Number(job.jobQty) || 0;
-  if (qty <= 0) return null;
-  return { paper: job.innerPaper, qty };
+  if (qty <= 0) return [];
+  return [{ paper: job.innerPaper, qty }];
 };
 
 const matchesPaperSource = (job, stock) =>
@@ -32,16 +52,16 @@ const matchesPaperName = (stock, paperName, paperType) => {
 
 const sumCoverDeductions = (jobs, stock) => jobs.reduce((sum, job) => {
   if (!matchesPaperSource(job, stock)) return sum;
-  const usage = getCoverUsage(job);
-  if (!usage || !matchesPaperName(stock, usage.paper, 'cover')) return sum;
-  return sum + usage.qty;
+  return sum + getCoverUsages(job).reduce((lineSum, usage) => (
+    matchesPaperName(stock, usage.paper, 'cover') ? lineSum + usage.qty : lineSum
+  ), 0);
 }, 0);
 
 const sumInnerDeductions = (jobs, stock) => jobs.reduce((sum, job) => {
   if (!matchesPaperSource(job, stock)) return sum;
-  const usage = getInnerUsage(job);
-  if (!usage || !matchesPaperName(stock, usage.paper, 'inner')) return sum;
-  return sum + usage.qty;
+  return sum + getInnerUsages(job).reduce((lineSum, usage) => (
+    matchesPaperName(stock, usage.paper, 'inner') ? lineSum + usage.qty : lineSum
+  ), 0);
 }, 0);
 
 const makeId = (parts) => parts.filter(Boolean).join('-');
