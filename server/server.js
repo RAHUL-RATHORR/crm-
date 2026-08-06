@@ -34,6 +34,7 @@ import estimateRoutes from "./routes/estimateRoutes.js";
 import itemRoutes from "./routes/itemRoutes.js";
 import staffRoutes from "./routes/staffRoutes.js";
 import roleRoutes from "./routes/roleRoutes.js";
+import recentDeletedRoutes from "./routes/recentDeletedRoutes.js";
 import { seedStaffAndRoles } from "./utils/seedStaff.js";
 import { reconcilePaperStockFromJobs } from "./utils/paperStockDeduction.js";
 
@@ -115,6 +116,7 @@ app.use("/api/estimate", estimateRoutes);
 app.use("/api/items", itemRoutes);
 app.use("/api/staff", staffRoutes);
 app.use("/api/roles", roleRoutes);
+app.use("/api/recent-deleted", recentDeletedRoutes);
 
 // API Test Route (Internal)
 app.get("/api/health", (req, res) => {

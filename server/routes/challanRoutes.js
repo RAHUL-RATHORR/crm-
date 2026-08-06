@@ -1,6 +1,7 @@
 import express from 'express';
 const router = express.Router();
 import Challan from '../models/Challan.js';
+import DeletedItem from '../models/DeletedItem.js';
 
 // POST /api/challan - Create or Update Challan
 router.post('/', async (req, res) => {
@@ -64,8 +65,16 @@ router.put('/:id', async (req, res) => {
 // DELETE /api/challan/:id - Delete a Challan
 router.delete('/:id', async (req, res) => {
   try {
+    const doc = await Challan.findById(req.params.id);
+    if (!doc) return res.status(404).json({ message: "Challan not found" });
+    await DeletedItem.create({
+      originalId: doc._id,
+      collectionName: 'Challan',
+      itemName: doc.challanNo || 'Unknown Challan',
+      itemType: 'Challan',
+      documentData: doc.toObject()
+    });
     const result = await Challan.findByIdAndDelete(req.params.id);
-    if (!result) return res.status(404).json({ message: "Challan not found" });
     res.json({ message: "Challan deleted successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });

@@ -9,6 +9,8 @@
   "main": "electron.js",
   "scripts": {
     "dev": "vite",
+    "server": "node server/server.js",
+    "dev:all": "concurrently \"node server/server.js\" \"vite\"",
     "build": "npm install --include=dev && npm install --prefix server && vite build",
     "start": "node electron.js",
     "postinstall": "npm install --prefix server",
@@ -16,6 +18,7 @@
     "preview": "vite preview",
     "make-installer": "electron-builder --win"
   },
+
   "build": {
     "asar": false,
     "appId": "com.trickwrick.crm",

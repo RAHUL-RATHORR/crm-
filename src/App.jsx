@@ -40,6 +40,7 @@ import AddEstimate from './AddEstimate';
 import ItemListManagement from './ItemListManagement';
 import ContactSupport from './ContactSupport';
 import StaffTeamManagement from './StaffTeamManagement';
+import RecentDeleted from './RecentDeleted';
 import { API_BASE_URL } from './utils/apiBase';
 import { clearSession, saveSession, getLegacyAdminUser } from './utils/authSession';
 import { hasPermission, canAccessStaffTeam, canAccessDashboard, getDefaultRoute, isAdminUser } from './utils/permissions';
@@ -550,6 +551,7 @@ export default function App() {
   const profileSettingsItems = [
     { label: 'Change Password', path: '/settings/password' },
     ...(hasPermission('itemList', 'view') ? [{ label: 'Listed Items', path: '/item-list' }] : []),
+    { label: 'Recently Deleted', path: '/recent-deleted' },
   ];
 
   const staffTeamItems = [
@@ -950,6 +952,7 @@ export default function App() {
           <Route path="/estimates" element={<Estimates />} />
           <Route path="/estimates/add" element={<AddEstimate />} />
           <Route path="/item-list" element={<ItemListManagement />} />
+          <Route path="/recent-deleted" element={<RecentDeleted />} />
         </Routes>
       </div>
     </div>

@@ -2,6 +2,7 @@ import express from 'express';
 const router = express.Router();
 import PaperStock from '../models/PaperStock.js';
 import PaperStockTransaction from '../models/PaperStockTransaction.js';
+import DeletedItem from '../models/DeletedItem.js';
 import { logPaperStockTransaction } from '../utils/paperStockTransactions.js';
 import { syncTotalQuantity } from '../utils/paperStockDeduction.js';
 
@@ -60,6 +61,18 @@ router.delete('/transactions/:transactionId', async (req, res) => {
   }
 });
 
+// GET /api/paper-stock/deletions - Recently deleted paper stock items
+router.get('/deletions', async (req, res) => {
+  try {
+    const deletions = await PaperStockTransaction.find({ transactionType: 'deleted_item' })
+      .sort({ createdAt: -1 })
+      .limit(20);
+    res.json(deletions);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET /api/paper-stock/:id/transactions - Add history for one stock item
 router.get('/:id/transactions', async (req, res) => {
   try {
@@ -81,7 +94,7 @@ router.get('/:id/transactions', async (req, res) => {
 // GET /api/paper-stock - Get all stock items
 router.get('/', async (req, res) => {
   try {
-    const stock = await PaperStock.find().sort({ name: 1, gsm: 1 });
+    const stock = await PaperStock.find().sort({ updatedAt: -1, createdAt: -1 });
     res.json(stock);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -256,13 +269,39 @@ router.put('/:id', async (req, res) => {
 // DELETE /api/paper-stock/:id - Delete stock item
 router.delete('/:id', async (req, res) => {
   try {
+    const doc = await PaperStock.findById(req.params.id);
+    if (!doc) {
+      return res.status(404).json({ message: 'Paper stock not found' });
+    }
+    await DeletedItem.create({
+      originalId: doc._id,
+      collectionName: 'PaperStock',
+      itemName: `${doc.paperBrand || ''} ${doc.paperSize || ''} ${doc.paperGsm || ''}`.trim() || 'Unknown Stock',
+      itemType: 'Paper Stock',
+      documentData: doc.toObject()
+    });
     const deleted = await PaperStock.findByIdAndDelete(req.params.id);
-    if (!deleted) return res.status(404).json({ error: "Item not found" });
-    await PaperStockTransaction.deleteMany({ paperStockId: deleted._id });
+
+    // Log deletion so it appears in Recent Deletions
+    await PaperStockTransaction.create({
+      paperStockId: deleted._id,
+      stockName: deleted.name,
+      paperName: deleted.name,
+      paperType: 'cover',
+      transactionType: 'deleted_item',
+      quantity: Number(deleted.coverQuantity || 0) + Number(deleted.innerQuantity || 0),
+      partyName: deleted.coverPartyName || deleted.innerPartyName || '',
+      note: `Item deleted – Cover: ${deleted.coverQuantity || 0}, Inner: ${deleted.innerQuantity || 0}`,
+      balanceAfter: 0,
+      createdAt: new Date(),
+    });
+
+    await PaperStockTransaction.deleteMany({ paperStockId: deleted._id, transactionType: { $ne: 'deleted_item' } });
     res.json({ message: "Item deleted successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 export default router;

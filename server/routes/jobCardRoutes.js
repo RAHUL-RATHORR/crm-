@@ -2,6 +2,7 @@ import express from 'express';
 const router = express.Router();
 import JobCard from '../models/JobCard.js';
 import Notification from '../models/Notification.js';
+import DeletedItem from '../models/DeletedItem.js';
 import { syncStockFromJobChange } from '../utils/paperStockDeduction.js';
 
 const parsePlateSizes = (value) => {
@@ -184,8 +185,16 @@ router.get('/:id', async (req, res) => {
 // DELETE /api/jobcard/:id
 router.delete('/:id', async (req, res) => {
   try {
+    const doc = await JobCard.findById(req.params.id);
+    if (!doc) return res.status(404).json({ message: "Job Card not found" });
+    await DeletedItem.create({
+      originalId: doc._id,
+      collectionName: 'JobCard',
+      itemName: doc.jobCardNo || doc.jobName || 'Unknown Job Card',
+      itemType: 'Job Card',
+      documentData: doc.toObject()
+    });
     const result = await JobCard.findByIdAndDelete(req.params.id);
-    if (!result) return res.status(404).json({ message: "Job Card not found" });
     res.json({ message: "Job Card deleted successfully" });
   } catch (err) {
     console.error(`❌ Delete Error: ${err.message}`);

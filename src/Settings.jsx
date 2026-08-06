@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, Lock, CheckCircle, AlertTriangle, Eye, EyeOff } from 'lucide-react';
+import { ShieldCheck, Lock, CheckCircle, AlertTriangle, Eye, EyeOff, Trash2, PackageX, Clock } from 'lucide-react';
 import { API_BASE_URL } from './utils/apiBase';
 import { getCurrentUser } from './utils/permissions';
 import { DEFAULT_ADMIN_AUTH } from './utils/adminConfig';
@@ -13,7 +13,27 @@ const Settings = () => {
     newPassword: '',
     confirmPassword: ''
   });
+  const [recentDeletions, setRecentDeletions] = useState([]);
+  const [deletionsLoading, setDeletionsLoading] = useState(true);
   const [status, setStatus] = useState({ type: '', message: '' });
+
+  useEffect(() => {
+    setDeletionsLoading(true);
+    fetch(`${API_BASE_URL}/api/paper-stock/deletions`)
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then((data) => {
+        setRecentDeletions(data);
+        setDeletionsLoading(false);
+      })
+      .catch((err) => {
+        console.error('Error fetching recent deletions:', err);
+        setDeletionsLoading(false);
+      });
+  }, []);
+
   const [showPasswords, setShowPasswords] = useState({
     old: false,
     new: false,
@@ -80,15 +100,22 @@ const Settings = () => {
     setStatus({ type: 'success', message: 'Password updated successfully! Next time you log in, use your new password.' });
   };
 
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '—';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) +
+      ' ' + d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+  };
+
   return (
     <div className="mx-auto mt-8 pb-12">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
             <div className="bg-blue-600 w-1.5 h-6 rounded-full" />
-            Change Password
+            Settings
           </h1>
-          <p className="text-sm sm:text-base text-gray-500 mt-1 font-medium italic">Update your account security</p>
+          <p className="text-sm sm:text-base text-gray-500 mt-1 font-medium italic">Manage your account and activity</p>
         </div>
       </div>
 
@@ -107,6 +134,18 @@ const Settings = () => {
             </p>
           </div>
 
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="bg-blue-100 p-2 rounded-lg text-blue-600">
+                <PackageX size={20} />
+              </div>
+              <h2 className="text-lg font-bold text-gray-800">Paper Stock</h2>
+            </div>
+            <p className="text-sm text-gray-600 leading-relaxed">
+              View recently deleted paper stock items below. These records are kept for audit purposes.
+            </p>
+          </div>
+
           <div className="bg-indigo-900 p-6 rounded-2xl shadow-xl text-white">
             <h3 className="font-bold mb-2">Need help?</h3>
             <p className="text-xs text-indigo-100/80 leading-relaxed mb-4">
@@ -122,8 +161,10 @@ const Settings = () => {
           </div>
         </div>
 
-        {/* Right Column: Change Password Form */}
-        <div className="lg:col-span-2">
+        {/* Right Column */}
+        <div className="lg:col-span-2 space-y-8">
+
+          {/* Change Password Form */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="p-6 border-b border-gray-50 flex items-center gap-3">
               <Lock className="text-gray-400" size={20} />
@@ -218,6 +259,97 @@ const Settings = () => {
               </form>
             </div>
           </div>
+
+          {/* Listed Items Section */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="p-6 border-b border-gray-50 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="bg-blue-100 p-2 rounded-lg text-blue-600">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                </div>
+                <h2 className="text-lg font-bold text-gray-800">Listed Items</h2>
+              </div>
+              <button
+                onClick={() => navigate('/item-list')}
+                className="text-sm font-semibold text-blue-600 hover:text-blue-700 hover:underline transition-colors"
+              >
+                Manage Items →
+              </button>
+            </div>
+            <div className="p-6">
+              <p className="text-sm text-gray-500">
+                View and manage all items saved in the system — used across invoices, challans and job cards.
+              </p>
+              <button
+                onClick={() => navigate('/item-list')}
+                className="mt-4 inline-flex items-center gap-2 bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold text-sm px-4 py-2.5 rounded-xl transition-colors"
+              >
+                Open Item List
+              </button>
+            </div>
+          </div>
+
+          {/* ── Recent Deletions Section ── */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="p-6 border-b border-gray-50 flex items-center gap-3">
+              <div className="bg-red-100 p-2 rounded-lg text-red-500">
+                <Trash2 size={20} />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-gray-800">Recently Deleted Paper Stock</h2>
+                <p className="text-xs text-gray-400 mt-0.5">Last 20 deleted items — kept for audit trail</p>
+              </div>
+            </div>
+
+            <div className="p-6">
+              {deletionsLoading ? (
+                <div className="flex items-center gap-3 text-gray-400 py-4">
+                  <div className="animate-spin w-5 h-5 border-2 border-gray-300 border-t-blue-500 rounded-full" />
+                  <span className="text-sm">Loading...</span>
+                </div>
+              ) : recentDeletions.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-10 text-gray-400">
+                  <PackageX size={40} className="mb-3 opacity-30" />
+                  <p className="text-sm font-medium">Koi bhi item delete nahi hua abhi tak</p>
+                  <p className="text-xs mt-1 text-gray-300">Jab bhi koi paper stock item delete hoga, yahan dikhega</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {recentDeletions.map((txn) => (
+                    <div
+                      key={txn._id}
+                      className="flex items-start justify-between gap-4 p-4 rounded-xl bg-red-50/50 border border-red-100 hover:bg-red-50 transition-colors"
+                    >
+                      <div className="flex items-start gap-3 min-w-0">
+                        <div className="bg-red-100 p-1.5 rounded-lg text-red-400 mt-0.5 shrink-0">
+                          <Trash2 size={14} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold text-gray-800 truncate">{txn.stockName || txn.paperName || 'Unnamed Item'}</p>
+                          {txn.partyName && (
+                            <p className="text-xs text-gray-500 mt-0.5">Party: {txn.partyName}</p>
+                          )}
+                          {txn.note && (
+                            <p className="text-xs text-gray-400 mt-0.5 truncate">{txn.note}</p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end gap-1 shrink-0">
+                        <span className="text-xs font-bold text-red-500 bg-red-100 px-2 py-0.5 rounded-full whitespace-nowrap">
+                          Qty: {txn.quantity || 0}
+                        </span>
+                        <span className="flex items-center gap-1 text-[11px] text-gray-400 whitespace-nowrap">
+                          <Clock size={10} />
+                          {formatDate(txn.createdAt)}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
         </div>
       </div>
     </div>

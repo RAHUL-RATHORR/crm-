@@ -109,7 +109,9 @@ const PaperStockManagement = () => {
     try {
       const res = await fetch(`${API_BASE_URL}/api/paper-stock`);
       const data = await res.json();
-      setStock(mergePaperSizes(data));
+      // Sort by updatedAt (newest first)
+      const sortedData = data.sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt));
+      setStock(mergePaperSizes(sortedData));
     } catch (err) {
       console.error("Fetch error:", err);
     } finally {

@@ -1,6 +1,7 @@
 import express from 'express';
 const router = express.Router();
 import Invoice from '../models/Invoice.js';
+import DeletedItem from '../models/DeletedItem.js';
 
 // POST /api/invoice - Create or Update Invoice
 router.post('/', async (req, res) => {
@@ -64,8 +65,16 @@ router.put('/:id', async (req, res) => {
 // DELETE /api/invoice/:id - Delete an Invoice
 router.delete('/:id', async (req, res) => {
   try {
+    const doc = await Invoice.findById(req.params.id);
+    if (!doc) return res.status(404).json({ message: "Invoice not found" });
+    await DeletedItem.create({
+      originalId: doc._id,
+      collectionName: 'Invoice',
+      itemName: doc.invoiceNumber || 'Unknown Invoice',
+      itemType: 'Invoice',
+      documentData: doc.toObject()
+    });
     const result = await Invoice.findByIdAndDelete(req.params.id);
-    if (!result) return res.status(404).json({ message: "Invoice not found" });
     res.json({ message: "Invoice deleted successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
