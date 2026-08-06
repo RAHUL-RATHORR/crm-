@@ -140,7 +140,8 @@ export default function JobCardForm() {
     if (!name) return '';
     const gsmText = gsm ? ` (${gsm} GSM)` : '';
     const sizeText = stock.coverPaperSize ? ` · ${stock.coverPaperSize}` : '';
-    return `${name}${gsmText}${sizeText}`;
+    const partyText = stock.coverPartyName ? ` [${stock.coverPartyName}]` : '';
+    return `${name}${gsmText}${sizeText}${partyText}`;
   };
 
   const formatInnerPaperOption = (stock) => {
@@ -149,7 +150,8 @@ export default function JobCardForm() {
     if (!name) return '';
     const gsmText = gsm ? ` (${gsm} GSM)` : '';
     const sizeText = stock.innerPaperSize ? ` · ${stock.innerPaperSize}` : '';
-    return `${name}${gsmText}${sizeText}`;
+    const partyText = stock.innerPartyName ? ` [${stock.innerPartyName}]` : '';
+    return `${name}${gsmText}${sizeText}${partyText}`;
   };
 
   const coverStocks = filteredStocks.filter((stock) => getCoverPaperLabel(stock));
