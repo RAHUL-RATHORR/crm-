@@ -9,7 +9,9 @@ import { syncTotalQuantity } from '../utils/paperStockDeduction.js';
 // GET /api/paper-stock/transactions - Stock add/deduct history
 router.get('/transactions', async (req, res) => {
   try {
-    const transactions = await PaperStockTransaction.find().sort({ createdAt: -1 });
+    const transactions = await PaperStockTransaction.find({
+      transactionType: { $in: ['add', 'deduct'] },
+    }).sort({ createdAt: -1 });
     res.json(transactions);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -276,13 +278,31 @@ router.delete('/:id', async (req, res) => {
     await DeletedItem.create({
       originalId: doc._id,
       collectionName: 'PaperStock',
-      itemName: `${doc.paperBrand || ''} ${doc.paperSize || ''} ${doc.paperGsm || ''}`.trim() || 'Unknown Stock',
+      itemName: `${doc.paperBrand || ''} ${doc.paperSize || ''} ${doc.paperGsm || ''}`.trim() || doc.name || 'Unknown Stock',
       itemType: 'Paper Stock',
       documentData: doc.toObject()
     });
     const deleted = await PaperStock.findByIdAndDelete(req.params.id);
 
-    // Log deletion so it appears in Recent Deletions
+    // Remove this stock's history from Paper Stock Statements
+    const relatedNames = [deleted.name, deleted.coverName, deleted.innerName]
+      .map((name) => String(name || '').trim())
+      .filter(Boolean);
+    const uniqueNames = [...new Set(relatedNames)];
+
+    await PaperStockTransaction.deleteMany({
+      $or: [
+        { paperStockId: deleted._id },
+        ...(uniqueNames.length
+          ? [
+              { stockName: { $in: uniqueNames } },
+              { paperName: { $in: uniqueNames } },
+            ]
+          : []),
+      ],
+    });
+
+    // Keep a short audit entry for Settings → Recently Deleted
     await PaperStockTransaction.create({
       paperStockId: deleted._id,
       stockName: deleted.name,
@@ -291,13 +311,13 @@ router.delete('/:id', async (req, res) => {
       transactionType: 'deleted_item',
       quantity: Number(deleted.coverQuantity || 0) + Number(deleted.innerQuantity || 0),
       partyName: deleted.coverPartyName || deleted.innerPartyName || '',
+      paperSource: deleted.paperSource || 'Company paper',
       note: `Item deleted – Cover: ${deleted.coverQuantity || 0}, Inner: ${deleted.innerQuantity || 0}`,
       balanceAfter: 0,
       createdAt: new Date(),
     });
 
-    await PaperStockTransaction.deleteMany({ paperStockId: deleted._id, transactionType: { $ne: 'deleted_item' } });
-    res.json({ message: "Item deleted successfully" });
+    res.json({ message: 'Item deleted successfully' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
