@@ -6,24 +6,39 @@ export const emptyPaperLine = () => ({
   details: '',
 });
 
+const text = (value) => String(value ?? '').trim();
+
+const hasPaperLineContent = (line) =>
+  !!(text(line?.paper) || text(line?.paperGSM) || Number(line?.count) > 0 || text(line?.details));
+
+const toPaperLine = (line = {}, fallback = {}) => ({
+  paper: text(line.paper || fallback.paper),
+  paperGSM: text(line.paperGSM || fallback.paperGSM),
+  count: line.count ?? fallback.count ?? '',
+  details: text(line.details || fallback.details),
+});
+
 export const normalizeCoverPaperLines = (editData) => {
-  if (editData?.coverPaperLines?.length) {
-    return editData.coverPaperLines.map((line) => ({
-      id: line.id || `${Date.now()}-${Math.random()}`,
-      paper: line.paper || '',
-      paperGSM: line.paperGSM || '',
-      count: line.count ?? '',
-      details: line.details || '',
+  const saved = (editData?.coverPaperLines || []).filter(hasPaperLineContent);
+  if (saved.length) {
+    return saved.map((line) => ({
+      id: line.id || line._id || `${Date.now()}-${Math.random()}`,
+      ...toPaperLine(line, {
+        paper: editData?.paper,
+        paperGSM: editData?.paperGSM,
+        count: editData?.coverPaperCount,
+        details: editData?.coverPaperDetails,
+      }),
     }));
   }
 
-  if (editData?.paper) {
+  if (editData?.paper || editData?.paperGSM || Number(editData?.coverPaperCount) > 0 || editData?.coverPaperDetails) {
     return [{
       id: 'legacy-cover',
-      paper: editData.paper,
+      paper: editData.paper || '',
       paperGSM: editData.paperGSM || '',
       count: editData.coverPaperCount ?? '',
-      details: editData.coverPaperDetails || '',
+      details: editData.coverPaperDetails || editData.paperSize || '',
     }];
   }
 
@@ -31,20 +46,23 @@ export const normalizeCoverPaperLines = (editData) => {
 };
 
 export const normalizeInnerPaperLines = (editData) => {
-  if (editData?.innerPaperLines?.length) {
-    return editData.innerPaperLines.map((line) => ({
-      id: line.id || `${Date.now()}-${Math.random()}`,
-      paper: line.paper || '',
-      paperGSM: line.paperGSM || '',
-      count: line.count ?? '',
-      details: line.details || '',
+  const saved = (editData?.innerPaperLines || []).filter(hasPaperLineContent);
+  if (saved.length) {
+    return saved.map((line) => ({
+      id: line.id || line._id || `${Date.now()}-${Math.random()}`,
+      ...toPaperLine(line, {
+        paper: editData?.innerPaper,
+        paperGSM: editData?.innerPaperGSM,
+        count: editData?.innerPaperCount,
+        details: editData?.innerPaperDetails,
+      }),
     }));
   }
 
-  if (editData?.innerPaper) {
+  if (editData?.innerPaper || editData?.innerPaperGSM || Number(editData?.innerPaperCount) > 0 || editData?.innerPaperDetails) {
     return [{
       id: 'legacy-inner',
-      paper: editData.innerPaper,
+      paper: editData.innerPaper || '',
       paperGSM: editData.innerPaperGSM || '',
       count: editData.innerPaperCount ?? '',
       details: editData.innerPaperDetails || '',
@@ -56,12 +74,12 @@ export const normalizeInnerPaperLines = (editData) => {
 
 export const serializePaperLines = (lines = []) =>
   lines
-    .filter((line) => line.paper)
+    .filter(hasPaperLineContent)
     .map(({ paper, paperGSM, count, details }) => ({
-      paper,
-      paperGSM: paperGSM || '',
+      paper: text(paper),
+      paperGSM: text(paperGSM),
       count: Number(count) || 0,
-      details: details || '',
+      details: text(details),
     }));
 
 export const buildLegacyPaperFields = (coverLines, innerLines) => {
@@ -69,32 +87,111 @@ export const buildLegacyPaperFields = (coverLines, innerLines) => {
   const inner = serializePaperLines(innerLines);
 
   return {
-    paper: cover[0]?.paper || '',
-    paperGSM: cover[0]?.paperGSM || '',
+    paper: cover.map((line) => line.paper).filter(Boolean).join(', ') || '',
+    paperGSM: cover.map((line) => line.paperGSM).filter(Boolean).join(', ') || '',
     coverPaperCount: cover.reduce((sum, line) => sum + (Number(line.count) || 0), 0),
-    coverPaperDetails: cover.map((line) => line.details).filter(Boolean).join('; ') || cover[0]?.details || '',
-    innerPaper: inner[0]?.paper || '',
-    innerPaperGSM: inner[0]?.paperGSM || '',
+    coverPaperDetails: cover.map((line) => line.details).filter(Boolean).join('; ') || '',
+    innerPaper: inner.map((line) => line.paper).filter(Boolean).join(', ') || '',
+    innerPaperGSM: inner.map((line) => line.paperGSM).filter(Boolean).join(', ') || '',
     innerPaperCount: inner.reduce((sum, line) => sum + (Number(line.count) || 0), 0),
-    innerPaperDetails: inner.map((line) => line.details).filter(Boolean).join('; ') || inner[0]?.details || '',
+    innerPaperDetails: inner.map((line) => line.details).filter(Boolean).join('; ') || '',
   };
 };
 
-export const formatPaperLinesForPrint = (lines = []) => {
-  const entries = Array.isArray(lines) && lines.length
-    ? lines
-    : [];
-
-  if (!entries.length) return '-';
-
-  return entries
-    .filter((line) => line.paper)
-    .map((line) => {
-      const count = Number(line.count) || 0;
-      const gsm = line.paperGSM ? ` (${line.paperGSM} GSM)` : '';
-      const details = line.details ? ` · ${line.details}` : '';
-      const countText = count > 0 ? ` · ${count} sheets` : '';
-      return `${line.paper}${gsm}${countText}${details}`;
-    })
-    .join('; ') || '-';
+const collectCoverLines = (card = {}) => {
+  const saved = (card.coverPaperLines || []).filter(hasPaperLineContent).map((line) => toPaperLine(line));
+  const legacy = toPaperLine({
+    paper: card.paper,
+    paperGSM: card.paperGSM,
+    count: card.coverPaperCount,
+    details: card.coverPaperDetails || card.paperSize || card.paperFrom,
+  });
+  const merged = [...saved];
+  if (hasPaperLineContent(legacy) && !saved.some((line) =>
+    line.paper === legacy.paper && line.paperGSM === legacy.paperGSM && String(line.count) === String(legacy.count)
+  )) {
+    merged.push(legacy);
+  }
+  return merged.filter(hasPaperLineContent);
 };
+
+const collectInnerLines = (card = {}) => {
+  const saved = (card.innerPaperLines || []).filter(hasPaperLineContent).map((line) => toPaperLine(line));
+  const legacy = toPaperLine({
+    paper: card.innerPaper,
+    paperGSM: card.innerPaperGSM,
+    count: card.innerPaperCount,
+    details: card.innerPaperDetails,
+  });
+  const merged = [...saved];
+  if (hasPaperLineContent(legacy) && !saved.some((line) =>
+    line.paper === legacy.paper && line.paperGSM === legacy.paperGSM && String(line.count) === String(legacy.count)
+  )) {
+    merged.push(legacy);
+  }
+  return merged.filter(hasPaperLineContent);
+};
+
+export const getCoverPaperLinesForPrint = (card = {}) => collectCoverLines(card);
+export const getInnerPaperLinesForPrint = (card = {}) => collectInnerLines(card);
+
+export const formatPaperLinesForPrint = (lines = []) => {
+  const formatted = (Array.isArray(lines) ? lines : [])
+    .filter(hasPaperLineContent)
+    .map((line) => {
+      const parts = [];
+      if (text(line.paper)) parts.push(text(line.paper));
+      if (text(line.paperGSM)) parts.push(`${text(line.paperGSM)} GSM`);
+      const count = Number(line.count);
+      if (count > 0) parts.push(`${count} sheets`);
+      if (text(line.details)) parts.push(text(line.details));
+      return parts.join(' · ');
+    })
+    .filter(Boolean);
+
+  return formatted.length ? formatted.join('; ') : '-';
+};
+
+export const formatCoverCountGsm = (card = {}) => {
+  const lines = collectCoverLines(card);
+  const count = lines.reduce((sum, line) => sum + (Number(line.count) || 0), 0)
+    || Number(card.coverPaperCount)
+    || 0;
+  const gsm = lines.map((line) => text(line.paperGSM)).filter(Boolean).join(', ')
+    || text(card.paperGSM)
+    || '-';
+  return `${count} (${gsm})`;
+};
+
+export const formatInnerCountGsm = (card = {}) => {
+  const lines = collectInnerLines(card);
+  const count = lines.reduce((sum, line) => sum + (Number(line.count) || 0), 0)
+    || Number(card.innerPaperCount)
+    || 0;
+  const gsm = lines.map((line) => text(line.paperGSM)).filter(Boolean).join(', ')
+    || text(card.innerPaperGSM)
+    || '-';
+  return `${count} (${gsm})`;
+};
+
+export const formatCoverDetails = (card = {}) =>
+  text(card.coverPaperDetails)
+  || collectCoverLines(card).map((line) => text(line.details)).filter(Boolean).join('; ')
+  || text(card.paperSize)
+  || '-';
+
+export const formatInnerDetails = (card = {}) =>
+  text(card.innerPaperDetails)
+  || collectInnerLines(card).map((line) => text(line.details)).filter(Boolean).join('; ')
+  || '-';
+
+export const formatCoverPaperName = (card = {}) =>
+  collectCoverLines(card).map((line) => text(line.paper)).filter(Boolean).join(', ')
+  || text(card.paper)
+  || '-';
+
+export const formatInnerPaperName = (card = {}) =>
+  collectInnerLines(card).map((line) => text(line.paper)).filter(Boolean).join(', ')
+  || text(card.innerPaper)
+  || '-';
+
