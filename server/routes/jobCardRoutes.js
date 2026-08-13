@@ -55,6 +55,37 @@ router.post('/', async (req, res) => {
       previousJob = await JobCard.findById(_id);
     }
 
+    // Keep existing paper fields if update would wipe them with empty values
+    if (previousJob) {
+      const incomingCoverLines = Array.isArray(req.body.coverPaperLines) ? req.body.coverPaperLines : null;
+      const incomingInnerLines = Array.isArray(req.body.innerPaperLines) ? req.body.innerPaperLines : null;
+      const coverEmpty = !incomingCoverLines?.length
+        && !String(req.body.paper || '').trim()
+        && !String(req.body.paperGSM || '').trim()
+        && !(Number(req.body.coverPaperCount) > 0)
+        && !String(req.body.coverPaperDetails || '').trim();
+      const innerEmpty = !incomingInnerLines?.length
+        && !String(req.body.innerPaper || '').trim()
+        && !String(req.body.innerPaperGSM || '').trim()
+        && !(Number(req.body.innerPaperCount) > 0)
+        && !String(req.body.innerPaperDetails || '').trim();
+
+      if (coverEmpty) {
+        req.body.paper = previousJob.paper;
+        req.body.paperGSM = previousJob.paperGSM;
+        req.body.coverPaperCount = previousJob.coverPaperCount;
+        req.body.coverPaperDetails = previousJob.coverPaperDetails;
+        req.body.coverPaperLines = previousJob.coverPaperLines;
+      }
+      if (innerEmpty) {
+        req.body.innerPaper = previousJob.innerPaper;
+        req.body.innerPaperGSM = previousJob.innerPaperGSM;
+        req.body.innerPaperCount = previousJob.innerPaperCount;
+        req.body.innerPaperDetails = previousJob.innerPaperDetails;
+        req.body.innerPaperLines = previousJob.innerPaperLines;
+      }
+    }
+
     if (req.body.plateSize) {
       const sizes = parsePlateSizes(req.body.plateSize);
       if (sizes.length) {

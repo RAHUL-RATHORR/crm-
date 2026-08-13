@@ -195,3 +195,62 @@ export const formatInnerPaperName = (card = {}) =>
   || text(card.innerPaper)
   || '-';
 
+/** Always-visible Paper & Stock rows for job card print (old + new cards). */
+export const buildPaperStockPrintRows = (card = {}) => {
+  const coverLines = collectCoverLines(card);
+  const innerLines = collectInnerLines(card);
+
+  const coverName = coverLines.map((line) => text(line.paper)).filter(Boolean).join(', ')
+    || text(card.paper)
+    || '-';
+  const coverGsm = coverLines.map((line) => text(line.paperGSM)).filter(Boolean).join(', ')
+    || text(card.paperGSM)
+    || '-';
+  const coverCount = coverLines.reduce((sum, line) => sum + (Number(line.count) || 0), 0)
+    || Number(card.coverPaperCount)
+    || 0;
+  const coverDetails = text(card.coverPaperDetails)
+    || coverLines.map((line) => text(line.details)).filter(Boolean).join('; ')
+    || text(card.paperSize)
+    || text(card.paperFrom)
+    || '-';
+
+  const innerName = innerLines.map((line) => text(line.paper)).filter(Boolean).join(', ')
+    || text(card.innerPaper)
+    || '-';
+  const innerGsm = innerLines.map((line) => text(line.paperGSM)).filter(Boolean).join(', ')
+    || text(card.innerPaperGSM)
+    || '-';
+  const innerCount = innerLines.reduce((sum, line) => sum + (Number(line.count) || 0), 0)
+    || Number(card.innerPaperCount)
+    || 0;
+  const innerDetails = text(card.innerPaperDetails)
+    || innerLines.map((line) => text(line.details)).filter(Boolean).join('; ')
+    || '-';
+
+  const coverExtra = coverLines.length > 1
+    ? formatPaperLinesForPrint(coverLines)
+    : '';
+  const innerExtra = innerLines.length > 1
+    ? formatPaperLinesForPrint(innerLines)
+    : '';
+
+  const rows = [
+    ['Cover Paper', coverName],
+    ['Cover Count / GSM', `${coverCount} (${coverGsm})`],
+    ['Cover Details', coverDetails],
+    ['Inner Paper', innerName],
+    ['Inner Count / GSM', `${innerCount} (${innerGsm})`],
+    ['Inner Details', innerDetails],
+  ];
+
+  if (coverExtra && coverExtra !== '-') {
+    rows.splice(3, 0, ['Cover Papers', coverExtra]);
+  }
+  if (innerExtra && innerExtra !== '-') {
+    rows.push(['Inner Papers', innerExtra]);
+  }
+
+  return rows;
+};
+

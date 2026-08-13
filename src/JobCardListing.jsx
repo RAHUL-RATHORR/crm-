@@ -6,12 +6,8 @@ import { printElement } from './utils/printDocument';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
 import { syncPlateUsageFromCards, formatPlateSizes, formatPlateUseCounts } from './utils/plateUsage';
 import {
-  formatCoverCountGsm,
-  formatInnerCountGsm,
-  formatCoverDetails,
-  formatInnerDetails,
   formatCoverPaperName,
-  formatInnerPaperName,
+  buildPaperStockPrintRows,
 } from './utils/jobPaperLines';
 import { SELLER, TaxFieldsTable, fmtTaxDate, CompanyBrandName } from './utils/taxDocumentPrint';
 import { API_BASE_URL } from './utils/apiBase';
@@ -694,14 +690,7 @@ export default function JobCardListing() {
                       <td colSpan={6} className="tax-cell align-top p-0">
                         <div className="tax-blue job-card-section-title text-center py-1 px-2">Paper &amp; Stock</div>
                         <div className="job-card-section-body p-1.5">
-                          <TaxFieldsTable rows={[
-                            ['Cover Paper', formatCoverPaperName(selectedCard)],
-                            ['Cover Count / GSM', formatCoverCountGsm(selectedCard)],
-                            ['Cover Details', formatCoverDetails(selectedCard)],
-                            ['Inner Paper', formatInnerPaperName(selectedCard)],
-                            ['Inner Count / GSM', formatInnerCountGsm(selectedCard)],
-                            ['Inner Details', formatInnerDetails(selectedCard)],
-                          ]} />
+                          <TaxFieldsTable rows={buildPaperStockPrintRows(selectedCard)} />
                         </div>
                       </td>
                       <td colSpan={6} className="tax-cell align-top p-0">
