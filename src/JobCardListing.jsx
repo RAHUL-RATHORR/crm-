@@ -5,7 +5,13 @@ import { downloadAsPDF } from './utils/pdfExport';
 import { printElement } from './utils/printDocument';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
 import { syncPlateUsageFromCards, formatPlateSizes, formatPlateUseCounts } from './utils/plateUsage';
-import { formatPaperLinesForPrint } from './utils/jobPaperLines';
+import {
+  formatPaperLinesForPrint,
+  getCoverPaperLinesForPrint,
+  getInnerPaperLinesForPrint,
+  formatCoverCountGsm,
+  formatInnerCountGsm,
+} from './utils/jobPaperLines';
 import { SELLER, TaxFieldsTable, fmtTaxDate, CompanyBrandName } from './utils/taxDocumentPrint';
 import { API_BASE_URL } from './utils/apiBase';
 
@@ -664,7 +670,7 @@ export default function JobCardListing() {
                             ['Compose', selectedCard.compose || 'No'],
                             ['Design', selectedCard.design || 'No'],
                             ['Paper Source', selectedCard.paperSource || 'Company paper'],
-                            ['Paper Type', selectedCard.paper || '-'],
+                            ['Paper Type', selectedCard.paper || formatPaperLinesForPrint(getCoverPaperLinesForPrint(selectedCard)) || '-'],
                           ]} />
                         </div>
                       </td>
@@ -688,20 +694,12 @@ export default function JobCardListing() {
                         <div className="tax-blue job-card-section-title text-center py-1 px-2">Paper &amp; Stock</div>
                         <div className="job-card-section-body p-1.5">
                           <TaxFieldsTable rows={[
-                            ['Cover Count / GSM', formatPaperLinesForPrint(selectedCard.coverPaperLines?.length ? selectedCard.coverPaperLines : [{
-                              paper: selectedCard.paper,
-                              paperGSM: selectedCard.paperGSM,
-                              count: selectedCard.coverPaperCount,
-                              details: selectedCard.coverPaperDetails,
-                            }])],
-                            ['Inner Count / GSM', formatPaperLinesForPrint(selectedCard.innerPaperLines?.length ? selectedCard.innerPaperLines : [{
-                              paper: selectedCard.innerPaper,
-                              paperGSM: selectedCard.innerPaperGSM,
-                              count: selectedCard.innerPaperCount,
-                              details: selectedCard.innerPaperDetails,
-                            }])],
-                            ['Cover Details', selectedCard.coverPaperDetails || '-'],
-                            ['Inner Details', selectedCard.innerPaperDetails || '-'],
+                            ['Cover Paper', formatPaperLinesForPrint(getCoverPaperLinesForPrint(selectedCard))],
+                            ['Cover Count / GSM', formatCoverCountGsm(selectedCard)],
+                            ['Cover Details', selectedCard.coverPaperDetails || getCoverPaperLinesForPrint(selectedCard).map((line) => line.details).filter(Boolean).join('; ') || '-'],
+                            ['Inner Paper', formatPaperLinesForPrint(getInnerPaperLinesForPrint(selectedCard))],
+                            ['Inner Count / GSM', formatInnerCountGsm(selectedCard)],
+                            ['Inner Details', selectedCard.innerPaperDetails || getInnerPaperLinesForPrint(selectedCard).map((line) => line.details).filter(Boolean).join('; ') || '-'],
                           ]} />
                         </div>
                       </td>

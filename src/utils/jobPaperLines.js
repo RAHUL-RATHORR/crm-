@@ -80,21 +80,64 @@ export const buildLegacyPaperFields = (coverLines, innerLines) => {
   };
 };
 
+const hasPaperLineContent = (line) =>
+  !!(line?.paper || line?.paperGSM || Number(line?.count) > 0 || line?.details);
+
+export const getCoverPaperLinesForPrint = (card = {}) => {
+  const saved = (card.coverPaperLines || []).filter(hasPaperLineContent);
+  if (saved.length) return saved;
+  return [{
+    paper: card.paper || '',
+    paperGSM: card.paperGSM || '',
+    count: card.coverPaperCount,
+    details: card.coverPaperDetails || '',
+  }];
+};
+
+export const getInnerPaperLinesForPrint = (card = {}) => {
+  const saved = (card.innerPaperLines || []).filter(hasPaperLineContent);
+  if (saved.length) return saved;
+  return [{
+    paper: card.innerPaper || '',
+    paperGSM: card.innerPaperGSM || '',
+    count: card.innerPaperCount,
+    details: card.innerPaperDetails || '',
+  }];
+};
+
 export const formatPaperLinesForPrint = (lines = []) => {
-  const entries = Array.isArray(lines) && lines.length
-    ? lines
-    : [];
-
-  if (!entries.length) return '-';
-
-  return entries
-    .filter((line) => line.paper)
+  const formatted = (Array.isArray(lines) ? lines : [])
+    .filter(hasPaperLineContent)
     .map((line) => {
-      const count = Number(line.count) || 0;
-      const gsm = line.paperGSM ? ` (${line.paperGSM} GSM)` : '';
-      const details = line.details ? ` · ${line.details}` : '';
-      const countText = count > 0 ? ` · ${count} sheets` : '';
-      return `${line.paper}${gsm}${countText}${details}`;
+      const parts = [];
+      if (line.paper) parts.push(line.paper);
+      if (line.paperGSM) parts.push(`${line.paperGSM} GSM`);
+      const count = Number(line.count);
+      if (count > 0) parts.push(`${count} sheets`);
+      if (line.details) parts.push(line.details);
+      return parts.join(' · ');
     })
-    .join('; ') || '-';
+    .filter(Boolean);
+
+  return formatted.length ? formatted.join('; ') : '-';
+};
+
+export const formatCoverCountGsm = (card = {}) => {
+  const lines = getCoverPaperLinesForPrint(card);
+  const count = lines.reduce((sum, line) => sum + (Number(line.count) || 0), 0)
+    || Number(card.coverPaperCount) || 0;
+  const gsm = lines.map((line) => line.paperGSM).filter(Boolean).join(', ')
+    || card.paperGSM
+    || '-';
+  return `${count} (${gsm})`;
+};
+
+export const formatInnerCountGsm = (card = {}) => {
+  const lines = getInnerPaperLinesForPrint(card);
+  const count = lines.reduce((sum, line) => sum + (Number(line.count) || 0), 0)
+    || Number(card.innerPaperCount) || 0;
+  const gsm = lines.map((line) => line.paperGSM).filter(Boolean).join(', ')
+    || card.innerPaperGSM
+    || '-';
+  return `${count} (${gsm})`;
 };
