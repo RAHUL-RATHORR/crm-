@@ -35,7 +35,10 @@ export const getCoverUsages = (job) => {
 
   if (Array.isArray(job.coverPaperLines) && job.coverPaperLines.length) {
     return job.coverPaperLines
-      .filter((line) => line?.paper && line.paper !== 'Custom' && line.paperGSM)
+      .filter((line) => {
+        const paper = String(line?.paper || '').trim();
+        return paper && paper !== 'Custom' && line.paperGSM;
+      })
       .map((line) => ({
         paper: line.paper,
         paperGSM: String(line.paperGSM),
@@ -45,7 +48,7 @@ export const getCoverUsages = (job) => {
       .filter((usage) => usage.qty > 0);
   }
 
-  if (!job.paper || job.paper === 'Custom' || !job.paperGSM) return [];
+  if (!job.paper || String(job.paper).trim() === 'Custom' || !job.paperGSM) return [];
   const qty = Number(job.coverPaperCount) > 0 ? Number(job.coverPaperCount) : fallbackQty;
   if (qty <= 0) return [];
   return [{
@@ -64,7 +67,10 @@ export const getInnerUsages = (job) => {
 
   if (Array.isArray(job.innerPaperLines) && job.innerPaperLines.length) {
     return job.innerPaperLines
-      .filter((line) => line?.paper && line.paper !== 'Custom' && line.paperGSM)
+      .filter((line) => {
+        const paper = String(line?.paper || '').trim();
+        return paper && paper !== 'Custom' && line.paperGSM;
+      })
       .map((line) => ({
         paper: line.paper,
         paperGSM: String(line.paperGSM),
@@ -74,7 +80,7 @@ export const getInnerUsages = (job) => {
       .filter((usage) => usage.qty > 0);
   }
 
-  if (!job.innerPaper || job.innerPaper === 'Custom' || !job.innerPaperGSM) return [];
+  if (!job.innerPaper || String(job.innerPaper).trim() === 'Custom' || !job.innerPaperGSM) return [];
   const qty = Number(job.innerPaperCount) > 0 ? Number(job.innerPaperCount) : fallbackQty;
   if (qty <= 0) return [];
   return [{

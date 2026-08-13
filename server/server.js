@@ -86,9 +86,13 @@ app.use((req, res, next) => {
 });
 
 /* ================= DB CONNECT ================= */
-const connectDB = async () => {
+const connectDB = async (attempt = 1) => {
     try {
-        await mongoose.connect(process.env.MONGO_URI);
+        if (mongoose.connection.readyState === 1) return;
+
+        await mongoose.connect(process.env.MONGO_URI, {
+            serverSelectionTimeoutMS: 10000,
+        });
 
         console.log("✅ MongoDB Connected Successfully");
         await seedStaffAndRoles();
@@ -98,9 +102,19 @@ const connectDB = async () => {
             console.log(`🔁 Reconciled ${reconciled} paper stock record(s) from job cards`);
         }
     } catch (error) {
-        console.error("❌ MongoDB Error:", error.message);
+        const delay = Math.min(30000, 3000 * attempt);
+        console.error(`❌ MongoDB Error (attempt ${attempt}): ${error.message}`);
+        console.error(`⏳ Retrying MongoDB connection in ${delay / 1000}s...`);
+        setTimeout(() => connectDB(attempt + 1), delay);
     }
 };
+
+mongoose.connection.on('disconnected', () => {
+    if (mongoose.connection.readyState === 0) {
+        console.warn('⚠️ MongoDB disconnected. Reconnecting...');
+        connectDB();
+    }
+});
 
 /* ================= ROUTES ================= */
 app.use("/api/jobcard", jobCardRoutes);

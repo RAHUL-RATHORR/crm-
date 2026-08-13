@@ -185,14 +185,20 @@ export const formatInnerDetails = (card = {}) =>
   || collectInnerLines(card).map((line) => text(line.details)).filter(Boolean).join('; ')
   || '-';
 
+const displayPaperName = (value) => {
+  const name = text(value);
+  if (!name || name === 'Custom') return '';
+  return name;
+};
+
 export const formatCoverPaperName = (card = {}) =>
-  collectCoverLines(card).map((line) => text(line.paper)).filter(Boolean).join(', ')
-  || text(card.paper)
+  collectCoverLines(card).map((line) => displayPaperName(line.paper)).filter(Boolean).join(', ')
+  || displayPaperName(card.paper)
   || '-';
 
 export const formatInnerPaperName = (card = {}) =>
-  collectInnerLines(card).map((line) => text(line.paper)).filter(Boolean).join(', ')
-  || text(card.innerPaper)
+  collectInnerLines(card).map((line) => displayPaperName(line.paper)).filter(Boolean).join(', ')
+  || displayPaperName(card.innerPaper)
   || '-';
 
 /** Always-visible Paper & Stock rows for job card print (old + new cards). */
@@ -200,8 +206,8 @@ export const buildPaperStockPrintRows = (card = {}) => {
   const coverLines = collectCoverLines(card);
   const innerLines = collectInnerLines(card);
 
-  const coverName = coverLines.map((line) => text(line.paper)).filter(Boolean).join(', ')
-    || text(card.paper)
+  const coverName = coverLines.map((line) => displayPaperName(line.paper)).filter(Boolean).join(', ')
+    || displayPaperName(card.paper)
     || '-';
   const coverGsm = coverLines.map((line) => text(line.paperGSM)).filter(Boolean).join(', ')
     || text(card.paperGSM)
@@ -215,8 +221,8 @@ export const buildPaperStockPrintRows = (card = {}) => {
     || text(card.paperFrom)
     || '-';
 
-  const innerName = innerLines.map((line) => text(line.paper)).filter(Boolean).join(', ')
-    || text(card.innerPaper)
+  const innerName = innerLines.map((line) => displayPaperName(line.paper)).filter(Boolean).join(', ')
+    || displayPaperName(card.innerPaper)
     || '-';
   const innerGsm = innerLines.map((line) => text(line.paperGSM)).filter(Boolean).join(', ')
     || text(card.innerPaperGSM)
