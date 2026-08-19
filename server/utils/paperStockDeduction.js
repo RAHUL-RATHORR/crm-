@@ -93,28 +93,42 @@ export const getInnerUsages = (job) => {
 
 export const findCoverStock = async (paper, paperSource = 'Company paper') => {
   if (!paper || paper === 'Custom') return null;
-  const escaped = escapeRegex(paper);
-  return PaperStock.findOne({
+  const escaped = escapeRegex(paper.trim());
+  const query = {
     $or: [
       { coverName: { $regex: new RegExp(`^${escaped}$`, 'i') } },
       { name: { $regex: new RegExp(`^${escaped}$`, 'i') } },
       { name: { $regex: new RegExp(`^${escaped}\\s*/`, 'i') } },
     ],
     paperSource,
-  });
+  };
+  const result = await PaperStock.findOne(query);
+  if (!result) {
+    console.warn(`🔍 findCoverStock MISS: paper="${paper}", source="${paperSource}"`);
+    const anyName = await PaperStock.findOne({ $or: query.$or });
+    if (anyName) console.warn(`   → Found "${anyName.name}" but paperSource="${anyName.paperSource}" != "${paperSource}"`);
+  }
+  return result;
 };
 
 export const findInnerStock = async (paper, paperSource = 'Company paper') => {
   if (!paper || paper === 'Custom') return null;
-  const escaped = escapeRegex(paper);
-  return PaperStock.findOne({
+  const escaped = escapeRegex(paper.trim());
+  const query = {
     $or: [
       { innerName: { $regex: new RegExp(`^${escaped}$`, 'i') } },
       { name: { $regex: new RegExp(`^${escaped}$`, 'i') } },
       { name: { $regex: new RegExp(`/\\s*${escaped}$`, 'i') } },
     ],
     paperSource,
-  });
+  };
+  const result = await PaperStock.findOne(query);
+  if (!result) {
+    console.warn(`🔍 findInnerStock MISS: paper="${paper}", source="${paperSource}"`);
+    const anyName = await PaperStock.findOne({ $or: query.$or });
+    if (anyName) console.warn(`   → Found "${anyName.name}" but paperSource="${anyName.paperSource}" != "${paperSource}"`);
+  }
+  return result;
 };
 
 const gsmMatchesCover = (stockItem, paperGSM) => {
