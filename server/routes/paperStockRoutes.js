@@ -5,6 +5,7 @@ import PaperStockTransaction from '../models/PaperStockTransaction.js';
 import DeletedItem from '../models/DeletedItem.js';
 import { logPaperStockTransaction } from '../utils/paperStockTransactions.js';
 import { syncTotalQuantity } from '../utils/paperStockDeduction.js';
+import { ensureStockAddTransactions } from '../utils/paperStockHistory.js';
 
 // GET /api/paper-stock/transactions - Stock add/deduct history
 router.get('/transactions', async (req, res) => {
@@ -82,6 +83,14 @@ router.get('/:id/transactions', async (req, res) => {
   try {
     const stock = await PaperStock.findById(req.params.id);
     if (!stock) return res.status(404).json({ error: 'Item not found' });
+
+    // If add/opening records are missing but current stock exists,
+    // create opening "add" history so UI modal doesn't show empty.
+    try {
+      await ensureStockAddTransactions(stock);
+    } catch (backfillErr) {
+      console.error('ensureStockAddTransactions failed:', backfillErr.message);
+    }
 
     let transactions = await PaperStockTransaction.find({
       paperStockId: stock._id,
