@@ -11,10 +11,12 @@ router.get('/transactions', async (req, res) => {
   try {
     const transactions = await PaperStockTransaction.find({
       transactionType: { $in: ['add', 'deduct'] },
-    }).sort({ createdAt: -1 });
+    }).sort({ createdAt: -1 }).maxTimeMS(8000);
     res.json(transactions);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    // Return empty array if DB is temporarily unavailable — UI stays functional
+    console.error('transactions GET error:', err.message);
+    res.json([]);
   }
 });
 
@@ -96,10 +98,11 @@ router.get('/:id/transactions', async (req, res) => {
 // GET /api/paper-stock - Get all stock items
 router.get('/', async (req, res) => {
   try {
-    const stock = await PaperStock.find().sort({ updatedAt: -1, createdAt: -1 });
+    const stock = await PaperStock.find().sort({ updatedAt: -1, createdAt: -1 }).maxTimeMS(8000);
     res.json(stock);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('paper-stock GET error:', err.message);
+    res.json([]);
   }
 });
 
