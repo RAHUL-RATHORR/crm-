@@ -241,6 +241,7 @@ export const syncStockFromJobChange = async (previousJob, newBody) => {
   const newCoverUsages = getCoverUsages(newBody);
   const oldInnerUsages = getInnerUsages(previousJob);
   const newInnerUsages = getInnerUsages(newBody);
+  console.log(`📦 syncStock: newCoverUsages=${JSON.stringify(newCoverUsages)}, newInnerUsages=${JSON.stringify(newInnerUsages)}, oldCoverUsages=${JSON.stringify(oldCoverUsages)}, oldInnerUsages=${JSON.stringify(oldInnerUsages)}`);
   const shouldRestore = previousJob?._id && await jobHadStockDeduction(previousJob._id);
 
   if (shouldRestore) {

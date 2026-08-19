@@ -219,6 +219,16 @@ router.delete('/:id', async (req, res) => {
   try {
     const doc = await JobCard.findById(req.params.id);
     if (!doc) return res.status(404).json({ message: "Job Card not found" });
+
+    // Restore stock before deleting
+    try {
+      const emptyJob = { coverPaperLines: [], innerPaperLines: [], paper: '', innerPaper: '' };
+      await syncStockFromJobChange(doc.toObject(), emptyJob);
+      console.log(`📦 Stock restored for deleted job card: ${doc.jobNumber}`);
+    } catch (stockErr) {
+      console.error(`⚠️ Stock restore on delete failed: ${stockErr.message}`);
+    }
+
     await DeletedItem.create({
       originalId: doc._id,
       collectionName: 'JobCard',
