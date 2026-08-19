@@ -5,7 +5,7 @@ import PaperStockTransaction from '../models/PaperStockTransaction.js';
 import DeletedItem from '../models/DeletedItem.js';
 import { logPaperStockTransaction } from '../utils/paperStockTransactions.js';
 import { syncTotalQuantity } from '../utils/paperStockDeduction.js';
-import { ensureStockAddTransactions } from '../utils/paperStockHistory.js';
+import { ensureStockAddTransactions, buildStockAddHistoryFallback } from '../utils/paperStockHistory.js';
 
 // GET /api/paper-stock/transactions - Stock add/deduct history
 router.get('/transactions', async (req, res) => {
@@ -97,6 +97,10 @@ router.get('/:id/transactions', async (req, res) => {
       transactionType: 'add',
       note: { $not: /Restored from job card/i },
     }).sort({ createdAt: -1 });
+
+    if (!transactions.length) {
+      return res.json(buildStockAddHistoryFallback(stock));
+    }
 
     res.json(transactions.map((tx) => tx.toObject()));
   } catch (err) {

@@ -1141,7 +1141,7 @@ const PaperStockManagement = () => {
                           <button
                             type="button"
                             onClick={() => deleteHistoryEntry(row)}
-                            disabled={deletingHistoryId === row._id}
+                            disabled={deletingHistoryId === row._id || String(row._id || '').includes('-fallback')}
                             className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-all disabled:opacity-50"
                             title="Delete entry"
                           >
