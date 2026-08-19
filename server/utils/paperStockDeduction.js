@@ -37,18 +37,18 @@ export const getCoverUsages = (job) => {
     return job.coverPaperLines
       .filter((line) => {
         const paper = String(line?.paper || '').trim();
-        return paper && paper !== 'Custom' && line.paperGSM;
+        return paper && paper !== 'Custom';
       })
       .map((line) => ({
-        paper: line.paper,
-        paperGSM: String(line.paperGSM),
+        paper: String(line.paper).trim(),
+        paperGSM: String(line.paperGSM || ''),
         qty: Number(line.count) > 0 ? Number(line.count) : fallbackQty,
         paperSource,
       }))
       .filter((usage) => usage.qty > 0);
   }
 
-  if (!job.paper || String(job.paper).trim() === 'Custom' || !job.paperGSM) return [];
+  if (!job.paper || String(job.paper).trim() === 'Custom') return [];
   const qty = Number(job.coverPaperCount) > 0 ? Number(job.coverPaperCount) : fallbackQty;
   if (qty <= 0) return [];
   return [{
@@ -69,18 +69,18 @@ export const getInnerUsages = (job) => {
     return job.innerPaperLines
       .filter((line) => {
         const paper = String(line?.paper || '').trim();
-        return paper && paper !== 'Custom' && line.paperGSM;
+        return paper && paper !== 'Custom';
       })
       .map((line) => ({
-        paper: line.paper,
-        paperGSM: String(line.paperGSM),
+        paper: String(line.paper).trim(),
+        paperGSM: String(line.paperGSM || ''),
         qty: Number(line.count) > 0 ? Number(line.count) : fallbackQty,
         paperSource,
       }))
       .filter((usage) => usage.qty > 0);
   }
 
-  if (!job.innerPaper || String(job.innerPaper).trim() === 'Custom' || !job.innerPaperGSM) return [];
+  if (!job.innerPaper || String(job.innerPaper).trim() === 'Custom') return [];
   const qty = Number(job.innerPaperCount) > 0 ? Number(job.innerPaperCount) : fallbackQty;
   if (qty <= 0) return [];
   return [{
@@ -119,9 +119,9 @@ export const findInnerStock = async (paper, paperSource = 'Company paper') => {
 
 const gsmMatchesCover = (stockItem, paperGSM) => {
   const gsm = parseGsm(paperGSM);
-  if (!Number.isFinite(gsm)) return false;
   const coverGsm = parseGsm(stockItem.coverGSM);
   const legacyGsm = parseGsm(stockItem.gsm);
+  if (!Number.isFinite(gsm)) return true;
   if (Number.isFinite(coverGsm) && coverGsm === gsm) return true;
   if (Number.isFinite(legacyGsm) && legacyGsm === gsm) return true;
   if (!Number.isFinite(coverGsm) && !Number.isFinite(legacyGsm)) return true;
@@ -130,9 +130,9 @@ const gsmMatchesCover = (stockItem, paperGSM) => {
 
 const gsmMatchesInner = (stockItem, paperGSM) => {
   const gsm = parseGsm(paperGSM);
-  if (!Number.isFinite(gsm)) return false;
   const innerGsm = parseGsm(stockItem.innerGSM);
   const legacyGsm = parseGsm(stockItem.gsm);
+  if (!Number.isFinite(gsm)) return true;
   if (Number.isFinite(innerGsm) && innerGsm === gsm) return true;
   if (Number.isFinite(legacyGsm) && legacyGsm === gsm) return true;
   if (!Number.isFinite(innerGsm) && !Number.isFinite(legacyGsm)) return true;
@@ -145,7 +145,7 @@ export const jobHadStockDeduction = async (jobCardId) => {
 };
 
 export const applyCoverDelta = async (paper, paperGSM, delta, meta = {}) => {
-  if (!paper || !paperGSM || !delta) return;
+  if (!paper || !delta) return;
   const paperSource = meta.paperSource || 'Company paper';
   const stockItem = await findCoverStock(paper, paperSource);
   if (!stockItem) {
@@ -189,7 +189,7 @@ export const applyCoverDelta = async (paper, paperGSM, delta, meta = {}) => {
 };
 
 export const applyInnerDelta = async (paper, paperGSM, delta, meta = {}) => {
-  if (!paper || !paperGSM || !delta) return;
+  if (!paper || !delta) return;
   const paperSource = meta.paperSource || 'Company paper';
   const stockItem = await findInnerStock(paper, paperSource);
   if (!stockItem) {
