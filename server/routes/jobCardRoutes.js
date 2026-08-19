@@ -141,14 +141,15 @@ router.post('/', async (req, res) => {
 
     // --- AUTO STOCK DEDUCTION LOGIC ---
     try {
-      await syncStockFromJobChange(previousJob, {
+      const deductBody = {
         ...req.body,
         _id: jobCard?._id || req.body._id,
         jobNumber: jobCard?.jobNumber || req.body.jobNumber,
-      });
+      };
+      console.log(`📋 Stock deduction input: paper="${deductBody.paper}", paperGSM="${deductBody.paperGSM}", coverPaperCount=${deductBody.coverPaperCount}, paperSource="${deductBody.paperSource}", coverPaperLines=${JSON.stringify(deductBody.coverPaperLines)}, innerPaper="${deductBody.innerPaper}", innerPaperGSM="${deductBody.innerPaperGSM}", innerPaperLines=${JSON.stringify(deductBody.innerPaperLines)}`);
+      await syncStockFromJobChange(previousJob, deductBody);
     } catch (stockErr) {
       console.error("⚠️ Stock deduction failed:", stockErr.message);
-      // We don't fail the whole job creation just because stock update failed
     }
     // ----------------------------------
 
