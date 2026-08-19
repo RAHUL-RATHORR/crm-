@@ -86,20 +86,33 @@ app.use((req, res, next) => {
 });
 
 /* ================= DB CONNECT ================= */
+let dbSeeded = false;
+
 const connectDB = async (attempt = 1) => {
     try {
         if (mongoose.connection.readyState === 1) return;
 
         await mongoose.connect(process.env.MONGO_URI, {
-            serverSelectionTimeoutMS: 10000,
+            serverSelectionTimeoutMS: 30000,
+            socketTimeoutMS: 45000,
+            heartbeatFrequencyMS: 10000,
+            maxPoolSize: 5,
         });
 
         console.log("✅ MongoDB Connected Successfully");
-        await seedStaffAndRoles();
-        console.log("✅ Staff roles seeded");
-        const reconciled = await reconcilePaperStockFromJobs();
-        if (reconciled > 0) {
-            console.log(`🔁 Reconciled ${reconciled} paper stock record(s) from job cards`);
+
+        if (!dbSeeded) {
+            dbSeeded = true;
+            try {
+                await seedStaffAndRoles();
+                console.log("✅ Staff roles seeded");
+                const reconciled = await reconcilePaperStockFromJobs();
+                if (reconciled > 0) {
+                    console.log(`🔁 Reconciled ${reconciled} paper stock record(s) from job cards`);
+                }
+            } catch (seedErr) {
+                console.error("⚠️ Seed/reconcile error (non-fatal):", seedErr.message);
+            }
         }
     } catch (error) {
         const delay = Math.min(30000, 3000 * attempt);
@@ -111,8 +124,8 @@ const connectDB = async (attempt = 1) => {
 
 mongoose.connection.on('disconnected', () => {
     if (mongoose.connection.readyState === 0) {
-        console.warn('⚠️ MongoDB disconnected. Reconnecting...');
-        connectDB();
+        console.warn('⚠️ MongoDB disconnected. Reconnecting in 5s...');
+        setTimeout(() => connectDB(), 5000);
     }
 });
 
