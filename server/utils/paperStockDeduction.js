@@ -91,10 +91,10 @@ export const getInnerUsages = (job) => {
   }];
 };
 
-export const findCoverStock = async (paper, paperSource = 'Company paper') => {
+export const findCoverStock = async (paper, paperSource = 'Company paper', paperGSM) => {
   if (!paper || paper === 'Custom') return null;
   const escaped = escapeRegex(paper.trim());
-  const query = {
+  const nameFilter = {
     $or: [
       { coverName: { $regex: new RegExp(`^${escaped}$`, 'i') } },
       { name: { $regex: new RegExp(`^${escaped}$`, 'i') } },
@@ -102,19 +102,26 @@ export const findCoverStock = async (paper, paperSource = 'Company paper') => {
     ],
     paperSource,
   };
-  const result = await PaperStock.findOne(query);
-  if (!result) {
+
+  const candidates = await PaperStock.find(nameFilter);
+  if (!candidates.length) {
     console.warn(`🔍 findCoverStock MISS: paper="${paper}", source="${paperSource}"`);
-    const anyName = await PaperStock.findOne({ $or: query.$or });
-    if (anyName) console.warn(`   → Found "${anyName.name}" but paperSource="${anyName.paperSource}" != "${paperSource}"`);
+    return null;
   }
-  return result;
+  if (candidates.length === 1) return candidates[0];
+
+  const gsm = parseGsm(paperGSM);
+  if (Number.isFinite(gsm)) {
+    const exact = candidates.find((s) => parseGsm(s.coverGSM) === gsm || parseGsm(s.gsm) === gsm);
+    if (exact) return exact;
+  }
+  return candidates[0];
 };
 
-export const findInnerStock = async (paper, paperSource = 'Company paper') => {
+export const findInnerStock = async (paper, paperSource = 'Company paper', paperGSM) => {
   if (!paper || paper === 'Custom') return null;
   const escaped = escapeRegex(paper.trim());
-  const query = {
+  const nameFilter = {
     $or: [
       { innerName: { $regex: new RegExp(`^${escaped}$`, 'i') } },
       { name: { $regex: new RegExp(`^${escaped}$`, 'i') } },
@@ -122,13 +129,20 @@ export const findInnerStock = async (paper, paperSource = 'Company paper') => {
     ],
     paperSource,
   };
-  const result = await PaperStock.findOne(query);
-  if (!result) {
+
+  const candidates = await PaperStock.find(nameFilter);
+  if (!candidates.length) {
     console.warn(`🔍 findInnerStock MISS: paper="${paper}", source="${paperSource}"`);
-    const anyName = await PaperStock.findOne({ $or: query.$or });
-    if (anyName) console.warn(`   → Found "${anyName.name}" but paperSource="${anyName.paperSource}" != "${paperSource}"`);
+    return null;
   }
-  return result;
+  if (candidates.length === 1) return candidates[0];
+
+  const gsm = parseGsm(paperGSM);
+  if (Number.isFinite(gsm)) {
+    const exact = candidates.find((s) => parseGsm(s.innerGSM) === gsm || parseGsm(s.gsm) === gsm);
+    if (exact) return exact;
+  }
+  return candidates[0];
 };
 
 const gsmMatchesCover = (stockItem, paperGSM) => {
@@ -161,7 +175,7 @@ export const jobHadStockDeduction = async (jobCardId) => {
 export const applyCoverDelta = async (paper, paperGSM, delta, meta = {}) => {
   if (!paper || !delta) return;
   const paperSource = meta.paperSource || 'Company paper';
-  const stockItem = await findCoverStock(paper, paperSource);
+  const stockItem = await findCoverStock(paper, paperSource, paperGSM);
   if (!stockItem) {
     console.warn(`⚠️ Cover stock not found: paper="${paper}", source=${paperSource}`);
     return;
@@ -205,7 +219,7 @@ export const applyCoverDelta = async (paper, paperGSM, delta, meta = {}) => {
 export const applyInnerDelta = async (paper, paperGSM, delta, meta = {}) => {
   if (!paper || !delta) return;
   const paperSource = meta.paperSource || 'Company paper';
-  const stockItem = await findInnerStock(paper, paperSource);
+  const stockItem = await findInnerStock(paper, paperSource, paperGSM);
   if (!stockItem) {
     console.warn(`⚠️ Inner stock not found: paper="${paper}", source=${paperSource}`);
     return;
