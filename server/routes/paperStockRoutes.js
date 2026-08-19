@@ -340,4 +340,22 @@ router.delete('/:id', async (req, res) => {
 });
 
 
+// PATCH /api/paper-stock/:id/set-quantity — set stock quantity directly without logging a transaction
+router.patch('/:id/set-quantity', async (req, res) => {
+  try {
+    const { coverQuantity, innerQuantity } = req.body;
+    const update = {};
+    if (coverQuantity !== undefined) update.coverQuantity = Number(coverQuantity);
+    if (innerQuantity !== undefined) update.innerQuantity = Number(innerQuantity);
+    if (update.coverQuantity !== undefined || update.innerQuantity !== undefined) {
+      const doc = await PaperStock.findByIdAndUpdate(req.params.id, { ...update, updatedAt: Date.now() }, { new: true });
+      if (!doc) return res.status(404).json({ error: 'Not found' });
+      return res.json({ coverQuantity: doc.coverQuantity, innerQuantity: doc.innerQuantity });
+    }
+    res.status(400).json({ error: 'No quantity provided' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 export default router;
