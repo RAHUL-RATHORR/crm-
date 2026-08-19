@@ -3,7 +3,7 @@ const router = express.Router();
 import JobCard from '../models/JobCard.js';
 import Notification from '../models/Notification.js';
 import DeletedItem from '../models/DeletedItem.js';
-import { syncStockFromJobChange } from '../utils/paperStockDeduction.js';
+import { syncStockFromJobChange, getCoverUsages, getInnerUsages, applyCoverDelta, applyInnerDelta } from '../utils/paperStockDeduction.js';
 
 const parsePlateSizes = (value) => {
   if (!value) return [];
@@ -220,11 +220,31 @@ router.delete('/:id', async (req, res) => {
     const doc = await JobCard.findById(req.params.id);
     if (!doc) return res.status(404).json({ message: "Job Card not found" });
 
-    // Restore stock before deleting
+    // Restore stock before deleting — always restore, skip shouldRestore check
     try {
-      const emptyJob = { coverPaperLines: [], innerPaperLines: [], paper: '', innerPaper: '' };
-      await syncStockFromJobChange(doc.toObject(), emptyJob);
-      console.log(`📦 Stock restored for deleted job card: ${doc.jobNumber}`);
+      const jobObj = doc.toObject();
+      const coverUsages = getCoverUsages(jobObj);
+      const innerUsages = getInnerUsages(jobObj);
+
+      for (const usage of coverUsages) {
+        await applyCoverDelta(usage.paper, usage.paperGSM, -usage.qty, {
+          paperSource: usage.paperSource,
+          partyName: jobObj.partyName || jobObj.companyName || '',
+          jobNumber: jobObj.jobNumber || '',
+          jobCardId: jobObj._id,
+          note: 'Restored from job card delete',
+        });
+      }
+      for (const usage of innerUsages) {
+        await applyInnerDelta(usage.paper, usage.paperGSM, -usage.qty, {
+          paperSource: usage.paperSource,
+          partyName: jobObj.partyName || jobObj.companyName || '',
+          jobNumber: jobObj.jobNumber || '',
+          jobCardId: jobObj._id,
+          note: 'Restored from job card delete',
+        });
+      }
+      console.log(`📦 Stock restored for deleted job card: ${doc.jobNumber} (cover=${coverUsages.length}, inner=${innerUsages.length})`);
     } catch (stockErr) {
       console.error(`⚠️ Stock restore on delete failed: ${stockErr.message}`);
     }
