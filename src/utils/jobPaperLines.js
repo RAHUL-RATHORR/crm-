@@ -4,6 +4,7 @@ export const emptyPaperLine = () => ({
   paperGSM: '',
   count: '',
   details: '',
+  stockId: '',
 });
 
 const text = (value) => String(value ?? '').trim();
@@ -16,6 +17,7 @@ const toPaperLine = (line = {}, fallback = {}) => ({
   paperGSM: text(line.paperGSM || fallback.paperGSM),
   count: line.count ?? fallback.count ?? '',
   details: text(line.details || fallback.details),
+  stockId: line.stockId || fallback.stockId || '',
 });
 
 export const normalizeCoverPaperLines = (editData) => {
@@ -39,6 +41,7 @@ export const normalizeCoverPaperLines = (editData) => {
       paperGSM: editData.paperGSM || '',
       count: editData.coverPaperCount ?? '',
       details: editData.coverPaperDetails || editData.paperSize || '',
+      stockId: '',
     }];
   }
 
@@ -66,6 +69,7 @@ export const normalizeInnerPaperLines = (editData) => {
       paperGSM: editData.innerPaperGSM || '',
       count: editData.innerPaperCount ?? '',
       details: editData.innerPaperDetails || '',
+      stockId: '',
     }];
   }
 
@@ -75,11 +79,12 @@ export const normalizeInnerPaperLines = (editData) => {
 export const serializePaperLines = (lines = []) =>
   lines
     .filter(hasPaperLineContent)
-    .map(({ paper, paperGSM, count, details }) => ({
+    .map(({ paper, paperGSM, count, details, stockId }) => ({
       paper: text(paper),
       paperGSM: text(paperGSM),
       count: Number(count) || 0,
       details: text(details),
+      stockId: stockId || undefined,
     }));
 
 export const buildLegacyPaperFields = (coverLines, innerLines) => {

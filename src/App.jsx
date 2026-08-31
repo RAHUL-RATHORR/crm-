@@ -323,7 +323,7 @@ const ProfileMenu = ({ settingsItems, staffTeamItems, showStaffTeam, location, o
       </button>
 
       <div
-        className={`absolute top-full right-0 w-56 z-60 transition-opacity duration-150 max-md:fixed max-md:right-3 max-md:top-[3.25rem] max-md:w-[min(calc(100vw-1.5rem),280px)] ${
+        className={`absolute top-full right-0 w-56 z-60 transition-opacity duration-150 max-md:fixed max-md:right-3 max-md:top-13 max-md:w-[min(calc(100vw-1.5rem),280px)] ${
           isOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'
         }`}
         onMouseEnter={() => { if (canUseHoverMenu()) openMenu(); }}

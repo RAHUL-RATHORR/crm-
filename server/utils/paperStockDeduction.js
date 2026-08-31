@@ -44,6 +44,7 @@ export const getCoverUsages = (job) => {
         paperGSM: String(line.paperGSM || ''),
         qty: Number(line.count) > 0 ? Number(line.count) : fallbackQty,
         paperSource,
+        stockId: line.stockId,
       }))
       .filter((usage) => usage.qty > 0);
   }
@@ -76,6 +77,7 @@ export const getInnerUsages = (job) => {
         paperGSM: String(line.paperGSM || ''),
         qty: Number(line.count) > 0 ? Number(line.count) : fallbackQty,
         paperSource,
+        stockId: line.stockId,
       }))
       .filter((usage) => usage.qty > 0);
   }
@@ -91,7 +93,11 @@ export const getInnerUsages = (job) => {
   }];
 };
 
-export const findCoverStock = async (paper, paperSource = 'Company paper', paperGSM) => {
+export const findCoverStock = async (paper, paperSource = 'Company paper', paperGSM, stockId) => {
+  if (stockId) {
+    const exactStock = await PaperStock.findById(stockId);
+    if (exactStock) return exactStock;
+  }
   if (!paper || paper === 'Custom') return null;
   const escaped = escapeRegex(paper.trim());
   const nameFilter = {
@@ -118,7 +124,11 @@ export const findCoverStock = async (paper, paperSource = 'Company paper', paper
   return candidates[0];
 };
 
-export const findInnerStock = async (paper, paperSource = 'Company paper', paperGSM) => {
+export const findInnerStock = async (paper, paperSource = 'Company paper', paperGSM, stockId) => {
+  if (stockId) {
+    const exactStock = await PaperStock.findById(stockId);
+    if (exactStock) return exactStock;
+  }
   if (!paper || paper === 'Custom') return null;
   const escaped = escapeRegex(paper.trim());
   const nameFilter = {
@@ -175,7 +185,7 @@ export const jobHadStockDeduction = async (jobCardId) => {
 export const applyCoverDelta = async (paper, paperGSM, delta, meta = {}) => {
   if (!paper || !delta) return;
   const paperSource = meta.paperSource || 'Company paper';
-  const stockItem = await findCoverStock(paper, paperSource, paperGSM);
+  const stockItem = await findCoverStock(paper, paperSource, paperGSM, meta.stockId);
   if (!stockItem) {
     console.warn(`⚠️ Cover stock not found: paper="${paper}", source=${paperSource}`);
     return;
@@ -219,7 +229,7 @@ export const applyCoverDelta = async (paper, paperGSM, delta, meta = {}) => {
 export const applyInnerDelta = async (paper, paperGSM, delta, meta = {}) => {
   if (!paper || !delta) return;
   const paperSource = meta.paperSource || 'Company paper';
-  const stockItem = await findInnerStock(paper, paperSource, paperGSM);
+  const stockItem = await findInnerStock(paper, paperSource, paperGSM, meta.stockId);
   if (!stockItem) {
     console.warn(`⚠️ Inner stock not found: paper="${paper}", source=${paperSource}`);
     return;
@@ -251,50 +261,57 @@ export const applyInnerDelta = async (paper, paperGSM, delta, meta = {}) => {
 };
 
 export const syncStockFromJobChange = async (previousJob, newBody) => {
-  const oldCoverUsages = getCoverUsages(previousJob);
-  const newCoverUsages = getCoverUsages(newBody);
-  const oldInnerUsages = getInnerUsages(previousJob);
-  const newInnerUsages = getInnerUsages(newBody);
-  console.log(`📦 syncStock: newCoverUsages=${JSON.stringify(newCoverUsages)}, newInnerUsages=${JSON.stringify(newInnerUsages)}, oldCoverUsages=${JSON.stringify(oldCoverUsages)}, oldInnerUsages=${JSON.stringify(oldInnerUsages)}`);
   const shouldRestore = previousJob?._id && await jobHadStockDeduction(previousJob._id);
+  
+  const oldCoverUsages = shouldRestore ? getCoverUsages(previousJob) : [];
+  const oldInnerUsages = shouldRestore ? getInnerUsages(previousJob) : [];
+  const newCoverUsages = getCoverUsages(newBody);
+  const newInnerUsages = getInnerUsages(newBody);
 
-  if (shouldRestore) {
-    for (const usage of oldCoverUsages) {
-      await applyCoverDelta(usage.paper, usage.paperGSM, -usage.qty, {
-        paperSource: usage.paperSource,
-        partyName: previousJob?.partyName || previousJob?.companyName || '',
-        jobNumber: previousJob?.jobNumber || '',
-        jobCardId: previousJob?._id,
-        note: 'Restored from job card update',
-      });
-    }
-    for (const usage of oldInnerUsages) {
-      await applyInnerDelta(usage.paper, usage.paperGSM, -usage.qty, {
-        paperSource: usage.paperSource,
-        partyName: previousJob?.partyName || previousJob?.companyName || '',
-        jobNumber: previousJob?.jobNumber || '',
-        jobCardId: previousJob?._id,
-        note: 'Restored from job card update',
-      });
-    }
-  }
+  const getUsageKey = (u) => u.stockId ? String(u.stockId) : `${String(u.paper).trim()}|${String(u.paperGSM).trim()}|${u.paperSource}`;
 
-  for (const usage of newCoverUsages) {
+  const calculateNet = (oldU, newU) => {
+    const map = {};
+    for (const u of oldU) {
+      const key = getUsageKey(u);
+      if (!map[key]) map[key] = { ...u, qty: 0 };
+      map[key].qty -= u.qty;
+    }
+    for (const u of newU) {
+      const key = getUsageKey(u);
+      if (!map[key]) map[key] = { ...u, qty: 0 };
+      map[key].qty += u.qty;
+    }
+    return Object.values(map).filter(u => u.qty !== 0);
+  };
+
+  const netCover = calculateNet(oldCoverUsages, newCoverUsages);
+  const netInner = calculateNet(oldInnerUsages, newInnerUsages);
+
+  console.log('📦 syncStock: oldCover=', JSON.stringify(oldCoverUsages));
+  console.log('📦 syncStock: newCover=', JSON.stringify(newCoverUsages));
+  console.log('📦 syncStock: netCover=', JSON.stringify(netCover));
+  console.log('📦 syncStock: netInner=', JSON.stringify(netInner));
+
+  for (const usage of netCover) {
     await applyCoverDelta(usage.paper, usage.paperGSM, usage.qty, {
       paperSource: usage.paperSource,
       partyName: newBody.partyName || newBody.companyName || '',
       jobNumber: newBody.jobNumber || '',
       jobCardId: newBody._id,
-      note: 'Deducted for job card',
+      stockId: usage.stockId,
+      note: usage.qty > 0 ? 'Deducted for job card update' : 'Restored from job card update',
     });
   }
-  for (const usage of newInnerUsages) {
+
+  for (const usage of netInner) {
     await applyInnerDelta(usage.paper, usage.paperGSM, usage.qty, {
       paperSource: usage.paperSource,
       partyName: newBody.partyName || newBody.companyName || '',
       jobNumber: newBody.jobNumber || '',
       jobCardId: newBody._id,
-      note: 'Deducted for job card',
+      stockId: usage.stockId,
+      note: usage.qty > 0 ? 'Deducted for job card update' : 'Restored from job card update',
     });
   }
 };
@@ -349,14 +366,18 @@ export const reconcilePaperStockFromJobs = async () => {
 
       const coverUsages = getCoverUsages(job);
       for (const cover of coverUsages) {
-        if (matchesPaperName(stock, cover.paper, 'cover') && gsmMatchesCover(stock, cover.paperGSM)) {
+        const isExactMatch = cover.stockId && String(cover.stockId) === String(stock._id);
+        const isLegacyMatch = !cover.stockId && matchesPaperName(stock, cover.paper, 'cover') && gsmMatchesCover(stock, cover.paperGSM);
+        if (isExactMatch || isLegacyMatch) {
           coverUsed += cover.qty;
         }
       }
 
       const innerUsages = getInnerUsages(job);
       for (const inner of innerUsages) {
-        if (matchesPaperName(stock, inner.paper, 'inner') && gsmMatchesInner(stock, inner.paperGSM)) {
+        const isExactMatch = inner.stockId && String(inner.stockId) === String(stock._id);
+        const isLegacyMatch = !inner.stockId && matchesPaperName(stock, inner.paper, 'inner') && gsmMatchesInner(stock, inner.paperGSM);
+        if (isExactMatch || isLegacyMatch) {
           innerUsed += inner.qty;
         }
       }

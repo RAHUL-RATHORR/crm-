@@ -60,6 +60,7 @@ const JobPaperLinesEditor = ({
         paper: getPaperLabel(stock),
         paperGSM: getPaperGsm(stock) || '',
         details: getPaperDetails(stock) || line.details,
+        stockId: stock._id || '',
       };
     }));
   };

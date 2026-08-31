@@ -10,6 +10,25 @@ import {
 } from 'lucide-react';
 import { API_BASE_URL } from './utils/apiBase';
 
+const HighlightText = ({ text, highlight }) => {
+  if (!highlight || !highlight.trim()) return <>{text}</>;
+  const regex = new RegExp(`(${highlight.trim()})`, 'gi');
+  const parts = String(text).split(regex);
+  return (
+    <>
+      {parts.map((part, i) =>
+        regex.test(part) ? (
+          <mark key={i} className="bg-yellow-200 text-gray-900 rounded-sm px-0.5 font-bold">
+            {part}
+          </mark>
+        ) : (
+          part
+        )
+      )}
+    </>
+  );
+};
+
 const PaperStockStatements = () => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -157,13 +176,13 @@ const PaperStockStatements = () => {
         <div className="p-6 border-b border-gray-50 flex flex-col sm:flex-row justify-between items-center gap-4">
           <h2 className="text-lg font-bold text-gray-900">Stock Transaction History</h2>
           <div className="relative w-full sm:w-72">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
             <input
               type="text"
               placeholder="Search name, party, job..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500/20"
+              className="w-full pl-10 pr-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl text-sm font-medium outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all shadow-sm"
             />
           </div>
         </div>
@@ -210,7 +229,7 @@ const PaperStockStatements = () => {
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-1.5 text-sm font-bold text-gray-800">
                         <User size={13} className="text-gray-400 shrink-0" />
-                        {item.partyName || '—'}
+                        <HighlightText text={item.partyName || '—'} highlight={searchQuery} />
                       </div>
                     </td>
                     <td className="px-6 py-5">
@@ -223,9 +242,13 @@ const PaperStockStatements = () => {
                       <div className="flex items-center gap-2">
                         <Layers size={14} className="text-indigo-500" />
                         <div>
-                          <p className="font-black text-gray-900 uppercase text-sm">{item.stockName || item.paperName}</p>
+                          <p className="font-black text-gray-900 uppercase text-sm">
+                            <HighlightText text={item.stockName || item.paperName} highlight={searchQuery} />
+                          </p>
                           {item.paperName && item.paperName !== item.stockName && (
-                            <p className="text-[10px] text-gray-400 font-bold mt-0.5">{item.paperName}</p>
+                            <p className="text-[10px] text-gray-400 font-bold mt-0.5">
+                              <HighlightText text={item.paperName} highlight={searchQuery} />
+                            </p>
                           )}
                         </div>
                       </div>
@@ -259,7 +282,7 @@ const PaperStockStatements = () => {
                       {item.jobNumber ? (
                         <div className="flex items-center gap-1.5 text-[11px] font-bold text-indigo-600">
                           <Hash size={12} />
-                          {item.jobNumber}
+                          <HighlightText text={item.jobNumber} highlight={searchQuery} />
                         </div>
                       ) : (
                         <span className="text-xs font-semibold text-gray-400 italic">—</span>

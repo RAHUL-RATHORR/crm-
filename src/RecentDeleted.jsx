@@ -80,7 +80,7 @@ const RecentDeleted = () => {
                 className="w-full sm:w-64 bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
               />
             </div>
-            <div className="overflow-x-auto min-h-[300px]">
+            <div className="overflow-x-auto min-h-75">
               <table className="w-full text-left whitespace-nowrap">
                 <thead>
                   <tr className="bg-gray-50 text-gray-600 uppercase text-[11px] font-bold tracking-wider">
