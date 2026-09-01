@@ -693,7 +693,7 @@ const PaperStockManagement = () => {
               <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2 underline decoration-blue-500 decoration-4 underline-offset-8">
                 Current Inventory
               </h2>
-              <div className="relative w-full sm:w-64">
+              <div className="relative w-full sm:w-96">
                 <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-500" />
                 <input 
                   type="text" 
