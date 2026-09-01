@@ -264,7 +264,7 @@ const StaffManage = () => {
                   <button
                     type="button"
                     onClick={() => setShowPassword((prev) => !prev)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600 transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-indigo-500 hover:text-blue-600 transition-colors"
                     tabIndex={-1}
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
@@ -292,7 +292,7 @@ const StaffManage = () => {
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword((prev) => !prev)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600 transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-indigo-500 hover:text-blue-600 transition-colors"
                     tabIndex={-1}
                     aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
                   >
@@ -350,7 +350,7 @@ const StaffManage = () => {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search name, email, team..."
-                className="w-full sm:w-64 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                className="w-full sm:w-64 bg-indigo-50/50 border border-indigo-200 rounded-lg px-4 py-2 text-indigo-900 placeholder:text-indigo-400 text-sm focus:outline-none focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20"
               />
             </div>
             <div className="overflow-x-auto min-h-[300px]">
@@ -368,7 +368,7 @@ const StaffManage = () => {
                 <tbody>
                   {filteredStaff.length === 0 ? (
                     <tr>
-                      <td colSpan={canEdit ? 6 : 5} className="px-4 py-10 text-center text-gray-400 text-sm">No staff members found.</td>
+                      <td colSpan={canEdit ? 6 : 5} className="px-4 py-10 text-center text-indigo-500 text-sm">No staff members found.</td>
                     </tr>
                   ) : filteredStaff.map((member) => (
                     <tr key={member._id} className="border-t border-gray-100 hover:bg-gray-50/60">

@@ -124,7 +124,7 @@ const PaperStockStatements = () => {
             <ArrowUpCircle size={26} />
           </div>
           <div>
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Stock Added</p>
+            <p className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-1">Total Stock Added</p>
             <h3 className="text-2xl font-black text-gray-900 tracking-tight">{totalAdded.toLocaleString()} Sheets</h3>
           </div>
         </div>
@@ -133,7 +133,7 @@ const PaperStockStatements = () => {
             <ArrowDownCircle size={26} />
           </div>
           <div>
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Stock Deducted</p>
+            <p className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-1">Total Stock Deducted</p>
             <h3 className="text-2xl font-black text-gray-900 tracking-tight">{totalDeducted.toLocaleString()} Sheets</h3>
           </div>
         </div>
@@ -176,18 +176,18 @@ const PaperStockStatements = () => {
         <div className="p-6 border-b border-gray-50 flex flex-col sm:flex-row justify-between items-center gap-4">
           <h2 className="text-lg font-bold text-gray-900">Stock Transaction History</h2>
           <div className="relative w-full sm:w-72">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-500" />
             <input
               type="text"
               placeholder="Search name, party, job..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl text-sm font-medium outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all shadow-sm"
+              className="w-full pl-10 pr-4 py-2.5 bg-indigo-50/50 border-2 border-indigo-200 rounded-xl text-sm font-medium outline-none focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 text-indigo-900 placeholder:text-indigo-400 transition-all shadow-sm"
             />
           </div>
         </div>
 
-        <div className="overflow-x-auto min-h-[300px]">
+        <div className="overflow-x-auto min-h-75">
           <table className="w-full text-left whitespace-nowrap">
             <thead>
               <tr className="bg-gray-50/50 text-[11px] font-black uppercase text-gray-900 tracking-[0.12em] border-b border-gray-100">
@@ -203,7 +203,7 @@ const PaperStockStatements = () => {
             </thead>
             <tbody className="divide-y divide-gray-50">
               {loading ? (
-                <tr><td colSpan="8" className="px-6 py-20 text-center text-gray-400 font-bold animate-pulse uppercase">Loading...</td></tr>
+                <tr><td colSpan="8" className="px-6 py-20 text-center text-indigo-500 font-bold animate-pulse uppercase">Loading...</td></tr>
               ) : error ? (
                 <tr>
                   <td colSpan="8" className="px-6 py-20 text-center">
@@ -219,7 +219,7 @@ const PaperStockStatements = () => {
                 </tr>
               ) : filteredTransactions.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="px-6 py-20 text-center text-gray-400 italic">
+                  <td colSpan="8" className="px-6 py-20 text-center text-indigo-500 italic">
                     No transactions yet. Add new stock or use paper from a Job Card — history will appear here.
                   </td>
                 </tr>
@@ -228,7 +228,7 @@ const PaperStockStatements = () => {
                   <tr key={item._id} className="hover:bg-gray-50/60 transition-colors">
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-1.5 text-sm font-bold text-gray-800">
-                        <User size={13} className="text-gray-400 shrink-0" />
+                        <User size={13} className="text-indigo-500 shrink-0" />
                         <HighlightText text={item.partyName || '—'} highlight={searchQuery} />
                       </div>
                     </td>
@@ -246,7 +246,7 @@ const PaperStockStatements = () => {
                             <HighlightText text={item.stockName || item.paperName} highlight={searchQuery} />
                           </p>
                           {item.paperName && item.paperName !== item.stockName && (
-                            <p className="text-[10px] text-gray-400 font-bold mt-0.5">
+                            <p className="text-[10px] text-indigo-500 font-bold mt-0.5">
                               <HighlightText text={item.paperName} highlight={searchQuery} />
                             </p>
                           )}
@@ -285,7 +285,7 @@ const PaperStockStatements = () => {
                           <HighlightText text={item.jobNumber} highlight={searchQuery} />
                         </div>
                       ) : (
-                        <span className="text-xs font-semibold text-gray-400 italic">—</span>
+                        <span className="text-xs font-semibold text-indigo-500 italic">—</span>
                       )}
                     </td>
                     <td className="px-6 py-5 text-right">

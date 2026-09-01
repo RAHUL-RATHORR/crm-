@@ -261,7 +261,7 @@ const ItemListManagement = () => {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search item, HSN, unit..."
-                className="w-full sm:w-64 bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full sm:w-64 bg-indigo-50/50 border border-indigo-200 rounded-lg px-4 py-2 text-indigo-900 placeholder:text-indigo-400 text-sm focus:outline-none focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20"
               />
             </div>
             <div className="overflow-x-auto min-h-[300px]">
@@ -280,7 +280,7 @@ const ItemListManagement = () => {
                 <tbody className="divide-y divide-gray-50">
                   {filteredItems.length === 0 ? (
                     <tr>
-                      <td colSpan="7" className="px-6 py-20 text-center text-gray-400 italic">
+                      <td colSpan="7" className="px-6 py-20 text-center text-indigo-500 italic">
                         {items.length === 0 ? 'No items added yet.' : 'No items match your search.'}
                       </td>
                     </tr>
@@ -291,7 +291,7 @@ const ItemListManagement = () => {
                         <td className="px-4 py-3">
                           <p className="text-sm font-semibold text-gray-800">{item.name}</p>
                           {item.note && (
-                            <p className="text-[11px] text-gray-400 truncate max-w-[200px]">{item.note}</p>
+                            <p className="text-[11px] text-indigo-500 truncate max-w-[200px]">{item.note}</p>
                           )}
                         </td>
                         <td className="px-4 py-3 text-sm text-gray-700">{item.hsn || '—'}</td>
@@ -327,7 +327,7 @@ const ItemListManagement = () => {
               </table>
             </div>
             <div className="p-4 bg-gray-50 border-t border-gray-100">
-              <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+              <p className="text-[11px] font-semibold text-indigo-500 uppercase tracking-wider">
                 Showing {filteredItems.length} of {items.length} items
               </p>
             </div>

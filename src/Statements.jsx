@@ -161,7 +161,7 @@ const Statements = ({ defaultTab = 'transactions' }) => {
 
     if (displayEntries.length === 0 && periodFilter === 'all') {
       return (
-        <div className="py-14 px-4 text-center text-gray-400 italic font-medium text-sm">
+        <div className="py-14 px-4 text-center text-indigo-500 italic font-medium text-sm">
           Is period / filter ke liye koi entry nahi mili.
         </div>
       );
@@ -177,7 +177,7 @@ const Statements = ({ defaultTab = 'transactions' }) => {
         )}
 
         {displayEntries.length === 0 ? (
-          <div className="py-14 px-4 text-center text-gray-400 italic font-medium text-sm">
+          <div className="py-14 px-4 text-center text-indigo-500 italic font-medium text-sm">
             Is period / filter ke liye koi entry nahi mili.
           </div>
         ) : (
@@ -190,7 +190,7 @@ const Statements = ({ defaultTab = 'transactions' }) => {
                 ) : entry.deposit > 0 ? (
                   <span className="text-sm font-black text-emerald-600 shrink-0">Cr {fmtAmt(entry.deposit)}</span>
                 ) : (
-                  <span className="text-xs font-bold text-gray-400 shrink-0">—</span>
+                  <span className="text-xs font-bold text-indigo-500 shrink-0">—</span>
                 )}
               </div>
               <p className="text-sm font-bold text-gray-900 leading-snug break-words">{entry.partyName || '—'}</p>
@@ -254,7 +254,7 @@ const Statements = ({ defaultTab = 'transactions' }) => {
             <TrendingUp size={26} />
           </div>
           <div className="min-w-0">
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Invoiced</p>
+            <p className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-1">Total Invoiced</p>
             <h3 className="text-2xl font-black text-gray-900 tracking-tight truncate">₹{totalInvoiced.toLocaleString()}</h3>
           </div>
         </div>
@@ -263,7 +263,7 @@ const Statements = ({ defaultTab = 'transactions' }) => {
             <CreditCard size={26} />
           </div>
           <div className="min-w-0">
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Collected</p>
+            <p className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-1">Total Collected</p>
             <h3 className="text-2xl font-black text-gray-900 tracking-tight truncate">₹{totalCollected.toLocaleString()}</h3>
           </div>
         </div>
@@ -272,7 +272,7 @@ const Statements = ({ defaultTab = 'transactions' }) => {
             <Clock size={26} />
           </div>
           <div className="min-w-0">
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Balance Pending</p>
+            <p className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-1">Balance Pending</p>
             <h3 className="text-2xl font-black text-gray-900 tracking-tight truncate">₹{totalPending.toLocaleString()}</h3>
           </div>
         </div>
@@ -364,7 +364,7 @@ const Statements = ({ defaultTab = 'transactions' }) => {
                     onChange={(e) => setCustomRange({ ...customRange, start: e.target.value })}
                     onClick={(e) => { try { e.target.showPicker(); } catch (_) { } }}
                   />
-                  <span className="text-gray-400 text-sm">to</span>
+                  <span className="text-indigo-500 text-sm">to</span>
                   <input type="date" className="px-2 py-1 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
                     value={customRange.end}
                     onChange={(e) => setCustomRange({ ...customRange, end: e.target.value })}
@@ -374,9 +374,9 @@ const Statements = ({ defaultTab = 'transactions' }) => {
               )}
 
               <div className="relative w-full md:w-64">
-                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-500" />
                 <input type="text" placeholder="Search transactions..."
-                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  className="w-full pl-10 pr-4 py-2.5 bg-indigo-50/50 border border-indigo-200 rounded-xl text-sm outline-none focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 text-indigo-900 placeholder:text-indigo-400"
                   value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
@@ -386,7 +386,7 @@ const Statements = ({ defaultTab = 'transactions' }) => {
           <div className="overflow-x-auto min-h-[300px]">
             <table className="w-full text-left whitespace-nowrap">
               <thead>
-                <tr className="bg-gray-50/50 text-[10px] font-black uppercase text-gray-400 tracking-[0.2em]">
+                <tr className="bg-gray-50/50 text-[10px] font-black uppercase text-indigo-500 tracking-[0.2em]">
                   <th className="px-8 py-4">Date & Reference</th>
                   <th className="px-8 py-4">Party Name</th>
                   <th className="px-8 py-4">Method</th>
@@ -396,9 +396,9 @@ const Statements = ({ defaultTab = 'transactions' }) => {
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {loading ? (
-                  <tr><td colSpan="5" className="px-8 py-20 text-center text-gray-400 font-bold animate-pulse uppercase">Processing Records...</td></tr>
+                  <tr><td colSpan="5" className="px-8 py-20 text-center text-indigo-500 font-bold animate-pulse uppercase">Processing Records...</td></tr>
                 ) : filteredStatements.length === 0 ? (
-                  <tr><td colSpan="5" className="px-8 py-20 text-center text-gray-400 italic">No transactions found.</td></tr>
+                  <tr><td colSpan="5" className="px-8 py-20 text-center text-indigo-500 italic">No transactions found.</td></tr>
                 ) : (
                   filteredStatements.map((item) => (
                     <tr key={item._id} className="hover:bg-emerald-50/10 transition-colors group">
@@ -410,7 +410,7 @@ const Statements = ({ defaultTab = 'transactions' }) => {
                           <div>
                             <p className="font-black text-gray-900 text-sm">{new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
                             <div className="flex items-center gap-1 mt-0.5">
-                              <Hash size={9} className="text-gray-400" />
+                              <Hash size={9} className="text-indigo-500" />
                               <span className="text-[10px] font-black text-emerald-600 uppercase">{item.invoiceNumber}</span>
                             </div>
                           </div>
@@ -418,10 +418,10 @@ const Statements = ({ defaultTab = 'transactions' }) => {
                       </td>
                       <td className="px-8 py-5">
                         <div className="flex items-center gap-2">
-                          <User size={13} className="text-gray-400" />
+                          <User size={13} className="text-indigo-500" />
                           <p className="font-bold text-gray-900 text-sm">{item.partyName}</p>
                         </div>
-                        {item.notes && <p className="text-[10px] text-gray-400 italic mt-0.5">{item.notes}</p>}
+                        {item.notes && <p className="text-[10px] text-indigo-500 italic mt-0.5">{item.notes}</p>}
                       </td>
                       <td className="px-8 py-5">
                         <span className="inline-flex items-center px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-[10px] font-black uppercase ring-1 ring-blue-100">
@@ -523,7 +523,7 @@ const Statements = ({ defaultTab = 'transactions' }) => {
                       onChange={(e) => setStatementDateRange({ ...statementDateRange, start: e.target.value })}
                       className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-indigo-500/20"
                     />
-                    <span className="text-gray-400 text-sm font-bold">to</span>
+                    <span className="text-indigo-500 text-sm font-bold">to</span>
                     <input
                       type="date"
                       value={statementDateRange.end}
@@ -546,11 +546,11 @@ const Statements = ({ defaultTab = 'transactions' }) => {
             </div>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
               <div className="relative w-full sm:w-64">
-                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-500" />
                 <input
                   type="text"
                   placeholder="Search party, invoice, ref..."
-                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  className="w-full pl-10 pr-4 py-2.5 bg-indigo-50/50 border border-indigo-200 rounded-xl text-sm outline-none focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 text-indigo-900 placeholder:text-indigo-400"
                   value={invoiceSearch}
                   onChange={(e) => setInvoiceSearch(e.target.value)}
                 />
@@ -653,8 +653,8 @@ const Statements = ({ defaultTab = 'transactions' }) => {
                           <td className="px-4 py-3 border border-gray-200 text-base font-bold text-gray-700" colSpan="3">
                             Opening Balance b/f
                           </td>
-                          <td className="px-4 py-3 border border-gray-200 text-right text-base font-bold text-gray-400">—</td>
-                          <td className="px-4 py-3 border border-gray-200 text-right text-base font-bold text-gray-400">—</td>
+                          <td className="px-4 py-3 border border-gray-200 text-right text-base font-bold text-indigo-500">—</td>
+                          <td className="px-4 py-3 border border-gray-200 text-right text-base font-bold text-indigo-500">—</td>
                           <td className="px-4 py-3 border border-gray-200 text-right text-base font-black text-gray-900">{fmtAmt(openingBalance)}</td>
                         </tr>
                       )}
@@ -698,25 +698,25 @@ const Statements = ({ defaultTab = 'transactions' }) => {
             {!loading && displayEntries.length > 0 && (
               <div className="financial-statement-totals px-4 md:px-6 py-4 bg-gray-50 border-t border-gray-200 grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 text-sm">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Total Withdrawal (Dr)</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-indigo-500">Total Withdrawal (Dr)</p>
                   <p className="font-black text-red-600 mt-1">{fmtAmt(totalWithdrawal)}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Total Deposit (Cr)</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-indigo-500">Total Deposit (Cr)</p>
                   <p className="font-black text-emerald-600 mt-1">{fmtAmt(totalDeposit)}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Closing Balance</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-indigo-500">Closing Balance</p>
                   <p className="font-black text-gray-900 mt-1">{fmtAmt(closingBalance)}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Entries in Statement</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-indigo-500">Entries in Statement</p>
                   <p className="font-black text-indigo-700 mt-1">{displayEntries.length}</p>
                 </div>
               </div>
             )}
 
-            <div className="financial-statement-footer px-6 py-3 border-t border-gray-100 text-[10px] text-gray-400 italic text-center">
+            <div className="financial-statement-footer px-6 py-3 border-t border-gray-100 text-[10px] text-indigo-500 italic text-center">
               This is a computer generated statement and does not require signature. | {SELLER.name} | {SELLER.email}
             </div>
           </div>

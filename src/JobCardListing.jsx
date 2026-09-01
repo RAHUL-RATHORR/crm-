@@ -267,13 +267,13 @@ export default function JobCardListing() {
       {/* Toolbar */}
       <div className="bg-white p-4 rounded-t-2xl border-x border-t border-gray-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 no-print">
         <div className="relative w-full sm:max-w-xs md:max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-500" size={18} />
           <input
             type="text"
             placeholder="Search keyword..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm transition-all"
+            className="w-full pl-10 pr-4 py-2 bg-indigo-50/50 border border-indigo-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:bg-white focus:border-indigo-500 text-indigo-900 placeholder:text-indigo-400 text-sm transition-all"
           />
         </div>
 
@@ -505,7 +505,7 @@ export default function JobCardListing() {
                       <td className="py-2.5 px-1.5 align-top wrap-break-word whitespace-normal leading-relaxed">
                         {card.lamination ? (
                           <span className="bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded text-[10px] font-medium inline-block">{card.lamination}</span>
-                        ) : <span className="text-gray-400">-</span>}
+                        ) : <span className="text-indigo-500">-</span>}
                       </td>
                     )}
                     {columnVisibility.binding && (
@@ -518,14 +518,14 @@ export default function JobCardListing() {
                                 <span key={i} className="bg-amber-50 text-amber-700 border border-amber-100 px-1 py-0.5 rounded text-[9px] font-semibold">{b}</span>
                               ))}
                             </div>
-                          ) : <span className="text-gray-400">-</span>;
+                          ) : <span className="text-indigo-500">-</span>;
                         })()}
                       </td>
                     )}
                     {columnVisibility.createdAt && (
                       <td className="py-2.5 px-1.5 text-gray-500 align-top wrap-break-word whitespace-normal leading-relaxed">
                         <span className="block">{formatShortDateTime(card.createdAt).date}</span>
-                        <span className="block text-[10px] text-gray-400 mt-0.5">{formatShortDateTime(card.createdAt).time}</span>
+                        <span className="block text-[10px] text-indigo-500 mt-0.5">{formatShortDateTime(card.createdAt).time}</span>
                       </td>
                     )}
                     <td className="py-2 px-0.5 align-top">

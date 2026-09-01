@@ -408,7 +408,7 @@ const PaperStockManagement = () => {
             </div>
             <form onSubmit={handleSubmit} className="p-8 space-y-6">
               <div className="mb-4">
-                <label className="block text-[10px] font-black uppercase text-gray-400 mb-2 pl-1 tracking-widest">Paper Source</label>
+                <label className="block text-[10px] font-black uppercase text-indigo-500 mb-2 pl-1 tracking-widest">Paper Source</label>
                 <div className="grid grid-cols-2 gap-4">
                   <button
                     type="button"
@@ -436,7 +436,7 @@ const PaperStockManagement = () => {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 pl-1 tracking-widest">Challan No.</label>
+                  <label className="block text-[10px] font-black uppercase text-indigo-500 mb-1.5 pl-1 tracking-widest">Challan No.</label>
                   <input
                     type="text"
                     placeholder="e.g. CH-1024"
@@ -446,7 +446,7 @@ const PaperStockManagement = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 pl-1 tracking-widest">Invoice No.</label>
+                  <label className="block text-[10px] font-black uppercase text-indigo-500 mb-1.5 pl-1 tracking-widest">Invoice No.</label>
                   <input
                     type="text"
                     placeholder="e.g. INV-5589"
@@ -456,7 +456,7 @@ const PaperStockManagement = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 pl-1 tracking-widest">Date</label>
+                  <label className="block text-[10px] font-black uppercase text-indigo-500 mb-1.5 pl-1 tracking-widest">Date</label>
                   <input
                     type="date"
                     className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-semibold"
@@ -473,7 +473,7 @@ const PaperStockManagement = () => {
                     Cover Paper
                   </h3>
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 pl-1 tracking-widest">Party Name</label>
+                    <label className="block text-[10px] font-black uppercase text-indigo-500 mb-1.5 pl-1 tracking-widest">Party Name</label>
                     <input 
                       type="text"
                       placeholder="e.g. ABC Traders"
@@ -483,7 +483,7 @@ const PaperStockManagement = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 pl-1 tracking-widest">Paper Name</label>
+                    <label className="block text-[10px] font-black uppercase text-indigo-500 mb-1.5 pl-1 tracking-widest">Paper Name</label>
                     <input 
                       type="text"
                       placeholder="e.g. Art Card, Glossy"
@@ -493,7 +493,7 @@ const PaperStockManagement = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 pl-1 tracking-widest">Cover GSM</label>
+                    <label className="block text-[10px] font-black uppercase text-indigo-500 mb-1.5 pl-1 tracking-widest">Cover GSM</label>
                     <input 
                       type="number"
                       placeholder="e.g. 350, 300"
@@ -503,7 +503,7 @@ const PaperStockManagement = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 pl-1 tracking-widest">
+                    <label className="block text-[10px] font-black uppercase text-indigo-500 mb-1.5 pl-1 tracking-widest">
                       {editingId ? 'Add More Cover Sheets' : 'Cover Initial Sheet Count'}
                     </label>
                     {editingId && (
@@ -524,7 +524,7 @@ const PaperStockManagement = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 pl-1 tracking-widest">Cover Paper Size</label>
+                    <label className="block text-[10px] font-black uppercase text-indigo-500 mb-1.5 pl-1 tracking-widest">Cover Paper Size</label>
                     <input 
                       type="text"
                       placeholder="e.g. 12x18, 13x19"
@@ -542,7 +542,7 @@ const PaperStockManagement = () => {
                     Inner Paper
                   </h3>
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 pl-1 tracking-widest">Party Name</label>
+                    <label className="block text-[10px] font-black uppercase text-indigo-500 mb-1.5 pl-1 tracking-widest">Party Name</label>
                     <input 
                       type="text"
                       placeholder="e.g. XYZ Publications"
@@ -552,7 +552,7 @@ const PaperStockManagement = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 pl-1 tracking-widest">Paper Name</label>
+                    <label className="block text-[10px] font-black uppercase text-indigo-500 mb-1.5 pl-1 tracking-widest">Paper Name</label>
                     <input 
                       type="text"
                       placeholder="e.g. Offset, Maplitho"
@@ -562,7 +562,7 @@ const PaperStockManagement = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 pl-1 tracking-widest">Inner GSM</label>
+                    <label className="block text-[10px] font-black uppercase text-indigo-500 mb-1.5 pl-1 tracking-widest">Inner GSM</label>
                     <input 
                       type="number"
                       placeholder="e.g. 90, 70"
@@ -572,7 +572,7 @@ const PaperStockManagement = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 pl-1 tracking-widest">
+                    <label className="block text-[10px] font-black uppercase text-indigo-500 mb-1.5 pl-1 tracking-widest">
                       {editingId ? 'Add More Inner Sheets' : 'Inner Initial Sheet Count'}
                     </label>
                     {editingId && (
@@ -593,7 +593,7 @@ const PaperStockManagement = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 pl-1 tracking-widest">Inner Paper Size</label>
+                    <label className="block text-[10px] font-black uppercase text-indigo-500 mb-1.5 pl-1 tracking-widest">Inner Paper Size</label>
                     <input 
                       type="text"
                       placeholder="e.g. 18x23, 23x36"
@@ -605,7 +605,7 @@ const PaperStockManagement = () => {
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-[10px] font-black uppercase text-gray-400 mb-2 pl-1 tracking-widest">Low Stock Alert (Value)</label>
+                  <label className="block text-[10px] font-black uppercase text-indigo-500 mb-2 pl-1 tracking-widest">Low Stock Alert (Value)</label>
                   <input 
                     type="number" required
                     placeholder="Alert when below..."
@@ -616,7 +616,7 @@ const PaperStockManagement = () => {
                 </div>
               </div>
               <div>
-                <label className="block text-[10px] font-black uppercase text-gray-400 mb-2 pl-1 tracking-widest">Description / Best Use</label>
+                <label className="block text-[10px] font-black uppercase text-indigo-500 mb-2 pl-1 tracking-widest">Description / Best Use</label>
                 <textarea 
                   rows="3"
                   placeholder="Notes for the team..."
@@ -648,7 +648,7 @@ const PaperStockManagement = () => {
                 </div>
                 <h3 className="font-black text-gray-900 uppercase text-xs tracking-wider">{item.type}</h3>
                 <p className="text-xl font-black text-blue-600 mt-1">{item.gsm}</p>
-                <p className="text-[10px] font-bold text-gray-400 mt-0.5 uppercase tracking-tighter">{item.paper}</p>
+                <p className="text-[10px] font-bold text-indigo-500 mt-0.5 uppercase tracking-tighter">{item.paper}</p>
               </div>
             ))}
           </div>
@@ -694,13 +694,13 @@ const PaperStockManagement = () => {
                 Current Inventory
               </h2>
               <div className="relative w-full sm:w-64">
-                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-500" />
                 <input 
                   type="text" 
                   placeholder="Search stock..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-100 rounded-full text-xs outline-none focus:ring-2 focus:ring-blue-100"
+                  className="w-full pl-10 pr-4 py-2 bg-indigo-50/50 border border-indigo-200 rounded-full text-indigo-900 placeholder:text-indigo-400 text-xs outline-none focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20"
                 />
               </div>
             </div>
@@ -708,7 +708,7 @@ const PaperStockManagement = () => {
             <div className="overflow-x-auto min-h-100">
               <table className="w-full text-left whitespace-nowrap">
                 <thead>
-                  <tr className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 tracking-widest">
+                  <tr className="bg-gray-50 text-[10px] font-black uppercase text-indigo-500 tracking-widest">
                     <th className="px-6 py-4">Party Name</th>
                     <th className="px-6 py-4">Paper Name & GSM</th>
                     <th className="px-6 py-4">Remaining Stock</th>
@@ -719,7 +719,7 @@ const PaperStockManagement = () => {
                 </thead>
                 <tbody className="divide-y divide-gray-50">
                   {loading ? (
-                    <tr><td colSpan="6" className="px-6 py-20 text-center text-gray-400 font-bold animate-pulse uppercase tracking-[0.2em]">Loading Inventory...</td></tr>
+                    <tr><td colSpan="6" className="px-6 py-20 text-center text-indigo-500 font-bold animate-pulse uppercase tracking-[0.2em]">Loading Inventory...</td></tr>
                   ) : stock.filter(item => {
                     const matchesTab = (item.paperSource || 'Company paper') === activeTab;
                     const matchesSearch = (item.coverName || item.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -733,7 +733,7 @@ const PaperStockManagement = () => {
                                             (item.innerPaperSize && item.innerPaperSize.toLowerCase().includes(searchQuery.toLowerCase()));
                     return matchesTab && matchesSearch;
                   }).length === 0 ? (
-                    <tr><td colSpan="6" className="px-6 py-20 text-center text-gray-400 italic">No inventory records found for {activeTab === 'Company paper' ? 'Company Paper' : 'Party Paper'}.</td></tr>
+                    <tr><td colSpan="6" className="px-6 py-20 text-center text-indigo-500 italic">No inventory records found for {activeTab === 'Company paper' ? 'Company Paper' : 'Party Paper'}.</td></tr>
                   ) : (
                     stock.filter(item => {
                       const matchesTab = (item.paperSource || 'Company paper') === activeTab;
@@ -757,11 +757,11 @@ const PaperStockManagement = () => {
                             {partyNames.split ? (
                               <div className="space-y-1.5 text-sm">
                                 <div className="flex items-center gap-2">
-                                  <span className="text-[10px] font-black text-gray-400 uppercase w-12">Cover:</span>
+                                  <span className="text-[10px] font-black text-indigo-500 uppercase w-12">Cover:</span>
                                   <span className="font-bold text-gray-800">{partyNames.cover}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <span className="text-[10px] font-black text-gray-400 uppercase w-12">Inner:</span>
+                                  <span className="text-[10px] font-black text-indigo-500 uppercase w-12">Inner:</span>
                                   <span className="font-bold text-gray-800">{partyNames.inner}</span>
                                 </div>
                               </div>
@@ -786,14 +786,14 @@ const PaperStockManagement = () => {
                                          Cover: {item.coverName || item.name || '--'} · {item.coverGSM !== undefined ? item.coverGSM : item.gsm} GSM{item.coverPaperSize ? ` · ${item.coverPaperSize}` : ''}
                                        </span>
                                      ) : (
-                                       <span className="bg-gray-50 text-gray-400 px-2 py-0.5 rounded border border-gray-200">Cover: --</span>
+                                       <span className="bg-gray-50 text-indigo-500 px-2 py-0.5 rounded border border-gray-200">Cover: --</span>
                                      )}
                                      {item.innerGSM ? (
                                        <span className="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded border border-indigo-100">
                                          Inner: {item.innerName || item.name || '--'} · {item.innerGSM} GSM{item.innerPaperSize ? ` · ${item.innerPaperSize}` : ''}
                                        </span>
                                      ) : (
-                                       <span className="bg-gray-50 text-gray-400 px-2 py-0.5 rounded border border-gray-200">Inner: --</span>
+                                       <span className="bg-gray-50 text-indigo-500 px-2 py-0.5 rounded border border-gray-200">Inner: --</span>
                                      )}
                                    </div>
                                 </div>
@@ -803,24 +803,24 @@ const PaperStockManagement = () => {
                              <div className="space-y-1.5">
                                {(item.coverGSM !== undefined || item.gsm) && (
                                  <div className="flex items-center gap-2">
-                                   <span className="text-[10px] font-black text-gray-400 uppercase w-12">Cover:</span>
+                                   <span className="text-[10px] font-black text-indigo-500 uppercase w-12">Cover:</span>
                                    <span className={`text-sm font-black tracking-tight ${(item.coverQuantity !== undefined ? item.coverQuantity : item.quantity) <= item.lowStockThreshold ? 'text-red-600' : 'text-gray-900'}`}>
                                      {(item.coverQuantity !== undefined ? item.coverQuantity : item.quantity).toLocaleString()} Sheets
                                    </span>
                                  </div>
                                )}
                                <div className="flex items-center gap-2">
-                                 <span className="text-[10px] font-black text-gray-400 uppercase w-12">Inner:</span>
+                                 <span className="text-[10px] font-black text-indigo-500 uppercase w-12">Inner:</span>
                                  {item.innerGSM ? (
                                    <span className={`text-sm font-black tracking-tight ${(item.innerQuantity || 0) <= item.lowStockThreshold ? 'text-red-600' : 'text-gray-900'}`}>
                                      {(item.innerQuantity || 0).toLocaleString()} Sheets
                                    </span>
                                  ) : (
-                                   <span className="text-xs font-bold text-gray-400 italic">Not set</span>
+                                   <span className="text-xs font-bold text-indigo-500 italic">Not set</span>
                                  )}
                                </div>
                              </div>
-                             {item.description && <p className="text-[9px] text-gray-400 font-medium italic mt-1.5">{item.description}</p>}
+                             {item.description && <p className="text-[9px] text-indigo-500 font-medium italic mt-1.5">{item.description}</p>}
                           </td>
                           <td className="px-6 py-5">
                              {isLow ? (
@@ -833,7 +833,7 @@ const PaperStockManagement = () => {
                                </span>
                              )}
                           </td>
-                          <td className="px-6 py-5 text-xs font-bold text-gray-400 uppercase">
+                          <td className="px-6 py-5 text-xs font-bold text-indigo-500 uppercase">
                              {new Date(item.updatedAt).toLocaleDateString()}
                           </td>
                           <td className="px-6 py-5">
@@ -905,7 +905,7 @@ const PaperStockManagement = () => {
             </div>
 
             <div className="px-6 py-4 bg-gray-50/60 border-b border-gray-100 space-y-3">
-              <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Paper Name & GSM</p>
+              <p className="text-[10px] font-black uppercase text-indigo-500 tracking-widest">Paper Name & GSM</p>
               {(addModal.item.coverGSM !== undefined && addModal.item.coverGSM !== null) || addModal.item.gsm ? (
                 <div className="flex items-start justify-between gap-3 text-sm">
                   <span className="font-bold text-sky-700 shrink-0">Cover</span>
@@ -932,7 +932,7 @@ const PaperStockManagement = () => {
               ) : null}
               <div className="pt-2 border-t border-gray-200/80 grid grid-cols-2 gap-3 text-sm">
                 <div>
-                  <p className="text-[10px] font-black uppercase text-gray-400 mb-1">Remaining Stock</p>
+                  <p className="text-[10px] font-black uppercase text-indigo-500 mb-1">Remaining Stock</p>
                   {(addModal.item.coverGSM !== undefined && addModal.item.coverGSM !== null) || addModal.item.gsm ? (
                     <p className="font-bold text-gray-900">
                       Cover: {(addModal.item.coverQuantity !== undefined ? addModal.item.coverQuantity : addModal.item.quantity || 0).toLocaleString()} Sheets
@@ -945,7 +945,7 @@ const PaperStockManagement = () => {
                   ) : null}
                 </div>
                 <div>
-                  <p className="text-[10px] font-black uppercase text-gray-400 mb-1">Last Updated</p>
+                  <p className="text-[10px] font-black uppercase text-indigo-500 mb-1">Last Updated</p>
                   <p className="font-bold text-gray-600">
                     {new Date(addModal.item.updatedAt).toLocaleDateString('en-IN')}
                   </p>
@@ -956,7 +956,7 @@ const PaperStockManagement = () => {
             <form onSubmit={submitAddStock} className="p-6 space-y-4">
               {((addModal.item.coverGSM !== undefined && addModal.item.coverGSM !== null) || addModal.item.gsm) && (
                 <div>
-                  <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 tracking-widest">
+                  <label className="block text-[10px] font-black uppercase text-indigo-500 mb-1.5 tracking-widest">
                     Add Cover Sheets
                   </label>
                   <input
@@ -980,7 +980,7 @@ const PaperStockManagement = () => {
 
               {addModal.item.innerGSM ? (
                 <div>
-                  <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 tracking-widest">
+                  <label className="block text-[10px] font-black uppercase text-indigo-500 mb-1.5 tracking-widest">
                     Add Inner Sheets
                   </label>
                   <input
@@ -1001,7 +1001,7 @@ const PaperStockManagement = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
                 <div>
-                  <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 tracking-widest">Challan No.</label>
+                  <label className="block text-[10px] font-black uppercase text-indigo-500 mb-1.5 tracking-widest">Challan No.</label>
                   <input
                     type="text"
                     name="stock-add-challan-no"
@@ -1018,7 +1018,7 @@ const PaperStockManagement = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 tracking-widest">Invoice No.</label>
+                  <label className="block text-[10px] font-black uppercase text-indigo-500 mb-1.5 tracking-widest">Invoice No.</label>
                   <input
                     type="text"
                     name="stock-add-invoice-no"
@@ -1035,7 +1035,7 @@ const PaperStockManagement = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 tracking-widest">Date</label>
+                  <label className="block text-[10px] font-black uppercase text-indigo-500 mb-1.5 tracking-widest">Date</label>
                   <input
                     type="date"
                     className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg outline-none focus:border-blue-500 text-sm font-semibold"
@@ -1086,9 +1086,9 @@ const PaperStockManagement = () => {
 
             <div className="overflow-auto max-h-[calc(85vh-5rem)]">
               {historyModal.loading ? (
-                <p className="px-6 py-16 text-center text-gray-400 font-semibold animate-pulse">Loading history...</p>
+                <p className="px-6 py-16 text-center text-indigo-500 font-semibold animate-pulse">Loading history...</p>
               ) : historyModal.rows.length === 0 ? (
-                <p className="px-6 py-16 text-center text-gray-400 italic">No stock add history found.</p>
+                <p className="px-6 py-16 text-center text-indigo-500 italic">No stock add history found.</p>
               ) : (
                 <table className="w-full text-left">
                   <thead>

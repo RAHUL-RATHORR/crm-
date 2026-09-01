@@ -77,7 +77,7 @@ const RecentDeleted = () => {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search by name or type..."
-                className="w-full sm:w-64 bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full sm:w-64 bg-indigo-50/50 border border-indigo-200 rounded-lg px-4 py-2 text-indigo-900 placeholder:text-indigo-400 text-sm focus:outline-none focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20"
               />
             </div>
             <div className="overflow-x-auto min-h-75">
@@ -94,7 +94,7 @@ const RecentDeleted = () => {
                 <tbody className="divide-y divide-gray-50">
                   {filteredItems.length === 0 ? (
                     <tr>
-                      <td colSpan="5" className="px-6 py-20 text-center text-gray-400 italic">
+                      <td colSpan="5" className="px-6 py-20 text-center text-indigo-500 italic">
                         {items.length === 0 ? 'No deleted items found.' : 'No items match your search.'}
                       </td>
                     </tr>

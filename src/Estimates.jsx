@@ -241,13 +241,13 @@ export default function Estimates() {
 
       <div className="bg-white p-4 rounded-t-3xl border-x border-t border-gray-50 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
         <div className="relative w-full lg:max-w-md">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-500" size={18} />
           <input
             type="text"
             placeholder="Search by Party Name or Quote Number..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-transparent rounded-2xl focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500/50 text-sm transition-all"
+            className="w-full pl-12 pr-4 py-3 bg-indigo-50/50 border border-indigo-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 text-indigo-900 placeholder:text-indigo-400 text-sm transition-all"
           />
         </div>
         <div className="flex items-center gap-3 shrink-0">
@@ -287,20 +287,20 @@ export default function Estimates() {
                   <td colSpan="6" className="py-20 text-center">
                     <div className="flex flex-col items-center gap-3">
                       <RefreshCw className="animate-spin text-orange-500" size={32} />
-                      <span className="text-sm font-black text-gray-400 uppercase tracking-widest">Loading Estimates...</span>
+                      <span className="text-sm font-black text-indigo-500 uppercase tracking-widest">Loading Estimates...</span>
                     </div>
                   </td>
                 </tr>
               ) : filteredEstimates.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="py-20 text-center text-gray-400 italic">
+                  <td colSpan="6" className="py-20 text-center text-indigo-500 italic">
                     No estimates found. Click &quot;Add New Estimate &amp; Quotation&quot; to create one.
                   </td>
                 </tr>
               ) : (
                 filteredEstimates.map((item, index) => (
                   <tr key={item._id} className="hover:bg-gray-50/60 transition-colors group">
-                    <td className="py-4 px-3 sm:px-4 text-gray-400 font-bold align-top">{index + 1}</td>
+                    <td className="py-4 px-3 sm:px-4 text-indigo-500 font-bold align-top">{index + 1}</td>
                     <td className="py-4 px-3 sm:px-4 align-top">
                       <div className="flex items-start gap-2 min-w-0">
                         <div className="w-9 h-9 shrink-0 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition-all">
@@ -321,11 +321,11 @@ export default function Estimates() {
                     <td className="py-4 px-3 sm:px-4 align-top">
                       <div className="flex flex-col gap-1">
                         <div className="flex flex-wrap items-center gap-1">
-                          <span className="text-[10px] font-black text-gray-400 uppercase">Size:</span>
+                          <span className="text-[10px] font-black text-indigo-500 uppercase">Size:</span>
                           <span className="text-xs font-bold text-gray-700 break-all">{item.pageSize || '-'}</span>
                         </div>
                         <div className="flex flex-wrap items-center gap-1">
-                          <span className="text-[10px] font-black text-gray-400 uppercase">Qty:</span>
+                          <span className="text-[10px] font-black text-indigo-500 uppercase">Qty:</span>
                           <span className="text-xs font-black text-blue-600">{item.jobQty || 0}</span>
                         </div>
                       </div>
