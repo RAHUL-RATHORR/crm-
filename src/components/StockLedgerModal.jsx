@@ -15,6 +15,7 @@ const StockLedgerModal = ({ stockId, stockName, onClose }) => {
   const [ledger, setLedger] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [filter, setFilter] = useState('all');
 
   useEffect(() => {
     if (!stockId) return;
@@ -47,20 +48,66 @@ const StockLedgerModal = ({ stockId, stockName, onClose }) => {
       <div className="bg-white w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         
         {/* Header */}
-        <div className="flex items-center justify-between p-6 bg-gray-50 border-b border-gray-100 shrink-0">
-          <div>
-            <h2 className="text-xl font-bold text-gray-900">Stock Ledger</h2>
-            <p className="text-sm font-bold text-indigo-600 mt-1 uppercase tracking-wider">{stockName}</p>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
-          >
-            <X size={20} />
-          </button>
-        </div>
+          <div className="flex items-center justify-between p-6 bg-gray-50 border-b border-gray-100 shrink-0">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">Stock Ledger</h2>
+              <p className="text-sm font-bold text-indigo-600 mt-1 uppercase tracking-wider">{stockName}</p>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <div className="hidden sm:flex bg-white rounded-lg p-1 border border-gray-200">
+                <button
+                  onClick={() => setFilter('all')}
+                  className={`px-4 py-1.5 text-xs font-bold rounded-md transition-colors ${filter === 'all' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:bg-gray-50'}`}
+                >
+                  All
+                </button>
+                <button
+                  onClick={() => setFilter('cover')}
+                  className={`px-4 py-1.5 text-xs font-bold rounded-md transition-colors ${filter === 'cover' ? 'bg-sky-50 text-sky-700' : 'text-gray-500 hover:bg-gray-50'}`}
+                >
+                  Cover
+                </button>
+                <button
+                  onClick={() => setFilter('inner')}
+                  className={`px-4 py-1.5 text-xs font-bold rounded-md transition-colors ${filter === 'inner' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:bg-gray-50'}`}
+                >
+                  Inner
+                </button>
+              </div>
 
-        {/* Content */}
+              <button
+                onClick={onClose}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+          </div>
+  
+          {/* Mobile Filter (visible only on small screens) */}
+          <div className="sm:hidden p-4 bg-gray-50 border-b border-gray-100 flex gap-2 overflow-x-auto shrink-0">
+            <button
+              onClick={() => setFilter('all')}
+              className={`px-4 py-1.5 text-xs font-bold rounded-lg border transition-colors ${filter === 'all' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-white text-gray-600 border-gray-200'}`}
+            >
+              All
+            </button>
+            <button
+              onClick={() => setFilter('cover')}
+              className={`px-4 py-1.5 text-xs font-bold rounded-lg border transition-colors ${filter === 'cover' ? 'bg-sky-50 text-sky-700 border-sky-200' : 'bg-white text-gray-600 border-gray-200'}`}
+            >
+              Cover
+            </button>
+            <button
+              onClick={() => setFilter('inner')}
+              className={`px-4 py-1.5 text-xs font-bold rounded-lg border transition-colors ${filter === 'inner' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-white text-gray-600 border-gray-200'}`}
+            >
+              Inner
+            </button>
+          </div>
+
+          {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 bg-white relative">
           {loading ? (
             <div className="flex flex-col items-center justify-center h-40 text-indigo-500">
@@ -76,79 +123,86 @@ const StockLedgerModal = ({ stockId, stockName, onClose }) => {
               No transactions found for this stock.
             </div>
           ) : (
-            <div className="space-y-4">
-              {ledger.map((item, index) => {
-                const isAdd = item.transactionType === 'add';
-                const isRestore = item.note && item.note.toLowerCase().includes('restore');
-                
-                let icon = <ArrowDownCircle size={18} className="text-red-500" />;
-                let badgeClass = "bg-red-50 text-red-700 ring-red-200";
-                let typeLabel = "DEDUCTED";
-                let qtyPrefix = "-";
+            <div className="flex flex-col gap-3">
+              {ledger
+                .filter(item => filter === 'all' ? true : item.paperType === filter)
+                .map((item, index) => {
+                  const isAdd = item.transactionType === 'add';
+                  const isRestore = item.note && item.note.toLowerCase().includes('restore');
+                  
+                  let icon = <ArrowDownCircle size={18} className="text-red-500" />;
+                  let badgeClass = "bg-red-50 text-red-700 ring-red-200";
+                  let typeLabel = "DEDUCTED";
+                  let qtyPrefix = "-";
 
-                if (isAdd) {
-                  icon = <ArrowUpCircle size={18} className={isRestore ? "text-amber-500" : "text-emerald-500"} />;
-                  badgeClass = isRestore ? "bg-amber-50 text-amber-700 ring-amber-200" : "bg-emerald-50 text-emerald-700 ring-emerald-200";
-                  typeLabel = isRestore ? "RESTORED" : "ADDED";
-                  qtyPrefix = "+";
-                }
+                  if (isAdd) {
+                    icon = <ArrowUpCircle size={18} className={isRestore ? "text-amber-500" : "text-emerald-500"} />;
+                    badgeClass = isRestore ? "bg-amber-50 text-amber-700 ring-amber-200" : "bg-emerald-50 text-emerald-700 ring-emerald-200";
+                    typeLabel = isRestore ? "RESTORED" : "ADDED";
+                    qtyPrefix = "+";
+                  }
 
-                return (
-                  <div key={item._id || index} className="flex flex-col sm:flex-row gap-4 p-4 rounded-2xl border border-gray-100 hover:border-indigo-100 hover:shadow-md transition-all bg-gray-50/30 group">
-                    
-                    {/* Left block: Icon, Type & Date */}
-                    <div className="flex sm:flex-col items-center sm:items-start gap-3 sm:w-48 shrink-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        {icon}
-                        <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md ring-1 ${badgeClass}`}>
-                          {typeLabel}
-                        </span>
-                        <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md ring-1 ${
-                          item.paperType === 'cover' ? 'bg-sky-50 text-sky-700 ring-sky-200' : 'bg-indigo-50 text-indigo-700 ring-indigo-200'
-                        }`}>
-                          {item.paperType === 'cover' ? 'Cover' : 'Inner'}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-gray-500 mt-0 sm:mt-1">
-                        <Calendar size={12} />
-                        {formatDateTime(item.createdAt)}
-                      </div>
-                    </div>
-
-                    {/* Middle block: Details */}
-                    <div className="flex-1 flex flex-col justify-center">
-                      {item.jobNumber ? (
-                        <div className="flex items-center gap-1.5 text-sm font-bold text-indigo-700 mb-1">
-                          <Hash size={14} />
-                          Job Card: {item.jobNumber}
-                        </div>
-                      ) : (
-                        <div className="text-sm font-bold text-gray-700 mb-1">
-                          Direct Update
-                        </div>
-                      )}
+                  return (
+                    <div key={item._id || index} className="flex flex-col sm:flex-row gap-4 p-4 rounded-2xl border border-gray-100 hover:border-indigo-100 hover:shadow-md transition-all bg-gray-50/30 group">
                       
-                      {item.note && (
-                        <div className="flex items-start gap-1.5 text-xs font-medium text-gray-500">
-                          <Info size={14} className="shrink-0 mt-0.5 opacity-70" />
-                          <p>{item.note}</p>
+                      {/* Left block: Icon, Type & Date */}
+                      <div className="flex sm:flex-col items-center sm:items-start gap-3 sm:w-48 shrink-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          {icon}
+                          <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md ring-1 ${badgeClass}`}>
+                            {typeLabel}
+                          </span>
+                          <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md ring-1 ${
+                            item.paperType === 'cover' ? 'bg-sky-50 text-sky-700 ring-sky-200' : 'bg-indigo-50 text-indigo-700 ring-indigo-200'
+                          }`}>
+                            {item.paperType === 'cover' ? 'Cover' : 'Inner'}
+                          </span>
                         </div>
-                      )}
-                    </div>
-
-                    {/* Right block: Quantity & Balance */}
-                    <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-1 sm:w-32 shrink-0 border-t sm:border-t-0 border-gray-100 pt-3 sm:pt-0 mt-2 sm:mt-0">
-                      <div className={`text-base sm:text-lg font-black ${isAdd ? (isRestore ? 'text-amber-600' : 'text-emerald-600') : 'text-red-500'}`}>
-                        {qtyPrefix}{item.quantity?.toLocaleString()}
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-gray-500 mt-0 sm:mt-1">
+                          <Calendar size={12} />
+                          {formatDateTime(item.createdAt)}
+                        </div>
                       </div>
-                      <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                        Balance: <span className="text-gray-700 text-xs">{item.balanceAfter?.toLocaleString() || '---'}</span>
-                      </div>
-                    </div>
 
-                  </div>
-                );
-              })}
+                      {/* Middle block: Details */}
+                      <div className="flex-1 flex flex-col justify-center">
+                        {item.jobNumber ? (
+                          <div className="flex items-center gap-1.5 text-sm font-bold text-indigo-700 mb-1">
+                            <Hash size={14} />
+                            Job Card: {item.jobNumber}
+                          </div>
+                        ) : (
+                          <div className="text-sm font-bold text-gray-700 mb-1">
+                            Direct Update
+                          </div>
+                        )}
+                        
+                        {item.note && (
+                          <div className="flex items-start gap-1.5 text-xs font-medium text-gray-500">
+                            <Info size={14} className="shrink-0 mt-0.5 opacity-70" />
+                            <p>{item.note}</p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Right block: Quantity & Balance */}
+                      <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-1 sm:w-32 shrink-0 border-t sm:border-t-0 border-gray-100 pt-3 sm:pt-0 mt-2 sm:mt-0">
+                        <div className={`text-base sm:text-lg font-black ${isAdd ? (isRestore ? 'text-amber-600' : 'text-emerald-600') : 'text-red-500'}`}>
+                          {qtyPrefix}{item.quantity?.toLocaleString()}
+                        </div>
+                        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                          Balance: <span className="text-gray-700 text-xs">{item.balanceAfter?.toLocaleString() || '---'}</span>
+                        </div>
+                      </div>
+
+                    </div>
+                  );
+                })}
+              {ledger.filter(item => filter === 'all' ? true : item.paperType === filter).length === 0 && (
+                <div className="text-center py-12 text-gray-400 font-medium">
+                  No matching transactions found.
+                </div>
+              )}
             </div>
           )}
         </div>
