@@ -693,14 +693,14 @@ const PaperStockManagement = () => {
               <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2 underline decoration-blue-500 decoration-4 underline-offset-8">
                 Current Inventory
               </h2>
-              <div className="relative w-full sm:w-96">
-                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-500" />
+              <div className="relative w-full sm:w-72">
+                <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-indigo-500" />
                 <input 
                   type="text" 
                   placeholder="Search stock..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-indigo-50/50 border border-indigo-200 rounded-full text-indigo-900 placeholder:text-indigo-400 text-xs outline-none focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20"
+                  className="w-full pl-10 pr-4 py-2.5 bg-indigo-50/50 border border-indigo-200 rounded-full text-indigo-900 placeholder:text-indigo-400 text-sm outline-none focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20"
                 />
               </div>
             </div>
