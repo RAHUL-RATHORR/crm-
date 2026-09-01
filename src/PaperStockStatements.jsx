@@ -7,8 +7,10 @@ import {
   User,
   Hash,
   Layers,
+  Eye,
 } from 'lucide-react';
 import { API_BASE_URL } from './utils/apiBase';
+import StockLedgerModal from './components/StockLedgerModal';
 
 const HighlightText = ({ text, highlight }) => {
   if (!highlight || !highlight.trim()) return <>{text}</>;
@@ -36,6 +38,7 @@ const PaperStockStatements = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('Company paper');
   const [typeFilter, setTypeFilter] = useState('all');
+  const [selectedLedgerStock, setSelectedLedgerStock] = useState(null);
 
   const loadTransactions = async () => {
     setLoading(true);
@@ -199,14 +202,15 @@ const PaperStockStatements = () => {
                 <th className="px-6 py-4 text-right">Quantity</th>
                 <th className="px-6 py-4">Job No.</th>
                 <th className="px-6 py-4 text-right">Balance After</th>
+                <th className="px-6 py-4 text-center">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {loading ? (
-                <tr><td colSpan="8" className="px-6 py-20 text-center text-indigo-500 font-bold animate-pulse uppercase">Loading...</td></tr>
+                <tr><td colSpan="9" className="px-6 py-20 text-center text-indigo-500 font-bold animate-pulse uppercase">Loading...</td></tr>
               ) : error ? (
                 <tr>
-                  <td colSpan="8" className="px-6 py-20 text-center">
+                  <td colSpan="9" className="px-6 py-20 text-center">
                     <p className="text-red-500 font-bold mb-3">{error}</p>
                     <button
                       type="button"
@@ -219,7 +223,7 @@ const PaperStockStatements = () => {
                 </tr>
               ) : filteredTransactions.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="px-6 py-20 text-center text-indigo-500 italic">
+                  <td colSpan="9" className="px-6 py-20 text-center text-indigo-500 italic">
                     No transactions yet. Add new stock or use paper from a Job Card — history will appear here.
                   </td>
                 </tr>
@@ -291,6 +295,22 @@ const PaperStockStatements = () => {
                     <td className="px-6 py-5 text-right">
                       <p className="font-black text-gray-900 text-sm">{item.balanceAfter?.toLocaleString()} Sheets</p>
                     </td>
+                    <td className="px-6 py-5 text-center">
+                      {item.paperStockId ? (
+                        <button
+                          type="button"
+                          onClick={() => setSelectedLedgerStock({ 
+                            id: item.paperStockId, 
+                            name: item.stockName || item.paperName 
+                          })}
+                          className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors"
+                        >
+                          <Eye size={16} />
+                        </button>
+                      ) : (
+                        <span className="text-gray-400 italic text-xs">N/A</span>
+                      )}
+                    </td>
                   </tr>
                 ))
               )}
@@ -298,6 +318,14 @@ const PaperStockStatements = () => {
           </table>
         </div>
       </div>
+
+      {selectedLedgerStock && (
+        <StockLedgerModal
+          stockId={selectedLedgerStock.id}
+          stockName={selectedLedgerStock.name}
+          onClose={() => setSelectedLedgerStock(null)}
+        />
+      )}
     </div>
   );
 };

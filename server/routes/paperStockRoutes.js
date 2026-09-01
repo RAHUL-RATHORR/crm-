@@ -108,6 +108,33 @@ router.get('/:id/transactions', async (req, res) => {
   }
 });
 
+// GET /api/paper-stock/:id/ledger - Full transaction ledger for one stock item
+router.get('/:id/ledger', async (req, res) => {
+  try {
+    const stock = await PaperStock.findById(req.params.id);
+    if (!stock) return res.status(404).json({ error: 'Item not found' });
+
+    // Try to ensure backfill exists so opening balance is visible
+    try {
+      await ensureStockAddTransactions(stock);
+    } catch (backfillErr) {
+      console.error('ensureStockAddTransactions failed:', backfillErr.message);
+    }
+
+    const transactions = await PaperStockTransaction.find({
+      paperStockId: stock._id,
+    }).sort({ createdAt: -1 });
+
+    if (!transactions.length) {
+      return res.json(buildStockAddHistoryFallback(stock));
+    }
+
+    res.json(transactions.map((tx) => tx.toObject()));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET /api/paper-stock - Get all stock items
 router.get('/', async (req, res) => {
   try {
