@@ -96,12 +96,17 @@ const StockLedgerModal = ({ stockId, stockName, onClose }) => {
                 return (
                   <div key={item._id || index} className="flex flex-col sm:flex-row gap-4 p-4 rounded-2xl border border-gray-100 hover:border-indigo-100 hover:shadow-md transition-all bg-gray-50/30 group">
                     
-                    {/* Left block: Icon & Date */}
-                    <div className="flex sm:flex-col items-center sm:items-start gap-3 sm:w-40 shrink-0">
-                      <div className="flex items-center gap-2">
+                    {/* Left block: Icon, Type & Date */}
+                    <div className="flex sm:flex-col items-center sm:items-start gap-3 sm:w-48 shrink-0">
+                      <div className="flex flex-wrap items-center gap-2">
                         {icon}
                         <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md ring-1 ${badgeClass}`}>
                           {typeLabel}
+                        </span>
+                        <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md ring-1 ${
+                          item.paperType === 'cover' ? 'bg-sky-50 text-sky-700 ring-sky-200' : 'bg-indigo-50 text-indigo-700 ring-indigo-200'
+                        }`}>
+                          {item.paperType === 'cover' ? 'Cover' : 'Inner'}
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5 text-xs font-bold text-gray-500 mt-0 sm:mt-1">
