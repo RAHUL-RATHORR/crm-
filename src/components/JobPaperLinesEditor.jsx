@@ -13,6 +13,7 @@ const JobPaperLinesEditor = ({
   getPaperGsm,
   getPaperDetails,
   formatOption,
+  getPaperStockQty,
 }) => {
   const stockLabels = stocks.map((stock) => getPaperLabel(stock)).filter(Boolean);
 
@@ -93,6 +94,11 @@ const JobPaperLinesEditor = ({
         {lines.map((line, index) => {
           const selectValue = selectValueFor(line);
           const showCustomFields = isCustomLine(line) || selectValue === 'Custom';
+          const selectedStock = stocks.find((item) => getPaperLabel(item) === selectValue);
+          const stockQty = selectedStock && getPaperStockQty ? getPaperStockQty(selectedStock) : undefined;
+          const enteredCount = Number(line.count) || 0;
+          const remainingStock = stockQty !== undefined ? stockQty - enteredCount : undefined;
+          const isOverStock = stockQty !== undefined && remainingStock < 0;
 
           return (
             <div key={line.id} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 p-3 rounded-xl border border-gray-100 bg-gray-50/70">
@@ -170,7 +176,16 @@ const JobPaperLinesEditor = ({
               </div>
 
               <div className="lg:col-span-3 flex flex-col">
-                <label className="text-xs font-bold text-gray-500 mb-1">Details</label>
+                <div className="flex justify-between items-end mb-1">
+                  <label className="text-xs font-bold text-gray-500">Details</label>
+                  {stockQty !== undefined && (
+                    <span className={`text-[10px] font-bold px-1.5 rounded ${isOverStock ? 'text-red-600 bg-red-50 border border-red-100' : 'text-emerald-600 bg-emerald-50'}`}>
+                      {isOverStock 
+                        ? `Not enough stock! (Available: ${stockQty})` 
+                        : (enteredCount > 0 ? `Stock: ${stockQty} - ${enteredCount} = ${remainingStock}` : `Stock: ${stockQty}`)}
+                    </span>
+                  )}
+                </div>
                 <input
                   type="text"
                   value={line.details}

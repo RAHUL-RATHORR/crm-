@@ -211,6 +211,29 @@ export default function JobCardForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const validateStock = (lines, stocks, labelGetter, qtyGetter) => {
+      for (const line of lines) {
+        if (!line.paper || line.paper === 'Custom' || !line.count) continue;
+        const count = Number(line.count);
+        if (count <= 0) continue;
+        const stock = stocks.find((s) => labelGetter(s) === line.paper);
+        if (stock) {
+          const qty = qtyGetter(stock) || 0;
+          if (count > qty) {
+            return `Not enough stock for ${line.paper}!\n(Available: ${qty}, Entered: ${count})`;
+          }
+        }
+      }
+      return null;
+    };
+
+    const coverError = validateStock(coverPaperLines, coverStocks, getCoverPaperLabel, s => s.coverQuantity);
+    if (coverError) return alert(coverError);
+
+    const innerError = validateStock(innerPaperLines, innerStocks, getInnerPaperLabel, s => s.innerQuantity);
+    if (innerError) return alert(innerError);
+
     const fd = new FormData(e.target);
     const legacyPaperFields = buildLegacyPaperFields(coverPaperLines, innerPaperLines);
     const jobCard = {
@@ -581,6 +604,7 @@ export default function JobCardForm() {
               getPaperGsm={(stock) => stock.coverGSM || stock.gsm || ''}
               getPaperDetails={(stock) => stock.coverPaperSize || ''}
               formatOption={formatCoverPaperOption}
+              getPaperStockQty={(stock) => stock.coverQuantity}
             />
           </div>
 
@@ -594,6 +618,7 @@ export default function JobCardForm() {
               getPaperGsm={(stock) => stock.innerGSM || stock.gsm || ''}
               getPaperDetails={(stock) => stock.innerPaperSize || ''}
               formatOption={formatInnerPaperOption}
+              getPaperStockQty={(stock) => stock.innerQuantity}
             />
           </div>
         </div>
