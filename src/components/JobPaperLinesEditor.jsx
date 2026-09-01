@@ -163,8 +163,17 @@ const JobPaperLinesEditor = ({
                 />
               </div>
 
-              <div className="lg:col-span-2 flex flex-col">
-                <label className="text-xs font-bold text-gray-500 mb-1">Count</label>
+              <div className="lg:col-span-3 flex flex-col">
+                <div className="flex justify-between items-end mb-1">
+                  <label className="text-xs font-bold text-gray-500">Count</label>
+                  {stockQty !== undefined && (
+                    <span className={`text-[10px] font-bold px-1.5 rounded ${isOverStock ? 'text-red-600 bg-red-50 border border-red-100' : 'text-emerald-600 bg-emerald-50'}`}>
+                      {isOverStock 
+                        ? `Not enough stock! (${stockQty})` 
+                        : (enteredCount > 0 ? `Stock: ${stockQty} - ${enteredCount} = ${remainingStock}` : `Stock: ${stockQty}`)}
+                    </span>
+                  )}
+                </div>
                 <input
                   type="number"
                   min="0"
@@ -175,17 +184,8 @@ const JobPaperLinesEditor = ({
                 />
               </div>
 
-              <div className="lg:col-span-3 flex flex-col">
-                <div className="flex justify-between items-end mb-1">
-                  <label className="text-xs font-bold text-gray-500">Details</label>
-                  {stockQty !== undefined && (
-                    <span className={`text-[10px] font-bold px-1.5 rounded ${isOverStock ? 'text-red-600 bg-red-50 border border-red-100' : 'text-emerald-600 bg-emerald-50'}`}>
-                      {isOverStock 
-                        ? `Not enough stock! (Available: ${stockQty})` 
-                        : (enteredCount > 0 ? `Stock: ${stockQty} - ${enteredCount} = ${remainingStock}` : `Stock: ${stockQty}`)}
-                    </span>
-                  )}
-                </div>
+              <div className="lg:col-span-2 flex flex-col">
+                <label className="text-xs font-bold text-gray-500 mb-1">Details</label>
                 <input
                   type="text"
                   value={line.details}
