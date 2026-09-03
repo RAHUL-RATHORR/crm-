@@ -10,6 +10,11 @@ export const parseGsm = (value) => {
   return match ? Number(match[1]) : NaN;
 };
 
+export const parseQty = (value) => {
+  const match = String(value || '').match(/(\d+(?:\.\d+)?)/);
+  return match ? Number(match[1]) : 0;
+};
+
 export const syncTotalQuantity = (stockItem) => {
   stockItem.quantity = Math.max(
     0,
@@ -31,7 +36,7 @@ export const getCoverUsages = (job) => {
   if (!job) return [];
 
   const paperSource = job.paperSource || 'Company paper';
-  const fallbackQty = Number(job.jobQty) || 0;
+  const fallbackQty = parseQty(job.jobQty);
 
   if (Array.isArray(job.coverPaperLines) && job.coverPaperLines.length) {
     return job.coverPaperLines
@@ -64,7 +69,7 @@ export const getInnerUsages = (job) => {
   if (!job) return [];
 
   const paperSource = job.paperSource || 'Company paper';
-  const fallbackQty = Number(job.jobQty) || 0;
+  const fallbackQty = parseQty(job.jobQty);
 
   if (Array.isArray(job.innerPaperLines) && job.innerPaperLines.length) {
     return job.innerPaperLines

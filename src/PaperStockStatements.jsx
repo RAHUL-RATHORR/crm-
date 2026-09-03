@@ -8,6 +8,7 @@ import {
   Hash,
   Layers,
   Eye,
+  Undo2,
 } from 'lucide-react';
 import { API_BASE_URL } from './utils/apiBase';
 import StockLedgerModal from './components/StockLedgerModal';
@@ -74,6 +75,31 @@ const PaperStockStatements = () => {
   useEffect(() => {
     loadTransactions();
   }, []);
+
+  const handleRevert = async (transaction) => {
+    const isAdd = transaction.transactionType === 'add';
+    const actionText = isAdd ? 'remove the added stock' : 'restore the deducted stock';
+    
+    if (!window.confirm(`Are you sure you want to revert this transaction?\n\nThis will ${actionText} from the main inventory and permanently delete this record.`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/paper-stock/transactions/${transaction._id}`, {
+        method: 'DELETE'
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to revert transaction');
+      }
+
+      loadTransactions();
+    } catch (err) {
+      console.error('Revert error:', err);
+      alert(err.message || 'Error reverting transaction');
+    }
+  };
 
   const filteredTransactions = transactions.filter((item) => {
     const matchesTab = (item.paperSource || 'Company paper') === activeTab;
@@ -296,20 +322,30 @@ const PaperStockStatements = () => {
                       <p className="font-black text-gray-900 text-sm">{item.balanceAfter?.toLocaleString()} Sheets</p>
                     </td>
                     <td className="px-6 py-5 text-center">
-                      {item.paperStockId ? (
+                      <div className="flex items-center justify-center gap-2">
+                        {item.paperStockId ? (
+                          <button
+                            type="button"
+                            onClick={() => setSelectedLedgerStock({ 
+                              id: item.paperStockId, 
+                              name: item.stockName || item.paperName 
+                            })}
+                            className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors"
+                          >
+                            <Eye size={16} />
+                          </button>
+                        ) : (
+                          <span className="text-gray-400 italic text-xs">N/A</span>
+                        )}
                         <button
                           type="button"
-                          onClick={() => setSelectedLedgerStock({ 
-                            id: item.paperStockId, 
-                            name: item.stockName || item.paperName 
-                          })}
-                          className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors"
+                          onClick={() => handleRevert(item)}
+                          className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-orange-50 text-orange-600 hover:bg-orange-100 transition-colors"
+                          title="Revert Transaction"
                         >
-                          <Eye size={16} />
+                          <Undo2 size={16} />
                         </button>
-                      ) : (
-                        <span className="text-gray-400 italic text-xs">N/A</span>
-                      )}
+                      </div>
                     </td>
                   </tr>
                 ))
