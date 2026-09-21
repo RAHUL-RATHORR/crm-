@@ -60,6 +60,23 @@ router.delete('/transactions/:transactionId', async (req, res) => {
     }
 
     await txn.deleteOne();
+
+    if (stock) {
+      const remainingTxns = await PaperStockTransaction.find({
+        $or: [
+          { paperStockId: stock._id },
+          { stockName: stock.name, paperSource: stock.paperSource || 'Company paper' }
+        ],
+        paperType: txn.paperType,
+        transactionType: { $in: ['add', 'deduct'] }
+      }).sort({ createdAt: -1 });
+
+      if (remainingTxns.length > 0) {
+        remainingTxns[0].balanceAfter = txn.paperType === 'cover' ? stock.coverQuantity : stock.innerQuantity;
+        await remainingTxns[0].save();
+      }
+    }
+
     res.json({ message: 'Transaction deleted', stock });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -135,11 +152,53 @@ router.get('/:id/ledger', async (req, res) => {
   }
 });
 
-// GET /api/paper-stock - Get all stock items
+// GET /api/paper-stock - Get all stock items (always synchronized with the latest ledger balanceAfter)
 router.get('/', async (req, res) => {
   try {
-    const stock = await PaperStock.find().sort({ updatedAt: -1, createdAt: -1 }).maxTimeMS(8000);
-    res.json(stock);
+    const stockList = await PaperStock.find().sort({ updatedAt: -1, createdAt: -1 }).maxTimeMS(8000);
+    const stockIds = stockList.map(s => s._id);
+    const stockNames = stockList.map(s => s.name);
+
+    const recentTxns = await PaperStockTransaction.find({
+      $or: [
+        { paperStockId: { $in: stockIds } },
+        { stockName: { $in: stockNames } }
+      ],
+      transactionType: { $in: ['add', 'deduct'] }
+    }).sort({ createdAt: -1 });
+
+    const syncedList = await Promise.all(stockList.map(async (stock) => {
+      const stockTxns = recentTxns.filter(t =>
+        (t.paperStockId && String(t.paperStockId) === String(stock._id)) ||
+        (t.stockName === stock.name && t.paperSource === (stock.paperSource || 'Company paper'))
+      );
+
+      const lastCover = stockTxns.find(t => t.paperType === 'cover');
+      const lastInner = stockTxns.find(t => t.paperType === 'inner');
+
+      let changed = false;
+      if (lastCover && lastCover.balanceAfter !== undefined && Number(stock.coverQuantity) !== Number(lastCover.balanceAfter)) {
+        stock.coverQuantity = Number(lastCover.balanceAfter);
+        changed = true;
+      }
+      if (lastInner && lastInner.balanceAfter !== undefined && Number(stock.innerQuantity) !== Number(lastInner.balanceAfter)) {
+        stock.innerQuantity = Number(lastInner.balanceAfter);
+        changed = true;
+      }
+      const nextTotal = (Number(stock.coverQuantity) || 0) + (Number(stock.innerQuantity) || 0);
+      if (Number(stock.quantity) !== nextTotal) {
+        stock.quantity = nextTotal;
+        changed = true;
+      }
+
+      if (changed) {
+        await stock.save().catch(e => console.error('Auto-sync save failed:', e.message));
+      }
+
+      return stock;
+    }));
+
+    res.json(syncedList);
   } catch (err) {
     console.error('paper-stock GET error:', err.message);
     res.json([]);
@@ -267,18 +326,18 @@ router.put('/:id', async (req, res) => {
     const now = new Date();
     const entryDay = entryDate ? new Date(entryDate) : now;
 
-    if (coverAdded > 0) {
+    if (coverAdded !== 0) {
       await logPaperStockTransaction({
         paperStockId: updated._id,
         stockName: resolvedName,
         paperName: resolvedCoverName || resolvedName,
         paperType: 'cover',
-        transactionType: 'add',
-        quantity: coverAdded,
+        transactionType: coverAdded > 0 ? 'add' : 'deduct',
+        quantity: Math.abs(coverAdded),
         partyName: (coverPartyName || '').trim(),
         paperSource: paperSource || existing.paperSource || 'Company paper',
         balanceAfter: Number(updated.coverQuantity || 0),
-        note: 'Cover stock added',
+        note: coverAdded > 0 ? 'Cover stock added (manual edit)' : 'Cover stock deducted (manual edit)',
         createdAt: now,
         entryDate: entryDay,
         challanNo: txnChallanNo,
@@ -286,18 +345,18 @@ router.put('/:id', async (req, res) => {
       });
     }
 
-    if (innerAdded > 0) {
+    if (innerAdded !== 0) {
       await logPaperStockTransaction({
         paperStockId: updated._id,
         stockName: resolvedName,
         paperName: resolvedInnerName || resolvedName,
         paperType: 'inner',
-        transactionType: 'add',
-        quantity: innerAdded,
+        transactionType: innerAdded > 0 ? 'add' : 'deduct',
+        quantity: Math.abs(innerAdded),
         partyName: (innerPartyName || '').trim(),
         paperSource: paperSource || existing.paperSource || 'Company paper',
         balanceAfter: Number(updated.innerQuantity || 0),
-        note: 'Inner stock added',
+        note: innerAdded > 0 ? 'Inner stock added (manual edit)' : 'Inner stock deducted (manual edit)',
         createdAt: now,
         entryDate: entryDay,
         challanNo: txnChallanNo,
@@ -367,19 +426,58 @@ router.delete('/:id', async (req, res) => {
 });
 
 
-// PATCH /api/paper-stock/:id/set-quantity — set stock quantity directly without logging a transaction
+// PATCH /api/paper-stock/:id/set-quantity — set stock quantity directly and log transaction
 router.patch('/:id/set-quantity', async (req, res) => {
   try {
     const { coverQuantity, innerQuantity } = req.body;
-    const update = {};
-    if (coverQuantity !== undefined) update.coverQuantity = Number(coverQuantity);
-    if (innerQuantity !== undefined) update.innerQuantity = Number(innerQuantity);
-    if (update.coverQuantity !== undefined || update.innerQuantity !== undefined) {
-      const doc = await PaperStock.findByIdAndUpdate(req.params.id, { ...update, updatedAt: Date.now() }, { new: true });
-      if (!doc) return res.status(404).json({ error: 'Not found' });
-      return res.json({ coverQuantity: doc.coverQuantity, innerQuantity: doc.innerQuantity });
+    const doc = await PaperStock.findById(req.params.id);
+    if (!doc) return res.status(404).json({ error: 'Not found' });
+
+    const now = new Date();
+    if (coverQuantity !== undefined) {
+      const newCover = Number(coverQuantity);
+      const diff = newCover - (Number(doc.coverQuantity) || 0);
+      doc.coverQuantity = newCover;
+      if (diff !== 0) {
+        await logPaperStockTransaction({
+          paperStockId: doc._id,
+          stockName: doc.name,
+          paperName: doc.coverName || doc.name,
+          paperType: 'cover',
+          transactionType: diff > 0 ? 'add' : 'deduct',
+          quantity: Math.abs(diff),
+          paperSource: doc.paperSource || 'Company paper',
+          balanceAfter: newCover,
+          note: diff > 0 ? 'Stock adjusted (direct set)' : 'Stock reduced (direct set)',
+          createdAt: now,
+        });
+      }
     }
-    res.status(400).json({ error: 'No quantity provided' });
+
+    if (innerQuantity !== undefined) {
+      const newInner = Number(innerQuantity);
+      const diff = newInner - (Number(doc.innerQuantity) || 0);
+      doc.innerQuantity = newInner;
+      if (diff !== 0) {
+        await logPaperStockTransaction({
+          paperStockId: doc._id,
+          stockName: doc.name,
+          paperName: doc.innerName || doc.name,
+          paperType: 'inner',
+          transactionType: diff > 0 ? 'add' : 'deduct',
+          quantity: Math.abs(diff),
+          paperSource: doc.paperSource || 'Company paper',
+          balanceAfter: newInner,
+          note: diff > 0 ? 'Stock adjusted (direct set)' : 'Stock reduced (direct set)',
+          createdAt: now,
+        });
+      }
+    }
+
+    syncTotalQuantity(doc);
+    doc.updatedAt = Date.now();
+    await doc.save();
+    return res.json({ coverQuantity: doc.coverQuantity, innerQuantity: doc.innerQuantity });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

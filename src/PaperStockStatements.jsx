@@ -53,6 +53,9 @@ const PaperStockStatements = () => {
       clearTimeout(timeoutId);
 
       if (!txRes.ok) {
+        if (txRes.status === 502 || txRes.status === 503 || txRes.status === 504) {
+          throw new Error('Backend server is offline or unreachable. Please ensure the server is running.');
+        }
         throw new Error('Could not load transaction history.');
       }
 

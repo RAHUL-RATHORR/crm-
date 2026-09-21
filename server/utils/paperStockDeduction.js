@@ -337,74 +337,50 @@ const isStockAddNote = (note = '') => {
   return text.includes('stock added') || text.includes('opening stock');
 };
 
-export const reconcilePaperStockFromJobs = async () => {
+export const syncStockFromLedger = async () => {
   const stocks = await PaperStock.find();
-  const jobs = await JobCard.find();
   let updated = 0;
 
   for (const stock of stocks) {
-    const stockSource = stock.paperSource || 'Company paper';
     const txns = await PaperStockTransaction.find({
-      paperStockId: stock._id,
-      transactionType: 'add',
-      note: { $not: /Restored from job card/i },
-    });
+      $or: [
+        { paperStockId: stock._id },
+        { stockName: stock.name, paperSource: stock.paperSource || 'Company paper' },
+      ],
+      transactionType: { $in: ['add', 'deduct'] },
+    }).sort({ createdAt: -1 });
 
-    let coverAdded = 0;
-    let innerAdded = 0;
+    const lastCover = txns.find((t) => t.paperType === 'cover');
+    const lastInner = txns.find((t) => t.paperType === 'inner');
 
-    for (const txn of txns) {
-      if (txn.paperType === 'cover') coverAdded += Number(txn.quantity) || 0;
-      if (txn.paperType === 'inner') innerAdded += Number(txn.quantity) || 0;
+    let changed = false;
+
+    if (lastCover && lastCover.balanceAfter !== undefined && Number(stock.coverQuantity) !== Number(lastCover.balanceAfter)) {
+      stock.coverQuantity = Number(lastCover.balanceAfter);
+      changed = true;
     }
 
-    if (coverAdded === 0 && innerAdded === 0) {
-      coverAdded = Number(stock.coverQuantity) || 0;
-      innerAdded = Number(stock.innerQuantity) || 0;
+    if (lastInner && lastInner.balanceAfter !== undefined && Number(stock.innerQuantity) !== Number(lastInner.balanceAfter)) {
+      stock.innerQuantity = Number(lastInner.balanceAfter);
+      changed = true;
     }
 
-    let coverUsed = 0;
-    let innerUsed = 0;
-
-    for (const job of jobs) {
-      if ((job.paperSource || 'Company paper') !== stockSource) continue;
-
-      const coverUsages = getCoverUsages(job);
-      for (const cover of coverUsages) {
-        const isExactMatch = cover.stockId && String(cover.stockId) === String(stock._id);
-        const isLegacyMatch = !cover.stockId && matchesPaperName(stock, cover.paper, 'cover') && gsmMatchesCover(stock, cover.paperGSM);
-        if (isExactMatch || isLegacyMatch) {
-          coverUsed += cover.qty;
-        }
-      }
-
-      const innerUsages = getInnerUsages(job);
-      for (const inner of innerUsages) {
-        const isExactMatch = inner.stockId && String(inner.stockId) === String(stock._id);
-        const isLegacyMatch = !inner.stockId && matchesPaperName(stock, inner.paper, 'inner') && gsmMatchesInner(stock, inner.paperGSM);
-        if (isExactMatch || isLegacyMatch) {
-          innerUsed += inner.qty;
-        }
-      }
-    }
-
-    const nextCover = Math.max(0, coverAdded - coverUsed);
-    const nextInner = Math.max(0, innerAdded - innerUsed);
-    const nextTotal = nextCover + nextInner;
-
-    if (
-      nextCover !== (Number(stock.coverQuantity) || 0) ||
-      nextInner !== (Number(stock.innerQuantity) || 0) ||
-      nextTotal !== (Number(stock.quantity) || 0)
-    ) {
-      stock.coverQuantity = nextCover;
-      stock.innerQuantity = nextInner;
+    const nextTotal = (Number(stock.coverQuantity) || 0) + (Number(stock.innerQuantity) || 0);
+    if (Number(stock.quantity) !== nextTotal) {
       stock.quantity = nextTotal;
+      changed = true;
+    }
+
+    if (changed) {
+      stock.updatedAt = Date.now();
       await stock.save();
       updated += 1;
-      console.log(`🔁 Reconciled ${stock.name} (${stockSource}): cover ${nextCover}, inner ${nextInner}`);
+      console.log(`📦 Synced ${stock.name} (${stock.paperSource || 'Company paper'}): cover ${stock.coverQuantity}, inner ${stock.innerQuantity}`);
     }
   }
 
   return updated;
 };
+
+// Backward-compatible alias
+export const reconcilePaperStockFromJobs = syncStockFromLedger;

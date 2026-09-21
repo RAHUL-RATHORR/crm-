@@ -36,7 +36,7 @@ import staffRoutes from "./routes/staffRoutes.js";
 import roleRoutes from "./routes/roleRoutes.js";
 import recentDeletedRoutes from "./routes/recentDeletedRoutes.js";
 import { seedStaffAndRoles } from "./utils/seedStaff.js";
-import { reconcilePaperStockFromJobs } from "./utils/paperStockDeduction.js";
+import { syncStockFromLedger } from "./utils/paperStockDeduction.js";
 
 const app = express();
 app.use(cors());
@@ -106,9 +106,9 @@ const connectDB = async (attempt = 1) => {
             try {
                 await seedStaffAndRoles();
                 console.log("✅ Staff roles seeded");
-                const reconciled = await reconcilePaperStockFromJobs();
-                if (reconciled > 0) {
-                    console.log(`🔁 Reconciled ${reconciled} paper stock record(s) from job cards`);
+                const synced = await syncStockFromLedger();
+                if (synced > 0) {
+                    console.log(`🔁 Synced ${synced} paper stock record(s) from transaction ledger`);
                 }
             } catch (seedErr) {
                 console.error("⚠️ Seed/reconcile error (non-fatal):", seedErr.message);
