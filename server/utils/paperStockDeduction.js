@@ -345,28 +345,49 @@ export const syncStockFromLedger = async () => {
     const txns = await PaperStockTransaction.find({
       $or: [
         { paperStockId: stock._id },
-        { stockName: stock.name, paperSource: stock.paperSource || 'Company paper' },
+        { stockName: stock.name, paperSource: stock.paperSource || 'Company paper', paperStockId: { $exists: false } },
       ],
       transactionType: { $in: ['add', 'deduct'] },
-    }).sort({ createdAt: -1 });
+    }).sort({ createdAt: 1 }); // Sort OLD to NEW for sequential calculation
 
-    const lastCover = txns.find((t) => t.paperType === 'cover');
-    const lastInner = txns.find((t) => t.paperType === 'inner');
+    let currentCover = 0;
+    let currentInner = 0;
+
+    for (const txn of txns) {
+      const qty = Number(txn.quantity) || 0;
+      if (txn.paperType === 'cover') {
+        if (txn.transactionType === 'add') currentCover += qty;
+        else if (txn.transactionType === 'deduct') currentCover = Math.max(0, currentCover - qty);
+        
+        if (txn.balanceAfter !== currentCover) {
+          txn.balanceAfter = currentCover;
+          await txn.save();
+        }
+      } else if (txn.paperType === 'inner') {
+        if (txn.transactionType === 'add') currentInner += qty;
+        else if (txn.transactionType === 'deduct') currentInner = Math.max(0, currentInner - qty);
+        
+        if (txn.balanceAfter !== currentInner) {
+          txn.balanceAfter = currentInner;
+          await txn.save();
+        }
+      }
+    }
 
     let changed = false;
 
-    if (lastCover && lastCover.balanceAfter !== undefined && Number(stock.coverQuantity) !== Number(lastCover.balanceAfter)) {
-      stock.coverQuantity = Number(lastCover.balanceAfter);
+    if (stock.coverQuantity !== currentCover) {
+      stock.coverQuantity = currentCover;
       changed = true;
     }
 
-    if (lastInner && lastInner.balanceAfter !== undefined && Number(stock.innerQuantity) !== Number(lastInner.balanceAfter)) {
-      stock.innerQuantity = Number(lastInner.balanceAfter);
+    if (stock.innerQuantity !== currentInner) {
+      stock.innerQuantity = currentInner;
       changed = true;
     }
 
-    const nextTotal = (Number(stock.coverQuantity) || 0) + (Number(stock.innerQuantity) || 0);
-    if (Number(stock.quantity) !== nextTotal) {
+    const nextTotal = currentCover + currentInner;
+    if (stock.quantity !== nextTotal) {
       stock.quantity = nextTotal;
       changed = true;
     }

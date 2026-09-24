@@ -220,31 +220,34 @@ router.delete('/:id', async (req, res) => {
     const doc = await JobCard.findById(req.params.id);
     if (!doc) return res.status(404).json({ message: "Job Card not found" });
 
-    // Restore stock before deleting — always restore, skip shouldRestore check
+    // Restore stock before deleting — check if it actually deducted stock
     try {
-      const jobObj = doc.toObject();
-      const coverUsages = getCoverUsages(jobObj);
-      const innerUsages = getInnerUsages(jobObj);
+      const shouldRestore = await jobHadStockDeduction(doc._id);
+      if (shouldRestore) {
+        const jobObj = doc.toObject();
+        const coverUsages = getCoverUsages(jobObj);
+        const innerUsages = getInnerUsages(jobObj);
 
-      for (const usage of coverUsages) {
-        await applyCoverDelta(usage.paper, usage.paperGSM, -usage.qty, {
-          paperSource: usage.paperSource,
-          partyName: jobObj.partyName || jobObj.companyName || '',
-          jobNumber: jobObj.jobNumber || '',
-          jobCardId: jobObj._id,
-          note: 'Restored from job card delete',
-        });
+        for (const usage of coverUsages) {
+          await applyCoverDelta(usage.paper, usage.paperGSM, -usage.qty, {
+            paperSource: usage.paperSource,
+            partyName: jobObj.partyName || jobObj.companyName || '',
+            jobNumber: jobObj.jobNumber || '',
+            jobCardId: jobObj._id,
+            note: 'Restored from job card delete',
+          });
+        }
+        for (const usage of innerUsages) {
+          await applyInnerDelta(usage.paper, usage.paperGSM, -usage.qty, {
+            paperSource: usage.paperSource,
+            partyName: jobObj.partyName || jobObj.companyName || '',
+            jobNumber: jobObj.jobNumber || '',
+            jobCardId: jobObj._id,
+            note: 'Restored from job card delete',
+          });
+        }
+        console.log(`📦 Stock restored for deleted job card: ${doc.jobNumber} (cover=${coverUsages.length}, inner=${innerUsages.length})`);
       }
-      for (const usage of innerUsages) {
-        await applyInnerDelta(usage.paper, usage.paperGSM, -usage.qty, {
-          paperSource: usage.paperSource,
-          partyName: jobObj.partyName || jobObj.companyName || '',
-          jobNumber: jobObj.jobNumber || '',
-          jobCardId: jobObj._id,
-          note: 'Restored from job card delete',
-        });
-      }
-      console.log(`📦 Stock restored for deleted job card: ${doc.jobNumber} (cover=${coverUsages.length}, inner=${innerUsages.length})`);
     } catch (stockErr) {
       console.error(`⚠️ Stock restore on delete failed: ${stockErr.message}`);
     }

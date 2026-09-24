@@ -1,6 +1,7 @@
 import express from 'express';
 import DeletedItem from '../models/DeletedItem.js';
 import mongoose from 'mongoose';
+import { getCoverUsages, getInnerUsages, applyCoverDelta, applyInnerDelta } from '../utils/paperStockDeduction.js';
 
 const router = express.Router();
 
@@ -39,6 +40,35 @@ router.post('/restore/:id', async (req, res) => {
 
     // Remove from DeletedItem collection
     await DeletedItem.findByIdAndDelete(req.params.id);
+
+    // If it was a Job Card, deduct stock again
+    if (collectionName === 'JobCard') {
+      try {
+        const coverUsages = getCoverUsages(documentData);
+        const innerUsages = getInnerUsages(documentData);
+
+        for (const usage of coverUsages) {
+          await applyCoverDelta(usage.paper, usage.paperGSM, usage.qty, {
+            paperSource: usage.paperSource,
+            partyName: documentData.partyName || documentData.companyName || '',
+            jobNumber: documentData.jobNumber || '',
+            jobCardId: documentData._id,
+            note: 'Deducted from job card restore',
+          });
+        }
+        for (const usage of innerUsages) {
+          await applyInnerDelta(usage.paper, usage.paperGSM, usage.qty, {
+            paperSource: usage.paperSource,
+            partyName: documentData.partyName || documentData.companyName || '',
+            jobNumber: documentData.jobNumber || '',
+            jobCardId: documentData._id,
+            note: 'Deducted from job card restore',
+          });
+        }
+      } catch (stockErr) {
+        console.error('⚠️ Failed to re-deduct stock for restored Job Card:', stockErr.message);
+      }
+    }
 
     res.json({ message: 'Item restored successfully' });
   } catch (err) {

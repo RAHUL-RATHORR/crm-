@@ -15,21 +15,13 @@ router.get('/transactions', async (req, res) => {
     }).sort({ createdAt: -1 }).maxTimeMS(8000);
     res.json(transactions);
   } catch (err) {
-    // Return empty array if DB is temporarily unavailable — UI stays functional
     console.error('transactions GET error:', err.message);
-    res.json([]);
+    res.status(500).json({ error: 'Database timeout or error' });
   }
 });
 
-// DELETE /api/paper-stock/transactions - Clear all transaction history
-router.delete('/transactions', async (req, res) => {
-  try {
-    const result = await PaperStockTransaction.deleteMany({});
-    res.json({ message: 'All transaction history cleared', deletedCount: result.deletedCount });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+// Route removed to prevent accidental data wipe
+// DELETE /api/paper-stock/transactions
 
 // DELETE /api/paper-stock/transactions/:transactionId - Delete one history entry
 router.delete('/transactions/:transactionId', async (req, res) => {
@@ -65,7 +57,7 @@ router.delete('/transactions/:transactionId', async (req, res) => {
       const remainingTxns = await PaperStockTransaction.find({
         $or: [
           { paperStockId: stock._id },
-          { stockName: stock.name, paperSource: stock.paperSource || 'Company paper' }
+          { stockName: stock.name, paperSource: stock.paperSource || 'Company paper', paperStockId: { $exists: false } }
         ],
         paperType: txn.paperType,
         transactionType: { $in: ['add', 'deduct'] }
@@ -168,24 +160,41 @@ router.get('/', async (req, res) => {
     }).sort({ createdAt: -1 });
 
     const syncedList = await Promise.all(stockList.map(async (stock) => {
-      const stockTxns = recentTxns.filter(t =>
-        (t.paperStockId && String(t.paperStockId) === String(stock._id)) ||
-        (t.stockName === stock.name && t.paperSource === (stock.paperSource || 'Company paper'))
-      );
+      const stockTxns = recentTxns.filter(t => {
+        if (t.paperStockId) {
+          return String(t.paperStockId) === String(stock._id);
+        }
+        return t.stockName === stock.name && t.paperSource === (stock.paperSource || 'Company paper');
+      });
 
-      const lastCover = stockTxns.find(t => t.paperType === 'cover');
-      const lastInner = stockTxns.find(t => t.paperType === 'inner');
+      // Sort OLD to NEW for sequential calculation
+      stockTxns.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+
+      let currentCover = 0;
+      let currentInner = 0;
+
+      for (const txn of stockTxns) {
+        const qty = Number(txn.quantity) || 0;
+        if (txn.paperType === 'cover') {
+          if (txn.transactionType === 'add') currentCover += qty;
+          else if (txn.transactionType === 'deduct') currentCover = Math.max(0, currentCover - qty);
+        } else if (txn.paperType === 'inner') {
+          if (txn.transactionType === 'add') currentInner += qty;
+          else if (txn.transactionType === 'deduct') currentInner = Math.max(0, currentInner - qty);
+        }
+      }
 
       let changed = false;
-      if (lastCover && lastCover.balanceAfter !== undefined && Number(stock.coverQuantity) !== Number(lastCover.balanceAfter)) {
-        stock.coverQuantity = Number(lastCover.balanceAfter);
+      if (Number(stock.coverQuantity) !== currentCover) {
+        stock.coverQuantity = currentCover;
         changed = true;
       }
-      if (lastInner && lastInner.balanceAfter !== undefined && Number(stock.innerQuantity) !== Number(lastInner.balanceAfter)) {
-        stock.innerQuantity = Number(lastInner.balanceAfter);
+      if (Number(stock.innerQuantity) !== currentInner) {
+        stock.innerQuantity = currentInner;
         changed = true;
       }
-      const nextTotal = (Number(stock.coverQuantity) || 0) + (Number(stock.innerQuantity) || 0);
+      
+      const nextTotal = currentCover + currentInner;
       if (Number(stock.quantity) !== nextTotal) {
         stock.quantity = nextTotal;
         changed = true;
@@ -201,7 +210,7 @@ router.get('/', async (req, res) => {
     res.json(syncedList);
   } catch (err) {
     console.error('paper-stock GET error:', err.message);
-    res.json([]);
+    res.status(500).json({ error: 'Database timeout or error' });
   }
 });
 
@@ -386,22 +395,9 @@ router.delete('/:id', async (req, res) => {
     });
     const deleted = await PaperStock.findByIdAndDelete(req.params.id);
 
-    // Remove this stock's history from Paper Stock Statements
-    const relatedNames = [deleted.name, deleted.coverName, deleted.innerName]
-      .map((name) => String(name || '').trim())
-      .filter(Boolean);
-    const uniqueNames = [...new Set(relatedNames)];
-
+    // Remove this stock's history using exact ID to prevent wiping other items with same name
     await PaperStockTransaction.deleteMany({
-      $or: [
-        { paperStockId: deleted._id },
-        ...(uniqueNames.length
-          ? [
-              { stockName: { $in: uniqueNames } },
-              { paperName: { $in: uniqueNames } },
-            ]
-          : []),
-      ],
+      paperStockId: deleted._id
     });
 
     // Keep a short audit entry for Settings → Recently Deleted
