@@ -148,6 +148,17 @@ router.get('/:id/ledger', async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     const stockList = await PaperStock.find().sort({ updatedAt: -1, createdAt: -1 }).maxTimeMS(8000);
+
+    // Ensure all items have opening transactions BEFORE we sync balances,
+    // otherwise legacy imported stock without transactions will be wiped out to 0!
+    for (const stock of stockList) {
+      try {
+        await ensureStockAddTransactions(stock);
+      } catch (err) {
+        console.error('ensureStockAddTransactions failed for', stock._id, err.message);
+      }
+    }
+
     const stockIds = stockList.map(s => s._id);
     const stockNames = stockList.map(s => s.name);
 

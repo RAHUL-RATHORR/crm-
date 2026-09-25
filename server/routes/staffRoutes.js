@@ -89,7 +89,7 @@ router.put('/:id', async (req, res) => {
     if (name?.trim()) user.name = name.trim();
     if (email?.trim()) {
       const emailLower = email.trim().toLowerCase();
-      if (isProtectedAdmin && emailLower !== ADMIN_EMAIL) {
+      if (isProtectedAdmin && emailLower !== DEFAULT_ADMIN_EMAIL) {
         return res.status(400).json({ error: 'Admin email cannot be changed' });
       }
       if (!isProtectedAdmin && isAdminEmail(emailLower)) {

@@ -3,7 +3,7 @@ const router = express.Router();
 import JobCard from '../models/JobCard.js';
 import Notification from '../models/Notification.js';
 import DeletedItem from '../models/DeletedItem.js';
-import { syncStockFromJobChange, getCoverUsages, getInnerUsages, applyCoverDelta, applyInnerDelta } from '../utils/paperStockDeduction.js';
+import { syncStockFromJobChange, getCoverUsages, getInnerUsages, applyCoverDelta, applyInnerDelta, jobHadStockDeduction } from '../utils/paperStockDeduction.js';
 
 const parsePlateSizes = (value) => {
   if (!value) return [];
@@ -297,20 +297,20 @@ router.patch('/:id/price', async (req, res) => {
 });
 
 
-router.post('/sync-tally-direct', async (req, res) => {
-  try {
-    const jobCardData = req.body;
-    if (!jobCardData || !jobCardData.partyName) {
-      return res.status(400).json({ error: "Invalid Job Card data" });
-    }
-
-    const result = await syncJobCardToTally(jobCardData);
-
-    res.json({ message: "Successfully synced to Tally Prime", details: result });
-  } catch (err) {
-    console.error(`❌ Tally Sync Error: ${err.message}`);
-    res.status(500).json({ error: err.message });
-  }
-});
+// router.post('/sync-tally-direct', async (req, res) => {
+//   try {
+//     const jobCardData = req.body;
+//     if (!jobCardData || !jobCardData.partyName) {
+//       return res.status(400).json({ error: "Invalid Job Card data" });
+//     }
+// 
+//     // const result = await syncJobCardToTally(jobCardData);
+// 
+//     res.json({ message: "Successfully synced to Tally Prime", details: {} });
+//   } catch (err) {
+//     console.error(`❌ Tally Sync Error: ${err.message}`);
+//     res.status(500).json({ error: err.message });
+//   }
+// });
 
 export default router;
