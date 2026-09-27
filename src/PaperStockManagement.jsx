@@ -128,6 +128,19 @@ const PaperStockManagement = () => {
       return;
     }
 
+    if (!editingId) {
+      if (formData.coverName.trim() && (Number(formData.coverQuantity) || 0) <= 0) {
+        setMessage({ type: 'error', text: 'Cover Initial Sheet Count must be greater than 0 to create new stock.' });
+        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+        return;
+      }
+      if (formData.innerName.trim() && (Number(formData.innerQuantity) || 0) <= 0) {
+        setMessage({ type: 'error', text: 'Inner Initial Sheet Count must be greater than 0 to create new stock.' });
+        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+        return;
+      }
+    }
+
     const url = editingId 
       ? `${API_BASE_URL}/api/paper-stock/${editingId}`
       : `${API_BASE_URL}/api/paper-stock`;

@@ -3,7 +3,7 @@ const router = express.Router();
 import JobCard from '../models/JobCard.js';
 import Notification from '../models/Notification.js';
 import DeletedItem from '../models/DeletedItem.js';
-import { syncStockFromJobChange, getCoverUsages, getInnerUsages, applyCoverDelta, applyInnerDelta, jobHadStockDeduction } from '../utils/paperStockDeduction.js';
+import { validateStockForJobChange, syncStockFromJobChange, getCoverUsages, getInnerUsages, applyCoverDelta, applyInnerDelta, jobHadStockDeduction } from '../utils/paperStockDeduction.js';
 
 const parsePlateSizes = (value) => {
   if (!value) return [];
@@ -99,6 +99,13 @@ router.post('/', async (req, res) => {
     }
 
     if (_id) {
+      // --- PRE-VALIDATE STOCK ---
+      const validationError = await validateStockForJobChange(previousJob, req.body);
+      if (validationError) {
+        return res.status(400).json({ error: validationError });
+      }
+      // --------------------------
+
       // UPDATE by _id (most reliable)
       jobCard = await JobCard.findByIdAndUpdate(
         _id,
@@ -114,6 +121,10 @@ router.post('/', async (req, res) => {
         // UPDATE by jobNumber (fallback)
         isUpdate = true;
         previousJob = previousJob || existingJob;
+
+        const validationError = await validateStockForJobChange(previousJob, req.body);
+        if (validationError) return res.status(400).json({ error: validationError });
+
         jobCard = await JobCard.findOneAndUpdate(
           { jobNumber },
           { ...req.body, updatedAt: new Date() },
@@ -121,6 +132,9 @@ router.post('/', async (req, res) => {
         );
       } else {
         // NEW job card with provided jobNumber
+        const validationError = await validateStockForJobChange(null, req.body);
+        if (validationError) return res.status(400).json({ error: validationError });
+
         jobCard = new JobCard(req.body);
         await jobCard.save();
       }
@@ -134,6 +148,10 @@ router.post('/', async (req, res) => {
       }
       const generatedJobNumber = `JOBHR-${String(nextNum).padStart(4, '0')}`;
       req.body.jobNumber = generatedJobNumber;
+
+      const validationError = await validateStockForJobChange(null, req.body);
+      if (validationError) return res.status(400).json({ error: validationError });
+
       jobCard = new JobCard(req.body);
       await jobCard.save();
     }

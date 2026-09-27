@@ -265,6 +265,61 @@ export const applyInnerDelta = async (paper, paperGSM, delta, meta = {}) => {
   });
 };
 
+export const validateStockForJobChange = async (previousJob, newBody) => {
+  const shouldRestore = previousJob?._id && await jobHadStockDeduction(previousJob._id);
+  
+  const oldCoverUsages = shouldRestore ? getCoverUsages(previousJob) : [];
+  const oldInnerUsages = shouldRestore ? getInnerUsages(previousJob) : [];
+  const newCoverUsages = getCoverUsages(newBody);
+  const newInnerUsages = getInnerUsages(newBody);
+
+  const getUsageKey = (u) => u.stockId ? String(u.stockId) : `${String(u.paper).trim()}|${String(u.paperGSM).trim()}|${u.paperSource}`;
+
+  const calculateNet = (oldU, newU) => {
+    const map = {};
+    for (const u of oldU) {
+      const key = getUsageKey(u);
+      if (!map[key]) map[key] = { ...u, qty: 0 };
+      map[key].qty -= u.qty;
+    }
+    for (const u of newU) {
+      const key = getUsageKey(u);
+      if (!map[key]) map[key] = { ...u, qty: 0 };
+      map[key].qty += u.qty;
+    }
+    return Object.values(map).filter(u => u.qty > 0); // Only care about positive net usage (deduction)
+  };
+
+  const netCover = calculateNet(oldCoverUsages, newCoverUsages);
+  const netInner = calculateNet(oldInnerUsages, newInnerUsages);
+
+  for (const usage of netCover) {
+    const paperSource = usage.paperSource || 'Company paper';
+    const stockItem = await findCoverStock(usage.paper, paperSource, usage.paperGSM, usage.stockId);
+    if (!stockItem || !gsmMatchesCover(stockItem, usage.paperGSM)) {
+      return `Insufficient Stock: Cover paper '${usage.paper}' (${usage.paperGSM || 'N/A'} GSM) not found in stock. Required: ${usage.qty} Sheets. Please add stock first.`;
+    }
+    const avail = Number(stockItem.coverQuantity) || 0;
+    if (avail < usage.qty) {
+      return `Insufficient Stock: Not enough Cover paper '${usage.paper}' (${usage.paperGSM || 'N/A'} GSM). Required: ${usage.qty}, Available: ${avail}. Please add stock first.`;
+    }
+  }
+
+  for (const usage of netInner) {
+    const paperSource = usage.paperSource || 'Company paper';
+    const stockItem = await findInnerStock(usage.paper, paperSource, usage.paperGSM, usage.stockId);
+    if (!stockItem || !gsmMatchesInner(stockItem, usage.paperGSM)) {
+      return `Insufficient Stock: Inner paper '${usage.paper}' (${usage.paperGSM || 'N/A'} GSM) not found in stock. Required: ${usage.qty} Sheets. Please add stock first.`;
+    }
+    const avail = Number(stockItem.innerQuantity) || 0;
+    if (avail < usage.qty) {
+      return `Insufficient Stock: Not enough Inner paper '${usage.paper}' (${usage.paperGSM || 'N/A'} GSM). Required: ${usage.qty}, Available: ${avail}. Please add stock first.`;
+    }
+  }
+
+  return null; // Validation passed
+};
+
 export const syncStockFromJobChange = async (previousJob, newBody) => {
   const shouldRestore = previousJob?._id && await jobHadStockDeduction(previousJob._id);
   
