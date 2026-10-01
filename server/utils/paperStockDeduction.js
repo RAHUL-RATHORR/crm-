@@ -206,12 +206,12 @@ export const applyCoverDelta = async (paper, paperGSM, delta, meta = {}) => {
   if (Number.isFinite(coverGsm)) {
     stockItem.coverQuantity = Math.max(0, (stockItem.coverQuantity || 0) - delta);
     balanceAfter = stockItem.coverQuantity;
+    syncTotalQuantity(stockItem);
   } else {
     stockItem.quantity = Math.max(0, (stockItem.quantity || 0) - delta);
     balanceAfter = stockItem.quantity;
   }
 
-  syncTotalQuantity(stockItem);
   await stockItem.save();
   console.log(`📦 Cover stock adjusted: ${paper} (${paperGSM}) delta ${delta}, remaining cover=${stockItem.coverQuantity}, total=${stockItem.quantity}`);
 
@@ -244,8 +244,18 @@ export const applyInnerDelta = async (paper, paperGSM, delta, meta = {}) => {
     return;
   }
 
-  stockItem.innerQuantity = Math.max(0, (stockItem.innerQuantity || 0) - delta);
-  syncTotalQuantity(stockItem);
+  const innerGsm = parseGsm(stockItem.innerGSM);
+  let balanceAfter = 0;
+
+  if (Number.isFinite(innerGsm)) {
+    stockItem.innerQuantity = Math.max(0, (stockItem.innerQuantity || 0) - delta);
+    balanceAfter = stockItem.innerQuantity;
+    syncTotalQuantity(stockItem);
+  } else {
+    stockItem.quantity = Math.max(0, (stockItem.quantity || 0) - delta);
+    balanceAfter = stockItem.quantity;
+  }
+
   await stockItem.save();
   console.log(`📦 Inner stock adjusted: ${paper} (${paperGSM}) delta ${delta}, remaining inner=${stockItem.innerQuantity}, total=${stockItem.quantity}`);
 
@@ -260,7 +270,7 @@ export const applyInnerDelta = async (paper, paperGSM, delta, meta = {}) => {
     jobNumber: meta.jobNumber || '',
     jobCardId: meta.jobCardId,
     paperSource: stockItem.paperSource || 'Company paper',
-    balanceAfter: stockItem.innerQuantity,
+    balanceAfter,
     note: meta.note || (delta > 0 ? 'Deducted for job card' : 'Restored from job card update'),
   });
 };
@@ -299,7 +309,8 @@ export const validateStockForJobChange = async (previousJob, newBody) => {
     if (!stockItem || !gsmMatchesCover(stockItem, usage.paperGSM)) {
       return `Insufficient Stock: Cover paper '${usage.paper}' (${usage.paperGSM || 'N/A'} GSM) not found in stock. Required: ${usage.qty} Sheets. Please add stock first.`;
     }
-    const avail = Number(stockItem.coverQuantity) || 0;
+    const coverGsm = parseGsm(stockItem.coverGSM);
+    const avail = Number.isFinite(coverGsm) ? (Number(stockItem.coverQuantity) || 0) : (Number(stockItem.quantity) || 0);
     if (avail < usage.qty) {
       return `Insufficient Stock: Not enough Cover paper '${usage.paper}' (${usage.paperGSM || 'N/A'} GSM). Required: ${usage.qty}, Available: ${avail}. Please add stock first.`;
     }
@@ -311,7 +322,8 @@ export const validateStockForJobChange = async (previousJob, newBody) => {
     if (!stockItem || !gsmMatchesInner(stockItem, usage.paperGSM)) {
       return `Insufficient Stock: Inner paper '${usage.paper}' (${usage.paperGSM || 'N/A'} GSM) not found in stock. Required: ${usage.qty} Sheets. Please add stock first.`;
     }
-    const avail = Number(stockItem.innerQuantity) || 0;
+    const innerGsm = parseGsm(stockItem.innerGSM);
+    const avail = Number.isFinite(innerGsm) ? (Number(stockItem.innerQuantity) || 0) : (Number(stockItem.quantity) || 0);
     if (avail < usage.qty) {
       return `Insufficient Stock: Not enough Inner paper '${usage.paper}' (${usage.paperGSM || 'N/A'} GSM). Required: ${usage.qty}, Available: ${avail}. Please add stock first.`;
     }
@@ -407,10 +419,16 @@ export const syncStockFromLedger = async () => {
 
     let currentCover = 0;
     let currentInner = 0;
+    let coverInitialized = false;
+    let innerInitialized = false;
 
     for (const txn of txns) {
       const qty = Number(txn.quantity) || 0;
       if (txn.paperType === 'cover') {
+        if (!coverInitialized) {
+          currentCover = Math.max(0, txn.transactionType === 'add' ? (txn.balanceAfter - qty) : (txn.balanceAfter + qty));
+          coverInitialized = true;
+        }
         if (txn.transactionType === 'add') currentCover += qty;
         else if (txn.transactionType === 'deduct') currentCover = Math.max(0, currentCover - qty);
         
@@ -419,6 +437,10 @@ export const syncStockFromLedger = async () => {
           await txn.save();
         }
       } else if (txn.paperType === 'inner') {
+        if (!innerInitialized) {
+          currentInner = Math.max(0, txn.transactionType === 'add' ? (txn.balanceAfter - qty) : (txn.balanceAfter + qty));
+          innerInitialized = true;
+        }
         if (txn.transactionType === 'add') currentInner += qty;
         else if (txn.transactionType === 'deduct') currentInner = Math.max(0, currentInner - qty);
         
@@ -431,20 +453,21 @@ export const syncStockFromLedger = async () => {
 
     let changed = false;
 
-    if (stock.coverQuantity !== currentCover) {
+    const hasCoverGsm = Number.isFinite(parseGsm(stock.coverGSM));
+    const hasInnerGsm = Number.isFinite(parseGsm(stock.innerGSM));
+
+    if (coverInitialized && hasCoverGsm && stock.coverQuantity !== currentCover) {
       stock.coverQuantity = currentCover;
       changed = true;
     }
 
-    if (stock.innerQuantity !== currentInner) {
+    if (innerInitialized && hasInnerGsm && stock.innerQuantity !== currentInner) {
       stock.innerQuantity = currentInner;
       changed = true;
     }
 
-    const nextTotal = currentCover + currentInner;
-    if (stock.quantity !== nextTotal) {
-      stock.quantity = nextTotal;
-      changed = true;
+    if (changed) {
+      syncTotalQuantity(stock);
     }
 
     if (changed) {
