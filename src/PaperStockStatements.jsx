@@ -340,14 +340,16 @@ const PaperStockStatements = () => {
                         ) : (
                           <span className="text-gray-400 italic text-xs">N/A</span>
                         )}
-                        <button
-                          type="button"
-                          onClick={() => handleRevert(item)}
-                          className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-orange-50 text-orange-600 hover:bg-orange-100 transition-colors"
-                          title="Revert Transaction"
-                        >
-                          <Undo2 size={16} />
-                        </button>
+                        {item.transactionType === 'deduct' && (
+                          <button
+                            type="button"
+                            onClick={() => handleRevert(item)}
+                            className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-orange-50 text-orange-600 hover:bg-orange-100 transition-colors"
+                            title="Revert Transaction"
+                          >
+                            <Undo2 size={16} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
