@@ -193,7 +193,7 @@ const getPrintMediaStylesAsScreen = () => {
 };
 
 export function mountPrintIframeForExport(elementId, options = {}) {
-  const { copyIds, forPdf = false } = options;
+  const { copyIds, forPdf = false, documentTitle = 'Print' } = options;
   const element = document.getElementById(elementId);
   if (!element) return null;
 
@@ -213,8 +213,12 @@ export function mountPrintIframeForExport(elementId, options = {}) {
   document.getElementById('print-root-temp')?.remove();
   document.body.classList.remove('is-printing');
 
+  const safeTitle = String(documentTitle || 'Print')
+    .replace(/[<>"]/g, '')
+    .trim() || 'Print';
+
   const iframe = document.createElement('iframe');
-  iframe.setAttribute('title', 'Print');
+  iframe.setAttribute('title', safeTitle);
   Object.assign(iframe.style, {
     visibility: 'hidden',
     position: 'fixed',
@@ -237,7 +241,7 @@ export function mountPrintIframeForExport(elementId, options = {}) {
     <html lang="en">
       <head>
         <meta charset="UTF-8" />
-        <title>Print</title>
+        <title>${safeTitle}</title>
         <style>
           @page { size: ${isFinancialStatement ? 'A4 landscape' : 'A4'}; margin: ${pageMargin}; }
           * {
@@ -836,13 +840,18 @@ export function printElement(elementId, options = {}) {
   }
 
   const runPrint = () => {
+    const originalDocumentTitle = document.title;
     try {
       const win = iframe.contentWindow;
       if (!win) return;
+      if (options.documentTitle) {
+        document.title = options.documentTitle;
+      }
       win.focus();
       win.print();
     } finally {
       setTimeout(() => {
+        document.title = originalDocumentTitle;
         if (document.body.contains(iframe)) {
           document.body.removeChild(iframe);
         }

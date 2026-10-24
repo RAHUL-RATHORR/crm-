@@ -230,17 +230,26 @@ export default function JobCardListing() {
     setSelectedCard(null);
   };
 
+  const getJobCardTitle = (card) => {
+    if (!card) return 'JobCard';
+    const num = card.jobNumber ? `JobCard_${card.jobNumber}` : 'JobCard';
+    const party = card.partyName ? `_${card.partyName.trim()}` : '';
+    return `${num}${party}`;
+  };
+
   const handlePrint = () => {
     window.scrollTo(0, 0);
     const container = document.querySelector('.a4-page-container');
     if (container) container.scrollTop = 0;
-    printElement('printable-inner');
+    printElement('printable-inner', {
+      documentTitle: getJobCardTitle(selectedCard),
+    });
   };
 
   const handleSharePDF = async () => {
     await downloadAsPDF(
       'printable-inner',
-      `JobCard_${selectedCard?.jobNumber || 'preview'}`,
+      getJobCardTitle(selectedCard),
       setIsGenerating
     );
   };

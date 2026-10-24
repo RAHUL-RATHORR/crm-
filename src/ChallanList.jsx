@@ -140,7 +140,11 @@ const ChallanList = () => {
     setIsModalOpen(true);
 
     const timer = setTimeout(() => {
-      printElement('printable-challan');
+      const num = ch.challanNo ? `Challan_${ch.challanNo}` : 'Challan';
+      const party = ch.partyName ? `_${ch.partyName.trim()}` : '';
+      printElement('printable-challan', {
+        documentTitle: `${num}${party}`,
+      });
     }, 1000);
 
     navigate('/challan/list', { replace: true, state: {} });
@@ -258,13 +262,25 @@ const ChallanList = () => {
     setPreviewChallans([]);
   };
 
+  const getChallanTitle = () => {
+    if (isMergedPrint) {
+      return `Challan_Combined_${primaryChallan?.partyName?.trim() || 'party'}`;
+    }
+    const num = primaryChallan?.challanNo ? `Challan_${primaryChallan.challanNo}` : 'Challan';
+    const party = primaryChallan?.partyName ? `_${primaryChallan.partyName.trim()}` : '';
+    return `${num}${party}`;
+  };
+
   const handlePrint = () => {
     const selected = getSelectedCopyIds(copySelection);
     if (!selected.length) {
       alert('Please select at least one copy type');
       return;
     }
-    printElement('printable-challan', { copyIds: selected });
+    printElement('printable-challan', {
+      copyIds: selected,
+      documentTitle: getChallanTitle(),
+    });
   };
 
   const handleDownloadPDF = async () => {
@@ -273,9 +289,7 @@ const ChallanList = () => {
       alert('Please select at least one copy type');
       return;
     }
-    const label = isMergedPrint
-      ? `Challan_Combined_${primaryChallan?.partyName || 'party'}`
-      : `Challan_${primaryChallan?.challanNo}`;
+    const label = getChallanTitle();
     await downloadAsPDF('printable-challan', label, setIsGenerating, { copyIds: selected });
   };
 

@@ -110,7 +110,12 @@ const InvoiceList = () => {
     setIsModalOpen(true);
 
     const timer = setTimeout(() => {
-      printElement('printable-invoice', { copyIds: getSelectedCopyIds(DEFAULT_TAX_COPY_SELECTION) });
+      const num = inv.invoiceNumber ? `Invoice_${inv.invoiceNumber}` : 'Invoice';
+      const party = inv.partyName ? `_${inv.partyName.trim()}` : '';
+      printElement('printable-invoice', {
+        copyIds: getSelectedCopyIds(DEFAULT_TAX_COPY_SELECTION),
+        documentTitle: `${num}${party}`,
+      });
     }, 1000);
 
     navigate('/invoice/list', { replace: true, state: {} });
@@ -191,13 +196,23 @@ const InvoiceList = () => {
     setSelectedInvoice(null);
   };
 
+  const getInvoiceTitle = (inv) => {
+    if (!inv) return 'Invoice';
+    const num = inv.invoiceNumber ? `Invoice_${inv.invoiceNumber}` : 'Invoice';
+    const party = inv.partyName ? `_${inv.partyName.trim()}` : '';
+    return `${num}${party}`;
+  };
+
   const handlePrint = () => {
     const selected = getSelectedCopyIds(copySelection);
     if (!selected.length) {
       alert('Please select at least one copy type');
       return;
     }
-    printElement('printable-invoice', { copyIds: selected });
+    printElement('printable-invoice', {
+      copyIds: selected,
+      documentTitle: getInvoiceTitle(selectedInvoice),
+    });
   };
 
   const handleDownloadPDF = async () => {
@@ -208,7 +223,7 @@ const InvoiceList = () => {
     }
     await downloadAsPDF(
       'printable-invoice',
-      `Invoice_${selectedInvoice.invoiceNumber}`,
+      getInvoiceTitle(selectedInvoice),
       setIsGenerating,
       { copyIds: selected }
     );

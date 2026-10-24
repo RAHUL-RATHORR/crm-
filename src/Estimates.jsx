@@ -123,7 +123,11 @@ export default function Estimates() {
     setIsModalOpen(true);
 
     const timer = setTimeout(() => {
-      printElement('printable-estimate');
+      const num = estimate.quoteNumber ? `Quotation_${estimate.quoteNumber}` : 'Quotation';
+      const party = estimate.partyName ? `_${estimate.partyName.trim()}` : '';
+      printElement('printable-estimate', {
+        documentTitle: `${num}${party}`,
+      });
     }, 1000);
 
     navigate('/estimates', { replace: true, state: {} });
@@ -186,15 +190,24 @@ export default function Estimates() {
     setSelectedEstimate(null);
   };
 
+  const getEstimateTitle = (est) => {
+    if (!est) return 'Estimate';
+    const num = est.quoteNumber ? `Quotation_${est.quoteNumber}` : 'Quotation';
+    const party = est.partyName ? `_${est.partyName.trim()}` : '';
+    return `${num}${party}`;
+  };
+
   const executePrint = () => {
-    printElement('printable-estimate');
+    printElement('printable-estimate', {
+      documentTitle: getEstimateTitle(selectedEstimate),
+    });
   };
 
   const handleDownloadPDF = async () => {
     if (!selectedEstimate) return;
     await downloadAsPDF(
       'printable-estimate',
-      `Quotation_${selectedEstimate.quoteNumber}`,
+      getEstimateTitle(selectedEstimate),
       setIsGenerating
     );
   };
