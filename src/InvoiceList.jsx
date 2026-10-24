@@ -393,15 +393,7 @@ const InvoiceList = () => {
                     <option value="IGST">IGST</option>
                   </select>
                 </div>
-                <div className="print-modal-actions grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
-                <button
-                  onClick={handleDownloadPDF}
-                  disabled={isGenerating}
-                  className="flex items-center justify-center gap-2 bg-gray-100 text-gray-700 px-4 py-3 sm:px-6 sm:py-2 rounded-xl text-sm font-bold hover:bg-gray-200 transition-all disabled:opacity-50"
-                >
-                  {isGenerating ? "..." : <Download size={18} />}
-                  PDF
-                </button>
+                <div className="print-modal-actions flex items-center gap-2">
                 <button
                   onClick={handlePrint}
                   className="inline-flex items-center justify-center gap-2 px-4 py-3 sm:px-6 sm:py-2 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 transition-all shadow-lg active:scale-95"

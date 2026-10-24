@@ -401,14 +401,6 @@ export default function Estimates() {
               <h2 className="text-xl font-bold text-gray-800">Quotation Preview</h2>
               <div className="flex items-center gap-3">
                 <button
-                  onClick={handleDownloadPDF}
-                  disabled={isGenerating}
-                  className="flex items-center gap-2 bg-gray-100 text-gray-700 px-6 py-2 rounded-xl text-sm font-bold hover:bg-gray-200 transition-all disabled:opacity-50"
-                >
-                  {isGenerating ? '...' : <Download size={18} />}
-                  PDF
-                </button>
-                <button
                   onClick={executePrint}
                   className="inline-flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 transition-all shadow-lg active:scale-95"
                 >
